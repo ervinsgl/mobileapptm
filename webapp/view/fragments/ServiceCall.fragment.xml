@@ -1,0 +1,31 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+>
+    <Panel
+        id="serviceCallPanel"
+        headerText="Service Call"
+        expandable="false"
+        expanded="true"
+        class="sapUiResponsiveMargin"
+    >
+        <VBox id="serviceCallInfoBox" class="sapUiSmallMargin">
+            <Label id="serviceCallIdLabel" text="ID" design="Bold" />
+            <Text 
+                id="serviceCallIdText"
+                text="{view>/serviceCall/id}" 
+            />
+            
+            <Label 
+                id="serviceCallSubjectLabel"
+                text="Subject" 
+                design="Bold" 
+                class="sapUiTinyMarginTop" 
+            />
+            <Text 
+                id="serviceCallSubjectText"
+                text="{view>/serviceCall/subject}" 
+            />
+        </VBox>
+    </Panel>
+</core:FragmentDefinition>

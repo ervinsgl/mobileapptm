@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service Confirmation</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 600px;
+            margin: 0 auto;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        h1 { color: #2c3e50; font-size: 24px; margin-bottom: 20px; text-align: center; }
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: #667eea;
+            color: white;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        .info-item {
+            background: #f8f9fa;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border-left: 4px solid #667eea;
+        }
+        .info-label {
+            font-size: 12px;
+            color: #6c757d;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+        .info-value {
+            font-size: 16px;
+            color: #2c3e50;
+            font-weight: 500;
+            word-break: break-all;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 12px;
+            border-radius: 6px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 6px;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 12px;
+        }
+        .btn:active { background: #5568d3; }
+        .btn:disabled { background: #ccc; cursor: not-allowed; }
+        .btn-success {
+            background: #28a745;
+        }
+        .btn-success:active { background: #218838; }
+        .loading {
+            text-align: center;
+            padding: 30px;
+        }
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .json-view {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 16px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.6;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <span class="badge">External App with OAuth</span>
+        <h1>🎯 Service Confirmation</h1>
+        
+        <div id="status"></div>
+        <div id="context-info"></div>
+        
+        <button class="btn btn-success" id="load-btn" onclick="loadActivityData()" disabled>
+            📋 Load Activity Details
+        </button>
+        
+        <div id="activity-data"></div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const activityId = urlParams.get('activityId');
+        const activityCode = urlParams.get('activityCode');
+        const activitySubject = urlParams.get('activitySubject');
+        
+        const contextDiv = document.getElementById('context-info');
+        const statusDiv = document.getElementById('status');
+        const loadBtn = document.getElementById('load-btn');
+        
+        // Display activity context
+        if (activityId || activityCode) {
+            contextDiv.innerHTML = `
+                <div class="success">✅ Activity context received!</div>
+                
+                ${activityId ? `
+                <div class="info-item">
+                    <div class="info-label">Activity ID</div>
+                    <div class="info-value">${activityId}</div>
+                </div>` : ''}
+                
+                ${activityCode ? `
+                <div class="info-item">
+                    <div class="info-label">Activity Code</div>
+                    <div class="info-value">${activityCode}</div>
+                </div>` : ''}
+                
+                ${activitySubject ? `
+                <div class="info-item">
+                    <div class="info-label">Activity Subject</div>
+                    <div class="info-value">${decodeURIComponent(activitySubject)}</div>
+                </div>` : ''}
+            `;
+            
+            // Enable load button
+            loadBtn.disabled = false;
+        } else {
+            contextDiv.innerHTML = `
+                <div class="error">⚠️ No activity data in URL</div>
+            `;
+        }
+        
+        async function loadActivityData() {
+            if (!activityId) {
+                statusDiv.innerHTML = '<div class="error">❌ No Activity ID available</div>';
+                return;
+            }
+            
+            loadBtn.disabled = true;
+            loadBtn.innerHTML = '⏳ Loading...';
+            
+            statusDiv.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <div>Authenticating and loading activity data...</div>
+                </div>
+            `;
+            
+            try {
+                const response = await fetch('/api/get-activity-by-id', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        activityId: activityId
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Failed to load activity');
+                }
+                
+                const data = await response.json();
+                
+                statusDiv.innerHTML = '<div class="success">✅ Activity loaded successfully!</div>';
+                
+                const dataDiv = document.getElementById('activity-data');
+                
+                // Extract activity from response
+                // FSM returns: { data: [{ activity: {...} }] }
+                const activity = data.data?.[0]?.activity || data;
+                
+                dataDiv.innerHTML = `
+                    <div style="margin-top: 20px;">
+                        <h2 style="color: #2c3e50; font-size: 18px; margin-bottom: 16px;">📊 Activity Details</h2>
+                        
+                        ${activity.subject ? `
+                        <div class="info-item">
+                            <div class="info-label">Subject</div>
+                            <div class="info-value">${activity.subject}</div>
+                        </div>` : ''}
+                        
+                        ${activity.createPerson ? `
+                        <div class="info-item">
+                            <div class="info-label">Created By (Person ID)</div>
+                            <div class="info-value">${activity.createPerson}</div>
+                        </div>` : ''}
+                        
+                        ${activity.id ? `
+                        <div class="info-item">
+                            <div class="info-label">ID</div>
+                            <div class="info-value">${activity.id}</div>
+                        </div>` : ''}
+                        
+                        ${activity.code ? `
+                        <div class="info-item">
+                            <div class="info-label">Code</div>
+                            <div class="info-value">${activity.code}</div>
+                        </div>` : ''}
+                        
+                        ${activity.type ? `
+                        <div class="info-item">
+                            <div class="info-label">Type</div>
+                            <div class="info-value">${activity.type}</div>
+                        </div>` : ''}
+                        
+                        ${activity.status ? `
+                        <div class="info-item">
+                            <div class="info-label">Status</div>
+                            <div class="info-value">${activity.status}</div>
+                        </div>` : ''}
+                        
+                        ${activity.startDateTime ? `
+                        <div class="info-item">
+                            <div class="info-label">Start Date</div>
+                            <div class="info-value">${new Date(activity.startDateTime).toLocaleString()}</div>
+                        </div>` : ''}
+                        
+                        ${activity.createDateTime ? `
+                        <div class="info-item">
+                            <div class="info-label">Created Date</div>
+                            <div class="info-value">${new Date(activity.createDateTime).toLocaleString()}</div>
+                        </div>` : ''}
+                        
+                        <details style="margin-top: 20px;">
+                            <summary style="cursor: pointer; font-weight: 600; color: #667eea; margin-bottom: 12px;">
+                                🔍 View Full JSON Response
+                            </summary>
+                            <div class="json-view">${JSON.stringify(data, null, 2)}</div>
+                        </details>
+                    </div>
+                `;
+                
+                loadBtn.innerHTML = '🔄 Reload Activity';
+                loadBtn.disabled = false;
+                
+            } catch (error) {
+                console.error('Error:', error);
+                
+                statusDiv.innerHTML = '';
+                
+                const dataDiv = document.getElementById('activity-data');
+                dataDiv.innerHTML = `
+                    <div class="error">
+                        ❌ Error: ${error.message}
+                    </div>
+                `;
+                
+                loadBtn.innerHTML = '🔄 Try Again';
+                loadBtn.disabled = false;
+            }
+        }
+        
+        console.log('External App loaded with OAuth');
+        console.log('Activity ID:', activityId);
+        console.log('Activity Code:', activityCode);
+    </script>
+</body>
+</html>

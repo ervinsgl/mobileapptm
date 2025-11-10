@@ -1,0 +1,61 @@
+<mvc:View
+    controllerName="mobileappsc.controller.View1"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:layout="sap.ui.layout"
+    displayBlock="true"
+>
+    <Page
+        id="serviceConfirmationPage"
+        title="Service Confirmation"
+        showNavButton="false"
+        class="sapUiContentPadding"
+    >
+        <content>
+            <layout:VerticalLayout
+                id="mainLayout"
+                width="100%"
+                class="sapUiContentPadding"
+            >
+                <!-- Service Call Details Fragment -->
+                <core:Fragment
+                    fragmentName="mobileappsc.view.fragments.ServiceCall"
+                    type="XML"
+                />
+
+                <!-- Activity Selection Fragment -->
+                <core:Fragment
+                    fragmentName="mobileappsc.view.fragments.ActivitySelection"
+                    type="XML"
+                />
+
+                <!-- Activity Details Fragment -->
+                <core:Fragment
+                    fragmentName="mobileappsc.view.fragments.ActivityDetails"
+                    type="XML"
+                />
+            </layout:VerticalLayout>
+        </content>
+
+        <!-- Loading Indicator -->
+        <BusyIndicator
+            id="busyIndicator"
+            visible="{view>/busy}"
+            text="Loading..."
+        />
+
+        <!-- Footer Toolbar -->
+        <footer>
+            <OverflowToolbar id="footerToolbar">
+                <ToolbarSpacer id="footerSpacer" />
+                <Button
+                    id="refreshButton"
+                    icon="sap-icon://refresh"
+                    text="Refresh"
+                    press=".onRefresh"
+                />
+            </OverflowToolbar>
+        </footer>
+    </Page>
+</mvc:View>
