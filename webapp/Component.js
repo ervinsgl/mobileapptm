@@ -31,12 +31,13 @@ sap.ui.define([
                 // Initialize router
                 router.initialize();
                 
-                // MOBILE FIX: Double-check after 500ms
+                // MOBILE FIX: Double-check after 500ms using getTargets
                 setTimeout(function() {
-                    const rootControl = router.getRootView();
-                    if (rootControl) {
-                        const pages = rootControl.getPages ? rootControl.getPages() : [];
-                        if (pages.length === 0) {
+                    const targets = router.getTargets();
+                    if (targets) {
+                        const view1Target = targets.getTarget("TargetView1");
+                        if (view1Target && !view1Target._oView) {
+                            // View not loaded, force navigation
                             router.navTo("RouteView1", {}, true);
                         }
                     }

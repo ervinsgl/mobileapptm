@@ -4,7 +4,7 @@
 >
     <Panel
         id="serviceCallPanel"
-        headerText="Service Call"
+        headerText="Service Order"
         expandable="false"
         expanded="true"
         class="sapUiResponsiveMargin"

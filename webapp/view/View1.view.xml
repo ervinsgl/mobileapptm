@@ -18,9 +18,15 @@
                 width="100%"
                 class="sapUiContentPadding"
             >
-                <!-- Service Call Details Fragment -->
+                <!-- Service Order Details Fragment -->
                 <core:Fragment
                     fragmentName="mobileappsc.view.fragments.ServiceCall"
+                    type="XML"
+                />
+
+                <!-- Activities List Fragment (NEW!) -->
+                <core:Fragment
+                    fragmentName="mobileappsc.view.fragments.ActivitiesList"
                     type="XML"
                 />
 

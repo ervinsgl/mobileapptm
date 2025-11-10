@@ -1,0 +1,29 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+>
+    <Panel
+        id="activitiesListPanel"
+        headerText="Activities ({= ${view>/serviceCallActivities}.length })"
+        expandable="true"
+        expanded="true"
+        class="sapUiResponsiveMargin"
+        visible="{= ${view>/serviceCallActivities}.length > 0 }"
+    >
+        <List
+            id="activitiesList"
+            items="{view>/serviceCallActivities}"
+            mode="None"
+            noDataText="No activities found"
+        >
+            <StandardListItem
+                id = "standardListItem"
+                title="{view>code} - {view>subject}"
+                description="Status: {view>status} | Type: {view>type}"
+                info="{view>executionStage}"
+                type="Active"
+                press=".onActivityPress"
+            />
+        </List>
+    </Panel>
+</core:FragmentDefinition>

@@ -68,6 +68,19 @@ sap.ui.define([], () => {
         formatDistance(distance) {
             if (!distance) return 0;
             return parseFloat(distance);
+        },
+
+        /**
+         * Format activity ID for FSM API
+         * Converts: 77f485d3-c917-49db-8da3-c4045d95c2b9
+         * To:       77F485D3C91749DB8DA3C4045D95C2B9
+         * @param {string} activityId - Activity ID from URL
+         * @returns {string} Formatted activity ID for FSM
+         */
+        formatActivityIdForFSM(activityId) {
+            if (!activityId) return "";
+            // Remove hyphens and convert to uppercase
+            return activityId.replace(/-/g, '').toUpperCase();
         }
     };
 });
