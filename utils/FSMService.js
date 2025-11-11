@@ -102,6 +102,42 @@ class FSMService {
     }
 
     /**
+     * Get organizational levels
+     */
+    async getOrganizationalLevels() {
+        try {
+            const destination = await DestinationService.getDestination('FSM_API');
+            const token = await TokenCache.getToken(destination);
+
+            // Get base cloud host (remove /api/data/v4 from URL) 
+            const baseUrl = destination.destinationConfiguration.URL;
+            const cloudHost = baseUrl.replace('/api/data/v4', '');
+            
+            // Build organizational levels API URL
+            const fullUrl = `${cloudHost}/cloud-org-level-service/api/v1/levels`;
+
+            console.log('Fetching organizational levels from:', fullUrl);
+
+            const headers = {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+                'X-Account-ID': destination.destinationConfiguration['URL.headers.X-Account-ID'],
+                'X-Company-ID': destination.destinationConfiguration['URL.headers.X-Company-ID']
+            };
+
+            const response = await axios.get(fullUrl, { headers });
+            
+            console.log('Organizational levels response:', response.data);
+            
+            return response.data;
+
+        } catch (error) {
+            console.error('FSM API Error (organizational-levels):', error.response?.data || error.message);
+            throw error;
+        }
+    }
+
+    /**
      * Update activity
      */
     async updateActivity(activityId, updateData) {

@@ -32,6 +32,7 @@ app.post("/api/get-activity-by-id", async (req, res) => {
         const data = await FSMService.getActivityById(activityId);
         res.json(data);
     } catch (error) {
+        console.error("Error fetching activity by ID:", error.message);
         res.status(error.response?.status || 500).json({
             message: error.response?.data?.message || 'Activity not found',
             error: error.response?.data || error.message
@@ -51,6 +52,7 @@ app.post("/api/get-activity-by-code", async (req, res) => {
         const data = await FSMService.getActivityByCode(activityCode);
         res.json(data);
     } catch (error) {
+        console.error("Error fetching activity by code:", error.message);
         res.status(error.response?.status || 500).json({
             message: error.response?.data?.message || 'Activity not found',
             error: error.response?.data || error.message
@@ -73,8 +75,47 @@ app.post("/api/get-activities-by-service-call", async (req, res) => {
             responsibles: data.responsibles || []
         });
     } catch (error) {
+        console.error("Error fetching activities by service call:", error.message);
         res.status(error.response?.status || 500).json({
             message: error.response?.data?.message || 'Failed to fetch activities',
+            error: error.response?.data || error.message
+        });
+    }
+});
+
+// Get Organizational Levels
+app.get("/api/get-organizational-levels", async (req, res) => {
+    try {
+        const data = await FSMService.getOrganizationalLevels();
+
+        // Extract subLevels
+        const subLevels = [];
+        if (data.level && data.level.subLevels && Array.isArray(data.level.subLevels)) {
+            data.level.subLevels.forEach((subLevel) => {
+                subLevels.push({
+                    id: subLevel.id,
+                    name: subLevel.name,
+                    shortDescription: subLevel.shortDescription || subLevel.name,
+                    longDescription: subLevel.longDescription || subLevel.name
+                });
+            });
+        }
+
+        // Verify no duplicate IDs
+        const ids = subLevels.map(s => s.id);
+        const uniqueIds = [...new Set(ids)];
+        if (ids.length !== uniqueIds.length) {
+            console.error("Backend: DUPLICATE IDs DETECTED in organizational levels!", ids);
+        }
+
+        res.json({
+            levels: subLevels
+        });
+
+    } catch (error) {
+        console.error("Error fetching organizational levels:", error.message);
+        res.status(error.response?.status || 500).json({
+            message: error.response?.data?.message || 'Failed to fetch organizational levels',
             error: error.response?.data || error.message
         });
     }
@@ -98,6 +139,7 @@ app.put("/api/update-activity", async (req, res) => {
         const data = await FSMService.updateActivity(activityId, updatePayload);
         res.json(data);
     } catch (error) {
+        console.error("Error updating activity:", error.message);
         res.status(error.response?.status || 500).json({
             message: error.response?.data?.message || 'Failed to update activity',
             error: error.response?.data || error.message

@@ -4,7 +4,7 @@
 >
     <Panel
         id="activitiesListPanel"
-        headerText="Activities ({= ${view>/serviceCallActivities}.length })"
+        headerText="Activities - {view>/selectedOrganizationLevel/text} ({= ${view>/serviceCallActivities}.length })"
         expandable="true"
         expanded="true"
         class="sapUiResponsiveMargin"

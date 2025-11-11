@@ -4,59 +4,64 @@
     xmlns="sap.m"
     xmlns:core="sap.ui.core"
     xmlns:layout="sap.ui.layout"
-    displayBlock="true"
 >
     <Page
-        id="serviceConfirmationPage"
+        id="mobileAppServiceConfirmationPage"
         title="Service Confirmation"
         showNavButton="false"
         class="sapUiContentPadding"
     >
         <content>
             <layout:VerticalLayout
-                id="mainLayout"
+                id="mobileAppMainLayout"
                 width="100%"
                 class="sapUiContentPadding"
             >
-                <!-- Service Order Details Fragment -->
+                <!-- Service Order Details Fragment - ALWAYS VISIBLE -->
                 <core:Fragment
                     fragmentName="mobileappsc.view.fragments.ServiceCall"
                     type="XML"
                 />
 
-                <!-- Activities List Fragment (NEW!) -->
+                <!-- Organization Level Fragment - ALWAYS VISIBLE -->
                 <core:Fragment
-                    fragmentName="mobileappsc.view.fragments.ActivitiesList"
+                    fragmentName="mobileappsc.view.fragments.OrganizationLevel"
                     type="XML"
                 />
 
-                <!-- Activity Selection Fragment -->
-                <core:Fragment
-                    fragmentName="mobileappsc.view.fragments.ActivitySelection"
-                    type="XML"
-                />
+                <!-- CONDITIONAL PANELS CONTAINER -->
+                <VBox 
+                    id="mobileAppConditionalPanelsContainer"
+                    visible="{view>/organizationSelected}"
+                    width="100%"
+                >
+                    <!-- Activities List Fragment - ONLY AFTER ORG SELECTION -->
+                    <core:Fragment
+                        fragmentName="mobileappsc.view.fragments.ActivitiesList"
+                        type="XML"
+                    />
 
-                <!-- Activity Details Fragment -->
-                <core:Fragment
-                    fragmentName="mobileappsc.view.fragments.ActivityDetails"
-                    type="XML"
-                />
+                    <!-- Activity Selection Fragment - ONLY AFTER ORG SELECTION -->
+                    <core:Fragment
+                        fragmentName="mobileappsc.view.fragments.ActivitySelection"
+                        type="XML"
+                    />
+
+                    <!-- Activity Details Fragment - ONLY AFTER ORG SELECTION -->
+                    <core:Fragment
+                        fragmentName="mobileappsc.view.fragments.ActivityDetails"
+                        type="XML"
+                    />
+                </VBox>
             </layout:VerticalLayout>
         </content>
 
-        <!-- Loading Indicator -->
-        <BusyIndicator
-            id="busyIndicator"
-            visible="{view>/busy}"
-            text="Loading..."
-        />
-
         <!-- Footer Toolbar -->
         <footer>
-            <OverflowToolbar id="footerToolbar">
-                <ToolbarSpacer id="footerSpacer" />
+            <OverflowToolbar id="mobileAppFooterToolbar">
+                <ToolbarSpacer id="mobileAppFooterSpacer" />
                 <Button
-                    id="refreshButton"
+                    id="mobileAppRefreshButton"
                     icon="sap-icon://refresh"
                     text="Refresh"
                     press=".onRefresh"

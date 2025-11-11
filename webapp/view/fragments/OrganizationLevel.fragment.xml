@@ -1,0 +1,38 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+>
+    <Panel
+        id="organizationLevelPanel"
+        headerText="Organization Level"
+        expandable="false"
+        expanded="true"
+        class="sapUiResponsiveMargin"
+    >
+        <VBox id="organizationLevelBox" class="sapUiSmallMargin">
+            <Label 
+                id="organizationLevelLabel" 
+                text="Select Organization Level:" 
+                design="Bold" 
+            />
+            
+            <ComboBox
+                id="organizationLevelComboBox"
+                selectionChange=".onOrganizationLevelChange"
+                placeholder="Choose organization level..."
+                width="100%"
+                busy="{view>/organizationLevelsLoading}"
+                class="sapUiTinyMarginTop"
+            >
+            </ComboBox>
+            
+            <MessageStrip
+                id="organizationLevelMessageStrip"
+                text="Please select an organization level to view activities"
+                type="Information"
+                class="sapUiTinyMarginTop"
+                visible="{= !${view>/organizationSelected} }"
+            />
+        </VBox>
+    </Panel>
+</core:FragmentDefinition>
