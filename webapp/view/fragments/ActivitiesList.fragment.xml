@@ -5,25 +5,34 @@
     <Panel
         id="activitiesListPanel"
         headerText="Activities - {view>/selectedOrganizationLevel/text} ({= ${view>/serviceCallActivities}.length })"
-        expandable="true"
+        expandable="false"
         expanded="true"
         class="sapUiResponsiveMargin"
         visible="{= ${view>/serviceCallActivities}.length > 0 }"
     >
-        <List
-            id="activitiesList"
-            items="{view>/serviceCallActivities}"
-            mode="None"
-            noDataText="No activities found"
-        >
-            <StandardListItem
-                id = "standardListItem"
-                title="{view>code} - {view>subject}"
-                description="Status: {view>status} | Type: {view>type}"
-                info="{view>executionStage}"
-                type="Active"
-                press=".onActivityPress"
+        <VBox id="activitiesListBox" class="sapUiSmallMargin">
+            <Label 
+                id="activitiesListLabel" 
+                text="Select Activity:" 
+                design="Bold" 
             />
-        </List>
+            
+            <ComboBox
+                id="activitiesComboBox"
+                selectionChange=".onActivitySelectionChange"
+                placeholder="Choose activity..."
+                width="100%"
+                class="sapUiTinyMarginTop"
+            >
+            </ComboBox>
+            
+            <MessageStrip
+                id="activitiesMessageStrip"
+                text="Please select an activity to view details"
+                type="Information"
+                class="sapUiTinyMarginTop"
+                visible="{= !${view>/activitySelected} }"
+            />
+        </VBox>
     </Panel>
 </core:FragmentDefinition>

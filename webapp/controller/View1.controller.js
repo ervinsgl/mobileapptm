@@ -15,16 +15,38 @@ sap.ui.define([
 
         formatter: formatter,
 
+        /* ========================================
+         * LIFECYCLE METHODS
+         * ======================================== */
+
         onInit() {
             this._initializeModel();
             this._loadOrganizationLevels();
             this._loadActivityFromURL();
         },
 
+        /* ========================================
+         * MODEL INITIALIZATION
+         * ======================================== */
+
         _initializeModel() {
             const viewModel = new JSONModel({
+                // Loading states
                 busy: false,
+                organizationLevelsLoading: false,
+
+                // Service Call data
                 serviceCall: { id: null, subject: null },
+
+                // Organization Level data
+                organizationLevels: [],
+                selectedOrganizationLevel: {
+                    key: null,
+                    text: "Please select organization level"
+                },
+
+                // Activities data
+                serviceCallActivities: [],
                 selectedActivity: {
                     id: null,
                     code: null,
@@ -36,22 +58,18 @@ sap.ui.define([
                     endDateTime: null
                 },
                 activityFullData: null,
-                serviceCallActivities: [],
 
-                // Organization Level data
-                organizationLevels: [],
-                organizationLevelsLoading: false,
-                selectedOrganizationLevel: {
-                    key: null,
-                    text: "Please select organization level"
-                },
-
-                // Control panel visibility
-                organizationSelected: false
+                // Panel visibility controls
+                organizationSelected: false,
+                activitySelected: false
             });
 
             this.getView().setModel(viewModel, "view");
         },
+
+        /* ========================================
+         * ORGANIZATION LEVEL MANAGEMENT
+         * ======================================== */
 
         async _loadOrganizationLevels() {
             const viewModel = this.getView().getModel("view");
@@ -63,9 +81,9 @@ sap.ui.define([
 
                 viewModel.setProperty("/organizationLevels", transformedLevels);
 
-                // Manually populate ComboBox items
+                // Populate dropdown
                 setTimeout(() => {
-                    this._populateComboBoxItems(transformedLevels);
+                    this._populateOrganizationLevelComboBox(transformedLevels);
                 }, 100);
 
             } catch (error) {
@@ -76,14 +94,12 @@ sap.ui.define([
             }
         },
 
-        _populateComboBoxItems(levels) {
+        _populateOrganizationLevelComboBox(levels) {
             const comboBox = this.byId("organizationLevelComboBox");
             if (!comboBox) return;
 
-            // Clear existing items
             comboBox.removeAllItems();
 
-            // Add items manually
             levels.forEach(level => {
                 const item = new Item({
                     key: level.key,
@@ -93,11 +109,82 @@ sap.ui.define([
             });
         },
 
-        _loadActivityFromURL() {
-            if (URLHelper.hasActivityId()) {
-                const activityId = URLHelper.getActivityId();
-                this._loadActivity(activityId);
+        async onOrganizationLevelChange(oEvent) {
+            const selectedItem = oEvent.getParameter("selectedItem");
+            if (!selectedItem) return;
+
+            const selectedKey = selectedItem.getKey();
+            const model = this.getView().getModel("view");
+            const organizationLevels = model.getProperty("/organizationLevels");
+            const selectedLevel = organizationLevels.find(level => level.key === selectedKey);
+
+            if (selectedLevel) {
+                // Update model
+                model.setProperty("/selectedOrganizationLevel", selectedLevel);
+                model.setProperty("/organizationSelected", true);
+
+                MessageToast.show(`Loading activities for: ${selectedLevel.text}`);
+
+                // Initialize activity panels
+                await this._initializeActivityPanels();
+
+                // Restore dropdown selection
+                this._restoreOrganizationLevelSelection(organizationLevels, selectedLevel.key);
+            } else {
+                console.warn("Selected level not found for key:", selectedKey);
             }
+        },
+
+        _restoreOrganizationLevelSelection(organizationLevels, selectedKey) {
+            setTimeout(() => {
+                this._populateOrganizationLevelComboBox(organizationLevels);
+                const comboBox = this.byId("organizationLevelComboBox");
+                if (comboBox) {
+                    comboBox.setSelectedKey(selectedKey);
+                }
+            }, 100);
+        },
+
+        /* ========================================
+         * ACTIVITY MANAGEMENT
+         * ======================================== */
+
+        async _initializeActivityPanels() {
+            const model = this.getView().getModel("view");
+            model.setProperty("/busy", true);
+
+            try {
+                // Reset activity data
+                this._resetActivityData();
+
+                // Load activities if URL contains activity ID
+                const currentActivityId = this._getCurrentActivityId();
+                if (currentActivityId) {
+                    await this._loadActivity(currentActivityId);
+                }
+
+            } catch (error) {
+                console.error("Error initializing activity panels:", error);
+                MessageBox.error("Failed to load activities for selected organization");
+            } finally {
+                model.setProperty("/busy", false);
+            }
+        },
+
+        _resetActivityData() {
+            const model = this.getView().getModel("view");
+            model.setProperty("/selectedActivity", {
+                id: null,
+                code: null,
+                subject: null,
+                createPerson: null,
+                type: null,
+                status: null,
+                startDateTime: null,
+                endDateTime: null
+            });
+            model.setProperty("/serviceCallActivities", []);
+            model.setProperty("/activitySelected", false);
         },
 
         async _loadActivity(activityId) {
@@ -105,11 +192,10 @@ sap.ui.define([
             viewModel.setProperty("/busy", true);
 
             try {
-                // Fetch activity
                 const response = await ActivityService.fetchActivityById(activityId);
                 const activity = ActivityService.extractActivityData(response);
 
-                // Update model
+                // Update model with activity data
                 viewModel.setProperty("/activityFullData", response);
                 viewModel.setProperty("/selectedActivity", {
                     id: activity.id,
@@ -122,11 +208,11 @@ sap.ui.define([
                     endDateTime: activity.endDateTime
                 });
 
-                // Load service call data
+                // Load service call and related activities
                 const serviceCall = ActivityService.extractServiceCallData(activity);
                 if (serviceCall) {
                     viewModel.setProperty("/serviceCall", serviceCall);
-                    this._loadServiceCallActivities(serviceCall.id);
+                    await this._loadServiceCallActivities(serviceCall.id);
                 }
 
                 MessageToast.show("Activity loaded: " + activity.subject);
@@ -144,81 +230,83 @@ sap.ui.define([
                 const activities = await ActivityService.fetchActivitiesForServiceCall(serviceCallId);
                 const viewModel = this.getView().getModel("view");
                 viewModel.setProperty("/serviceCallActivities", activities);
+
+                // Populate activities dropdown
+                setTimeout(() => {
+                    this._populateActivitiesComboBox(activities);
+                }, 100);
+
             } catch (error) {
                 console.error("Load activities error:", error);
             }
         },
 
-        async onOrganizationLevelChange(oEvent) {
+        _populateActivitiesComboBox(activities) {
+            const comboBox = this.byId("activitiesComboBox");
+            if (!comboBox) return;
+
+            comboBox.removeAllItems();
+
+            activities.forEach(activity => {
+                const item = new Item({
+                    key: activity.id,
+                    text: `${activity.code} - ${activity.subject}`
+                });
+                comboBox.addItem(item);
+            });
+        },
+
+        async onActivitySelectionChange(oEvent) {
             const selectedItem = oEvent.getParameter("selectedItem");
+            if (!selectedItem) return;
 
-            if (selectedItem) {
-                const selectedKey = selectedItem.getKey();
-                const model = this.getView().getModel("view");
-                const organizationLevels = model.getProperty("/organizationLevels");
-                const selectedLevel = organizationLevels.find(level => level.key === selectedKey);
+            const selectedActivityId = selectedItem.getKey();
+            const model = this.getView().getModel("view");
+            const activities = model.getProperty("/serviceCallActivities");
+            const selectedActivity = activities.find(activity => activity.id === selectedActivityId);
 
-                if (selectedLevel) {
-                    // Update selected organization
-                    model.setProperty("/selectedOrganizationLevel", selectedLevel);
+            if (selectedActivity) {
+                MessageToast.show(`Loading activity: ${selectedActivity.subject}`);
 
-                    // Show the activity panels
-                    model.setProperty("/organizationSelected", true);
+                // Show activity panels and load data
+                model.setProperty("/activitySelected", true);
+                await this._loadActivity(selectedActivityId);
 
-                    MessageToast.show(`Loading activities for: ${selectedLevel.text}`);
-
-                    // Load activities for this organization
-                    await this._initializeActivityPanels(selectedLevel);
-
-                    // Re-populate ComboBox items to prevent corruption
-                    setTimeout(() => {
-                        this._populateComboBoxItems(organizationLevels);
-                        const comboBox = this.byId("organizationLevelComboBox");
-                        if (comboBox) {
-                            comboBox.setSelectedKey(selectedLevel.key);
-                        }
-                    }, 100);
-                } else {
-                    console.warn("Selected level not found for key:", selectedKey);
-                }
+                // Restore dropdown selection
+                this._restoreActivitySelection(activities, selectedActivityId);
+            } else {
+                console.warn("Selected activity not found for ID:", selectedActivityId);
             }
         },
 
-        async _initializeActivityPanels(organizationLevel) {
-            const model = this.getView().getModel("view");
-            model.setProperty("/busy", true);
-
-            try {
-                // Clear previous data
-                model.setProperty("/selectedActivity", null);
-                model.setProperty("/serviceCallActivities", []);
-
-                // Load activities
-                const currentActivityId = this._getCurrentActivityId();
-                if (currentActivityId) {
-                    await this._loadActivity(currentActivityId);
+        _restoreActivitySelection(activities, selectedActivityId) {
+            setTimeout(() => {
+                this._populateActivitiesComboBox(activities);
+                const comboBox = this.byId("activitiesComboBox");
+                if (comboBox) {
+                    comboBox.setSelectedKey(selectedActivityId);
                 }
+            }, 100);
+        },
 
-            } catch (error) {
-                console.error("Error initializing activity panels:", error);
-                MessageBox.error("Failed to load activities for selected organization");
-            } finally {
-                model.setProperty("/busy", false);
+        /* ========================================
+         * URL HANDLING
+         * ======================================== */
+
+        _loadActivityFromURL() {
+            if (URLHelper.hasActivityId()) {
+                const activityId = URLHelper.getActivityId();
+                this._loadActivity(activityId);
             }
         },
 
         _getCurrentActivityId() {
-            if (URLHelper.hasActivityId()) {
-                return URLHelper.getActivityId();
-            }
-            return null;
+            return URLHelper.hasActivityId() ? URLHelper.getActivityId() : null;
         },
 
-        onActivityPress(event) {
-            const context = event.getSource().getBindingContext("view");
-            const activity = context.getObject();
-            this._loadActivity(activity.id);
-        },
+        /* ========================================
+         * USER ACTIONS
+         * ======================================== */
 
         onSelectActivity() {
             MessageBox.information(
@@ -229,18 +317,33 @@ sap.ui.define([
 
         onRefresh() {
             const model = this.getView().getModel("view");
-            const currentActivityId = model.getProperty("/selectedActivity/id");
 
-            if (currentActivityId) {
-                this._loadActivity(currentActivityId);
-            } else {
-                this._loadActivityFromURL();
-            }
+            // Reset all state
+            model.setProperty("/organizationSelected", false);
+            model.setProperty("/activitySelected", false);
+            this._resetActivityData();
 
-            // Also refresh organization levels
+            // Clear and reset dropdowns
+            this._clearAllDropdowns();
+
+            // Reload data
             this._loadOrganizationLevels();
 
             MessageToast.show("View refreshed");
+        },
+
+        _clearAllDropdowns() {
+            const orgComboBox = this.byId("organizationLevelComboBox");
+            if (orgComboBox) {
+                orgComboBox.setSelectedKey("");
+                orgComboBox.removeAllItems();
+            }
+
+            const actComboBox = this.byId("activitiesComboBox");
+            if (actComboBox) {
+                actComboBox.setSelectedKey("");
+                actComboBox.removeAllItems();
+            }
         }
     });
 });

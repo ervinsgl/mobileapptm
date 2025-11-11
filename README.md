@@ -1,6 +1,6 @@
 # FSM Mobile Integration App
 
-A SAP Fiori mobile application for SAP Field Service Management (FSM), designed to be opened from FSM Mobile as an External App or Workflow.
+A SAP Fiori mobile application for SAP Field Service Management (FSM), designed to be opened from FSM Mobile as an External App or Workflow. Features progressive disclosure UI with organization level selection and activity management.
 
 ---
 
@@ -20,11 +20,14 @@ A SAP Fiori mobile application for SAP Field Service Management (FSM), designed 
 
 ## 🎯 Overview
 
-This application provides a mobile-optimized interface for viewing and managing FSM activities. It integrates seamlessly with FSM Mobile through External Apps and Workflows.
+This application provides a mobile-optimized interface for viewing and managing FSM activities with organizational level filtering. It integrates seamlessly with FSM Mobile through External Apps and Workflows.
 
 **Key Features:**
+- ✅ Progressive disclosure UI (Organization → Activities → Details)
+- ✅ Organization level selection dropdown
+- ✅ Activity selection dropdown with filtering
 - ✅ Auto-loads activity data from FSM Mobile context
-- ✅ Displays activity details, service call information
+- ✅ Displays activity details and service call information
 - ✅ Mobile-first responsive design
 - ✅ Secure authentication via SAP BTP Destination Service
 - ✅ Direct FSM API integration
@@ -48,8 +51,10 @@ This application provides a mobile-optimized interface for viewing and managing 
 ┌─────────────────┐
 │  SAP BTP (CF)   │  (Cloud Foundry App)
 │  ┌───────────┐  │
-│  │ UI5 App   │  │  (Frontend - Fiori)
-│  │ (webapp/) │  │
+│  │ UI5 App   │  │  (Frontend - Progressive UI)
+│  │ (webapp/) │  │  1. Organization Level Selection
+│  │           │  │  2. Activity Selection  
+│  │           │  │  3. Activity Details
 │  └─────┬─────┘  │
 │        │         │
 │  ┌─────▼─────┐  │
@@ -67,7 +72,67 @@ This application provides a mobile-optimized interface for viewing and managing 
          ▼
 ┌─────────────────┐
 │   FSM API       │  (SAP Field Service Management)
+│                 │  - Organization Levels
+│                 │  - Activities by Service Call
+│                 │  - Activity Details
 └─────────────────┘
+```
+
+---
+
+## 🎨 User Experience
+
+### Progressive Disclosure UI Flow:
+
+```
+┌─────────────────────────────┐
+│ 1. Initial Load             │
+│ ┌─────────────────────────┐ │
+│ │ Service Order Panel     │ │
+│ └─────────────────────────┘ │
+│ ┌─────────────────────────┐ │
+│ │ Organization Level      │ │
+│ │ [Choose org level... ▼] │ │
+│ │ ℹ Please select...      │ │
+│ └─────────────────────────┘ │
+└─────────────────────────────┘
+          ⬇️ Select Organization
+┌─────────────────────────────┐
+│ 2. Organization Selected    │
+│ ┌─────────────────────────┐ │
+│ │ Service Order Panel     │ │
+│ └─────────────────────────┘ │
+│ ┌─────────────────────────┐ │
+│ │ Organization Level      │ │
+│ │ [TUEV-NORD_S4E     ▼] │ │
+│ └─────────────────────────┘ │
+│ ┌─────────────────────────┐ │
+│ │ Activities - TUEV... (15)│ │
+│ │ [Choose activity... ▼] │ │
+│ │ ℹ Please select activity│ │
+│ └─────────────────────────┘ │
+└─────────────────────────────┘
+          ⬇️ Select Activity
+┌─────────────────────────────┐
+│ 3. Activity Selected        │
+│ ┌─────────────────────────┐ │
+│ │ Service Order Panel     │ │
+│ └─────────────────────────┘ │
+│ ┌─────────────────────────┐ │
+│ │ Organization Level      │ │
+│ │ [TUEV-NORD_S4E     ▼] │ │
+│ └─────────────────────────┘ │
+│ ┌─────────────────────────┐ │
+│ │ Activities - TUEV... (15)│ │
+│ │ [19709 - TEST APP #23▼] │ │
+│ └─────────────────────────┘ │
+│ ┌─────────────────────────┐ │
+│ │ Activity Selection      │ │
+│ └─────────────────────────┘ │
+│ ┌─────────────────────────┐ │
+│ │ Activity Details        │ │
+│ └─────────────────────────┘ │
+└─────────────────────────────┘
 ```
 
 ---
@@ -146,17 +211,13 @@ In FSM Admin → Configuration → External Apps:
 ```json
 {
   "android": {
-    "url": "https://mobileappsc-xxx.cfapps.eu10.hana.ondemand.com/?activityId=${activity.id}&activityCode=${activity.code}&activitySubject=${activity.subject}"
+    "url": "https://mobileappsc-xxx.cfapps.eu10.hana.ondemand.com/?activityId=${activity.id}"
   },
   "ios": {
-    "url": "https://mobileappsc-xxx.cfapps.eu10.hana.ondemand.com/?activityId=${activity.id}&activityCode=${activity.code}&activitySubject=${activity.subject}"
+    "url": "https://mobileappsc-xxx.cfapps.eu10.hana.ondemand.com/?activityId=${activity.id}"
   }
 }
 ```
-
-### 7. Create Workflow (Optional)
-
-Add a workflow button to activities that opens the External App.
 
 ---
 
@@ -166,11 +227,11 @@ Add a workflow button to activities that opens the External App.
 
 1. **Technician opens FSM Mobile** → Navigates to an Activity
 2. **Clicks "External App" button** → FSM Mobile opens the app in Chrome Custom Tabs
-3. **App receives URL parameters** → `?activityId=123&activityCode=456`
-4. **Backend authenticates** → Gets OAuth token from BTP Destination Service
-5. **Fetches activity data** → Calls FSM API with authentication
-6. **Displays activity** → Shows activity details, service call info
-7. **User can refresh** → Reload button fetches latest data
+3. **App loads with Service Order panel** → Shows basic service call information
+4. **Organization levels load** → Dropdown populated from FSM API
+5. **User selects organization** → Activities dropdown appears with filtered activities
+6. **User selects activity** → Activity Selection and Activity Details panels appear
+7. **User can refresh** → Resets to initial state, reloads all data
 
 ### URL Parameters:
 
@@ -179,8 +240,6 @@ The app receives context from FSM Mobile via URL:
 ```
 https://app.cfapps.eu10.../
   ?activityId=9D92E0B18FDC4A27A213401FEEA89FDA    # Activity UUID
-  &activityCode=19687                             # Activity Code
-  &activitySubject=TEST%20APP%20#17              # Activity Subject
 ```
 
 ### Authentication Flow:
@@ -190,7 +249,7 @@ https://app.cfapps.eu10.../
 2. Gets OAuth token → Calls BTP Destination Service
 3. Retrieves FSM destination → Gets FSM API URL + credentials
 4. Gets FSM OAuth token → Authenticates with FSM
-5. Makes API call → Fetches activity data
+5. Makes API call → Fetches organization levels and activity data
 6. Token cached → Reused for 55 minutes (with 5min buffer)
 ```
 
@@ -203,24 +262,25 @@ mobileappsc/
 ├── webapp/                          # Frontend (UI5 Fiori app)
 │   ├── controller/
 │   │   ├── App.controller.js        # Root controller
-│   │   └── View1.controller.js      # Main view controller (activity display)
+│   │   └── View1.controller.js      # Main controller (structured, enterprise-grade)
 │   ├── view/
 │   │   ├── App.view.xml             # Root view (router container)
-│   │   ├── View1.view.xml           # Main view (activity details)
+│   │   ├── View1.view.xml           # Main view (progressive disclosure layout)
 │   │   └── fragments/
-│   │       ├── ServiceCall.fragment.xml       # Service call panel
-│   │       ├── ActivityDetails.fragment.xml   # Activity details panel
-│   │       └── ActivitySelection.fragment.xml # Activity picker (future use)
+│   │       ├── ServiceCall.fragment.xml         # Service call panel (always visible)
+│   │       ├── OrganizationLevel.fragment.xml   # Organization dropdown (always visible)
+│   │       ├── ActivitiesList.fragment.xml      # Activities dropdown (conditional)
+│   │       ├── ActivitySelection.fragment.xml   # Activity selection (conditional)
+│   │       └── ActivityDetails.fragment.xml     # Activity details (conditional)
 │   ├── utils/
-│   │   └── formatter.js             # Data formatting utilities
-│   ├── model/
-│   │   └── models.js                # Device model initialization
+│   │   ├── formatter.js             # Data formatting utilities
+│   │   ├── ActivityService.js       # Activity data management
+│   │   ├── URLHelper.js             # URL parameter handling
+│   │   └── OrganizationService.js   # Organization level management
 │   ├── css/
 │   │   └── style.css                # Custom styles
-│   ├── i18n/
-│   │   └── i18n.properties          # Internationalization texts
 │   ├── index.html                   # App entry point
-│   ├── manifest.json                # App descriptor (UI5 manifest)
+│   ├── manifest.json                # App descriptor (flexEnabled: true)
 │   └── Component.js                 # UI5 Component (with mobile router fix)
 │
 ├── index.js                         # Express server + FSM API integration
@@ -235,29 +295,96 @@ mobileappsc/
 
 - **`index.js`** - Express server that:
   - Serves static UI5 files
-  - Provides REST API endpoints (`/api/get-activity-by-id`, etc.)
+  - Provides REST API endpoints for activities and organization levels
   - Handles FSM API authentication via BTP Destination Service
   - Caches OAuth tokens for performance
 
 #### **Frontend:**
 
-- **`webapp/Component.js`** - UI5 component with **mobile router fix**
-  - Fixes routing issues in mobile Chrome Custom Tabs
-  - Forces navigation to View1 if route bypassed
+- **`webapp/controller/View1.controller.js`** - Main controller (enterprise-grade):
+  - Structured with clear sections (Lifecycle, Model, Organization, Activity, etc.)
+  - Manages progressive disclosure state
+  - Handles dropdown population and selection events
+  - Clean error handling and user feedback
 
-- **`webapp/controller/View1.controller.js`** - Main controller
-  - Reads URL parameters (activityId)
-  - Fetches activity data from backend API
-  - Updates view model with activity details
+- **`webapp/utils/OrganizationService.js`** - Organization management:
+  - Fetches organizational levels from FSM API
+  - Transforms data for dropdown display
+  - Handles duplicate detection
 
-- **`webapp/view/View1.view.xml`** - Main view
-  - Displays activity information
-  - Uses fragments for modular UI
+- **`webapp/view/View1.view.xml`** - Main view with conditional panels:
+  - Uses VBox containers for conditional visibility
+  - Progressive disclosure UI pattern
   - Responsive design for mobile
 
-- **`webapp/manifest.json`** - UI5 app descriptor
-  - Defines routing configuration
-  - Specifies models and dependencies
+---
+
+## 🔌 API Reference
+
+### Backend Endpoints:
+
+#### **GET /api/get-organizational-levels**
+
+Fetch available organization levels.
+
+**Response:**
+```json
+{
+  "levels": [
+    {
+      "id": "6fcb305c-17dc-428a-8b7b-cad767938560",
+      "name": "2130 - MPA Leuna GmbH",
+      "shortDescription": "2130",
+      "longDescription": "2130 - MPA Leuna GmbH"
+    }
+  ]
+}
+```
+
+#### **POST /api/get-activity-by-id**
+
+Fetch activity by ID.
+
+**Request:**
+```json
+{
+  "activityId": "9D92E0B18FDC4A27A213401FEEA89FDA"
+}
+```
+
+**Response:**
+```json
+{
+  "data": [{
+    "activity": {
+      "id": "9D92E0B18FDC4A27A213401FEEA89FDA",
+      "code": "19687",
+      "subject": "TEST APP #17",
+      "status": "IN_PROGRESS",
+      "type": "INSTALLATION"
+    }
+  }]
+}
+```
+
+#### **POST /api/get-activities-by-service-call**
+
+Fetch all activities for a service call.
+
+**Request:**
+```json
+{
+  "serviceCallId": "ABC123"
+}
+```
+
+**Response:**
+```json
+{
+  "activities": [...],
+  "responsibles": [...]
+}
+```
 
 ---
 
@@ -285,107 +412,62 @@ Open the app with test parameters:
 http://localhost:3000/?activityId=YOUR_ACTIVITY_ID
 ```
 
+The app will:
+1. Show Service Order and Organization Level panels
+2. Load organization levels automatically
+3. Allow progressive navigation through organization → activities → details
+
 ### Making Changes
 
-#### 1. **Add a new UI field:**
+#### 1. **Add a new panel to the progressive disclosure:**
 
-Edit `webapp/view/fragments/ActivityDetails.fragment.xml`:
+Edit `webapp/view/View1.view.xml` and add to the conditional containers:
 
 ```xml
-<Label text="New Field" design="Bold" class="sapUiTinyMarginTop" />
-<Text text="{view>/selectedActivity/newField}" />
+<VBox id="yourNewPanelContainer" visible="{view>/yourCondition}" width="100%">
+    <core:Fragment fragmentName="mobileappsc.view.fragments.YourPanel" type="XML" />
+</VBox>
 ```
 
-#### 2. **Add a new API endpoint:**
+#### 2. **Add a new dropdown service:**
 
-Edit `index.js`:
+Create `webapp/utils/YourService.js`:
 
 ```javascript
-app.post("/api/your-endpoint", async (req, res) => {
-    try {
-        const data = await makeFSMRequest('/YourPath', { params });
-        res.json(data);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
+sap.ui.define([], () => {
+    "use strict";
+    return {
+        async fetchYourData() {
+            const response = await fetch("/api/your-endpoint");
+            return response.json();
+        },
+        transformForDropdown(data) {
+            return data.map(item => ({
+                key: item.id,
+                text: item.name
+            }));
+        }
+    };
 });
 ```
 
-#### 3. **Add a formatter:**
-
-Edit `webapp/utils/formatter.js`:
+#### 3. **Add controller methods following the established pattern:**
 
 ```javascript
-formatYourData(value) {
-    if (!value) return "";
-    return value.toUpperCase();
-}
-```
+/* ========================================
+ * YOUR FEATURE MANAGEMENT
+ * ======================================== */
 
-### Deploy Changes
+async _loadYourData() {
+    // Follow the pattern from _loadOrganizationLevels()
+},
 
-```bash
-cf push
-```
+_populateYourComboBox(items) {
+    // Follow the pattern from _populateOrganizationLevelComboBox()
+},
 
-App updates automatically. **No need to reconfigure FSM External App!**
-
----
-
-## 🔌 API Reference
-
-### Backend Endpoints:
-
-#### **POST /api/get-activity-by-id**
-
-Fetch activity by ID.
-
-**Request:**
-```json
-{
-  "activityId": "9D92E0B18FDC4A27A213401FEEA89FDA"
-}
-```
-
-**Response:**
-```json
-{
-  "data": [{
-    "activity": {
-      "id": "9D92E0B18FDC4A27A213401FEEA89FDA",
-      "code": "19687",
-      "subject": "TEST APP #17",
-      "status": "IN_PROGRESS",
-      "type": "INSTALLATION",
-      ...
-    }
-  }]
-}
-```
-
-#### **POST /api/get-activity-by-code**
-
-Fetch activity by external code.
-
-**Request:**
-```json
-{
-  "activityCode": "19687"
-}
-```
-
-#### **PUT /api/update-activity**
-
-Update activity fields.
-
-**Request:**
-```json
-{
-  "activityId": "9D92E0B18FDC4A27A213401FEEA89FDA",
-  "startDateTime": "2025-11-07T10:00:00Z",
-  "endDateTime": "2025-11-07T12:00:00Z",
-  "remarks": "Work completed",
-  "status": "COMPLETED"
+async onYourSelectionChange(oEvent) {
+    // Follow the pattern from onOrganizationLevelChange()
 }
 ```
 
@@ -393,41 +475,29 @@ Update activity fields.
 
 ## 🐛 Troubleshooting
 
-### Issue: Blank screen on mobile
+### Issue: Organization dropdown not populating
 
-**Cause:** Mobile Chrome Custom Tabs don't initialize router properly.
+**Cause:** FSM API credentials or organizational levels API failure.
 
-**Solution:** Already fixed in `Component.js` with mobile router fix:
-```javascript
-router.attachBypassed(function() {
-    router.navTo("RouteView1", {}, true);
-});
-```
+**Solution:** Check logs and verify FSM_API destination configuration.
 
-### Issue: "Destination service not bound"
+### Issue: Activities dropdown shows no items
 
-**Cause:** Destination service not bound to app.
+**Cause:** No activities found for the service call or organization filter.
 
-**Solution:**
-```bash
-cf bind-service mobileappsc mobileappsc-destination
-cf restage mobileappsc
-```
+**Solution:** Verify the service call has activities in FSM.
 
-### Issue: "Activity not found (404)"
+### Issue: Panels not showing after selection
 
-**Cause:** FSM API credentials or destination config incorrect.
+**Cause:** Model binding issue or conditional visibility not updating.
 
-**Solution:** Check BTP Destination configuration (FSM_API).
+**Solution:** Check browser console for binding errors. Verify model properties are set correctly.
 
-### Issue: Token expired
+### Issue: Dropdown selection gets corrupted
 
-**Cause:** FSM OAuth token expired (cached for 55 min).
+**Cause:** ComboBox items binding conflict.
 
-**Solution:** Token auto-refreshes. If issue persists, restart app:
-```bash
-cf restart mobileappsc
-```
+**Solution:** Already handled with manual item population and restoration logic.
 
 ### View Logs:
 
@@ -437,34 +507,13 @@ cf logs mobileappsc --recent
 
 ---
 
-## 📊 Monitoring
-
-### View App Status:
-
-```bash
-cf app mobileappsc
-```
-
-### View Recent Logs:
-
-```bash
-cf logs mobileappsc --recent
-```
-
-### Stream Live Logs:
-
-```bash
-cf logs mobileappsc
-```
-
----
-
 ## 🔐 Security Notes
 
 - OAuth tokens are **cached in memory** (not persisted)
 - Destination credentials stored in **VCAP_SERVICES** (secure)
-- **No sensitive data** logged to console
+- **No sensitive data** logged to console (production-clean)
 - App uses **HTTPS only** (enforced by Cloud Foundry)
+- Unique IDs enforced for **flexEnabled** compliance
 
 ---
 
@@ -475,26 +524,36 @@ cf logs mobileappsc
 | **App Name**                       | FSM Mobile Integration                                   |
 | **Module Name**                    | mobileappsc                                              |
 | **Framework**                      | SAP UI5 (Fiori) + Node.js Express                        |
+| **UI Design Pattern**              | Progressive Disclosure                                   |
 | **UI5 Theme**                      | sap_horizon                                              |
 | **UI5 Version**                    | Latest (loaded from CDN)                                 |
 | **Deployment Platform**            | SAP Business Technology Platform (Cloud Foundry)         |
 | **Development Platform**           | SAP Business Application Studio                          |
-| **TypeScript**                     | No                                                       |
-| **Target Device**                  | Mobile (FSM Mobile - iOS/Android)                        |
+| **Code Quality**                   | Enterprise-grade, structured, production-ready          |
 
 ---
 
-## 🚀 Future Enhancements
+## 🚀 Current Features
 
-Planned features (not yet implemented):
+### ✅ **Implemented:**
+- Progressive disclosure UI (Organization → Activities → Details)
+- Organization level selection with FSM API integration
+- Activity dropdown with filtering by service call
+- Conditional panel visibility based on user selections
+- Clean, structured controller with enterprise coding standards
+- Production-ready error handling and user feedback
+- Mobile-optimized responsive design
+- Dropdown corruption prevention with manual item management
 
-- [ ] Activity list selection dialog
-- [ ] Service confirmation creation
-- [ ] Materials tracking
-- [ ] Time entry logging
-- [ ] Expense tracking
-- [ ] Photo upload
-- [ ] Signature capture
+### 🔄 **In Development:**
+- Activity Selection panel functionality
+- Activity Details panel enhancements
+
+### 📋 **Planned:**
+- Service confirmation creation
+- Materials tracking
+- Time entry logging
+- Expense tracking
 
 ---
 
@@ -503,8 +562,9 @@ Planned features (not yet implemented):
 For issues or questions:
 1. Check logs: `cf logs mobileappsc --recent`
 2. Verify BTP Destination configuration
-3. Test in desktop browser first (easier debugging)
-4. Contact your SAP BTP administrator
+3. Test progressive disclosure flow: Organization → Activities → Details
+4. Check browser console for model binding issues
+5. Contact your SAP BTP administrator
 
 ---
 

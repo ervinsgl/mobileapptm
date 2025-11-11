@@ -29,25 +29,32 @@
                     type="XML"
                 />
 
-                <!-- CONDITIONAL PANELS CONTAINER -->
+                <!-- ACTIVITIES DROPDOWN - ONLY AFTER ORG SELECTION -->
                 <VBox 
-                    id="mobileAppConditionalPanelsContainer"
+                    id="activitiesDropdownContainer"
                     visible="{view>/organizationSelected}"
                     width="100%"
                 >
-                    <!-- Activities List Fragment - ONLY AFTER ORG SELECTION -->
+                    <!-- Activities List Fragment (now dropdown) -->
                     <core:Fragment
                         fragmentName="mobileappsc.view.fragments.ActivitiesList"
                         type="XML"
                     />
+                </VBox>
 
-                    <!-- Activity Selection Fragment - ONLY AFTER ORG SELECTION -->
+                <!-- ACTIVITY PANELS - ONLY AFTER ACTIVITY SELECTION -->
+                <VBox 
+                    id="activityPanelsContainer"
+                    visible="{view>/activitySelected}"
+                    width="100%"
+                >
+                    <!-- Activity Selection Fragment - ONLY AFTER ACTIVITY SELECTION -->
                     <core:Fragment
                         fragmentName="mobileappsc.view.fragments.ActivitySelection"
                         type="XML"
                     />
 
-                    <!-- Activity Details Fragment - ONLY AFTER ORG SELECTION -->
+                    <!-- Activity Details Fragment - ONLY AFTER ACTIVITY SELECTION -->
                     <core:Fragment
                         fragmentName="mobileappsc.view.fragments.ActivityDetails"
                         type="XML"
