@@ -204,20 +204,141 @@ cf app mobileappsc
 
 Copy the URL (e.g., `https://mobileappsc-xxx.cfapps.eu10.hana.ondemand.com`)
 
-### 6. Configure FSM External App
+### 6. Create FSM User Defined Field (UDF)
 
-In FSM Admin → Configuration → External Apps:
+#### 6.1 Create Custom Field Definition
+Navigate to: **FSM Admin → Company → Custom Objects → Custom Field Definitions**
 
-```json
-{
-  "android": {
-    "url": "https://mobileappsc-xxx.cfapps.eu10.hana.ondemand.com/?activityId=${activity.id}"
-  },
-  "ios": {
-    "url": "https://mobileappsc-xxx.cfapps.eu10.hana.ondemand.com/?activityId=${activity.id}"
-  }
-}
+1. **Click "Create" and configure:**
+   - **Name:** `Z_externalAppLink`
+   - **External ID:** `Z_externalAppLink`
+   - **Description:** `Service Confirmation App`
+   - **Object Type:** `Activity`
+   - **Type:** `String`
+   - **Classification Level:** `INTERNAL`
+   - **Mandatory:** Unchecked
+   - **Preserved:** Checked (to retain data during sync)
+
+2. **Click "Save"**
+
+#### 6.2 Add UDF to Mobile Screen Configuration
+Navigate to: **FSM Admin → Companies → [Your Company] → Screen Configurations**
+
+1. **Select:** `Activity Mobile` (or your custom activity screen)
+2. **Click the pencil icon** to edit
+3. **In the Fields section:**
+   - Find or drag `udfMeta.Z_externalAppLink` to desired position
+4. **Configure field settings (Basic settings tab):**
+   - **Label/Translation:** `Service Confirmation App` (or your preferred label)
+   - **Description:** `Service Confirmation App`
+   - **Name:** `Z_externalAppLink`
+   - **Default value:** `Default` (leave empty)
+5. **Configure Advanced settings:**
+   - **Visible expression:** Leave empty (always visible) or add condition
+   - **Editable expression:** `false` (read-only, populated by Business Rule)
+   - **Required expression:** Leave empty (not mandatory)
+6. **Click "Save"**
+
+> **Note:** The UDF will display as plain text with the full URL. SAP FSM mobile does not support clickable hyperlinks with custom text in UDF fields.
+
+---
+
+### 7. Configure FSM Business Rule
+
+Navigate to: **FSM Admin → Company → Business Rules → Create**
+
+#### 7.1 Business Rule Header Configuration
+1. **Create new Business Rule:**
+   - **Code:** `Z_GenerateExternalAppLink` (use your naming convention)
+   - **Name:** `Generate External App Link (10.112025)`
+   - **Type:** `Three - new transaction behavior of business rule actions`
+   - **Enabled:** ✓ Checked
+   - **Technical Contact:** `[your-email@company.com]`
+
+#### 7.2 Trigger Configuration
+**Trigger on:**
+- **Event:** `FSM Event`
+- **FSM Event:** `ActivityCreatedEvent`
+
+**Variables:**
+| Variable Name | Variable Type | Object      | Object Version | CoreSQL WHERE Clause |
+|--------------|---------------|-------------|----------------|---------------------|
+| fsmEvent     | Object        | -           | -              | -                   |
+| activity     | Object        | Activity    | 43             | `activity.id=${fsmEvent.activityId}` |
+| servicecall  | Object        | ServiceCall | 27             | `servicecall.id=${activity.object.objectId}` |
+
+**Conditions:**
 ```
+${servicecall.typeName} == 'External App Testing'
+```
+> This ensures the BR only triggers for specific service call types
+
+#### 7.3 Execute Action Configuration
+**Action #1: Update Object**
+- **Action:** `Update Object`
+- **Execution Count:** `1`
+- **Object Id:** `${activity.id}`
+- **Object Type:** `Activity`
+- **Soft Update:** Unchecked
+
+**Fields to Update:**
+
+| Name | Value |
+|------|-------|
+| udf_Z_externalAppLink | `${"https://mobileappsc-delightful-tiger-mv.cfapps.eu10.hana.ondemand.com/?activityId=" + activity.id}` |
+
+> **Alternative with additional parameters:**
+> ```
+> ${"https://mobileappsc-delightful-tiger-mv.cfapps.eu10.hana.ondemand.com/?activityId=" + activity.id + "Service Confirmation App[/xurl]"}
+> ```
+
+#### 7.4 Save and Validate
+1. **Click "Save"**
+2. **Click "Validate"** to check for syntax errors
+3. **Click "Execute"** to test with existing activity (optional)
+
+---
+
+### 7.5 Expected Result
+
+**On Activity Creation:**
+- When a new Activity is created with Service Call type = "External App Testing"
+- The Business Rule automatically populates `udf_Z_externalAppLink`
+- The UDF contains: `https://mobileappsc-delightful-tiger-mv.cfapps.eu10.hana.ondemand.com/?activityId=A98EA0FBFAB24F13B663A0EFB39A0DE5`
+
+**On FSM Mobile:**
+- Technician opens the Activity
+- Sees field labeled "Service Confirmation App"
+- Field displays the full URL (not clickable with custom text)
+- Technician must copy/paste URL or long-press to open
+
+---
+
+### 7.6 Limitations & Workarounds
+
+**Current Limitation:**
+SAP FSM UDF fields of type "String" display as plain text only. BB Code formats like `[xurl=URL]text[/xurl]` and HTML anchor tags `<a href="">` are **not supported** in mobile UDF fields.
+
+**Alternative Solutions:**
+
+1. **Service Workflow with External App Launch:**
+   - Navigate to: Admin → Company → Service Workflow
+   - Add workflow step with "Launch External App" action
+   - Configure custom button text and URL with activity parameters
+
+2. **HTML Report with Clickable Link:**
+   - Use Business Rule action "Build HTML Report"
+   - Create HTML template with proper anchor tag: `<a href="${activity.udfMeta.Z_externalAppLink}">Open Service Confirmation</a>`
+   - Attach report to activity
+
+3. **Email Notification:**
+   - Use Business Rule action "Send Email"
+   - Include HTML formatted link in email body
+   - Technician receives notification with clickable link
+
+4. **URL Shortener:**
+   - Use bit.ly or similar service
+   - Store shortened URL in UDF for better readability
 
 ---
 
