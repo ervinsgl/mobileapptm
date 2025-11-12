@@ -59,6 +59,12 @@ sap.ui.define([
                 },
                 activityFullData: null,
 
+                // T&M Reporting data
+                tmReporting: {
+                    date: "",
+                    createPerson: ""
+                },
+
                 // Panel visibility controls
                 organizationSelected: false,
                 activitySelected: false
@@ -185,6 +191,12 @@ sap.ui.define([
             });
             model.setProperty("/serviceCallActivities", []);
             model.setProperty("/activitySelected", false);
+            
+            // Reset T&M Reporting data
+            model.setProperty("/tmReporting", {
+                date: "",
+                createPerson: ""
+            });
         },
 
         async _loadActivity(activityId) {
@@ -344,6 +356,28 @@ sap.ui.define([
                 actComboBox.setSelectedKey("");
                 actComboBox.removeAllItems();
             }
+        },
+
+        /* ========================================
+         * T&M REPORTING
+         * ======================================== */
+
+        onSendForApproval() {
+            const model = this.getView().getModel("view");
+            const tmData = model.getProperty("/tmReporting");
+
+            const payload = {
+                date: tmData.date || "",
+                createPerson: tmData.createPerson || ""
+            };
+
+            MessageBox.information(
+                JSON.stringify(payload, null, 2),
+                {
+                    title: "T&M Reporting Data",
+                    contentWidth: "400px"
+                }
+            );
         }
     });
 });

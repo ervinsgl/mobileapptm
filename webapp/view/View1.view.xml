@@ -54,9 +54,9 @@
                         type="XML"
                     />
 
-                    <!-- Activity Details Fragment - ONLY AFTER ACTIVITY SELECTION -->
+                    <!-- T&M REPORTING TABLE - REPLACES ACTIVITY DETAILS -->
                     <core:Fragment
-                        fragmentName="mobileappsc.view.fragments.ActivityDetails"
+                        fragmentName="mobileappsc.view.fragments.TMReporting"
                         type="XML"
                     />
                 </VBox>

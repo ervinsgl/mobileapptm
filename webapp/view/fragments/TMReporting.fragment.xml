@@ -1,0 +1,60 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout"
+    xmlns:f="sap.ui.layout.form">
+    
+    <Panel
+        id="tmReportingPanel"
+        headerText="T&amp;M Reporting"
+        class="sapUiResponsiveMargin"
+        width="auto"
+        visible="{view>/activitySelected}">
+        
+        <content>
+            <!-- T&M Table -->
+            <Table
+                id="tmReportingTable"
+                inset="false"
+                class="sapUiSmallMarginTop">
+                
+                <columns>
+                    <Column id="tmDateColumn" width="50%">
+                        <Text id="tmDateHeaderText" text="Date" />
+                    </Column>
+                    <Column id="tmTechnicianColumn" width="50%">
+                        <Text id="tmTechnicianHeaderText" text="Technician" />
+                    </Column>
+                </columns>
+                
+                <items>
+                    <ColumnListItem id="tmReportingRow">
+                        <cells>
+                            <Input
+                                id="tmDateInput"
+                                value="{view>/tmReporting/date}"
+                                placeholder="Enter date"
+                                width="100%" />
+                            <Input
+                                id="tmTechnicianInput"
+                                value="{view>/tmReporting/createPerson}"
+                                placeholder="Enter technician"
+                                width="100%" />
+                        </cells>
+                    </ColumnListItem>
+                </items>
+            </Table>
+            
+            <!-- Send Button -->
+            <Button
+                id="tmSendForApprovalButton"
+                text="Send for approval!"
+                type="Emphasized"
+                press="onSendForApproval"
+                width="100%"
+                class="sapUiSmallMarginTop" />
+            
+        </content>
+    </Panel>
+    
+</core:FragmentDefinition>
