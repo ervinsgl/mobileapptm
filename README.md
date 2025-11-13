@@ -65,7 +65,7 @@ This application provides a mobile-optimized interface for viewing and managing 
          │ OAuth Token
          ▼
 ┌─────────────────┐
-│ BTP Destination │  (FSM_API destination)
+│ BTP Destination │  (FSM_S4E destination)
 │    Service      │
 └────────┬────────┘
          │ Authenticated Request
@@ -148,7 +148,7 @@ This application provides a mobile-optimized interface for viewing and managing 
 
 ### SAP BTP Services:
 - **Destination Service** - Bound to the application
-- **Destination Configuration** - FSM_API destination configured
+- **Destination Configuration** - FSM_S4E destination configured
 
 ---
 
@@ -164,10 +164,10 @@ npm install
 
 ### 2. Configure BTP Destination
 
-Create a destination named **FSM_API** in SAP BTP Cockpit:
+Create a destination named **FSM_S4E** in SAP BTP Cockpit:
 
 ```
-Name: FSM_API
+Name: FSM_S4E
 Type: HTTP
 URL: https://de.fsm.cloud.sap/api/data/v4
 Authentication: OAuth2ClientCredentials
@@ -600,7 +600,7 @@ async onYourSelectionChange(oEvent) {
 
 **Cause:** FSM API credentials or organizational levels API failure.
 
-**Solution:** Check logs and verify FSM_API destination configuration.
+**Solution:** Check logs and verify FSM_S4E destination configuration.
 
 ### Issue: Activities dropdown shows no items
 

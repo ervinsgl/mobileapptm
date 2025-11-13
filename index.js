@@ -60,7 +60,7 @@ app.post("/api/get-activity-by-code", async (req, res) => {
     }
 });
 
-// Get Activities by Service Call ID
+// Get Activities by Service Call ID (Composite Tree)
 app.post("/api/get-activities-by-service-call", async (req, res) => {
     const { serviceCallId } = req.body;
 
@@ -69,11 +69,9 @@ app.post("/api/get-activities-by-service-call", async (req, res) => {
     }
 
     try {
+        // Return the COMPLETE composite-tree response
         const data = await FSMService.getActivitiesForServiceCall(serviceCallId);
-        res.json({
-            activities: data.activities || [],
-            responsibles: data.responsibles || []
-        });
+        res.json(data);
     } catch (error) {
         console.error("Error fetching activities by service call:", error.message);
         res.status(error.response?.status || 500).json({

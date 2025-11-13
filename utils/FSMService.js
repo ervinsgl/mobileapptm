@@ -15,7 +15,7 @@ class FSMService {
      */
     async makeRequest(path, params = {}) {
         try {
-            const destination = await DestinationService.getDestination('FSM_API');
+            const destination = await DestinationService.getDestination('FSM_S4E');
             const token = await TokenCache.getToken(destination);
 
             const baseUrl = destination.destinationConfiguration.URL;
@@ -68,7 +68,7 @@ class FSMService {
      */
     async getActivitiesForServiceCall(serviceCallId) {
         try {
-            const destination = await DestinationService.getDestination('FSM_API');
+            const destination = await DestinationService.getDestination('FSM_S4E');
             const token = await TokenCache.getToken(destination);
 
             // Get base cloud host (remove /api/data/v4 from URL)
@@ -106,7 +106,7 @@ class FSMService {
      */
     async getOrganizationalLevels() {
         try {
-            const destination = await DestinationService.getDestination('FSM_API');
+            const destination = await DestinationService.getDestination('FSM_S4E');
             const token = await TokenCache.getToken(destination);
 
             // Get base cloud host (remove /api/data/v4 from URL) 
@@ -141,7 +141,7 @@ class FSMService {
      * Update activity
      */
     async updateActivity(activityId, updateData) {
-        const destination = await DestinationService.getDestination('FSM_API');
+        const destination = await DestinationService.getDestination('FSM_S4E');
         const token = await TokenCache.getToken(destination);
 
         const baseUrl = destination.destinationConfiguration.URL;

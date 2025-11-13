@@ -6,9 +6,10 @@ sap.ui.define([
     "sap/ui/core/Item",
     "mobileappsc/utils/formatter",
     "mobileappsc/utils/ActivityService",
+    "mobileappsc/utils/ServiceOrderService",
     "mobileappsc/utils/URLHelper",
     "mobileappsc/utils/OrganizationService"
-], (Controller, JSONModel, MessageToast, MessageBox, Item, formatter, ActivityService, URLHelper, OrganizationService) => {
+], (Controller, JSONModel, MessageToast, MessageBox, Item, formatter, ActivityService, ServiceOrderService, URLHelper, OrganizationService) => {
     "use strict";
 
     return Controller.extend("mobileappsc.controller.View1", {
@@ -36,7 +37,15 @@ sap.ui.define([
                 organizationLevelsLoading: false,
 
                 // Service Call data
-                serviceCall: { id: null, subject: null },
+                serviceCall: { 
+                    id: null, 
+                    externalId: null,
+                    subject: null,
+                    businessPartnerExternalId: null,
+                    responsibleExternalId: null,
+                    earliestStartDateTime: null,
+                    dueDateTime: null
+                },
 
                 // Organization Level data
                 organizationLevels: [],
@@ -200,12 +209,20 @@ sap.ui.define([
         },
 
         async _loadActivity(activityId) {
+            console.log('\n========================================');
+            console.log('CONTROLLER: Load Activity');
+            console.log('========================================');
+            console.log('Activity ID:', activityId);
+            
             const viewModel = this.getView().getModel("view");
             viewModel.setProperty("/busy", true);
 
             try {
                 const response = await ActivityService.fetchActivityById(activityId);
+                
+                console.log('\n--- CONTROLLER: Extracting Activity Data ---');
                 const activity = ActivityService.extractActivityData(response);
+                console.log('Extracted Activity:', activity);
 
                 // Update model with activity data
                 viewModel.setProperty("/activityFullData", response);
@@ -221,7 +238,10 @@ sap.ui.define([
                 });
 
                 // Load service call and related activities
+                console.log('\n--- CONTROLLER: Extracting Service Call Data ---');
                 const serviceCall = ActivityService.extractServiceCallData(activity);
+                console.log('Service Call:', serviceCall);
+                
                 if (serviceCall) {
                     viewModel.setProperty("/serviceCall", serviceCall);
                     await this._loadServiceCallActivities(serviceCall.id);
@@ -230,6 +250,9 @@ sap.ui.define([
                 MessageToast.show("Activity loaded: " + activity.subject);
 
             } catch (error) {
+                console.error('\n========================================');
+                console.error('CONTROLLER: Load Activity ERROR');
+                console.error('========================================');
                 console.error("Load activity error:", error);
                 MessageBox.error("Failed to load activity: " + error.message);
             } finally {
@@ -238,17 +261,52 @@ sap.ui.define([
         },
 
         async _loadServiceCallActivities(serviceCallId) {
+            console.log('\n========================================');
+            console.log('CONTROLLER: Load Service Call Activities');
+            console.log('========================================');
+            console.log('Service Call ID:', serviceCallId);
+            
             try {
-                const activities = await ActivityService.fetchActivitiesForServiceCall(serviceCallId);
+                // Fetch composite tree data (contains both service order and activities)
+                const compositeData = await ServiceOrderService.fetchServiceCallById(serviceCallId);
+                
+                // Extract service order data
+                console.log('\n--- CONTROLLER: Extracting Service Order Data ---');
+                const serviceOrderData = ServiceOrderService.extractServiceOrderData(compositeData);
+                
+                // Extract activities
+                console.log('\n--- CONTROLLER: Extracting Activities ---');
+                const allActivities = ServiceOrderService.extractActivitiesFromCompositeTree(compositeData);
+                
+                // Filter EXECUTION activities using ActivityService
+                const executionActivities = allActivities.filter(activity => 
+                    activity.executionStage === "EXECUTION"
+                );
+                
+                console.log('\n--- CONTROLLER: Filtered EXECUTION Activities ---');
+                console.log('EXECUTION activities count:', executionActivities.length);
+                
                 const viewModel = this.getView().getModel("view");
-                viewModel.setProperty("/serviceCallActivities", activities);
+                
+                // Update service order data
+                if (serviceOrderData) {
+                    console.log('\n--- CONTROLLER: Setting Service Order Data ---');
+                    console.log('Service Order Data:', serviceOrderData);
+                    viewModel.setProperty("/serviceCall", serviceOrderData);
+                }
+                
+                // Set activities
+                viewModel.setProperty("/serviceCallActivities", executionActivities);
 
                 // Populate activities dropdown
                 setTimeout(() => {
-                    this._populateActivitiesComboBox(activities);
+                    this._populateActivitiesComboBox(executionActivities);
                 }, 100);
 
             } catch (error) {
+                console.error('\n========================================');
+                console.error('CONTROLLER: Load Service Call Activities ERROR');
+                console.error('========================================');
                 console.error("Load activities error:", error);
             }
         },
