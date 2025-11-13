@@ -6,17 +6,29 @@
     <Panel
         id="serviceCallPanel"
         headerText="Service Order"
-        expandable="true"
+        expandable="false"
         expanded="true"
-        class="sapUiResponsiveMargin"
+        class="sapUiResponsiveMargin sapUiSmallMarginBottom serviceOrderPanel"
         width="auto"
     >
+        <headerToolbar>
+            <OverflowToolbar 
+                design="Solid"
+                class="serviceOrderHeader">
+                <Title 
+                    text="Service Order" 
+                    level="H4" 
+                    titleStyle="H4"
+                    class="sapUiTinyMarginBegin serviceOrderHeaderTitle"
+                />
+            </OverflowToolbar>
+        </headerToolbar>
+        
         <l:Grid
             id="serviceCallGrid"
             defaultSpan="L6 M6 S12"
             class="sapUiSmallMargin"
         >
-            <!-- ID -->
             <VBox>
                 <Label text="ID" design="Bold" />
                 <Text 
@@ -24,7 +36,6 @@
                 />
             </VBox>
             
-            <!-- External ID -->
             <VBox>
                 <Label 
                     text="External ID" 
@@ -35,7 +46,6 @@
                 />
             </VBox>
             
-            <!-- Subject (spans full width) -->
             <VBox class="sapUiTinyMarginTop">
                 <layoutData>
                     <l:GridData id="serviceCallSubjectGridData" span="L12 M12 S12" />
@@ -49,7 +59,6 @@
                 />
             </VBox>
             
-            <!-- Business Partner External ID -->
             <VBox class="sapUiTinyMarginTop">
                 <Label 
                     text="Business Partner" 
@@ -60,7 +69,6 @@
                 />
             </VBox>
             
-            <!-- Responsible External ID -->
             <VBox class="sapUiTinyMarginTop">
                 <Label 
                     text="Responsible" 
@@ -71,7 +79,6 @@
                 />
             </VBox>
             
-            <!-- Earliest Start Date Time -->
             <VBox class="sapUiTinyMarginTop">
                 <Label 
                     text="Earliest Start" 
@@ -85,7 +92,6 @@
                 />
             </VBox>
             
-            <!-- Due Date Time -->
             <VBox class="sapUiTinyMarginTop">
                 <Label 
                     text="Due Date" 

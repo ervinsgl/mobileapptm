@@ -1,1 +1,358 @@
-/* Enter your custom styles here */
+/* ========================================
+   Enhanced Styling for Mobile App SC
+   Option B - Professional Blue Theme
+   ======================================== */
+
+/* ========================================
+   SERVICE ORDER PANEL STYLING
+   ======================================== */
+
+.serviceOrderPanel {
+    border: 1px solid #d9d9d9;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.serviceOrderPanel .sapMPanelHdr {
+    border-radius: 4px 4px 0 0;
+    overflow: hidden;
+}
+
+.serviceOrderHeader {
+    background: linear-gradient(to right, #0854a0, #1873cd) !important;
+    border-radius: 4px 4px 0 0;
+}
+
+.serviceOrderHeaderTitle {
+    color: white !important;
+    font-weight: 600;
+}
+
+/* ========================================
+   ORGANIZATION LEVEL PANEL STYLING
+   ======================================== */
+
+.organizationLevelPanel {
+    border: 1px solid #d9d9d9;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.organizationLevelPanel .sapMPanelHdr {
+    border-radius: 4px 4px 0 0;
+    overflow: hidden;
+}
+
+.organizationLevelHeader {
+    background: linear-gradient(to right, #0854a0, #1873cd) !important;
+    border-radius: 4px 4px 0 0;
+}
+
+.organizationLevelHeaderTitle {
+    color: white !important;
+    font-weight: 600;
+}
+
+/* ========================================
+   PRODUCT GROUP PANEL STYLING
+   ======================================== */
+
+.productGroupPanel {
+    border: 1px solid #d9d9d9;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.3s ease;
+}
+
+.productGroupPanel:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.productGroupPanel .sapMPanelHdr {
+    border-radius: 4px 4px 0 0;
+    overflow: hidden;
+}
+
+.productGroupPanel .sapMPanelContent {
+    padding: 0;
+    background-color: #ffffff;
+}
+
+.productGroupHeader {
+    background: linear-gradient(to right, #0854a0, #1873cd) !important;
+    border-radius: 4px 4px 0 0;
+}
+
+.productGroupHeaderTitle,
+.productGroupHeaderLabel {
+    color: white !important;
+}
+
+.productGroupHeaderTitle {
+    font-weight: 600;
+}
+
+.productGroupHeaderLabel {
+    font-size: 0.95rem;
+    font-weight: bold;
+}
+
+/* ========================================
+   ACTIVITIES TABLE STYLING
+   ======================================== */
+
+.activitiesTable {
+    border: none;
+}
+
+.activitiesTableToolbar {
+    background-color: #f0f0f0 !important;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.activitiesTableToolbar .sapMTitle {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.activitiesTable .sapMListTblHeaderCell {
+    background-color: #f7f7f7;
+    font-weight: 600;
+    border-bottom: 2px solid #0854a0;
+}
+
+.activitiesTable .sapMListTbl tbody tr:nth-child(odd) {
+    background-color: #ffffff;
+}
+
+.activitiesTable .sapMListTbl tbody tr:nth-child(even) {
+    background-color: #fafafa;
+}
+
+.activitiesTable .sapMListTblRow:hover {
+    background-color: #e8f4ff !important;
+    cursor: pointer;
+}
+
+.activitiesTable .sapMLIBSelected {
+    background-color: #d4edff !important;
+    border-left: 3px solid #0854a0;
+}
+
+/* ========================================
+   STATUS COLORS
+   ======================================== */
+
+.sapMObjectStatus.sapMObjectStatusWarning {
+    color: #e09d00;
+    font-weight: 600;
+}
+
+.sapMObjectStatus.sapMObjectStatusSuccess {
+    color: #107e3e;
+    font-weight: 600;
+}
+
+.sapMObjectStatus.sapMObjectStatusError {
+    color: #b00;
+    font-weight: 600;
+}
+
+/* ========================================
+   OBJECTIDENTIFIER STYLING
+   ======================================== */
+
+.sapMObjectIdentifier .sapMObjectIdentifierTitle {
+    font-weight: 600;
+    color: #0854a0;
+}
+
+.sapMObjectIdentifier .sapMObjectIdentifierText {
+    font-size: 0.875rem;
+    color: #666;
+}
+
+/* ========================================
+   LINK STYLING
+   ======================================== */
+
+.sapMLink {
+    color: #0854a0;
+    font-weight: 500;
+}
+
+.sapMLink:hover {
+    text-decoration: underline;
+    color: #1873cd;
+}
+
+/* ========================================
+   MESSAGE STRIP STYLING
+   ======================================== */
+
+.sapMMsgStrip.sapMMsgStripInformation {
+    background-color: #e5f4ff;
+    border-left: 3px solid #0854a0;
+}
+
+/* ========================================
+   COMBOBOX STYLING
+   ======================================== */
+
+.sapMComboBox:focus-within {
+    border-color: #0854a0;
+    box-shadow: 0 0 0 2px rgba(8, 84, 160, 0.1);
+}
+
+/* ========================================
+   TOUCH TARGETS
+   ======================================== */
+
+.sapMBtn,
+.sapMLink,
+.sapMCb {
+    min-height: 44px;
+    min-width: 44px;
+}
+
+/* ========================================
+   SELECTION CHECKBOX STYLING
+   ======================================== */
+
+.sapMLIBSelectM {
+    padding: 0 8px;
+}
+
+/* ========================================
+   PANEL ANIMATIONS
+   ======================================== */
+
+.sapMPanel .sapMPanelContent {
+    transition: max-height 0.3s ease-in-out;
+}
+
+/* ========================================
+   STICKY HEADERS
+   ======================================== */
+
+.sapMListTbl.sapMListTblHasNav .sapMListTblHeaderCell {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: #f0f0f0;
+}
+
+/* ========================================
+   DISABLED STATES
+   ======================================== */
+
+.sapMInputBaseDisabled,
+.sapMInputBaseReadonly {
+    background-color: #f7f7f7;
+    color: #666;
+}
+
+/* ========================================
+   LOADING INDICATOR
+   ======================================== */
+
+.sapMBusyIndicator {
+    z-index: 1000;
+}
+
+/* ========================================
+   SCROLLBAR STYLING
+   ======================================== */
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* ========================================
+   RESPONSIVE ADJUSTMENTS
+   ======================================== */
+
+@media (max-width: 600px) {
+    .productGroupPanel,
+    .organizationLevelPanel,
+    .serviceOrderPanel {
+        margin-bottom: 12px;
+    }
+    
+    .sapMListTbl .sapMListTblCell {
+        padding: 8px 4px;
+    }
+    
+    .productGroupHeaderTitle,
+    .organizationLevelHeaderTitle,
+    .serviceOrderHeaderTitle {
+        font-size: 0.95rem;
+    }
+    
+    .productGroupHeaderLabel {
+        font-size: 0.85rem;
+    }
+}
+
+@media (min-width: 601px) and (max-width: 1024px) {
+    .productGroupPanel,
+    .organizationLevelPanel,
+    .serviceOrderPanel {
+        margin-bottom: 16px;
+    }
+}
+
+@media (min-width: 1025px) {
+    .productGroupPanel:hover,
+    .organizationLevelPanel:hover,
+    .serviceOrderPanel:hover {
+        transform: translateY(-2px);
+        transition: transform 0.2s ease, box-shadow 0.3s ease;
+    }
+}
+
+/* ========================================
+   ACCESSIBILITY
+   ======================================== */
+
+.sapMListTblRow:focus,
+.sapMComboBox:focus {
+    outline: 2px solid #0854a0;
+    outline-offset: 2px;
+}
+
+@media (prefers-contrast: high) {
+    .productGroupHeader,
+    .organizationLevelHeader,
+    .serviceOrderHeader {
+        border: 2px solid white;
+    }
+    
+    .activitiesTable .sapMListTblRow:hover {
+        border: 2px solid #0854a0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .productGroupPanel,
+    .organizationLevelPanel,
+    .serviceOrderPanel,
+    .sapMPanel .sapMPanelContent {
+        transition: none;
+    }
+}

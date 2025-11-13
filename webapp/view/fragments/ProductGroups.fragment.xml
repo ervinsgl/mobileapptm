@@ -4,15 +4,6 @@
 >
     <VBox id="productGroupsMainContainer" class="sapUiResponsiveMargin">
         
-        <!-- Header -->
-        <Title 
-            id="productGroupsTitle"
-            text="Activities - {view>/selectedOrganizationLevel/text} ({view>/productGroups/length})" 
-            level="H3"
-            class="sapUiSmallMarginBottom"
-        />
-        
-        <!-- List of Product Groups -->
         <VBox id="productGroupsContainer">
             <List
                 id="productGroupsList"
@@ -22,145 +13,125 @@
             >
                 <CustomListItem type="Inactive">
                     
-                    <!-- Product Panel (Level 1) -->
                     <Panel
                         headerText="Product: {view>productDescription}"
                         expandable="true"
                         expanded="{view>expanded}"
                         expand="onProductPanelExpand"
-                        class="sapUiSmallMarginBottom"
-                        width="100%"
+                        class="sapUiSmallMarginBottom productGroupPanel"
+                        width="auto"
                     >
                         <headerToolbar>
-                            <Toolbar>
-                                <Title text="Product: {view>productDescription}" level="H4" />
+                            <OverflowToolbar 
+                                design="Solid"
+                                class="productGroupHeader">
+                                <Title 
+                                    text="Product: {view>productDescription}" 
+                                    level="H4" 
+                                    titleStyle="H4"
+                                    class="sapUiTinyMarginBegin productGroupHeaderTitle"
+                                    wrapping="true"
+                                />
                                 <ToolbarSpacer />
                                 <Label 
-                                    text="SO Item ID: {view>soItemId}" 
+                                    text="SO Item: {view>soItemId}" 
                                     design="Bold"
+                                    class="sapUiTinyMarginEnd productGroupHeaderLabel"
                                 />
-                            </Toolbar>
+                            </OverflowToolbar>
                         </headerToolbar>
                         
                         <content>
-                            <VBox class="sapUiSmallMargin">
+                            <Table 
+                                id="activitiesTable"
+                                items="{view>activities}"
+                                mode="MultiSelect"
+                                selectionChange="onActivitySelectionChange"
+                                class="sapUiSmallMarginTop activitiesTable"
+                                alternateRowColors="true"
+                                sticky="ColumnHeaders"
+                            >
+                                <headerToolbar>
+                                    <OverflowToolbar class="activitiesTableToolbar">
+                                        <Title 
+                                            text="{= ${view>activities}.length + ' Activities'}" 
+                                            level="H5"
+                                        />
+                                    </OverflowToolbar>
+                                </headerToolbar>
                                 
-                                <!-- Activities Count Info -->
-                                <HBox class="sapUiTinyMarginBottom">
-                                    <Label 
-                                        text="{view>activities/length} activities" 
-                                    />
-                                </HBox>
+                                <columns>
+                                    <Column width="12%" minScreenWidth="Tablet" demandPopin="true">
+                                        <Text text="Activity Code" class="sapUiSmallMarginBegin"/>
+                                    </Column>
+                                    <Column width="28%" minScreenWidth="Desktop" demandPopin="true" popinDisplay="Inline">
+                                        <Text text="Subject"/>
+                                    </Column>
+                                    <Column width="12%" minScreenWidth="Tablet" demandPopin="true" hAlign="Center">
+                                        <Text text="Status"/>
+                                    </Column>
+                                    <Column width="15%" minScreenWidth="Desktop" demandPopin="true">
+                                        <Text text="Planned Start"/>
+                                    </Column>
+                                    <Column width="15%" minScreenWidth="Desktop" demandPopin="true">
+                                        <Text text="Planned End"/>
+                                    </Column>
+                                    <Column width="10%" minScreenWidth="Tablet" demandPopin="true" hAlign="Center">
+                                        <Text text="Duration"/>
+                                    </Column>
+                                    <Column width="8%" minScreenWidth="Desktop" demandPopin="true" hAlign="Center">
+                                        <Text text="Details"/>
+                                    </Column>
+                                </columns>
                                 
-                                <!-- List of Activities (Level 2) -->
-                                <VBox>
-                                    <List
-                                        items="{view>activities}"
-                                        mode="None"
-                                        showSeparators="Inner"
+                                <items>
+                                    <ColumnListItem 
+                                        type="Active"
+                                        press="onActivityPress"
                                     >
-                                        <CustomListItem type="Active" press="onActivityPress">
+                                        <cells>
+                                            <ObjectIdentifier 
+                                                title="{view>code}"
+                                                text="{view>fullActivity/externalId}"
+                                            />
                                             
-                                            <!-- Activity Panel -->
-                                            <Panel
-                                                expandable="true"
-                                                expanded="{view>activityExpanded}"
-                                                class="sapUiTinyMarginBottom"
-                                                width="100%"
-                                                backgroundDesign="Translucent"
-                                            >
-                                                <headerToolbar>
-                                                    <Toolbar>
-                                                        <Title 
-                                                            text="{view>code} - {view>subject}" 
-                                                            level="H5"
-                                                        />
-                                                    </Toolbar>
-                                                </headerToolbar>
-                                                
-                                                <content>
-                                                    <VBox class="sapUiSmallMargin">
-                                                        
-                                                        <!-- Activity Details in 3 columns -->
-                                                        <HBox justifyContent="SpaceBetween">
-                                                            
-                                                            <!-- Column 1 -->
-                                                            <VBox width="32%">
-                                                                <Label text="External ID" design="Bold" />
-                                                                <Text text="{view>fullActivity/externalId}" class="sapUiTinyMarginBottom" />
-                                                                
-                                                                <Label text="Status" design="Bold" class="sapUiTinyMarginTop" />
-                                                                <Text text="{view>status}" class="sapUiTinyMarginBottom" />
-                                                                
-                                                                <Label text="Type" design="Bold" class="sapUiTinyMarginTop" />
-                                                                <Text text="{view>type}" class="sapUiTinyMarginBottom" />
-                                                                
-                                                                <Label text="Stage" design="Bold" class="sapUiTinyMarginTop" />
-                                                                <Text text="{view>executionStage}" class="sapUiTinyMarginBottom" />
-                                                            </VBox>
-                                                            
-                                                            <!-- Column 2 -->
-                                                            <VBox width="32%">
-                                                                <Label text="Activity ID" design="Bold" />
-                                                                <Text text="{view>id}" class="sapUiTinyMarginBottom" />
-                                                                
-                                                                <Label text="Planned Duration (min)" design="Bold" class="sapUiTinyMarginTop" />
-                                                                <Text text="{view>fullActivity/plannedDurationInMinutes}" class="sapUiTinyMarginBottom" />
-                                                                
-                                                                <Label text="Planned Start" design="Bold" class="sapUiTinyMarginTop" />
-                                                                <Text 
-                                                                    text="{
-                                                                        path: 'view>plannedStartDate',
-                                                                        formatter: '.formatter.formatDateTime'
-                                                                    }" 
-                                                                    class="sapUiTinyMarginBottom"
-                                                                />
-                                                                
-                                                                <Label text="Planned End" design="Bold" class="sapUiTinyMarginTop" />
-                                                                <Text 
-                                                                    text="{
-                                                                        path: 'view>plannedEndDate',
-                                                                        formatter: '.formatter.formatDateTime'
-                                                                    }" 
-                                                                />
-                                                            </VBox>
-                                                            
-                                                            <!-- Column 3 -->
-                                                            <VBox width="32%">
-                                                                <Label text="Organization Level ID" design="Bold" />
-                                                                <Text text="{view>fullActivity/orgLevelIds/0}" class="sapUiTinyMarginBottom" />
-                                                                
-                                                                <Label text="Address" design="Bold" class="sapUiTinyMarginTop" />
-                                                                <Text text="{view>fullActivity/address/street} {view>fullActivity/address/streetNumber}" class="sapUiTinyMarginBottom" />
-                                                                <Text text="{view>fullActivity/address/city}" class="sapUiTinyMarginBottom" />
-                                                                
-                                                                <Label text="Service Product" design="Bold" class="sapUiTinyMarginTop" />
-                                                                <Text text="{view>fullActivity/serviceProduct/externalId}" class="sapUiTinyMarginBottom" />
-                                                                
-                                                                <Label text="Responsible" design="Bold" class="sapUiTinyMarginTop" />
-                                                                <Text text="{view>fullActivity/responsibles/0/externalId}" />
-                                                            </VBox>
-                                                        </HBox>
-                                                        
-                                                        <!-- Action Button -->
-                                                        <HBox justifyContent="End" class="sapUiSmallMarginTop">
-                                                            <Button
-                                                                text="Select Activity"
-                                                                type="Emphasized"
-                                                                press="onSelectActivityPress"
-                                                                icon="sap-icon://action"
-                                                            />
-                                                        </HBox>
-                                                        
-                                                    </VBox>
-                                                </content>
-                                            </Panel>
+                                            <Text 
+                                                text="{view>subject}" 
+                                                class="sapUiSmallMarginBegin"
+                                                wrapping="true"
+                                            />
                                             
-                                        </CustomListItem>
-                                    </List>
-                                </VBox>
-                                
-                            </VBox>
+                                            <ObjectStatus 
+                                                text="{view>status}" 
+                                                state="{= ${view>status} === 'OPEN' ? 'Warning' : ${view>status} === 'COMPLETED' ? 'Success' : 'None'}"
+                                            />
+                                            
+                                            <Text 
+                                                text="{
+                                                    path: 'view>plannedStartDate',
+                                                    formatter: '.formatter.formatDateTime'
+                                                }"
+                                            />
+                                            
+                                            <Text 
+                                                text="{
+                                                    path: 'view>plannedEndDate',
+                                                    formatter: '.formatter.formatDateTime'
+                                                }"
+                                            />
+                                            
+                                            <Text 
+                                                text="{view>fullActivity/plannedDurationInMinutes} min"
+                                            />
+                                            
+                                            <Link 
+                                                text="View" 
+                                                press="onViewActivityDetails"
+                                            />
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
                         </content>
                     </Panel>
                     

@@ -7,32 +7,52 @@
         headerText="Organization Level"
         expandable="false"
         expanded="true"
-        class="sapUiResponsiveMargin"
+        class="sapUiResponsiveMargin sapUiSmallMarginBottom organizationLevelPanel"
+        width="auto"
     >
-        <VBox id="organizationLevelBox" class="sapUiSmallMargin">
-            <Label 
-                id="organizationLevelLabel" 
-                text="Select Organization Level:" 
-                design="Bold" 
-            />
-            
-            <ComboBox
-                id="organizationLevelComboBox"
-                selectionChange=".onOrganizationLevelChange"
-                placeholder="Choose organization level..."
-                width="100%"
-                busy="{view>/organizationLevelsLoading}"
-                class="sapUiTinyMarginTop"
-            >
-            </ComboBox>
-            
-            <MessageStrip
-                id="organizationLevelMessageStrip"
-                text="Please select an organization level to view activities"
-                type="Information"
-                class="sapUiTinyMarginTop"
-                visible="{= !${view>/organizationSelected} }"
-            />
-        </VBox>
+        <headerToolbar>
+            <OverflowToolbar 
+                design="Solid"
+                class="organizationLevelHeader">
+                <Title 
+                    text="Organization Level" 
+                    level="H4" 
+                    titleStyle="H4"
+                    class="sapUiTinyMarginBegin organizationLevelHeaderTitle"
+                />
+            </OverflowToolbar>
+        </headerToolbar>
+        
+        <content>
+            <VBox id="organizationLevelBox" class="sapUiSmallMargin">
+                <Label 
+                    id="organizationLevelLabel" 
+                    text="Select Organization Level:" 
+                    design="Bold" 
+                    class="sapUiTinyMarginBottom"
+                />
+                
+                <ComboBox
+                    id="organizationLevelComboBox"
+                    selectionChange=".onOrganizationLevelChange"
+                    placeholder="Choose organization level..."
+                    width="100%"
+                    busy="{view>/organizationLevelsLoading}"
+                    class="sapUiTinyMarginTop"
+                    valueState="{view>/orgLevelState}"
+                    valueStateText="{view>/orgLevelStateText}"
+                >
+                </ComboBox>
+                
+                <MessageStrip
+                    id="organizationLevelMessageStrip"
+                    text="Please select an organization level to view activities"
+                    type="Information"
+                    class="sapUiTinyMarginTop"
+                    visible="{= !${view>/organizationSelected} }"
+                    showIcon="true"
+                />
+            </VBox>
+        </content>
     </Panel>
 </core:FragmentDefinition>

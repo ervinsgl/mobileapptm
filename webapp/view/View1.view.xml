@@ -17,46 +17,26 @@
                 width="100%"
                 class="sapUiContentPadding"
             >
-                <!-- Service Order Details Fragment - ALWAYS VISIBLE -->
+                <!-- Service Order Details Fragment -->
                 <core:Fragment
                     fragmentName="mobileappsc.view.fragments.ServiceCall"
                     type="XML"
                 />
 
-                <!-- Organization Level Fragment - ALWAYS VISIBLE -->
+                <!-- Organization Level Fragment -->
                 <core:Fragment
                     fragmentName="mobileappsc.view.fragments.OrganizationLevel"
                     type="XML"
                 />
 
-                <!-- PRODUCT GROUPS - ONLY AFTER ORG SELECTION -->
+                <!-- Product Groups Fragment -->
                 <VBox 
                     id="productGroupsOuterContainer"
                     visible="{view>/organizationSelected}"
                     width="100%"
                 >
-                    <!-- Product Groups Fragment (UDF-based grouping) -->
                     <core:Fragment
                         fragmentName="mobileappsc.view.fragments.ProductGroups"
-                        type="XML"
-                    />
-                </VBox>
-
-                <!-- ACTIVITY PANELS - ONLY AFTER ACTIVITY SELECTION -->
-                <VBox 
-                    id="activityPanelsContainer"
-                    visible="{view>/activitySelected}"
-                    width="100%"
-                >
-                    <!-- Activity Selection Fragment - ONLY AFTER ACTIVITY SELECTION -->
-                    <core:Fragment
-                        fragmentName="mobileappsc.view.fragments.ActivitySelection"
-                        type="XML"
-                    />
-
-                    <!-- T&M REPORTING TABLE - REPLACES ACTIVITY DETAILS -->
-                    <core:Fragment
-                        fragmentName="mobileappsc.view.fragments.TMReporting"
                         type="XML"
                     />
                 </VBox>
