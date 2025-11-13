@@ -29,15 +29,15 @@
                     type="XML"
                 />
 
-                <!-- ACTIVITIES DROPDOWN - ONLY AFTER ORG SELECTION -->
+                <!-- PRODUCT GROUPS - ONLY AFTER ORG SELECTION -->
                 <VBox 
-                    id="activitiesDropdownContainer"
+                    id="productGroupsOuterContainer"
                     visible="{view>/organizationSelected}"
                     width="100%"
                 >
-                    <!-- Activities List Fragment (now dropdown) -->
+                    <!-- Product Groups Fragment (UDF-based grouping) -->
                     <core:Fragment
-                        fragmentName="mobileappsc.view.fragments.ActivitiesList"
+                        fragmentName="mobileappsc.view.fragments.ProductGroups"
                         type="XML"
                     />
                 </VBox>

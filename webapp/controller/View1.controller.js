@@ -7,9 +7,10 @@ sap.ui.define([
     "mobileappsc/utils/formatter",
     "mobileappsc/utils/ActivityService",
     "mobileappsc/utils/ServiceOrderService",
+    "mobileappsc/utils/ProductGroupService",
     "mobileappsc/utils/URLHelper",
     "mobileappsc/utils/OrganizationService"
-], (Controller, JSONModel, MessageToast, MessageBox, Item, formatter, ActivityService, ServiceOrderService, URLHelper, OrganizationService) => {
+], (Controller, JSONModel, MessageToast, MessageBox, Item, formatter, ActivityService, ServiceOrderService, ProductGroupService, URLHelper, OrganizationService) => {
     "use strict";
 
     return Controller.extend("mobileappsc.controller.View1", {
@@ -54,8 +55,10 @@ sap.ui.define([
                     text: "Please select organization level"
                 },
 
-                // Activities data
-                serviceCallActivities: [],
+                // Product Groups (UDF-based grouping)
+                productGroups: [],
+
+                // Selected activity data
                 selectedActivity: {
                     id: null,
                     code: null,
@@ -198,7 +201,7 @@ sap.ui.define([
                 startDateTime: null,
                 endDateTime: null
             });
-            model.setProperty("/serviceCallActivities", []);
+            model.setProperty("/productGroups", []);
             model.setProperty("/activitySelected", false);
             
             // Reset T&M Reporting data
@@ -278,13 +281,28 @@ sap.ui.define([
                 console.log('\n--- CONTROLLER: Extracting Activities ---');
                 const allActivities = ServiceOrderService.extractActivitiesFromCompositeTree(compositeData);
                 
-                // Filter EXECUTION activities using ActivityService
+                // Filter EXECUTION activities
                 const executionActivities = allActivities.filter(activity => 
                     activity.executionStage === "EXECUTION"
                 );
                 
                 console.log('\n--- CONTROLLER: Filtered EXECUTION Activities ---');
                 console.log('EXECUTION activities count:', executionActivities.length);
+                
+                // Group activities by Product Description and Parent Item ID
+                console.log('\n--- CONTROLLER: Creating Product Groups ---');
+                const productGroups = ProductGroupService.groupActivitiesByProduct(
+                    executionActivities, 
+                    serviceOrderData.externalId
+                );
+                
+                // Add expanded properties for UI
+                productGroups.forEach(group => {
+                    group.expanded = false; // Product panel collapsed by default
+                    group.activities.forEach(activity => {
+                        activity.activityExpanded = false; // Activity panel collapsed by default
+                    });
+                });
                 
                 const viewModel = this.getView().getModel("view");
                 
@@ -295,13 +313,10 @@ sap.ui.define([
                     viewModel.setProperty("/serviceCall", serviceOrderData);
                 }
                 
-                // Set activities
-                viewModel.setProperty("/serviceCallActivities", executionActivities);
-
-                // Populate activities dropdown
-                setTimeout(() => {
-                    this._populateActivitiesComboBox(executionActivities);
-                }, 100);
+                // Set product groups
+                console.log('\n--- CONTROLLER: Setting Product Groups ---');
+                console.log('Product groups count:', productGroups.length);
+                viewModel.setProperty("/productGroups", productGroups);
 
             } catch (error) {
                 console.error('\n========================================');
@@ -311,52 +326,12 @@ sap.ui.define([
             }
         },
 
-        _populateActivitiesComboBox(activities) {
-            const comboBox = this.byId("activitiesComboBox");
-            if (!comboBox) return;
-
-            comboBox.removeAllItems();
-
-            activities.forEach(activity => {
-                const item = new Item({
-                    key: activity.id,
-                    text: `${activity.code} - ${activity.subject}`
-                });
-                comboBox.addItem(item);
-            });
-        },
-
-        async onActivitySelectionChange(oEvent) {
-            const selectedItem = oEvent.getParameter("selectedItem");
-            if (!selectedItem) return;
-
-            const selectedActivityId = selectedItem.getKey();
-            const model = this.getView().getModel("view");
-            const activities = model.getProperty("/serviceCallActivities");
-            const selectedActivity = activities.find(activity => activity.id === selectedActivityId);
-
-            if (selectedActivity) {
-                MessageToast.show(`Loading activity: ${selectedActivity.subject}`);
-
-                // Show activity panels and load data
-                model.setProperty("/activitySelected", true);
-                await this._loadActivity(selectedActivityId);
-
-                // Restore dropdown selection
-                this._restoreActivitySelection(activities, selectedActivityId);
-            } else {
-                console.warn("Selected activity not found for ID:", selectedActivityId);
+        _clearAllDropdowns() {
+            const orgComboBox = this.byId("organizationLevelComboBox");
+            if (orgComboBox) {
+                orgComboBox.setSelectedKey("");
+                orgComboBox.removeAllItems();
             }
-        },
-
-        _restoreActivitySelection(activities, selectedActivityId) {
-            setTimeout(() => {
-                this._populateActivitiesComboBox(activities);
-                const comboBox = this.byId("activitiesComboBox");
-                if (comboBox) {
-                    comboBox.setSelectedKey(selectedActivityId);
-                }
-            }, 100);
         },
 
         /* ========================================
@@ -378,13 +353,6 @@ sap.ui.define([
          * USER ACTIONS
          * ======================================== */
 
-        onSelectActivity() {
-            MessageBox.information(
-                "Activity selection will be implemented here.",
-                { title: "Activity Selection" }
-            );
-        },
-
         onRefresh() {
             const model = this.getView().getModel("view");
 
@@ -402,17 +370,52 @@ sap.ui.define([
             MessageToast.show("View refreshed");
         },
 
-        _clearAllDropdowns() {
-            const orgComboBox = this.byId("organizationLevelComboBox");
-            if (orgComboBox) {
-                orgComboBox.setSelectedKey("");
-                orgComboBox.removeAllItems();
-            }
+        /* ========================================
+         * PRODUCT GROUP MANAGEMENT
+         * ======================================== */
 
-            const actComboBox = this.byId("activitiesComboBox");
-            if (actComboBox) {
-                actComboBox.setSelectedKey("");
-                actComboBox.removeAllItems();
+        onProductPanelExpand(oEvent) {
+            const expanded = oEvent.getParameter("expand");
+            const panel = oEvent.getSource();
+            const bindingContext = panel.getBindingContext("view");
+            
+            console.log('\n--- Product Panel Expanded ---');
+            console.log('Expanded:', expanded);
+            console.log('Product:', bindingContext.getProperty("productDescription"));
+        },
+
+        onActivityPress(oEvent) {
+            const listItem = oEvent.getSource();
+            const bindingContext = listItem.getBindingContext("view");
+            const activityPath = bindingContext.getPath();
+            const model = this.getView().getModel("view");
+            
+            // Toggle activity panel expansion
+            const currentExpanded = model.getProperty(activityPath + "/activityExpanded");
+            model.setProperty(activityPath + "/activityExpanded", !currentExpanded);
+            
+            console.log('\n--- Activity Panel Toggled ---');
+            console.log('Activity:', bindingContext.getProperty("subject"));
+            console.log('New Expanded State:', !currentExpanded);
+        },
+
+        onSelectActivityPress(oEvent) {
+            const button = oEvent.getSource();
+            const bindingContext = button.getBindingContext("view");
+            const activity = bindingContext.getObject();
+            
+            console.log('\n========================================');
+            console.log('CONTROLLER: Activity Selected');
+            console.log('========================================');
+            console.log('Activity ID:', activity.id);
+            console.log('Activity Code:', activity.code);
+            console.log('Activity Subject:', activity.subject);
+            
+            if (activity && activity.id) {
+                MessageToast.show(`Loading activity: ${activity.subject}`);
+                
+                // Load the full activity data
+                this._loadActivity(activity.id);
             }
         },
 
