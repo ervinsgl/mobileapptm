@@ -9,8 +9,9 @@ sap.ui.define([
     "mobileappsc/utils/ServiceOrderService",
     "mobileappsc/utils/ProductGroupService",
     "mobileappsc/utils/URLHelper",
-    "mobileappsc/utils/OrganizationService"
-], (Controller, JSONModel, MessageToast, MessageBox, Item, formatter, ActivityService, ServiceOrderService, ProductGroupService, URLHelper, OrganizationService) => {
+    "mobileappsc/utils/OrganizationService",
+    "mobileappsc/utils/ReportedItemsData"
+], (Controller, JSONModel, MessageToast, MessageBox, Item, formatter, ActivityService, ServiceOrderService, ProductGroupService, URLHelper, OrganizationService, ReportedItemsData) => {
     "use strict";
 
     return Controller.extend("mobileappsc.controller.View1", {
@@ -239,6 +240,14 @@ sap.ui.define([
                 isClosed: isClosed,
                 isReadOnly: isClosed,
                 
+                // T&M Reports flags
+                tmReportsExpanded: false,
+                tmReportsLoaded: false,
+                tmReportsLoading: false,
+                tmReportsCount: 0,
+                tmReports: [],
+                tmIconClass: 'expandIcon',
+                
                 // Pre-calculated CSS classes
                 textClass: isClosed ? 'closedActivityText' : '',
                 
@@ -351,6 +360,63 @@ sap.ui.define([
                 const productPath = bindingContext.getPath();
                 const model = this.getView().getModel("view");
                 model.setProperty(productPath + "/expanded", expanded);
+            }
+        },
+
+        /**
+         * Toggle T&M Reports for an activity
+         */
+        async onToggleTMReports(oEvent) {
+            const oIcon = oEvent.getSource();
+            const oContext = oIcon.getBindingContext("view");
+            
+            if (!oContext) {
+                return;
+            }
+            
+            const sPath = oContext.getPath();
+            const oModel = this.getView().getModel("view");
+            const oActivity = oContext.getObject();
+            
+            // Toggle expanded state
+            const bCurrentState = oModel.getProperty(sPath + "/tmReportsExpanded");
+            const bNewState = !bCurrentState;
+            
+            oModel.setProperty(sPath + "/tmReportsExpanded", bNewState);
+            oModel.setProperty(sPath + "/tmIconClass", bNewState ? 'expandIcon expandIconRotated' : 'expandIcon');
+            
+            // If expanding and reports not loaded yet, fetch them
+            if (bNewState && !oModel.getProperty(sPath + "/tmReportsLoaded")) {
+                await this._loadTMReports(sPath, oActivity.id);
+            }
+        },
+
+        /**
+         * Load T&M Reports for an activity
+         */
+        async _loadTMReports(activityPath, activityId) {
+            const oModel = this.getView().getModel("view");
+            
+            oModel.setProperty(activityPath + "/tmReportsLoading", true);
+            
+            try {
+                console.log("Loading T&M reports for activity:", activityId);
+                
+                const reports = await ReportedItemsData.getReportedItems(activityId);
+                
+                oModel.setProperty(activityPath + "/tmReports", reports);
+                oModel.setProperty(activityPath + "/tmReportsCount", reports.length);
+                oModel.setProperty(activityPath + "/tmReportsLoaded", true);
+                
+                console.log(`Loaded ${reports.length} T&M reports`);
+                
+            } catch (error) {
+                console.error("Error loading T&M reports:", error);
+                MessageToast.show("Failed to load T&M reports");
+                oModel.setProperty(activityPath + "/tmReports", []);
+                oModel.setProperty(activityPath + "/tmReportsCount", 0);
+            } finally {
+                oModel.setProperty(activityPath + "/tmReportsLoading", false);
             }
         }
     });

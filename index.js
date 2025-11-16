@@ -145,6 +145,61 @@ app.put("/api/update-activity", async (req, res) => {
     }
 });
 
+// Get Reported Items (T&M) for Activity
+app.post("/api/get-reported-items", async (req, res) => {
+    const { activityId } = req.body;
+
+    if (!activityId) {
+        return res.status(400).json({ message: 'Activity ID is required' });
+    }
+
+    try {
+        // Fetch all 4 types in parallel
+        const [timeEfforts, materials, expenses, mileages] = await Promise.all([
+            FSMService.getTimeEffortsForActivity(activityId),
+            FSMService.getMaterialsForActivity(activityId),
+            FSMService.getExpensesForActivity(activityId),
+            FSMService.getMileagesForActivity(activityId)
+        ]);
+
+        // Combine all results
+        const allItems = [
+            ...timeEfforts.map(item => ({
+                type: "Time Effort",
+                id: item.id,
+                createDateTime: item.createDateTime
+            })),
+            ...materials.map(item => ({
+                type: "Material",
+                id: item.id,
+                createDateTime: item.createDateTime
+            })),
+            ...expenses.map(item => ({
+                type: "Expense",
+                id: item.id,
+                createDateTime: item.createDateTime
+            })),
+            ...mileages.map(item => ({
+                type: "Mileage",
+                id: item.id,
+                createDateTime: item.createDateTime
+            }))
+        ];
+
+        res.json({
+            items: allItems,
+            count: allItems.length
+        });
+
+    } catch (error) {
+        console.error("Error fetching reported items:", error.message);
+        res.status(error.response?.status || 500).json({
+            message: error.response?.data?.message || 'Failed to fetch reported items',
+            error: error.response?.data || error.message
+        });
+    }
+});
+
 // Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

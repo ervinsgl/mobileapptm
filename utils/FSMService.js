@@ -74,7 +74,7 @@ class FSMService {
             // Get base cloud host (remove /api/data/v4 from URL)
             const baseUrl = destination.destinationConfiguration.URL;
             const cloudHost = baseUrl.replace('/api/data/v4', '');
-            
+
             // Build service-management API URL
             const fullUrl = `${cloudHost}/api/service-management/v2/composite-tree/service-calls/${serviceCallId}`;
 
@@ -90,9 +90,9 @@ class FSMService {
             };
 
             const response = await axios.get(fullUrl, { headers });
-            
+
             console.log('Activities response:', response.data);
-            
+
             return response.data;
 
         } catch (error) {
@@ -112,7 +112,7 @@ class FSMService {
             // Get base cloud host (remove /api/data/v4 from URL) 
             const baseUrl = destination.destinationConfiguration.URL;
             const cloudHost = baseUrl.replace('/api/data/v4', '');
-            
+
             // Build organizational levels API URL
             const fullUrl = `${cloudHost}/cloud-org-level-service/api/v1/levels`;
 
@@ -126,9 +126,9 @@ class FSMService {
             };
 
             const response = await axios.get(fullUrl, { headers });
-            
+
             console.log('Organizational levels response:', response.data);
-            
+
             return response.data;
 
         } catch (error) {
@@ -168,6 +168,134 @@ class FSMService {
         });
 
         return response.data;
+    }
+
+    /**
+ * Make Query API request (for /api/query/v1 endpoints)
+ */
+    async makeQueryRequest(query, dtos) {
+        try {
+            const destination = await DestinationService.getDestination('FSM_S4E');
+            const token = await TokenCache.getToken(destination);
+
+            const baseUrl = destination.destinationConfiguration.URL;
+            const queryUrl = `${baseUrl}/api/query/v1`;
+
+            const queryParams = {
+                query: query,
+                dtos: dtos,
+                account: destination.destinationConfiguration.account || this.config.account,
+                company: destination.destinationConfiguration.company || this.config.company
+            };
+
+            const headers = {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+                'X-Account-ID': destination.destinationConfiguration['URL.headers.X-Account-ID'],
+                'X-Company-ID': destination.destinationConfiguration['URL.headers.X-Company-ID'],
+                'X-Client-ID': destination.destinationConfiguration['URL.headers.X-Client-ID'],
+                'X-Client-Version': destination.destinationConfiguration['URL.headers.X-Client-Version']
+            };
+
+            const response = await axios.get(queryUrl, {
+                params: queryParams,
+                headers: headers
+            });
+
+            return response.data;
+
+        } catch (error) {
+            console.error('FSM Query API Error:', error.response?.data || error.message);
+            throw error;
+        }
+    }
+
+    /**
+     * Get Time Efforts for activity
+     */
+    async getTimeEffortsForActivity(activityId) {
+        try {
+            const query = `SELECT timeEffort.id, timeEffort.createDateTime FROM TimeEffort timeEffort WHERE timeEffort.object.objectId = '${activityId}'`;
+            const data = await this.makeQueryRequest(query, 'TimeEffort.17');
+
+            if (!data.data || data.data.length === 0) {
+                return [];
+            }
+
+            return data.data.map(item => ({
+                id: item.timeEffort.id,
+                createDateTime: item.timeEffort.createDateTime
+            }));
+        } catch (error) {
+            console.error("Error fetching time efforts:", error);
+            return [];
+        }
+    }
+
+    /**
+     * Get Materials for activity
+     */
+    async getMaterialsForActivity(activityId) {
+        try {
+            const query = `SELECT w.id, w.createDateTime FROM Material w WHERE w.object.objectId = '${activityId}'`;
+            const data = await this.makeQueryRequest(query, 'Material.22');
+
+            if (!data.data || data.data.length === 0) {
+                return [];
+            }
+
+            return data.data.map(item => ({
+                id: item.w.id,
+                createDateTime: item.w.createDateTime
+            }));
+        } catch (error) {
+            console.error("Error fetching materials:", error);
+            return [];
+        }
+    }
+
+    /**
+     * Get Expenses for activity
+     */
+    async getExpensesForActivity(activityId) {
+        try {
+            const query = `SELECT w.id, w.createDateTime FROM Expense w WHERE w.object.objectId = '${activityId}'`;
+            const data = await this.makeQueryRequest(query, 'Expense.17');
+
+            if (!data.data || data.data.length === 0) {
+                return [];
+            }
+
+            return data.data.map(item => ({
+                id: item.w.id,
+                createDateTime: item.w.createDateTime
+            }));
+        } catch (error) {
+            console.error("Error fetching expenses:", error);
+            return [];
+        }
+    }
+
+    /**
+     * Get Mileages for activity
+     */
+    async getMileagesForActivity(activityId) {
+        try {
+            const query = `SELECT w.id, w.createDateTime FROM Mileage w WHERE w.object.objectId = '${activityId}'`;
+            const data = await this.makeQueryRequest(query, 'Mileage.19');
+
+            if (!data.data || data.data.length === 0) {
+                return [];
+            }
+
+            return data.data.map(item => ({
+                id: item.w.id,
+                createDateTime: item.w.createDateTime
+            }));
+        } catch (error) {
+            console.error("Error fetching mileages:", error);
+            return [];
+        }
     }
 }
 
