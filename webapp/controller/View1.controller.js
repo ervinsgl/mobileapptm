@@ -46,10 +46,6 @@ sap.ui.define([
 
                 productGroups: [],
 
-                selectedActivities: [],
-                selectedActivitiesCount: 0,
-                hasActivitySelection: false,
-
                 organizationSelected: false
             });
 
@@ -149,8 +145,6 @@ sap.ui.define([
         _resetActivityData() {
             const model = this.getView().getModel("view");
             model.setProperty("/productGroups", []);
-            model.setProperty("/selectedActivities", []);
-            model.setProperty("/selectedActivitiesCount", 0);
         },
 
         async _loadActivity(activityId) {
@@ -162,8 +156,6 @@ sap.ui.define([
             try {
                 const response = await ActivityService.fetchActivityById(activityId);
                 const activity = ActivityService.extractActivityData(response);
-
-                viewModel.setProperty("/activityFullData", activity.rawData);
 
                 const serviceCall = ActivityService.extractServiceCallData(activity);
                 
@@ -190,18 +182,25 @@ sap.ui.define([
                 const serviceOrderData = ServiceOrderService.extractServiceOrderData(compositeData);
                 const allActivities = ServiceOrderService.extractActivitiesFromCompositeTree(compositeData);
                 
-                const executionActivities = allActivities.filter(activity => 
-                    activity.executionStage === "EXECUTION"
+                // Filter EXECUTION and CLOSED activities
+                const filteredActivities = allActivities.filter(activity => 
+                    activity.executionStage === "EXECUTION" || activity.executionStage === "CLOSED"
                 );
                 
+                console.log('Filtered activities (EXECUTION + CLOSED):', filteredActivities.length);
+                
                 const productGroups = ProductGroupService.groupActivitiesByProduct(
-                    executionActivities, 
+                    filteredActivities, 
                     serviceOrderData.externalId
                 );
                 
-                productGroups.forEach(group => {
-                    group.expanded = true;
-                });
+                // Optimize data - pre-calculate all display values in single pass
+                const optimizedGroups = productGroups.map(group => ({
+                    ...group,
+                    expanded: true,
+                    activityCount: group.activities.length,
+                    activities: group.activities.map(activity => this._prepareActivityData(activity))
+                }));
                 
                 const viewModel = this.getView().getModel("view");
                 
@@ -209,11 +208,106 @@ sap.ui.define([
                     viewModel.setProperty("/serviceCall", serviceOrderData);
                 }
                 
-                viewModel.setProperty("/productGroups", productGroups);
+                // Single model update for better performance
+                viewModel.setProperty("/productGroups", optimizedGroups);
 
             } catch (error) {
                 console.error("Load activities error:", error);
             }
+        },
+
+        /**
+         * Pre-calculate all display values to avoid expression bindings
+         * This significantly improves rendering performance
+         */
+        _prepareActivityData(activity) {
+            const isClosed = activity.executionStage === 'CLOSED';
+            const fullActivity = activity.fullActivity || {};
+            
+            return {
+                // Original data
+                id: activity.id,
+                code: activity.code,
+                subject: activity.subject,
+                status: activity.status,
+                type: activity.type,
+                executionStage: activity.executionStage,
+                plannedStartDate: activity.plannedStartDate,
+                plannedEndDate: activity.plannedEndDate,
+                
+                // Pre-calculated flags
+                isClosed: isClosed,
+                isReadOnly: isClosed,
+                
+                // Pre-calculated CSS classes
+                textClass: isClosed ? 'closedActivityText' : '',
+                
+                // Pre-calculated status state
+                statusState: this._getStatusState(activity),
+                stageState: isClosed ? 'None' : 'Information',
+                
+                // Flattened and pre-formatted fields
+                externalId: fullActivity.externalId || 'N/A',
+                orgLevelId: fullActivity.orgLevelIds?.[0] || 'N/A',
+                responsibleId: fullActivity.responsibles?.[0]?.externalId || 'N/A',
+                serviceProductId: fullActivity.serviceProduct?.externalId || 'N/A',
+                plannedDuration: fullActivity.plannedDurationInMinutes || 0,
+                
+                // Address fields
+                addressStreet: fullActivity.address?.street || '',
+                addressStreetNumber: fullActivity.address?.streetNumber || '',
+                addressCity: fullActivity.address?.city || '',
+                addressFull: this._formatAddress(fullActivity.address),
+                
+                // Formatted dates
+                formattedStartDate: this.formatter.formatDateTime(activity.plannedStartDate),
+                formattedEndDate: this.formatter.formatDateTime(activity.plannedEndDate),
+                formattedDuration: (fullActivity.plannedDurationInMinutes || 0) + ' min',
+                
+                // Keep full activity for edge cases
+                fullActivity: fullActivity
+            };
+        },
+
+        /**
+         * Calculate status state based on execution stage and status
+         */
+        _getStatusState(activity) {
+            if (activity.executionStage === 'CLOSED') {
+                return 'None';
+            }
+            
+            switch (activity.status) {
+                case 'OPEN':
+                    return 'Warning';
+                case 'COMPLETED':
+                    return 'Success';
+                default:
+                    return 'None';
+            }
+        },
+
+        /**
+         * Format address into single string
+         */
+        _formatAddress(address) {
+            if (!address) {
+                return 'N/A';
+            }
+            
+            const parts = [];
+            
+            if (address.street) {
+                parts.push(address.street);
+            }
+            if (address.streetNumber) {
+                parts.push(address.streetNumber);
+            }
+            if (address.city) {
+                parts.push(address.city);
+            }
+            
+            return parts.length > 0 ? parts.join(' ') : 'N/A';
         },
 
         _clearAllDropdowns() {
@@ -258,79 +352,6 @@ sap.ui.define([
                 const model = this.getView().getModel("view");
                 model.setProperty(productPath + "/expanded", expanded);
             }
-        },
-
-        onActivitySelectionChange(oEvent) {
-            const oTable = oEvent.getSource();
-            const aSelectedItems = oTable.getSelectedItems();
-            const oViewModel = this.getView().getModel("view");
-            
-            const aSelectedActivities = aSelectedItems.map(oItem => {
-                const oContext = oItem.getBindingContext("view");
-                const oActivity = oContext.getObject();
-                
-                const sPath = oContext.getPath();
-                const aPathParts = sPath.split("/");
-                const iGroupIndex = parseInt(aPathParts[2]);
-                const productGroup = oViewModel.getProperty("/productGroups/" + iGroupIndex);
-                
-                return {
-                    id: oActivity.id,
-                    code: oActivity.code,
-                    externalId: oActivity.fullActivity?.externalId,
-                    subject: oActivity.subject,
-                    status: oActivity.status,
-                    type: oActivity.type,
-                    productDescription: productGroup?.productDescription,
-                    soItemId: productGroup?.soItemId,
-                    fullActivity: oActivity.fullActivity
-                };
-            });
-            
-            oViewModel.setProperty("/selectedActivities", aSelectedActivities);
-            oViewModel.setProperty("/selectedActivitiesCount", aSelectedActivities.length);
-            
-            this._updateSelectionState();
-            
-            if (aSelectedActivities.length > 0) {
-                MessageToast.show(
-                    `${aSelectedActivities.length} ${aSelectedActivities.length === 1 ? 'activity' : 'activities'} selected`
-                );
-            }
-        },
-
-        onViewActivityDetails(oEvent) {
-            const oSource = oEvent.getSource();
-            const oContext = oSource.getBindingContext("view");
-            const oActivity = oContext.getObject();
-            
-            const sDetails = `Activity: ${oActivity.code}\n` +
-                           `Subject: ${oActivity.subject}\n` +
-                           `Status: ${oActivity.status}\n` +
-                           `Type: ${oActivity.type}\n` +
-                           `External ID: ${oActivity.fullActivity?.externalId || 'N/A'}`;
-            
-            MessageBox.information(sDetails, {
-                title: "Activity Details",
-                contentWidth: "400px"
-            });
-        },
-
-        _updateSelectionState() {
-            const oViewModel = this.getView().getModel("view");
-            const aSelected = oViewModel.getProperty("/selectedActivities") || [];
-            const bHasSelection = aSelected.length > 0;
-            
-            oViewModel.setProperty("/hasActivitySelection", bHasSelection);
-        },
-
-        getSelectedActivities() {
-            const oViewModel = this.getView().getModel("view");
-            return oViewModel.getProperty("/selectedActivities") || [];
-        },
-
-        onActivityPress(oEvent) {
-            this.onViewActivityDetails(oEvent);
         }
     });
 });

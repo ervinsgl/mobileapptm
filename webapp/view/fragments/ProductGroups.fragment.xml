@@ -44,89 +44,111 @@
                         <content>
                             <Table 
                                 id="activitiesTable"
-                                items="{view>activities}"
-                                mode="MultiSelect"
-                                selectionChange="onActivitySelectionChange"
+                                items="{
+                                    path: 'view>activities',
+                                    templateShareable: false
+                                }"
+                                growing="true"
+                                growingThreshold="10"
+                                growingScrollToLoad="true"
                                 class="sapUiSmallMarginTop activitiesTable"
-                                alternateRowColors="true"
                                 sticky="ColumnHeaders"
                             >
                                 <headerToolbar>
                                     <OverflowToolbar class="activitiesTableToolbar">
                                         <Title 
-                                            text="{= ${view>activities}.length + ' Activities'}" 
+                                            text="{view>activityCount} Activities" 
                                             level="H5"
                                         />
                                     </OverflowToolbar>
                                 </headerToolbar>
                                 
                                 <columns>
-                                    <Column width="12%" minScreenWidth="Tablet" demandPopin="true">
-                                        <Text text="Activity Code" class="sapUiSmallMarginBegin"/>
+                                    <Column width="8%" minScreenWidth="Tablet" demandPopin="true">
+                                        <Text text="Code"/>
                                     </Column>
-                                    <Column width="28%" minScreenWidth="Desktop" demandPopin="true" popinDisplay="Inline">
+                                    <Column width="10%" minScreenWidth="Tablet" demandPopin="true">
+                                        <Text text="External ID"/>
+                                    </Column>
+                                    <Column width="18%" minScreenWidth="Desktop" demandPopin="true">
                                         <Text text="Subject"/>
                                     </Column>
-                                    <Column width="12%" minScreenWidth="Tablet" demandPopin="true" hAlign="Center">
+                                    <Column width="8%" minScreenWidth="Tablet" demandPopin="true" hAlign="Center">
                                         <Text text="Status"/>
                                     </Column>
-                                    <Column width="15%" minScreenWidth="Desktop" demandPopin="true">
+                                    <Column width="8%" minScreenWidth="Tablet" demandPopin="true" hAlign="Center">
+                                        <Text text="Stage"/>
+                                    </Column>
+                                    <Column width="10%" minScreenWidth="Desktop" demandPopin="true">
                                         <Text text="Planned Start"/>
                                     </Column>
-                                    <Column width="15%" minScreenWidth="Desktop" demandPopin="true">
+                                    <Column width="10%" minScreenWidth="Desktop" demandPopin="true">
                                         <Text text="Planned End"/>
                                     </Column>
-                                    <Column width="10%" minScreenWidth="Tablet" demandPopin="true" hAlign="Center">
+                                    <Column width="6%" minScreenWidth="Tablet" demandPopin="true">
                                         <Text text="Duration"/>
                                     </Column>
-                                    <Column width="8%" minScreenWidth="Desktop" demandPopin="true" hAlign="Center">
-                                        <Text text="Details"/>
+                                    <Column width="10%" minScreenWidth="Desktop" demandPopin="true">
+                                        <Text text="Org Level"/>
+                                    </Column>
+                                    <Column width="12%" minScreenWidth="Desktop" demandPopin="true">
+                                        <Text text="Address"/>
                                     </Column>
                                 </columns>
                                 
                                 <items>
-                                    <ColumnListItem 
-                                        type="Active"
-                                        press="onActivityPress"
-                                    >
+                                    <ColumnListItem type="Inactive">
                                         <cells>
-                                            <ObjectIdentifier 
-                                                title="{view>code}"
-                                                text="{view>fullActivity/externalId}"
+                                            <Text 
+                                                text="{view>code}" 
+                                                class="{view>textClass}"
+                                            />
+                                            
+                                            <Text 
+                                                text="{view>externalId}" 
+                                                class="{view>textClass}"
                                             />
                                             
                                             <Text 
                                                 text="{view>subject}" 
-                                                class="sapUiSmallMarginBegin"
                                                 wrapping="true"
+                                                class="{view>textClass}"
                                             />
                                             
                                             <ObjectStatus 
                                                 text="{view>status}" 
-                                                state="{= ${view>status} === 'OPEN' ? 'Warning' : ${view>status} === 'COMPLETED' ? 'Success' : 'None'}"
+                                                state="{view>statusState}"
+                                            />
+                                            
+                                            <ObjectStatus 
+                                                text="{view>executionStage}" 
+                                                state="{view>stageState}"
                                             />
                                             
                                             <Text 
-                                                text="{
-                                                    path: 'view>plannedStartDate',
-                                                    formatter: '.formatter.formatDateTime'
-                                                }"
+                                                text="{view>formattedStartDate}"
+                                                class="{view>textClass}"
                                             />
                                             
                                             <Text 
-                                                text="{
-                                                    path: 'view>plannedEndDate',
-                                                    formatter: '.formatter.formatDateTime'
-                                                }"
+                                                text="{view>formattedEndDate}"
+                                                class="{view>textClass}"
                                             />
                                             
                                             <Text 
-                                                text="{view>fullActivity/plannedDurationInMinutes} min"
+                                                text="{view>formattedDuration}"
+                                                class="{view>textClass}"
                                             />
                                             
-                                            <Link 
-                                                text="View" 
-                                                press="onViewActivityDetails"
+                                            <Text 
+                                                text="{view>orgLevelId}"
+                                                class="{view>textClass}"
+                                            />
+                                            
+                                            <Text 
+                                                text="{view>addressFull}"
+                                                class="{view>textClass}"
+                                                wrapping="true"
                                             />
                                         </cells>
                                     </ColumnListItem>
