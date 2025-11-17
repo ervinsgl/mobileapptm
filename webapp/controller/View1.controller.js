@@ -400,19 +400,19 @@ sap.ui.define([
             oModel.setProperty(activityPath + "/tmReportsLoading", true);
             
             try {
-                console.log("Loading T&M reports for activity:", activityId);
-                
                 const reports = await ReportedItemsData.getReportedItems(activityId);
                 
                 oModel.setProperty(activityPath + "/tmReports", reports);
                 oModel.setProperty(activityPath + "/tmReportsCount", reports.length);
                 oModel.setProperty(activityPath + "/tmReportsLoaded", true);
                 
-                console.log(`Loaded ${reports.length} T&M reports`);
+                if (reports.length > 0) {
+                    MessageToast.show(`Loaded ${reports.length} T&M report(s)`);
+                }
                 
             } catch (error) {
                 console.error("Error loading T&M reports:", error);
-                MessageToast.show("Failed to load T&M reports");
+                MessageToast.show("Failed to load T&M reports: " + error.message);
                 oModel.setProperty(activityPath + "/tmReports", []);
                 oModel.setProperty(activityPath + "/tmReportsCount", 0);
             } finally {

@@ -178,8 +178,10 @@ class FSMService {
             const destination = await DestinationService.getDestination('FSM_S4E');
             const token = await TokenCache.getToken(destination);
 
+            // Get base cloud host (remove /api/data/v4 from URL)
             const baseUrl = destination.destinationConfiguration.URL;
-            const queryUrl = `${baseUrl}/api/query/v1`;
+            const cloudHost = baseUrl.replace('/api/data/v4', '');
+            const queryUrl = `${cloudHost}/api/query/v1`;
 
             const queryParams = {
                 query: query,
@@ -227,7 +229,7 @@ class FSMService {
                 createDateTime: item.timeEffort.createDateTime
             }));
         } catch (error) {
-            console.error("Error fetching time efforts:", error);
+            console.error("Error fetching time efforts:", error.message);
             return [];
         }
     }

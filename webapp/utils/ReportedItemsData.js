@@ -8,8 +8,6 @@ sap.ui.define([], () => {
          * @returns {Promise<Array>} Array of reported items
          */
         async getReportedItems(activityId) {
-            console.log("ReportedItemsData: Fetching reported items for activity:", activityId);
-
             if (!activityId) {
                 console.error("ReportedItemsData: Activity ID is required");
                 throw new Error("Activity ID is required");
@@ -28,8 +26,6 @@ sap.ui.define([], () => {
                 }
 
                 const data = await response.json();
-                console.log(`ReportedItemsData: Found ${data.items?.length || 0} reported items`);
-                
                 return data.items || [];
 
             } catch (error) {

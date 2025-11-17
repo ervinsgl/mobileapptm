@@ -1,0 +1,65 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+>
+    <!-- T&M Reports Expandable Section -->
+    <VBox visible="{view>tmReportsExpanded}" class="tmReportsPanel">
+        <Panel
+            headerText="T&amp;M Reports"
+            class="tmReportsInnerPanel"
+        >
+            <!-- Loading State -->
+            <VBox 
+                visible="{view>tmReportsLoading}"
+                alignItems="Center"
+                class="sapUiSmallMargin"
+            >
+                <BusyIndicator size="2rem"/>
+                <Text text="Loading reports..." class="sapUiTinyMarginTop"/>
+            </VBox>
+            
+            <!-- Empty State -->
+            <VBox 
+                visible="{= !${view>tmReportsLoading} &amp;&amp; ${view>tmReportsCount} === 0}"
+                class="sapUiSmallMargin"
+            >
+                <MessageStrip
+                    text="No reports have been made."
+                    type="Information"
+                    showIcon="true"
+                />
+            </VBox>
+            
+            <!-- Reports Table -->
+            <Table
+                visible="{= !${view>tmReportsLoading} &amp;&amp; ${view>tmReportsCount} > 0}"
+                items="{view>tmReports}"
+                class="tmReportsTable"
+            >
+                <columns>
+                    <Column width="15%">
+                        <Text text="Type"/>
+                    </Column>
+                    <Column width="40%">
+                        <Text text="ID"/>
+                    </Column>
+                    <Column width="45%">
+                        <Text text="Created Date"/>
+                    </Column>
+                </columns>
+                <items>
+                    <ColumnListItem>
+                        <cells>
+                            <Text text="{view>type}"/>
+                            <Text text="{view>id}"/>
+                            <Text text="{
+                                path: 'view>createDateTime',
+                                formatter: '.formatter.formatDateTime'
+                            }"/>
+                        </cells>
+                    </ColumnListItem>
+                </items>
+            </Table>
+        </Panel>
+    </VBox>
+</core:FragmentDefinition>
