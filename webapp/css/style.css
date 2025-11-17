@@ -344,28 +344,30 @@
    ======================================== */
 
 @media (max-width: 600px) {
+
     .productGroupPanel,
     .organizationLevelPanel,
     .serviceOrderPanel {
         margin-bottom: 12px;
     }
-    
+
     .sapMListTbl .sapMListTblCell {
         padding: 8px 4px;
     }
-    
+
     .productGroupHeaderTitle,
     .organizationLevelHeaderTitle,
     .serviceOrderHeaderTitle {
         font-size: 0.95rem;
     }
-    
+
     .productGroupHeaderLabel {
         font-size: 0.85rem;
     }
 }
 
 @media (min-width: 601px) and (max-width: 1024px) {
+
     .productGroupPanel,
     .organizationLevelPanel,
     .serviceOrderPanel {
@@ -374,6 +376,7 @@
 }
 
 @media (min-width: 1025px) {
+
     .productGroupPanel:hover,
     .organizationLevelPanel:hover,
     .serviceOrderPanel:hover {
@@ -393,18 +396,20 @@
 }
 
 @media (prefers-contrast: high) {
+
     .productGroupHeader,
     .organizationLevelHeader,
     .serviceOrderHeader {
         border: 2px solid white;
     }
-    
+
     .activitiesTable .sapMListTblRow:hover {
         border: 2px solid #0854a0;
     }
 }
 
 @media (prefers-reduced-motion: reduce) {
+
     .productGroupPanel,
     .organizationLevelPanel,
     .serviceOrderPanel,
@@ -412,8 +417,6 @@
         transition: none;
     }
 }
-
-/* ========================================
 
 /* ========================================
    T&M REPORTS PANEL STYLING
@@ -488,4 +491,40 @@
 
 .activityRow .sapMText {
     padding: 0 8px;
+}
+
+/* ============================================
+   MOBILE RESPONSIVE - MINIMAL
+   ============================================ */
+
+@media (max-width: 768px) {
+
+    /* Reduce panel margins on mobile */
+    .productGroupPanel,
+    .serviceOrderPanel,
+    .organizationLevelPanel {
+        margin: 0.5rem 0.25rem !important;
+    }
+
+    /* T&M Reports panel spacing */
+    .tmReportsPanel {
+        padding: 0.5rem !important;
+        margin-top: 0.5rem !important;
+    }
+
+    /* Better text wrapping */
+    .sapMText {
+        word-break: break-word;
+        overflow-wrap: break-word;
+    }
+
+    /* ObjectListItem adjustments for mobile */
+    .sapMObjLItem {
+        padding: 0.75rem !important;
+    }
+}
+
+/* Closed activity styling */
+.closedActivity .sapMObjLItem {
+    opacity: 0.6;
 }
