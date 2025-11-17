@@ -1,0 +1,44 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core">
+    <Dialog 
+        title="T&amp;M Reports - {dialog>/activityCode}"
+        contentWidth="90%"
+        contentHeight="70%"
+        draggable="true"
+        resizable="true"
+    >
+        <content>
+            <VBox class="sapUiMediumMargin">
+                <!-- Header Info -->
+                <VBox class="sapUiSmallMarginBottom">
+                    <Text text="Activity: {dialog>/activityCode}" class="sapUiMediumMarginBottom"/>
+                    <Text text="Subject: {dialog>/activitySubject}" class="sapUiSmallMarginBottom"/>
+                    <Text text="Total Reports: {dialog>/reportCount}" class="sapUiMediumMarginBottom"/>
+                </VBox>
+                
+                <!-- Reports List -->
+                <List
+                    items="{
+                        path: 'dialog>/reports',
+                        templateShareable: false
+                    }"
+                    mode="None"
+                    headerText="All T&amp;M Reports"
+                    growing="true"
+                    growingThreshold="50"
+                >
+                    <StandardListItem
+                        title="{dialog>type}"
+                        description="Created: {path: 'dialog>createDateTime', formatter: '.formatter.formatDateTime'}"
+                        info="{dialog>id}"
+                        infoState="None"
+                    />
+                </List>
+            </VBox>
+        </content>
+        
+        <buttons>
+            <Button text="Close" press=".onCloseTMReportsDialog"/>
+            <Button text="Add New T&amp;M" type="Emphasized" press=".onAddTMReport"/>
+        </buttons>
+    </Dialog>
+</core:FragmentDefinition>

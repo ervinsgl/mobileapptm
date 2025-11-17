@@ -1,6 +1,6 @@
 /* ========================================
    Enhanced Styling for Mobile App SC
-   Option B - Professional Blue Theme
+   Cleaned and Optimized Version
    ======================================== */
 
 /* ========================================
@@ -98,12 +98,8 @@
 }
 
 /* ========================================
-   ACTIVITIES TABLE STYLING
+   ACTIVITIES TOOLBAR STYLING
    ======================================== */
-
-.activitiesTable {
-    border: none;
-}
 
 .activitiesTableToolbar {
     background-color: #f0f0f0 !important;
@@ -114,86 +110,6 @@
     font-size: 1rem;
     font-weight: 600;
     color: #333;
-}
-
-.activitiesTable .sapMListTblHeaderCell {
-    background-color: #f7f7f7;
-    font-weight: 600;
-    border-bottom: 2px solid #0854a0;
-}
-
-.activitiesTable .sapMListTbl tbody tr:nth-child(odd) {
-    background-color: #ffffff;
-}
-
-.activitiesTable .sapMListTbl tbody tr:nth-child(even) {
-    background-color: #fafafa;
-}
-
-.activitiesTable .sapMListTblRow:hover {
-    background-color: #e8f4ff !important;
-    cursor: pointer;
-}
-
-.activitiesTable .sapMLIBSelected {
-    background-color: #d4edff !important;
-    border-left: 3px solid #0854a0;
-}
-
-/* Closed Activity Styling */
-.closedActivityText {
-    color: #999 !important;
-    opacity: 0.6;
-}
-
-/* Expand Icon */
-.expandIcon {
-    cursor: pointer;
-    font-size: 1rem;
-    transition: transform 0.2s ease;
-}
-
-.expandIcon:hover {
-    color: #0854a0;
-}
-
-.expandIconRotated {
-    transform: rotate(90deg);
-}
-
-/* Activity Details Panel */
-.activityDetailsPanel {
-    background-color: #f9f9f9;
-    border-top: 1px solid #e0e0e0;
-    padding: 16px;
-}
-
-.activityDetailsContent {
-    padding: 0;
-}
-
-.detailsRow {
-    margin-bottom: 12px;
-}
-
-.detailsRow:last-child {
-    margin-bottom: 0;
-}
-
-.detailsCell {
-    padding-right: 16px;
-}
-
-.activityDetailsContent .detailLabel {
-    color: #666;
-    font-size: 0.875rem;
-    margin-bottom: 4px;
-}
-
-.activityDetailsContent .detailText {
-    color: #333;
-    word-break: break-word;
-    font-size: 0.9375rem;
 }
 
 /* ========================================
@@ -213,20 +129,6 @@
 .sapMObjectStatus.sapMObjectStatusError {
     color: #b00;
     font-weight: 600;
-}
-
-/* ========================================
-   OBJECTIDENTIFIER STYLING
-   ======================================== */
-
-.sapMObjectIdentifier .sapMObjectIdentifierTitle {
-    font-weight: 600;
-    color: #0854a0;
-}
-
-.sapMObjectIdentifier .sapMObjectIdentifierText {
-    font-size: 0.875rem;
-    color: #666;
 }
 
 /* ========================================
@@ -266,55 +168,9 @@
    ======================================== */
 
 .sapMBtn,
-.sapMLink,
-.sapMCb {
+.sapMLink {
     min-height: 44px;
     min-width: 44px;
-}
-
-/* ========================================
-   SELECTION CHECKBOX STYLING
-   ======================================== */
-
-.sapMLIBSelectM {
-    padding: 0 8px;
-}
-
-/* ========================================
-   PANEL ANIMATIONS
-   ======================================== */
-
-.sapMPanel .sapMPanelContent {
-    transition: max-height 0.3s ease-in-out;
-}
-
-/* ========================================
-   STICKY HEADERS
-   ======================================== */
-
-.sapMListTbl.sapMListTblHasNav .sapMListTblHeaderCell {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    background-color: #f0f0f0;
-}
-
-/* ========================================
-   DISABLED STATES
-   ======================================== */
-
-.sapMInputBaseDisabled,
-.sapMInputBaseReadonly {
-    background-color: #f7f7f7;
-    color: #666;
-}
-
-/* ========================================
-   LOADING INDICATOR
-   ======================================== */
-
-.sapMBusyIndicator {
-    z-index: 1000;
 }
 
 /* ========================================
@@ -340,20 +196,234 @@
 }
 
 /* ========================================
-   RESPONSIVE ADJUSTMENTS
+   T&M-FOCUSED ACTIVITY CARDS
    ======================================== */
 
-@media (max-width: 600px) {
+/* Activity Card Container */
+.activityCardContainer {
+    padding: 0 !important;
+    margin: 0 !important;
+}
 
+.activityCard {
+    background: white;
+    border: 1px solid #d9d9d9;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Activity Header */
+.activityHeader {
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #0854a0;
+    margin-bottom: 0.75rem;
+}
+
+.activityCode {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #0854a0;
+}
+
+.activityExternalId {
+    font-size: 0.875rem;
+    color: #666;
+    margin-top: 0.25rem;
+}
+
+/* Activity Subject */
+.activitySubject {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #333;
+    margin: 0.75rem 0;
+    line-height: 1.4;
+}
+
+/* Quick Info Section */
+.activityQuickInfo {
+    background: #f7f7f7;
+    padding: 0.75rem;
+    border-radius: 4px;
+    margin: 0.75rem 0;
+}
+
+.infoRow {
+    margin-bottom: 0.5rem;
+}
+
+.infoRow:last-child {
+    margin-bottom: 0;
+}
+
+.infoLabel {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #666;
+    min-width: 110px;
+    margin-right: 0.5rem;
+}
+
+.infoValue {
+    font-size: 0.875rem;
+    color: #333;
+    flex: 1;
+}
+
+/* T&M Summary Box */
+.tmSummaryBox {
+    background: linear-gradient(135deg, #e5f4ff 0%, #f0f8ff 100%);
+    border: 2px solid #0854a0;
+    border-radius: 6px;
+    padding: 1rem;
+    margin: 0.75rem 0;
+}
+
+.tmSummaryTitle {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #0854a0;
+}
+
+.tmSummaryItem {
+    font-size: 0.875rem;
+    color: #333;
+    line-height: 1.6;
+}
+
+/* Action Buttons */
+.activityActions {
+    display: flex;
+    gap: 0.5rem;
+    margin: 1rem 0 0.5rem 0;
+}
+
+.tmActionButton {
+    flex: 1;
+    min-height: 48px;
+}
+
+/* Details Toggle Link */
+.detailsToggleLink {
+    text-align: center;
+    display: block;
+    padding: 0.5rem;
+    font-size: 0.875rem;
+}
+
+/* Extended Details */
+.activityExtendedDetails {
+    background: #f9f9f9;
+    border-top: 1px solid #e0e0e0;
+    padding: 1rem;
+    margin-top: 0.75rem;
+    border-radius: 0 0 6px 6px;
+}
+
+.detailField {
+    margin-bottom: 0.75rem;
+}
+
+.detailField:last-child {
+    margin-bottom: 0;
+}
+
+.detailField .sapMLabel {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #666;
+    margin-bottom: 0.25rem;
+}
+
+.detailField .sapMText {
+    font-size: 0.9375rem;
+    color: #333;
+}
+
+/* ========================================
+   CLOSED ACTIVITY STYLING
+   ======================================== */
+
+.closedActivity .activityCard {
+    opacity: 0.65;
+    background: #f5f5f5;
+    border-color: #ccc;
+}
+
+.closedActivity .activityCode {
+    color: #999;
+}
+
+.closedActivity .activitySubject {
+    color: #999;
+}
+
+.closedActivity .activityHeader {
+    border-bottom-color: #999;
+}
+
+.closedActivity .tmSummaryBox {
+    background: #f0f0f0;
+    border-color: #999;
+}
+
+.closedActivity .tmSummaryTitle {
+    color: #999;
+}
+
+/* ========================================
+   RESPONSIVE DESIGN
+   ======================================== */
+
+@media (max-width: 768px) {
+
+    /* Panel margins on mobile */
     .productGroupPanel,
-    .organizationLevelPanel,
-    .serviceOrderPanel {
-        margin-bottom: 12px;
+    .serviceOrderPanel,
+    .organizationLevelPanel {
+        margin: 0.5rem 0.25rem !important;
     }
 
-    .sapMListTbl .sapMListTblCell {
-        padding: 8px 4px;
+    /* Activity cards on mobile */
+    .activityCard {
+        margin: 0.5rem 0.25rem;
+        padding: 0.875rem;
     }
+
+    .activityCode {
+        font-size: 1.1rem;
+    }
+
+    .activitySubject {
+        font-size: 0.9375rem;
+    }
+
+    .tmActionButton {
+        min-height: 44px;
+        font-size: 0.875rem;
+    }
+
+    /* Product header adjustments */
+    .productGroupHeaderTitle {
+        font-size: 0.85rem !important;
+        line-height: 1.2;
+    }
+
+    .productGroupHeaderLabel {
+        font-size: 0.75rem !important;
+    }
+
+    /* Better text wrapping */
+    .sapMText {
+        word-break: break-word;
+        overflow-wrap: break-word;
+    }
+}
+
+@media (max-width: 600px) {
 
     .productGroupHeaderTitle,
     .organizationLevelHeaderTitle,
@@ -363,15 +433,6 @@
 
     .productGroupHeaderLabel {
         font-size: 0.85rem;
-    }
-}
-
-@media (min-width: 601px) and (max-width: 1024px) {
-
-    .productGroupPanel,
-    .organizationLevelPanel,
-    .serviceOrderPanel {
-        margin-bottom: 16px;
     }
 }
 
@@ -389,7 +450,6 @@
    ACCESSIBILITY
    ======================================== */
 
-.sapMListTblRow:focus,
 .sapMComboBox:focus {
     outline: 2px solid #0854a0;
     outline-offset: 2px;
@@ -402,129 +462,37 @@
     .serviceOrderHeader {
         border: 2px solid white;
     }
-
-    .activitiesTable .sapMListTblRow:hover {
-        border: 2px solid #0854a0;
-    }
 }
 
 @media (prefers-reduced-motion: reduce) {
 
     .productGroupPanel,
     .organizationLevelPanel,
-    .serviceOrderPanel,
-    .sapMPanel .sapMPanelContent {
+    .serviceOrderPanel {
         transition: none;
     }
 }
 
-/* ========================================
-   T&M REPORTS PANEL STYLING
-   ======================================== */
-
-/* Expand Icon for T&M Reports */
-.expandIcon {
-    cursor: pointer;
-    font-size: 1rem;
-    transition: transform 0.2s ease;
+/* Loading state styling */
+.tmSummaryBox .sapMBusyIndicator {
+    --sapContent_BusyColor: #0854a0;
 }
 
-.expandIcon:hover {
-    color: #0854a0;
-}
-
-.expandIconRotated {
-    transform: rotate(90deg);
-}
-
-/* T&M Reports Panel */
-.tmReportsPanel {
-    background-color: #fafafa;
-    border-top: 1px solid #e0e0e0;
-    padding: 12px;
-    margin-top: 8px;
-}
-
-.tmReportsInnerPanel {
-    border: 1px solid #d9d9d9;
-    border-radius: 4px;
-}
-
-.tmReportsInnerPanel .sapMPanelHdr {
-    background-color: #f7f7f7;
+.tmSummaryItem[design="Bold"] {
+    color: #d32f2f;
+    /* Red for error state */
     font-weight: 600;
 }
 
-/* T&M Reports Table */
-.tmReportsTable {
-    margin-top: 8px;
-}
-
-.tmReportsTable .sapMListTblHeaderCell {
-    background-color: #f0f0f0;
+/* Error state for T&M loading */
+.tmSummaryItemError {
+    font-size: 0.875rem;
+    color: #d32f2f; /* Red color for errors */
     font-weight: 600;
+    line-height: 1.6;
 }
 
-/* Activity Table Header (Custom Grid) */
-.activityTableHeader {
-    background-color: #f7f7f7;
-    border-bottom: 2px solid #0854a0;
-    padding: 12px;
-}
-
-.activityHeaderText {
-    font-weight: 600;
-    color: #333;
-    padding: 0 8px;
-}
-
-/* Activity Row */
-.activityRow {
-    padding: 12px;
-    min-height: 48px;
-    border-bottom: 1px solid #e5e5e5;
-}
-
-.activityRow:hover {
-    background-color: #f5f5f5;
-}
-
-.activityRow .sapMText {
-    padding: 0 8px;
-}
-
-/* ============================================
-   MOBILE RESPONSIVE - MINIMAL
-   ============================================ */
-
-@media (max-width: 768px) {
-
-    /* Reduce panel margins on mobile */
-    .productGroupPanel,
-    .serviceOrderPanel,
-    .organizationLevelPanel {
-        margin: 0.5rem 0.25rem !important;
-    }
-
-    /* T&M Reports panel spacing */
-    .tmReportsPanel {
-        padding: 0.5rem !important;
-        margin-top: 0.5rem !important;
-    }
-
-    /* Better text wrapping */
-    .sapMText {
-        word-break: break-word;
-        overflow-wrap: break-word;
-    }
-
-    /* ObjectListItem adjustments for mobile */
-    .sapMObjLItem {
-        padding: 0.75rem !important;
-    }
-}
-
-/* Closed activity styling */
-.closedActivity .sapMObjLItem {
-    opacity: 0.6;
+/* Loading state styling */
+.tmSummaryBox .sapMBusyIndicator {
+    --sapContent_BusyColor: #0854a0;
 }

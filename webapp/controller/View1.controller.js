@@ -4,6 +4,7 @@ sap.ui.define([
     "sap/m/MessageToast",
     "sap/m/MessageBox",
     "sap/ui/core/Item",
+    "sap/ui/core/Fragment",
     "mobileappsc/utils/formatter",
     "mobileappsc/utils/ActivityService",
     "mobileappsc/utils/ServiceOrderService",
@@ -11,7 +12,7 @@ sap.ui.define([
     "mobileappsc/utils/URLHelper",
     "mobileappsc/utils/OrganizationService",
     "mobileappsc/utils/ReportedItemsData"
-], (Controller, JSONModel, MessageToast, MessageBox, Item, formatter, ActivityService, ServiceOrderService, ProductGroupService, URLHelper, OrganizationService, ReportedItemsData) => {
+], (Controller, JSONModel, MessageToast, MessageBox, Item, Fragment, formatter, ActivityService, ServiceOrderService, ProductGroupService, URLHelper, OrganizationService, ReportedItemsData) => {
     "use strict";
 
     return Controller.extend("mobileappsc.controller.View1", {
@@ -29,8 +30,8 @@ sap.ui.define([
                 busy: false,
                 organizationLevelsLoading: false,
 
-                serviceCall: { 
-                    id: null, 
+                serviceCall: {
+                    id: null,
                     externalId: null,
                     subject: null,
                     businessPartnerExternalId: null,
@@ -159,7 +160,7 @@ sap.ui.define([
                 const activity = ActivityService.extractActivityData(response);
 
                 const serviceCall = ActivityService.extractServiceCallData(activity);
-                
+
                 if (serviceCall) {
                     viewModel.setProperty("/serviceCall", serviceCall);
                     await this._loadServiceCallActivities(serviceCall.id);
@@ -177,24 +178,24 @@ sap.ui.define([
 
         async _loadServiceCallActivities(serviceCallId) {
             console.log('Loading service call activities:', serviceCallId);
-            
+
             try {
                 const compositeData = await ServiceOrderService.fetchServiceCallById(serviceCallId);
                 const serviceOrderData = ServiceOrderService.extractServiceOrderData(compositeData);
                 const allActivities = ServiceOrderService.extractActivitiesFromCompositeTree(compositeData);
-                
+
                 // Filter EXECUTION and CLOSED activities
-                const filteredActivities = allActivities.filter(activity => 
+                const filteredActivities = allActivities.filter(activity =>
                     activity.executionStage === "EXECUTION" || activity.executionStage === "CLOSED"
                 );
-                
+
                 console.log('Filtered activities (EXECUTION + CLOSED):', filteredActivities.length);
-                
+
                 const productGroups = ProductGroupService.groupActivitiesByProduct(
-                    filteredActivities, 
+                    filteredActivities,
                     serviceOrderData.externalId
                 );
-                
+
                 // Optimize data - pre-calculate all display values in single pass
                 const optimizedGroups = productGroups.map(group => ({
                     ...group,
@@ -202,13 +203,13 @@ sap.ui.define([
                     activityCount: group.activities.length,
                     activities: group.activities.map(activity => this._prepareActivityData(activity))
                 }));
-                
+
                 const viewModel = this.getView().getModel("view");
-                
+
                 if (serviceOrderData) {
                     viewModel.setProperty("/serviceCall", serviceOrderData);
                 }
-                
+
                 // Single model update for better performance
                 viewModel.setProperty("/productGroups", optimizedGroups);
 
@@ -219,13 +220,12 @@ sap.ui.define([
 
         /**
          * Pre-calculate all display values to avoid expression bindings
-         * This significantly improves rendering performance
          */
         _prepareActivityData(activity) {
             const isClosed = activity.executionStage === 'CLOSED';
             const fullActivity = activity.fullActivity || {};
-            
-            return {
+
+            const preparedData = {
                 // Original data
                 id: activity.id,
                 code: activity.code,
@@ -235,47 +235,100 @@ sap.ui.define([
                 executionStage: activity.executionStage,
                 plannedStartDate: activity.plannedStartDate,
                 plannedEndDate: activity.plannedEndDate,
-                
+
                 // Pre-calculated flags
                 isClosed: isClosed,
                 isReadOnly: isClosed,
-                
-                // T&M Reports flags
+
+                // T&M Reports flags - ONLY SET ONCE HERE
                 tmReportsExpanded: false,
                 tmReportsLoaded: false,
                 tmReportsLoading: false,
                 tmReportsCount: 0,
                 tmReports: [],
                 tmIconClass: 'expandIcon',
-                
+
+                // T&M Type counts
+                tmTimeEffortCount: 0,
+                tmMaterialCount: 0,
+                tmExpenseCount: 0,
+                tmMileageCount: 0,
+
+                // Details expansion flag
+                detailsExpanded: false,
+
                 // Pre-calculated CSS classes
                 textClass: isClosed ? 'closedActivityText' : '',
-                
+
                 // Pre-calculated status state
                 statusState: this._getStatusState(activity),
                 stageState: isClosed ? 'None' : 'Information',
-                
+
                 // Flattened and pre-formatted fields
                 externalId: fullActivity.externalId || 'N/A',
                 orgLevelId: fullActivity.orgLevelIds?.[0] || 'N/A',
                 responsibleId: fullActivity.responsibles?.[0]?.externalId || 'N/A',
                 serviceProductId: fullActivity.serviceProduct?.externalId || 'N/A',
                 plannedDuration: fullActivity.plannedDurationInMinutes || 0,
-                
+
                 // Address fields
                 addressStreet: fullActivity.address?.street || '',
                 addressStreetNumber: fullActivity.address?.streetNumber || '',
                 addressCity: fullActivity.address?.city || '',
                 addressFull: this._formatAddress(fullActivity.address),
-                
+
                 // Formatted dates
                 formattedStartDate: this.formatter.formatDateTime(activity.plannedStartDate),
                 formattedEndDate: this.formatter.formatDateTime(activity.plannedEndDate),
                 formattedDuration: (fullActivity.plannedDurationInMinutes || 0) + ' min',
-                
+
                 // Keep full activity for edge cases
                 fullActivity: fullActivity
             };
+
+            // AUTO-LOAD T&M Reports for immediate count display
+            this._autoLoadTMReportsFixed(activity.id, preparedData);
+
+            return preparedData;
+        },
+
+        /**
+         * Auto-load T&M reports and update model properly
+         */
+        async _autoLoadTMReportsFixed(activityId, activityData) {
+            try {
+                const reports = await ReportedItemsData.getReportedItems(activityId);
+
+                // Calculate counts by type
+                const timeEffortCount = reports.filter(r => r.type === "Time Effort").length;
+                const materialCount = reports.filter(r => r.type === "Material").length;
+                const expenseCount = reports.filter(r => r.type === "Expense").length;
+                const mileageCount = reports.filter(r => r.type === "Mileage").length;
+
+                // Update activity data directly
+                activityData.tmReports = reports;
+                activityData.tmReportsCount = reports.length;
+                activityData.tmReportsLoaded = true;
+                activityData.tmTimeEffortCount = timeEffortCount;
+                activityData.tmMaterialCount = materialCount;
+                activityData.tmExpenseCount = expenseCount;
+                activityData.tmMileageCount = mileageCount;
+
+                // Force model update after data is loaded
+                setTimeout(() => {
+                    const model = this.getView().getModel("view");
+                    if (model) {
+                        model.refresh(true); // Force refresh
+                    }
+                }, 100);
+
+                console.log(`Auto-loaded ${reports.length} T&M reports for activity ${activityData.code}`);
+
+            } catch (error) {
+                console.error("Error auto-loading T&M reports for activity", activityId, ":", error);
+                activityData.tmReportsCount = 0;
+                activityData.tmReportsLoaded = false;
+            }
         },
 
         /**
@@ -285,7 +338,7 @@ sap.ui.define([
             if (activity.executionStage === 'CLOSED') {
                 return 'None';
             }
-            
+
             switch (activity.status) {
                 case 'OPEN':
                     return 'Warning';
@@ -303,9 +356,9 @@ sap.ui.define([
             if (!address) {
                 return 'N/A';
             }
-            
+
             const parts = [];
-            
+
             if (address.street) {
                 parts.push(address.street);
             }
@@ -315,7 +368,7 @@ sap.ui.define([
             if (address.city) {
                 parts.push(address.city);
             }
-            
+
             return parts.length > 0 ? parts.join(' ') : 'N/A';
         },
 
@@ -355,7 +408,7 @@ sap.ui.define([
             const expanded = oEvent.getParameter("expand");
             const panel = oEvent.getSource();
             const bindingContext = panel.getBindingContext("view");
-            
+
             if (bindingContext) {
                 const productPath = bindingContext.getPath();
                 const model = this.getView().getModel("view");
@@ -364,27 +417,27 @@ sap.ui.define([
         },
 
         /**
-         * Toggle T&M Reports for an activity
+         * Toggle T&M Reports for an activity (OLD METHOD - Keep for backward compatibility)
          */
         async onToggleTMReports(oEvent) {
             const oIcon = oEvent.getSource();
             const oContext = oIcon.getBindingContext("view");
-            
+
             if (!oContext) {
                 return;
             }
-            
+
             const sPath = oContext.getPath();
             const oModel = this.getView().getModel("view");
             const oActivity = oContext.getObject();
-            
+
             // Toggle expanded state
             const bCurrentState = oModel.getProperty(sPath + "/tmReportsExpanded");
             const bNewState = !bCurrentState;
-            
+
             oModel.setProperty(sPath + "/tmReportsExpanded", bNewState);
             oModel.setProperty(sPath + "/tmIconClass", bNewState ? 'expandIcon expandIconRotated' : 'expandIcon');
-            
+
             // If expanding and reports not loaded yet, fetch them
             if (bNewState && !oModel.getProperty(sPath + "/tmReportsLoaded")) {
                 await this._loadTMReports(sPath, oActivity.id);
@@ -392,24 +445,36 @@ sap.ui.define([
         },
 
         /**
-         * Load T&M Reports for an activity
+         * Load T&M Reports for an activity with type counts
          */
         async _loadTMReports(activityPath, activityId) {
             const oModel = this.getView().getModel("view");
-            
+
             oModel.setProperty(activityPath + "/tmReportsLoading", true);
-            
+
             try {
                 const reports = await ReportedItemsData.getReportedItems(activityId);
-                
+
+                // Calculate counts by type
+                const timeEffortCount = reports.filter(r => r.type === "Time Effort").length;
+                const materialCount = reports.filter(r => r.type === "Material").length;
+                const expenseCount = reports.filter(r => r.type === "Expense").length;
+                const mileageCount = reports.filter(r => r.type === "Mileage").length;
+
                 oModel.setProperty(activityPath + "/tmReports", reports);
                 oModel.setProperty(activityPath + "/tmReportsCount", reports.length);
                 oModel.setProperty(activityPath + "/tmReportsLoaded", true);
-                
+
+                // NEW - Set type counts
+                oModel.setProperty(activityPath + "/tmTimeEffortCount", timeEffortCount);
+                oModel.setProperty(activityPath + "/tmMaterialCount", materialCount);
+                oModel.setProperty(activityPath + "/tmExpenseCount", expenseCount);
+                oModel.setProperty(activityPath + "/tmMileageCount", mileageCount);
+
                 if (reports.length > 0) {
                     MessageToast.show(`Loaded ${reports.length} T&M report(s)`);
                 }
-                
+
             } catch (error) {
                 console.error("Error loading T&M reports:", error);
                 MessageToast.show("Failed to load T&M reports: " + error.message);
@@ -418,6 +483,102 @@ sap.ui.define([
             } finally {
                 oModel.setProperty(activityPath + "/tmReportsLoading", false);
             }
+        },
+
+        /* ========================================
+         * METHODS FOR SIMPLIFIED T&M UI
+         * ======================================== */
+
+        /**
+         * Toggle extended activity details
+         */
+        onToggleDetails(oEvent) {
+            const oLink = oEvent.getSource();
+            const oContext = oLink.getBindingContext("view");
+
+            if (!oContext) return;
+
+            const sPath = oContext.getPath();
+            const oModel = this.getView().getModel("view");
+            const bCurrentState = oModel.getProperty(sPath + "/detailsExpanded");
+
+            oModel.setProperty(sPath + "/detailsExpanded", !bCurrentState);
+        },
+
+        /**
+         * View T&M Reports (opens dialog or shows summary)
+         */
+        async onViewTMReports(oEvent) {
+            const oButton = oEvent.getSource();
+            const oContext = oButton.getBindingContext("view");
+
+            if (!oContext) return;
+
+            const oActivity = oContext.getObject();
+            const reports = oActivity.tmReports || [];
+
+            // Create dialog model
+            const oDialogModel = new JSONModel({
+                activityCode: oActivity.code,
+                activitySubject: oActivity.subject,
+                reports: reports,
+                reportCount: reports.length
+            });
+
+            // Load and open dialog
+            if (!this._tmReportsDialog) {
+                Fragment.load({
+                    name: "mobileappsc.view.fragments.TMReportsDialog",
+                    controller: this
+                }).then((oDialog) => {
+                    this._tmReportsDialog = oDialog;
+                    this.getView().addDependent(oDialog);
+                    oDialog.setModel(oDialogModel, "dialog");
+                    oDialog.open();
+                });
+            } else {
+                this._tmReportsDialog.setModel(oDialogModel, "dialog");
+                this._tmReportsDialog.open();
+            }
+        },
+
+        /**
+         * Close T&M Reports Dialog
+         */
+        onCloseTMReportsDialog() {
+            if (this._tmReportsDialog) {
+                this._tmReportsDialog.close();
+            }
+        },
+
+        /**
+         * Add new T&M Report
+         */
+        onAddTMReport(oEvent) {
+            const oButton = oEvent.getSource();
+            const oContext = oButton.getBindingContext("view");
+
+            if (!oContext) {
+                MessageToast.show("Please select an activity first");
+                return;
+            }
+
+            const oActivity = oContext.getObject();
+
+            // TODO: Open T&M Creation Dialog
+            MessageBox.information(
+                `Add T&M Report for:\n\nActivity: ${oActivity.code}\nSubject: ${oActivity.subject}`,
+                {
+                    title: "Add T&M Report",
+                    actions: ["Time Effort", "Material", "Expense", "Mileage", MessageBox.Action.CANCEL],
+                    onClose: (sAction) => {
+                        if (sAction !== MessageBox.Action.CANCEL) {
+                            MessageToast.show(`Creating ${sAction} report...`);
+                            // TODO: Implement T&M creation
+                        }
+                    }
+                }
+            );
         }
     });
 });

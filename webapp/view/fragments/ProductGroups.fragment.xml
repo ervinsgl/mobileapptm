@@ -6,8 +6,9 @@
         <List
             items="{view>/productGroups}"
             mode="None"
+            showSeparators="None"
         >
-            <CustomListItem>
+            <CustomListItem type="Inactive">
                 <Panel
                     headerText="Product: {view>productDescription}"
                     expandable="true"
@@ -18,7 +19,7 @@
                     <headerToolbar>
                         <OverflowToolbar class="productGroupHeader">
                             <Title 
-                                text="Product: {view>productDescription}" 
+                                text="{= ${device>/system/phone} ? ${view>productDescription} : 'Product: ' + ${view>productDescription}}" 
                                 wrapping="true"
                                 class="productGroupHeaderTitle"
                             />
@@ -35,84 +36,93 @@
                             <Title text="{view>activityCount} Activities"/>
                         </Toolbar>
                         
-                        <!-- Activities List -->
+                        <!-- SIMPLIFIED ACTIVITIES LIST -->
                         <List
-                            items="{
-                                path: 'view>activities',
-                                templateShareable: false
-                            }"
+                            items="{path: 'view>activities', templateShareable: false}"
+                            mode="None"
                             growing="true"
                             growingThreshold="20"
                         >
-                            <CustomListItem type="Active" press=".onToggleTMReports">
-                                <VBox width="100%">
+                            <CustomListItem type="Inactive" class="activityCardContainer">
+                                <VBox width="100%" class="activityCard">
                                     
-                                    <!-- Activity Card -->
-                                    <ObjectListItem
-                                        type="Inactive"
-                                        title="{view>code} - {view>subject}"
-                                        intro="ID: {view>externalId}"
-                                        number="{view>status}"
-                                        numberState="{view>statusState}"
-                                    >
-                                        <attributes>
-                                            <ObjectAttribute title="Stage" text="{view>executionStage}"/>
-                                            <ObjectAttribute title="Start" text="{view>formattedStartDate}"/>
-                                            <ObjectAttribute title="End" text="{view>formattedEndDate}"/>
-                                            <ObjectAttribute title="Duration" text="{view>formattedDuration}"/>
-                                            <ObjectAttribute title="Org Level" text="{view>orgLevelId}"/>
-                                            <ObjectAttribute title="Address" text="{view>addressFull}"/>
-                                        </attributes>
+                                    <!-- Header: Code + External ID + Status -->
+                                    <HBox justifyContent="SpaceBetween" alignItems="Center" class="activityHeader">
+                                        <VBox>
+                                            <Text text="{view>code}" class="activityCode"/>
+                                            <Text text="ID: {view>externalId}" class="activityExternalId"/>
+                                        </VBox>
+                                        <HBox>
+                                            <ObjectStatus text="{view>status}" state="{view>statusState}"/>
+                                            <ObjectStatus text="{view>executionStage}" state="{view>stageState}" class="sapUiTinyMarginBegin"/>
+                                        </HBox>
+                                    </HBox>
+                                    
+                                    <!-- Subject -->
+                                    <Text text="{view>subject}" wrapping="true" class="activitySubject"/>
+                                    
+                                    <!-- Quick Info: Address + Time -->
+                                    <VBox class="activityQuickInfo">
+                                        <Text text="Address: {view>addressFull}" wrapping="true"/>
+                                        <Text text="Planned: {view>formattedStartDate} - {view>formattedEndDate}" class="sapUiTinyMarginTop"/>
+                                        <Text text="Responsible: {view>responsibleId}" class="sapUiTinyMarginTop"/>
+                                    </VBox>
+                                    
+                                    <!-- T&M Summary Box -->
+                                    <VBox class="tmSummaryBox">
+                                        <HBox justifyContent="SpaceBetween" alignItems="Center">
+                                            <Text text="T&amp;M Reports: {view>tmReportsCount} items" class="tmSummaryTitle"/>
+                                            <core:Icon src="sap-icon://chart-table-view" size="1.25rem" color="#0854a0"/>
+                                        </HBox>
                                         
-                                        <firstStatus>
-                                            <ObjectStatus 
-                                                text="{view>executionStage}" 
-                                                state="{view>stageState}"
-                                            />
-                                        </firstStatus>
-                                    </ObjectListItem>
+                                        <!-- T&M Type Breakdown (show when loaded) -->
+                                        <VBox visible="{view>tmReportsLoaded}" class="sapUiTinyMarginTop">
+                                            <Text text="• Time Effort: {view>tmTimeEffortCount}" class="tmSummaryItem"/>
+                                            <Text text="• Material: {view>tmMaterialCount}" class="tmSummaryItem"/>
+                                            <Text text="• Expense: {view>tmExpenseCount}" class="tmSummaryItem"/>
+                                            <Text text="• Mileage: {view>tmMileageCount}" class="tmSummaryItem"/>
+                                        </VBox>
+                                    </VBox>
                                     
-                                    <!-- T&M Reports (Expandable) -->
-                                    <VBox visible="{view>tmReportsExpanded}" class="tmReportsPanel">
-                                        <Panel 
-                                            headerText="T&amp;M Reports ({view>tmReportsCount})" 
-                                            class="tmReportsInnerPanel"
-                                        >
-                                            <!-- Loading -->
-                                            <VBox 
-                                                visible="{view>tmReportsLoading}" 
-                                                alignItems="Center" 
-                                                class="sapUiSmallMargin"
-                                            >
-                                                <BusyIndicator size="1.5rem"/>
-                                                <Text text="Loading..." class="sapUiTinyMarginTop"/>
-                                            </VBox>
-                                            
-                                            <!-- Empty State -->
-                                            <MessageStrip 
-                                                visible="{= !${view>tmReportsLoading} &amp;&amp; ${view>tmReportsCount} === 0}"
-                                                text="No T&amp;M reports yet."
-                                                type="Information"
-                                                showIcon="true"
-                                                class="sapUiSmallMargin"
-                                            />
-                                            
-                                            <!-- Reports List -->
-                                            <List
-                                                visible="{= !${view>tmReportsLoading} &amp;&amp; ${view>tmReportsCount} > 0}"
-                                                items="{
-                                                    path: 'view>tmReports',
-                                                    templateShareable: false
-                                                }"
-                                            >
-                                                <StandardListItem
-                                                    title="{view>type}"
-                                                    description="{path: 'view>createDateTime', formatter: '.formatter.formatDateTime'}"
-                                                    info="{view>id}"
-                                                    type="Inactive"
-                                                />
-                                            </List>
-                                        </Panel>
+                                    <!-- Action Buttons -->
+                                    <HBox justifyContent="SpaceBetween" class="activityActions">
+                                        <Button
+                                            text="View T&amp;M"
+                                            icon="sap-icon://detail-view"
+                                            type="Emphasized"
+                                            press=".onViewTMReports"
+                                            class="tmActionButton"
+                                        />
+                                        <Button
+                                            text="Add T&amp;M"
+                                            icon="sap-icon://add"
+                                            type="Accept"
+                                            press=".onAddTMReport"
+                                            class="tmActionButton"
+                                        />
+                                    </HBox>
+                                    
+                                    <!-- More Details Link -->
+                                    <Link
+                                        text="{= ${view>detailsExpanded} ? 'Hide Details' : 'More Details...'}"
+                                        press=".onToggleDetails"
+                                        class="detailsToggleLink"
+                                    />
+                                    
+                                    <!-- Extended Details (Hidden) -->
+                                    <VBox visible="{view>detailsExpanded}" class="activityExtendedDetails">
+                                        <VBox class="detailField">
+                                            <Label text="Duration" design="Bold"/>
+                                            <Text text="{view>formattedDuration}"/>
+                                        </VBox>
+                                        <VBox class="detailField">
+                                            <Label text="Organization Level" design="Bold"/>
+                                            <Text text="{view>orgLevelId}"/>
+                                        </VBox>
+                                        <VBox class="detailField">
+                                            <Label text="Service Product" design="Bold"/>
+                                            <Text text="{view>serviceProductId}"/>
+                                        </VBox>
                                     </VBox>
                                     
                                 </VBox>
