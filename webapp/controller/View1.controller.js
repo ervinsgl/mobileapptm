@@ -196,12 +196,12 @@ sap.ui.define([
                     serviceOrderData.externalId
                 );
 
-                // Optimize data - pre-calculate all display values in single pass
+                // Prepare data WITHOUT auto-loading T&M
                 const optimizedGroups = productGroups.map(group => ({
                     ...group,
                     expanded: true,
                     activityCount: group.activities.length,
-                    activities: group.activities.map(activity => this._prepareActivityData(activity))
+                    activities: group.activities.map(activity => this._prepareActivityDataOptimized(activity))
                 }));
 
                 const viewModel = this.getView().getModel("view");
@@ -210,8 +210,11 @@ sap.ui.define([
                     viewModel.setProperty("/serviceCall", serviceOrderData);
                 }
 
-                // Single model update for better performance
+                // Set data first (fast UI load)
                 viewModel.setProperty("/productGroups", optimizedGroups);
+
+                // THEN batch load T&M reports in background
+                this._batchLoadTMReports(optimizedGroups);
 
             } catch (error) {
                 console.error("Load activities error:", error);
@@ -219,13 +222,121 @@ sap.ui.define([
         },
 
         /**
+         * Batch load T&M reports for all activities
+         */
+        async _batchLoadTMReports(productGroups) {
+            console.log('Starting batch T&M loading...');
+
+            // Collect all activity IDs
+            const allActivities = [];
+            const activityPaths = new Map();
+
+            productGroups.forEach((group, groupIndex) => {
+                group.activities.forEach((activity, activityIndex) => {
+                    allActivities.push({
+                        id: activity.id,
+                        code: activity.code,
+                        path: `/productGroups/${groupIndex}/activities/${activityIndex}`
+                    });
+                    activityPaths.set(activity.id, `/productGroups/${groupIndex}/activities/${activityIndex}`);
+                });
+            });
+
+            console.log(`Batch loading T&M for ${allActivities.length} activities`);
+
+            // Process in chunks of 10 to avoid overwhelming the API
+            const chunkSize = 10;
+            const model = this.getView().getModel("view");
+
+            for (let i = 0; i < allActivities.length; i += chunkSize) {
+                const chunk = allActivities.slice(i, i + chunkSize);
+
+                // Set loading state for this chunk
+                chunk.forEach(activity => {
+                    const path = activityPaths.get(activity.id);
+                    model.setProperty(`${path}/tmReportsLoadingState`, 'loading');
+                    model.setProperty(`${path}/tmReportsLoading`, true);
+                });
+
+                // Load T&M reports for this chunk in parallel
+                const promises = chunk.map(activity =>
+                    this._loadSingleActivityTMReports(activity.id, activityPaths.get(activity.id))
+                );
+
+                try {
+                    await Promise.allSettled(promises); // Continue even if some fail
+                } catch (error) {
+                    console.error('Error in batch loading chunk:', error);
+                }
+
+                // Small delay between chunks to avoid API rate limiting
+                if (i + chunkSize < allActivities.length) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+            }
+
+            console.log('Batch T&M loading completed');
+
+            // Single model refresh at the end
+            model.refresh(true);
+        },
+
+        /**
+         * Load T&M for single activity
+         */
+        async _loadSingleActivityTMReports(activityId, activityPath) {
+            const model = this.getView().getModel("view");
+
+            try {
+                const reports = await ReportedItemsData.getReportedItems(activityId);
+
+                // Calculate counts
+                const timeEffortCount = reports.filter(r => r.type === "Time Effort").length;
+                const materialCount = reports.filter(r => r.type === "Material").length;
+                const expenseCount = reports.filter(r => r.type === "Expense").length;
+                const mileageCount = reports.filter(r => r.type === "Mileage").length;
+
+                // Update model in batch
+                const updates = {
+                    [`${activityPath}/tmReports`]: reports,
+                    [`${activityPath}/tmReportsCount`]: reports.length,
+                    [`${activityPath}/tmReportsLoaded`]: true,
+                    [`${activityPath}/tmReportsLoading`]: false,
+                    [`${activityPath}/tmReportsLoadingState`]: 'loaded',
+                    [`${activityPath}/tmTimeEffortCount`]: timeEffortCount,
+                    [`${activityPath}/tmMaterialCount`]: materialCount,
+                    [`${activityPath}/tmExpenseCount`]: expenseCount,
+                    [`${activityPath}/tmMileageCount`]: mileageCount
+                };
+
+                // Apply all updates at once
+                Object.keys(updates).forEach(path => {
+                    model.setProperty(path, updates[path]);
+                });
+
+            } catch (error) {
+                console.error(`Error loading T&M for activity ${activityId}:`, error);
+                model.setProperty(`${activityPath}/tmReportsLoadingState`, 'error');
+                model.setProperty(`${activityPath}/tmReportsLoading`, false);
+                model.setProperty(`${activityPath}/tmReportsCount`, 0);
+            }
+        },
+
+        /**
          * Pre-calculate all display values to avoid expression bindings
          */
-        _prepareActivityData(activity) {
+        _prepareActivityDataOptimized(activity) {
             const isClosed = activity.executionStage === 'CLOSED';
             const fullActivity = activity.fullActivity || {};
 
-            const preparedData = {
+            // ✅ Extract UDF values for Quantity and UoM
+            const quantity = this._getUdfValue(fullActivity, 'Z_Quantity') || 'N/A';
+            const quantityUoM = this._getUdfValue(fullActivity, 'Z_QuantityUoM') || 'N/A';
+            const formattedQuantity = quantity !== 'N/A' && quantityUoM !== 'N/A'
+                ? `${quantity} ${quantityUoM}`
+                : quantity;
+
+            return {
                 // Original data
                 id: activity.id,
                 code: activity.code,
@@ -240,13 +351,10 @@ sap.ui.define([
                 isClosed: isClosed,
                 isReadOnly: isClosed,
 
-                // T&M Reports flags - ONLY SET ONCE HERE
-                tmReportsExpanded: false,
+                // T&M Reports flags
                 tmReportsLoaded: false,
                 tmReportsLoading: false,
                 tmReportsCount: 0,
-                tmReports: [],
-                tmIconClass: 'expandIcon',
 
                 // T&M Type counts
                 tmTimeEffortCount: 0,
@@ -271,6 +379,11 @@ sap.ui.define([
                 serviceProductId: fullActivity.serviceProduct?.externalId || 'N/A',
                 plannedDuration: fullActivity.plannedDurationInMinutes || 0,
 
+                // ✅ NEW: Quantity fields
+                quantity: quantity,
+                quantityUoM: quantityUoM,
+                formattedQuantity: formattedQuantity,
+
                 // Address fields
                 addressStreet: fullActivity.address?.street || '',
                 addressStreetNumber: fullActivity.address?.streetNumber || '',
@@ -285,50 +398,21 @@ sap.ui.define([
                 // Keep full activity for edge cases
                 fullActivity: fullActivity
             };
-
-            // AUTO-LOAD T&M Reports for immediate count display
-            this._autoLoadTMReportsFixed(activity.id, preparedData);
-
-            return preparedData;
         },
 
         /**
-         * Auto-load T&M reports and update model properly
+         * Helper method to extract UDF values
          */
-        async _autoLoadTMReportsFixed(activityId, activityData) {
-            try {
-                const reports = await ReportedItemsData.getReportedItems(activityId);
-
-                // Calculate counts by type
-                const timeEffortCount = reports.filter(r => r.type === "Time Effort").length;
-                const materialCount = reports.filter(r => r.type === "Material").length;
-                const expenseCount = reports.filter(r => r.type === "Expense").length;
-                const mileageCount = reports.filter(r => r.type === "Mileage").length;
-
-                // Update activity data directly
-                activityData.tmReports = reports;
-                activityData.tmReportsCount = reports.length;
-                activityData.tmReportsLoaded = true;
-                activityData.tmTimeEffortCount = timeEffortCount;
-                activityData.tmMaterialCount = materialCount;
-                activityData.tmExpenseCount = expenseCount;
-                activityData.tmMileageCount = mileageCount;
-
-                // Force model update after data is loaded
-                setTimeout(() => {
-                    const model = this.getView().getModel("view");
-                    if (model) {
-                        model.refresh(true); // Force refresh
-                    }
-                }, 100);
-
-                console.log(`Auto-loaded ${reports.length} T&M reports for activity ${activityData.code}`);
-
-            } catch (error) {
-                console.error("Error auto-loading T&M reports for activity", activityId, ":", error);
-                activityData.tmReportsCount = 0;
-                activityData.tmReportsLoaded = false;
+        _getUdfValue(activity, udfExternalId) {
+            if (!activity.udfValues || !Array.isArray(activity.udfValues)) {
+                return null;
             }
+
+            const udfValue = activity.udfValues.find(udf =>
+                udf.udfMeta && udf.udfMeta.externalId === udfExternalId
+            );
+
+            return udfValue ? udfValue.value : null;
         },
 
         /**
@@ -465,7 +549,7 @@ sap.ui.define([
                 oModel.setProperty(activityPath + "/tmReportsCount", reports.length);
                 oModel.setProperty(activityPath + "/tmReportsLoaded", true);
 
-                // NEW - Set type counts
+                // Set type counts
                 oModel.setProperty(activityPath + "/tmTimeEffortCount", timeEffortCount);
                 oModel.setProperty(activityPath + "/tmMaterialCount", materialCount);
                 oModel.setProperty(activityPath + "/tmExpenseCount", expenseCount);

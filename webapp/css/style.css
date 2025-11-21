@@ -496,3 +496,99 @@
 .tmSummaryBox .sapMBusyIndicator {
     --sapContent_BusyColor: #0854a0;
 }
+
+/* ========================================
+   IMPROVED DETAIL FIELD SPACING
+   ======================================== */
+
+/* Detail field containers */
+.detailField {
+    margin-bottom: 0.75rem;
+    padding-right: 1rem; /* Add some right padding for better column separation */
+}
+
+.detailField:last-child {
+    margin-bottom: 0;
+}
+
+/* Labels */
+.detailField .sapMLabel {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #666;
+    margin-bottom: 0.25rem;
+    font-weight: 600;
+}
+
+/* Values */
+.detailField .detailFieldValue {
+    font-size: 0.9375rem;
+    color: #333;
+    margin-bottom: 0.5rem;
+    line-height: 1.3;
+}
+
+/* Quick info container adjustments */
+.activityQuickInfo .sapUiLayoutGrid {
+    margin: 0 !important;
+    padding: 0.75rem !important;
+}
+
+.activityExtendedDetails .sapUiLayoutGrid {
+    margin: 0 !important;
+    padding: 1rem !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+    .detailField {
+        padding-right: 0.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .detailField {
+        padding-right: 0;
+        margin-bottom: 0.5rem;
+    }
+    
+    .activityQuickInfo .sapUiLayoutGrid,
+    .activityExtendedDetails .sapUiLayoutGrid {
+        padding: 0.5rem !important;
+    }
+}
+
+/* Grid spacing adjustments */
+.sapUiLayoutGrid[data-sap-ui-hspacing="2"] .sapUiLayoutGridInner {
+    margin-left: -1rem;
+    margin-right: -1rem;
+}
+
+.sapUiLayoutGrid[data-sap-ui-hspacing="2"] .sapUiLayoutGridInner > .sapUiLayoutGridSpan {
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+/* ========================================
+   DETAILS TOGGLE LINK STYLING
+   ======================================== */
+
+.detailsToggleLink {
+    font-size: 0.875rem;
+    color: #0854a0 !important;
+    font-weight: 500;
+    text-decoration: none;
+    padding: 0.5rem;
+    display: inline-block;
+}
+
+.detailsToggleLink:hover {
+    text-decoration: underline !important;
+    color: #1873cd !important;
+}
+
+.detailsToggleLink:focus {
+    outline: 2px solid #0854a0;
+    outline-offset: 2px;
+}

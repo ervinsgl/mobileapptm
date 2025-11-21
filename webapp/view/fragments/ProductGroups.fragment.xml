@@ -1,6 +1,7 @@
 <core:FragmentDefinition
     xmlns="sap.m"
     xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout"
 >
     <VBox class="sapUiResponsiveMargin">
         <List
@@ -19,7 +20,7 @@
                     <headerToolbar>
                         <OverflowToolbar class="productGroupHeader">
                             <Title 
-                                text="{= ${device>/system/phone} ? ${view>productDescription} : 'Product: ' + ${view>productDescription}}" 
+                                text="Product: {view>productDescription}"
                                 wrapping="true"
                                 class="productGroupHeaderTitle"
                             />
@@ -62,12 +63,98 @@
                                     <Text text="{view>subject}" wrapping="true" class="activitySubject"/>
                                     
                                     <!-- Quick Info: Address + Time -->
-                                    <VBox class="activityQuickInfo">
-                                        <Text text="Address: {view>addressFull}" wrapping="true"/>
-                                        <Text text="Planned: {view>formattedStartDate} - {view>formattedEndDate}" class="sapUiTinyMarginTop"/>
-                                        <Text text="Responsible: {view>responsibleId}" class="sapUiTinyMarginTop"/>
+									<VBox class="activityQuickInfo">
+                                        <l:Grid defaultSpan="XL6 L6 M12 S12" hSpacing="2" vSpacing="1" containerQuery="true">
+                                            <!-- Left Column -->
+                                            <VBox class="detailField">
+                                                <layoutData>
+                                                    <l:GridData span="XL6 L6 M12 S12"/>
+                                                </layoutData>
+                                                <Label text="Address:" design="Bold" class="infoLabel"/>
+                                                <Text text="{view>addressFull}" wrapping="true" class="infoValue detailFieldValue"/>
+                                            </VBox>
+                                            
+                                            <VBox class="detailField">
+                                                <layoutData>
+                                                    <l:GridData span="XL6 L6 M12 S12"/>
+                                                </layoutData>
+                                                <Label text="Responsible:" design="Bold" class="infoLabel"/>
+                                                <Text text="{view>responsibleId}" class="infoValue detailFieldValue"/>
+                                            </VBox>
+                                            
+                                            <!-- Right Column -->
+                                            <VBox class="detailField">
+                                                <layoutData>
+                                                    <l:GridData span="XL6 L6 M12 S12"/>
+                                                </layoutData>
+                                                <Label text="Planned Start:" design="Bold" class="infoLabel"/>
+                                                <Text text="{view>formattedStartDate}" class="infoValue detailFieldValue"/>
+                                            </VBox>
+                                            
+                                            <VBox class="detailField">
+                                                <layoutData>
+                                                    <l:GridData span="XL6 L6 M12 S12"/>
+                                                </layoutData>
+                                                <Label text="Planned End:" design="Bold" class="infoLabel"/>
+                                                <Text text="{view>formattedEndDate}" class="infoValue detailFieldValue"/>
+                                            </VBox>
+                                        </l:Grid>
                                     </VBox>
-                                    
+
+                                    <!-- More Details Link -->
+                                    <HBox class="activityActions">
+                                        <Link
+                                            text="{= ${view>detailsExpanded} ? 'Hide Details' : 'More Details...'}"
+                                            press=".onToggleDetails"
+                                            class="detailsToggleLink"
+                                        />
+                                    </HBox>
+
+                                    <!-- Extended Details (Hidden) -->
+                                    <VBox visible="{view>detailsExpanded}" class="activityExtendedDetails">
+                                        <l:Grid defaultSpan="XL6 L6 M12 S12" hSpacing="2" vSpacing="1" containerQuery="true">
+                                            <VBox class="detailField">
+                                                <layoutData>
+                                                    <l:GridData span="XL6 L6 M12 S12"/>
+                                                </layoutData>
+                                                <Label text="Duration" design="Bold" class="infoLabel"/>
+                                                <Text text="{view>formattedDuration}" class="infoValue detailFieldValue"/>
+                                            </VBox>
+                                            
+                                            <VBox class="detailField">
+                                                <layoutData>
+                                                    <l:GridData span="XL6 L6 M12 S12"/>
+                                                </layoutData>
+                                                <Label text="Organization Level" design="Bold" class="infoLabel"/>
+                                                <Text text="{view>orgLevelId}" class="infoValue detailFieldValue"/>
+                                            </VBox>
+                                            
+                                            <VBox class="detailField">
+                                                <layoutData>
+                                                    <l:GridData span="XL6 L6 M12 S12"/>
+                                                </layoutData>
+                                                <Label text="Service Product" design="Bold" class="infoLabel"/>
+                                                <Text text="{view>serviceProductId}" class="infoValue detailFieldValue"/>
+                                            </VBox>
+                                            
+                                            <VBox class="detailField">
+                                                <layoutData>
+                                                    <l:GridData span="XL6 L6 M12 S12"/>
+                                                </layoutData>
+                                                <Label text="Quantity" design="Bold" class="infoLabel"/>
+                                                <Text text="{view>quantity}" class="infoValue detailFieldValue"/>
+                                            </VBox>
+                                            
+                                            <VBox class="detailField">
+                                                <layoutData>
+                                                    <l:GridData span="XL6 L6 M12 S12"/>
+                                                </layoutData>
+                                                <Label text="Unit of Measure" design="Bold" class="infoLabel"/>
+                                                <Text text="{view>quantityUoM}" class="infoValue detailFieldValue"/>
+                                            </VBox>
+                                        </l:Grid>
+                                    </VBox>
+
                                     <!-- T&M Summary Box -->
                                     <VBox class="tmSummaryBox">
                                         <HBox justifyContent="SpaceBetween" alignItems="Center">
@@ -85,7 +172,7 @@
                                     </VBox>
                                     
                                     <!-- Action Buttons -->
-                                    <HBox justifyContent="SpaceBetween" class="activityActions">
+                                    <HBox class="activityActions">
                                         <Button
                                             text="View T&amp;M"
                                             icon="sap-icon://detail-view"
@@ -101,29 +188,6 @@
                                             class="tmActionButton"
                                         />
                                     </HBox>
-                                    
-                                    <!-- More Details Link -->
-                                    <Link
-                                        text="{= ${view>detailsExpanded} ? 'Hide Details' : 'More Details...'}"
-                                        press=".onToggleDetails"
-                                        class="detailsToggleLink"
-                                    />
-                                    
-                                    <!-- Extended Details (Hidden) -->
-                                    <VBox visible="{view>detailsExpanded}" class="activityExtendedDetails">
-                                        <VBox class="detailField">
-                                            <Label text="Duration" design="Bold"/>
-                                            <Text text="{view>formattedDuration}"/>
-                                        </VBox>
-                                        <VBox class="detailField">
-                                            <Label text="Organization Level" design="Bold"/>
-                                            <Text text="{view>orgLevelId}"/>
-                                        </VBox>
-                                        <VBox class="detailField">
-                                            <Label text="Service Product" design="Bold"/>
-                                            <Text text="{view>serviceProductId}"/>
-                                        </VBox>
-                                    </VBox>
                                     
                                 </VBox>
                             </CustomListItem>

@@ -10,7 +10,7 @@ sap.ui.define([], () => {
                 return null;
             }
 
-            const udfValue = activity.udfValues.find(udf => 
+            const udfValue = activity.udfValues.find(udf =>
                 udf.udfMeta && udf.udfMeta.externalId === udfExternalId
             );
 
@@ -35,10 +35,6 @@ sap.ui.define([], () => {
                 const productDescription = this.getUdfValue(activity, 'Z_ProductDescription');
                 const parentItemId = this.getUdfValue(activity, 'Z_ActParentItemID');
 
-                console.log(`\nActivity: ${activity.code} - ${activity.subject}`);
-                console.log('  Product Description:', productDescription);
-                console.log('  Parent Item ID:', parentItemId);
-
                 // Skip if no product description
                 if (!productDescription) {
                     console.log('  -> Skipping (no product description)');
@@ -46,8 +42,8 @@ sap.ui.define([], () => {
                 }
 
                 // Create SO Item ID (e.g., "8200001975/100")
-                const soItemId = parentItemId 
-                    ? `${serviceOrderCode}/${parentItemId}` 
+                const soItemId = parentItemId
+                    ? `${serviceOrderCode}/${parentItemId}`
                     : serviceOrderCode;
 
                 // Create unique group key
@@ -80,13 +76,22 @@ sap.ui.define([], () => {
 
             // Convert to array and sort
             const groupArray = Object.values(groups);
-            
+
             // Sort by SO Item ID, then by Product Description
             groupArray.sort((a, b) => {
                 if (a.soItemId !== b.soItemId) {
                     return a.soItemId.localeCompare(b.soItemId);
                 }
                 return a.productDescription.localeCompare(b.productDescription);
+            });
+
+            // SORT ACTIVITIES BY EXTERNAL ID within each group
+            groupArray.forEach(group => {
+                group.activities.sort((a, b) => {
+                    const externalIdA = a.fullActivity?.externalId || a.code || '';
+                    const externalIdB = b.fullActivity?.externalId || b.code || '';
+                    return externalIdA.localeCompare(externalIdB);
+                });
             });
 
             console.log('\n--- GROUPED RESULTS ---');

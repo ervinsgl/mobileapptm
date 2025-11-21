@@ -19,7 +19,7 @@ class FSMService {
             const token = await TokenCache.getToken(destination);
 
             const baseUrl = destination.destinationConfiguration.URL;
-            const fullUrl = `${baseUrl}${path}`;
+            const fullUrl = `${baseUrl}/api/data/v4${path}`;
 
             const queryParams = {
                 ...params,
@@ -71,12 +71,8 @@ class FSMService {
             const destination = await DestinationService.getDestination('FSM_S4E');
             const token = await TokenCache.getToken(destination);
 
-            // Get base cloud host (remove /api/data/v4 from URL)
             const baseUrl = destination.destinationConfiguration.URL;
-            const cloudHost = baseUrl.replace('/api/data/v4', '');
-
-            // Build service-management API URL
-            const fullUrl = `${cloudHost}/api/service-management/v2/composite-tree/service-calls/${serviceCallId}`;
+            const fullUrl = `${baseUrl}/api/service-management/v2/composite-tree/service-calls/${serviceCallId}`;
 
             console.log('Fetching activities from:', fullUrl);
 
@@ -109,12 +105,8 @@ class FSMService {
             const destination = await DestinationService.getDestination('FSM_S4E');
             const token = await TokenCache.getToken(destination);
 
-            // Get base cloud host (remove /api/data/v4 from URL) 
             const baseUrl = destination.destinationConfiguration.URL;
-            const cloudHost = baseUrl.replace('/api/data/v4', '');
-
-            // Build organizational levels API URL
-            const fullUrl = `${cloudHost}/cloud-org-level-service/api/v1/levels`;
+            const fullUrl = `${baseUrl}/cloud-org-level-service/api/v1/levels`;
 
             console.log('Fetching organizational levels from:', fullUrl);
 
@@ -145,7 +137,7 @@ class FSMService {
         const token = await TokenCache.getToken(destination);
 
         const baseUrl = destination.destinationConfiguration.URL;
-        const fullUrl = `${baseUrl}/Activity/${activityId}`;
+        const fullUrl = `${baseUrl}/api/data/v4/Activity/${activityId}`;
 
         const queryParams = {
             dtos: 'Activity.40',
@@ -171,17 +163,15 @@ class FSMService {
     }
 
     /**
- * Make Query API request (for /api/query/v1 endpoints)
- */
+     * Make Query API request (for /api/query/v1 endpoints)
+     */
     async makeQueryRequest(query, dtos) {
         try {
             const destination = await DestinationService.getDestination('FSM_S4E');
             const token = await TokenCache.getToken(destination);
 
-            // Get base cloud host (remove /api/data/v4 from URL)
             const baseUrl = destination.destinationConfiguration.URL;
-            const cloudHost = baseUrl.replace('/api/data/v4', '');
-            const queryUrl = `${cloudHost}/api/query/v1`;
+            const queryUrl = `${baseUrl}/api/query/v1`;
 
             const queryParams = {
                 query: query,
@@ -217,16 +207,23 @@ class FSMService {
      */
     async getTimeEffortsForActivity(activityId) {
         try {
-            const query = `SELECT timeEffort.id, timeEffort.createDateTime FROM TimeEffort timeEffort WHERE timeEffort.object.objectId = '${activityId}'`;
+            const query = `SELECT timeEffort FROM TimeEffort timeEffort WHERE timeEffort.object.objectId = '${activityId}'`;
             const data = await this.makeQueryRequest(query, 'TimeEffort.17');
 
             if (!data.data || data.data.length === 0) {
                 return [];
             }
 
+            console.log('\n=== TIME EFFORT FULL DATA ===');
+            data.data.forEach((item, index) => {
+                console.log(`Time Effort ${index + 1}:`, JSON.stringify(item.timeEffort, null, 2));
+            });
+            console.log('============================\n');
+
             return data.data.map(item => ({
                 id: item.timeEffort.id,
-                createDateTime: item.timeEffort.createDateTime
+                createDateTime: item.timeEffort.createDateTime,
+                fullData: item.timeEffort // ✅ Keep full object for analysis
             }));
         } catch (error) {
             console.error("Error fetching time efforts:", error.message);
@@ -239,16 +236,23 @@ class FSMService {
      */
     async getMaterialsForActivity(activityId) {
         try {
-            const query = `SELECT w.id, w.createDateTime FROM Material w WHERE w.object.objectId = '${activityId}'`;
+            const query = `SELECT w FROM Material w WHERE w.object.objectId = '${activityId}'`;
             const data = await this.makeQueryRequest(query, 'Material.22');
 
             if (!data.data || data.data.length === 0) {
                 return [];
             }
 
+            console.log('\n=== MATERIAL FULL DATA ===');
+            data.data.forEach((item, index) => {
+                console.log(`Material ${index + 1}:`, JSON.stringify(item.w, null, 2));
+            });
+            console.log('===========================\n');
+
             return data.data.map(item => ({
                 id: item.w.id,
-                createDateTime: item.w.createDateTime
+                createDateTime: item.w.createDateTime,
+                fullData: item.w // ✅ Keep full object for analysis
             }));
         } catch (error) {
             console.error("Error fetching materials:", error);
@@ -261,16 +265,23 @@ class FSMService {
      */
     async getExpensesForActivity(activityId) {
         try {
-            const query = `SELECT w.id, w.createDateTime FROM Expense w WHERE w.object.objectId = '${activityId}'`;
+            const query = `SELECT w FROM Expense w WHERE w.object.objectId = '${activityId}'`;
             const data = await this.makeQueryRequest(query, 'Expense.17');
 
             if (!data.data || data.data.length === 0) {
                 return [];
             }
 
+            console.log('\n=== EXPENSE FULL DATA ===');
+            data.data.forEach((item, index) => {
+                console.log(`Expense ${index + 1}:`, JSON.stringify(item.w, null, 2));
+            });
+            console.log('=========================\n');
+
             return data.data.map(item => ({
                 id: item.w.id,
-                createDateTime: item.w.createDateTime
+                createDateTime: item.w.createDateTime,
+                fullData: item.w // ✅ Keep full object for analysis
             }));
         } catch (error) {
             console.error("Error fetching expenses:", error);
@@ -283,16 +294,23 @@ class FSMService {
      */
     async getMileagesForActivity(activityId) {
         try {
-            const query = `SELECT w.id, w.createDateTime FROM Mileage w WHERE w.object.objectId = '${activityId}'`;
+            const query = `SELECT w FROM Mileage w WHERE w.object.objectId = '${activityId}'`;
             const data = await this.makeQueryRequest(query, 'Mileage.19');
 
             if (!data.data || data.data.length === 0) {
                 return [];
             }
 
+            console.log('\n=== MILEAGE FULL DATA ===');
+            data.data.forEach((item, index) => {
+                console.log(`Mileage ${index + 1}:`, JSON.stringify(item.w, null, 2));
+            });
+            console.log('=========================\n');
+
             return data.data.map(item => ({
                 id: item.w.id,
-                createDateTime: item.w.createDateTime
+                createDateTime: item.w.createDateTime,
+                fullData: item.w // ✅ Keep full object for analysis
             }));
         } catch (error) {
             console.error("Error fetching mileages:", error);
