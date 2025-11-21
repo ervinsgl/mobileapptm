@@ -379,7 +379,7 @@ sap.ui.define([
                 serviceProductId: fullActivity.serviceProduct?.externalId || 'N/A',
                 plannedDuration: fullActivity.plannedDurationInMinutes || 0,
 
-                // ✅ NEW: Quantity fields
+                // Quantity fields
                 quantity: quantity,
                 quantityUoM: quantityUoM,
                 formattedQuantity: formattedQuantity,

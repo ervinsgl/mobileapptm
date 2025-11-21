@@ -165,14 +165,8 @@ app.post("/api/get-reported-items", async (req, res) => {
         const allItems = [
             ...timeEfforts,
             ...materials,
-            ...expenses.map(item => ({
-                ...item, // Keep all fields  
-                type: "Expense" // Ensure type is set
-            })),
-            ...mileages.map(item => ({
-                ...item, // Keep all fields
-                type: "Mileage" // Ensure type is set
-            }))
+            ...expenses,
+            ...mileages
         ];
 
         console.log('Backend: Sending enhanced T&M data:', allItems);

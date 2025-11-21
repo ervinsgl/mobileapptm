@@ -57,18 +57,14 @@
                                             <l:GridData span="XL6 L6 M12 S12"/>
                                         </layoutData>
                                         
-                                        <!-- Dynamic field based on type -->
+                                        <!-- ===============================
+                                             TIME EFFORT FIELDS
+                                             =============================== -->
                                         <VBox class="tmField" visible="{= ${dialog>type} === 'Time Effort'}">
                                             <Label text="Duration:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{dialog>durationText}" class="tmFieldValue"/>
                                         </VBox>
                                         
-                                        <VBox class="tmField" visible="{= ${dialog>type} === 'Material'}">
-                                            <Label text="Quantity:" design="Bold" class="tmFieldLabel"/>
-                                            <Text text="{dialog>quantityText}" class="tmFieldValue"/>
-                                        </VBox>
-                                        
-                                        <!-- Time fields for Time Effort -->
                                         <VBox class="tmField" visible="{= ${dialog>type} === 'Time Effort'}">
                                             <Label text="Start:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{
@@ -85,18 +81,76 @@
                                             }" class="tmFieldValue"/>
                                         </VBox>
                                         
-                                        <!-- Date field for Material -->
+                                        <!-- ===============================
+                                             MATERIAL FIELDS
+                                             =============================== -->
                                         <VBox class="tmField" visible="{= ${dialog>type} === 'Material'}">
-                                            <Label text="Date:" design="Bold" class="tmFieldLabel"/>
-                                            <Text text="{dialog>dateText}" class="tmFieldValue"/>
+                                            <Label text="Quantity:" design="Bold" class="tmFieldLabel"/>
+                                            <Text text="{dialog>quantityText}" class="tmFieldValue"/>
                                         </VBox>
                                         
-                                        <!-- Item info for Material -->
                                         <VBox class="tmField" visible="{= ${dialog>type} === 'Material'}">
                                             <Label text="Item:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{dialog>itemDisplayText}" class="tmFieldValue"/>
                                         </VBox>
                                         
+                                        <!-- ===============================
+                                             EXPENSE FIELDS
+                                             =============================== -->
+                                        <VBox class="tmField" visible="{= ${dialog>type} === 'Expense'}">
+                                            <Label text="External Amount:" design="Bold" class="tmFieldLabel"/>
+                                            <Text text="{dialog>externalAmountText}" class="tmFieldValue"/>
+                                        </VBox>
+                                        
+                                        <VBox class="tmField" visible="{= ${dialog>type} === 'Expense'}">
+                                            <Label text="Internal Amount:" design="Bold" class="tmFieldLabel"/>
+                                            <Text text="{dialog>internalAmountText}" class="tmFieldValue"/>
+                                        </VBox>
+                                        
+                                        <VBox class="tmField" visible="{= ${dialog>type} === 'Expense'}">
+                                            <Label text="Expense Type:" design="Bold" class="tmFieldLabel"/>
+                                            <Text text="{dialog>expenseTypeText}" class="tmFieldValue"/>
+                                        </VBox>
+                                        
+                                        <!-- ===============================
+                                             MILEAGE FIELDS
+                                             =============================== -->
+                                        <VBox class="tmField" visible="{= ${dialog>type} === 'Mileage'}">
+                                            <Label text="Distance:" design="Bold" class="tmFieldLabel"/>
+                                            <Text text="{dialog>distanceText}" class="tmFieldValue"/>
+                                        </VBox>
+                                        
+                                        <VBox class="tmField" visible="{= ${dialog>type} === 'Mileage'}">
+                                            <Label text="Route:" design="Bold" class="tmFieldLabel"/>
+                                            <Text text="{dialog>routeText}" class="tmFieldValue"/>
+                                        </VBox>
+                                        
+                                        <VBox class="tmField" visible="{= ${dialog>type} === 'Mileage'}">
+                                            <Label text="Travel Start:" design="Bold" class="tmFieldLabel"/>
+                                            <Text text="{
+                                                path: 'dialog>travelStartDateTime', 
+                                                formatter: '.formatter.formatDateTime'
+                                            }" class="tmFieldValue"/>
+                                        </VBox>
+                                        
+                                        <VBox class="tmField" visible="{= ${dialog>type} === 'Mileage'}">
+                                            <Label text="Travel End:" design="Bold" class="tmFieldLabel"/>
+                                            <Text text="{
+                                                path: 'dialog>travelEndDateTime', 
+                                                formatter: '.formatter.formatDateTime'
+                                            }" class="tmFieldValue"/>
+                                        </VBox>
+                                        
+                                        <!-- ===============================
+                                             SHARED FIELDS (LEFT)
+                                             =============================== -->
+                                        <!-- Date (Material + Expense + Mileage) -->
+                                        <VBox class="tmField" visible="{= ${dialog>type} === 'Material' || ${dialog>type} === 'Expense' || ${dialog>type} === 'Mileage'}">
+                                            <Label text="Date:" design="Bold" class="tmFieldLabel"/>
+                                            <Text text="{dialog>dateText}" class="tmFieldValue"/>
+                                        </VBox>
+                                        
+                                        <!-- Created (All types) -->
                                         <VBox class="tmField">
                                             <Label text="Created:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{
@@ -105,6 +159,7 @@
                                             }" class="tmFieldValue"/>
                                         </VBox>
                                         
+                                        <!-- Create Person (All types) -->
                                         <VBox class="tmField">
                                             <Label text="Create Person:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{dialog>createPerson}" class="tmFieldValue tmFieldValueSmall"/>
@@ -117,38 +172,71 @@
                                             <l:GridData span="XL6 L6 M12 S12"/>
                                         </layoutData>
                                         
-                                        <VBox class="tmField">
-                                            <Label text="Charge Option:" design="Bold" class="tmFieldLabel"/>
-                                            <Text text="{dialog>chargeOption}" class="tmFieldValue"/>
-                                        </VBox>
-                                        
-                                        <VBox class="tmField">
-                                            <Label text="Org Level:" design="Bold" class="tmFieldLabel"/>
-                                            <Text text="{dialog>orgLevel}" class="tmFieldValue tmFieldValueSmall"/>
-                                        </VBox>
-                                        
-                                        <!-- Time Effort specific field -->
+                                        <!-- ===============================
+                                             TIME EFFORT FIELDS (RIGHT)
+                                             =============================== -->
                                         <VBox class="tmField" visible="{= ${dialog>type} === 'Time Effort'}">
                                             <Label text="Task ID:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{dialog>task}" class="tmFieldValue tmFieldValueSmall"/>
                                         </VBox>
                                         
+                                        <!-- ===============================
+                                             MATERIAL FIELDS (RIGHT)
+                                             =============================== -->
+                                        <!-- (No additional material-specific fields for right column) -->
+                                        
+                                        <!-- ===============================
+                                             EXPENSE FIELDS (RIGHT)
+                                             =============================== -->
+                                        <!-- (Expense fields are all in left column) -->
+                                        
+                                        <!-- ===============================
+                                             MILEAGE FIELDS (RIGHT)
+                                             =============================== -->
+                                        <VBox class="tmField" visible="{= ${dialog>type} === 'Mileage'}">
+                                            <Label text="Driver:" design="Bold" class="tmFieldLabel"/>
+                                            <Text text="{dialog>driverText}" class="tmFieldValue"/>
+                                        </VBox>
+                                        
+                                        <VBox class="tmField" visible="{= ${dialog>type} === 'Mileage'}">
+                                            <Label text="Private Car:" design="Bold" class="tmFieldLabel"/>
+                                            <Text text="{dialog>privateCarText}" class="tmFieldValue"/>
+                                        </VBox>
+                                        
+                                        <!-- ===============================
+                                             SHARED FIELDS (RIGHT)
+                                             =============================== -->
+                                        <!-- Charge Option (All types) -->
+                                        <VBox class="tmField">
+                                            <Label text="Charge Option:" design="Bold" class="tmFieldLabel"/>
+                                            <Text text="{dialog>chargeOption}" class="tmFieldValue"/>
+                                        </VBox>
+                                        
+                                        <!-- Org Level (All types) -->
+                                        <VBox class="tmField">
+                                            <Label text="Org Level:" design="Bold" class="tmFieldLabel"/>
+                                            <Text text="{dialog>orgLevel}" class="tmFieldValue tmFieldValueSmall"/>
+                                        </VBox>
+                                        
+                                        <!-- UDF Values (All types) -->
                                         <VBox class="tmField">
                                             <Label text="UDF Values:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{dialog>udfValuesText}" class="tmFieldValue tmFieldValueSmall" wrapping="true"/>
                                         </VBox>
                                         
+                                        <!-- Sync Status (All types) -->
                                         <VBox class="tmField">
                                             <Label text="Sync Status:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{dialog>syncStatus}" class="tmFieldValue"/>
                                         </VBox>
                                         
-                                        <!-- ✅ SPLIT REMARKS INTO TWO FIELDS -->
+                                        <!-- Internal Remarks (Time Effort only) -->
                                         <VBox class="tmField" visible="{= ${dialog>type} === 'Time Effort'}">
                                             <Label text="Internal Remarks:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{= ${dialog>internalRemarks} || 'N/A'}" class="tmFieldValue" wrapping="true"/>
                                         </VBox>
                                         
+                                        <!-- Remarks (All types) -->
                                         <VBox class="tmField">
                                             <Label text="Remarks:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{= ${dialog>remarks} || 'N/A'}" class="tmFieldValue" wrapping="true"/>

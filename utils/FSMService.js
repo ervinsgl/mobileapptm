@@ -332,7 +332,7 @@ class FSMService {
                     quantity: material.quantity || 0,
                     remarks: material.remarks || null,
 
-                    // ✅ SIMPLIFIED: Just use the item ID directly
+                    // Just use the item ID directly
                     itemDisplayText: material.item || 'N/A',
 
                     // Display type
@@ -369,15 +369,72 @@ class FSMService {
             data.data.forEach((item, index) => {
                 console.log(`Expense ${index + 1}:`, JSON.stringify(item.w, null, 2));
             });
-            console.log('=========================\n');
+            console.log('==========================\n');
 
-            return data.data.map(item => ({
-                id: item.w.id,
-                createDateTime: item.w.createDateTime,
-                fullData: item.w // ✅ Keep full object for analysis
-            }));
+            return data.data.map(item => {
+                const expense = item.w;
+
+                // Extract UDF values (same pattern as TimeEffort)
+                const udfValues = expense.udfValues || [];
+                const udfValuesText = udfValues.map(udf => `${udf.meta}: ${udf.value}`).join(', ') || 'N/A';
+
+                // Extract amount information
+                const externalAmount = expense.externalAmount ?
+                    `${expense.externalAmount.amount} ${expense.externalAmount.currency}` : 'N/A';
+                const internalAmount = expense.internalAmount ?
+                    `${expense.internalAmount.amount} ${expense.internalAmount.currency}` : 'N/A';
+
+                console.log(`\n=== PROCESSED EXPENSE ===`);
+                console.log('ID:', expense.id);
+                console.log('Date:', expense.date);
+                console.log('Type:', expense.type);
+                console.log('External Amount:', externalAmount);
+                console.log('Internal Amount:', internalAmount);
+                console.log('Charge Option:', expense.chargeOption);
+                console.log('Create Person:', expense.createPerson);
+                console.log('Org Level:', expense.orgLevel);
+                console.log('Remarks:', expense.remarks);
+                console.log('Sync Status:', expense.syncStatus);
+                console.log('UDF Values:', udfValuesText);
+                console.log('=============================\n');
+
+                return {
+                    id: expense.id,
+                    createDateTime: expense.createDateTime,
+
+                    // ✅ BASIC FIELDS (matching TimeEffort/Material pattern)
+                    createPerson: expense.createPerson || 'N/A',
+                    orgLevel: expense.orgLevel || 'N/A',
+                    chargeOption: expense.chargeOption || 'N/A',
+                    syncStatus: expense.syncStatus || 'N/A',
+
+                    // ✅ EXPENSE-SPECIFIC FIELDS
+                    date: expense.date || null,
+                    type: expense.type || 'N/A',
+                    externalAmount: expense.externalAmount,
+                    internalAmount: expense.internalAmount,
+                    remarks: expense.remarks || null,
+
+                    // ✅ UDF INFORMATION
+                    udfValues: udfValues,
+                    udfValuesText: udfValuesText,
+
+                    // ✅ DISPLAY TYPE
+                    type: 'Expense',
+
+                    // ✅ PRE-FORMATTED DISPLAY TEXT (no complex expressions needed in UI)
+                    dateText: expense.date || 'N/A',
+                    expenseTypeText: expense.type || 'N/A',
+                    externalAmountText: externalAmount,
+                    internalAmountText: internalAmount,
+                    remarksText: expense.remarks || 'N/A',
+
+                    // ✅ KEEP FULL DATA FOR REFERENCE
+                    fullData: expense
+                };
+            });
         } catch (error) {
-            console.error("Error fetching expenses:", error);
+            console.error("Error fetching expenses:", error.message);
             return [];
         }
     }
@@ -398,15 +455,85 @@ class FSMService {
             data.data.forEach((item, index) => {
                 console.log(`Mileage ${index + 1}:`, JSON.stringify(item.w, null, 2));
             });
-            console.log('=========================\n');
+            console.log('==========================\n');
 
-            return data.data.map(item => ({
-                id: item.w.id,
-                createDateTime: item.w.createDateTime,
-                fullData: item.w // ✅ Keep full object for analysis
-            }));
+            return data.data.map(item => {
+                const mileage = item.w;
+
+                // Extract UDF values (same pattern as other types)
+                const udfValues = mileage.udfValues || [];
+                const udfValuesText = udfValues.map(udf => `${udf.meta}: ${udf.value}`).join(', ') || 'N/A';
+
+                // Format distance with unit
+                const distanceText = mileage.distance && mileage.distanceUnit ?
+                    `${mileage.distance} ${mileage.distanceUnit}` : 'N/A';
+
+                // Format route
+                const routeText = mileage.source && mileage.destination ?
+                    `${mileage.source} → ${mileage.destination}` : 'N/A';
+
+                console.log(`\n=== PROCESSED MILEAGE ===`);
+                console.log('ID:', mileage.id);
+                console.log('Date:', mileage.date);
+                console.log('Source:', mileage.source);
+                console.log('Destination:', mileage.destination);
+                console.log('Distance:', distanceText);
+                console.log('Route:', routeText);
+                console.log('Driver:', mileage.driver);
+                console.log('Private Car:', mileage.privateCar);
+                console.log('Travel Start:', mileage.travelStartDateTime);
+                console.log('Travel End:', mileage.travelEndDateTime);
+                console.log('Charge Option:', mileage.chargeOption);
+                console.log('Create Person:', mileage.createPerson);
+                console.log('Org Level:', mileage.orgLevel);
+                console.log('Remarks:', mileage.remarks);
+                console.log('Sync Status:', mileage.syncStatus);
+                console.log('UDF Values:', udfValuesText);
+                console.log('=============================\n');
+
+                return {
+                    id: mileage.id,
+                    createDateTime: mileage.createDateTime,
+
+                    // ✅ BASIC FIELDS (matching TimeEffort/Material/Expense pattern)
+                    createPerson: mileage.createPerson || 'N/A',
+                    orgLevel: mileage.orgLevel || 'N/A',
+                    chargeOption: mileage.chargeOption || 'N/A',
+                    syncStatus: mileage.syncStatus || 'N/A',
+
+                    // ✅ MILEAGE-SPECIFIC FIELDS
+                    date: mileage.date || null,
+                    source: mileage.source || 'N/A',
+                    destination: mileage.destination || 'N/A',
+                    distance: mileage.distance || 0,
+                    distanceUnit: mileage.distanceUnit || 'KM',
+                    driver: mileage.driver || false,
+                    privateCar: mileage.privateCar || false,
+                    travelStartDateTime: mileage.travelStartDateTime || null,
+                    travelEndDateTime: mileage.travelEndDateTime || null,
+                    remarks: mileage.remarks || null,
+
+                    // ✅ UDF INFORMATION
+                    udfValues: udfValues,
+                    udfValuesText: udfValuesText,
+
+                    // ✅ DISPLAY TYPE
+                    type: 'Mileage',
+
+                    // ✅ PRE-FORMATTED DISPLAY TEXT (no complex expressions needed in UI)
+                    dateText: mileage.date || 'N/A',
+                    distanceText: distanceText,
+                    routeText: routeText,
+                    driverText: mileage.driver ? 'Yes' : 'No',
+                    privateCarText: mileage.privateCar ? 'Yes' : 'No',
+                    remarksText: mileage.remarks || 'N/A',
+
+                    // ✅ KEEP FULL DATA FOR REFERENCE
+                    fullData: mileage
+                };
+            });
         } catch (error) {
-            console.error("Error fetching mileages:", error);
+            console.error("Error fetching mileages:", error.message);
             return [];
         }
     }
