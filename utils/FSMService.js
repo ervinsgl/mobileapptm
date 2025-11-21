@@ -303,13 +303,52 @@ class FSMService {
             });
             console.log('===========================\n');
 
-            return data.data.map(item => ({
-                id: item.w.id,
-                createDateTime: item.w.createDateTime,
-                fullData: item.w // ✅ Keep full object for analysis
-            }));
+            return data.data.map(item => {
+                const material = item.w;
+
+                console.log(`\n=== PROCESSED MATERIAL ===`);
+                console.log('ID:', material.id);
+                console.log('Item ID:', material.item);
+                console.log('Quantity:', material.quantity);
+                console.log('Date:', material.date);
+                console.log('Charge Option:', material.chargeOption);
+                console.log('Create Person:', material.createPerson);
+                console.log('Remarks:', material.remarks);
+                console.log('Sync Status:', material.syncStatus);
+                console.log('=============================\n');
+
+                return {
+                    id: material.id,
+                    createDateTime: material.createDateTime,
+
+                    // Basic fields
+                    createPerson: material.createPerson || 'N/A',
+                    orgLevel: material.orgLevel || 'N/A',
+                    chargeOption: material.chargeOption || 'N/A',
+                    syncStatus: material.syncStatus || 'N/A',
+
+                    // Material-specific fields
+                    date: material.date || null,
+                    quantity: material.quantity || 0,
+                    remarks: material.remarks || null,
+
+                    // ✅ SIMPLIFIED: Just use the item ID directly
+                    itemDisplayText: material.item || 'N/A',
+
+                    // Display type
+                    type: 'Material',
+
+                    // Pre-formatted display text
+                    quantityText: material.quantity ? `${material.quantity}` : 'N/A',
+                    dateText: material.date || 'N/A',
+                    remarksText: material.remarks || 'N/A',
+
+                    // Keep full data for reference
+                    fullData: material
+                };
+            });
         } catch (error) {
-            console.error("Error fetching materials:", error);
+            console.error("Error fetching materials:", error.message);
             return [];
         }
     }

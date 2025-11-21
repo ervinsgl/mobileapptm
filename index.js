@@ -164,10 +164,7 @@ app.post("/api/get-reported-items", async (req, res) => {
 
         const allItems = [
             ...timeEfforts,
-            ...materials.map(item => ({
-                ...item, // Keep all fields
-                type: "Material" // Ensure type is set
-            })),
+            ...materials,
             ...expenses.map(item => ({
                 ...item, // Keep all fields  
                 type: "Expense" // Ensure type is set
@@ -181,8 +178,14 @@ app.post("/api/get-reported-items", async (req, res) => {
         console.log('Backend: Sending enhanced T&M data:', allItems);
 
         res.json({
-            items: allItems,
-            count: allItems.length
+            items: allItems,     // Full data including all fields
+            count: allItems.length,
+            breakdown: {
+                timeEfforts: timeEfforts.length,
+                materials: materials.length,
+                expenses: expenses.length,
+                mileages: mileages.length
+            }
         });
 
     } catch (error) {

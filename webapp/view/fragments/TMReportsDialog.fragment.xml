@@ -40,7 +40,6 @@
                                         class="tmEntryHeaderTitle"
                                     />
                                     <ToolbarSpacer />
-                                    <!-- ✅ KEEP ID - Simple binding -->
                                     <Label 
                                         text="ID: {dialog>id}" 
                                         class="tmEntryHeaderId"
@@ -58,12 +57,19 @@
                                             <l:GridData span="XL6 L6 M12 S12"/>
                                         </layoutData>
                                         
-                                        <VBox class="tmField">
+                                        <!-- Dynamic field based on type -->
+                                        <VBox class="tmField" visible="{= ${dialog>type} === 'Time Effort'}">
                                             <Label text="Duration:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{dialog>durationText}" class="tmFieldValue"/>
                                         </VBox>
                                         
-                                        <VBox class="tmField">
+                                        <VBox class="tmField" visible="{= ${dialog>type} === 'Material'}">
+                                            <Label text="Quantity:" design="Bold" class="tmFieldLabel"/>
+                                            <Text text="{dialog>quantityText}" class="tmFieldValue"/>
+                                        </VBox>
+                                        
+                                        <!-- Time fields for Time Effort -->
+                                        <VBox class="tmField" visible="{= ${dialog>type} === 'Time Effort'}">
                                             <Label text="Start:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{
                                                 path: 'dialog>startDateTime', 
@@ -71,12 +77,24 @@
                                             }" class="tmFieldValue"/>
                                         </VBox>
                                         
-                                        <VBox class="tmField">
+                                        <VBox class="tmField" visible="{= ${dialog>type} === 'Time Effort'}">
                                             <Label text="End:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{
                                                 path: 'dialog>endDateTime', 
                                                 formatter: '.formatter.formatDateTime'
                                             }" class="tmFieldValue"/>
+                                        </VBox>
+                                        
+                                        <!-- Date field for Material -->
+                                        <VBox class="tmField" visible="{= ${dialog>type} === 'Material'}">
+                                            <Label text="Date:" design="Bold" class="tmFieldLabel"/>
+                                            <Text text="{dialog>dateText}" class="tmFieldValue"/>
+                                        </VBox>
+                                        
+                                        <!-- Item info for Material -->
+                                        <VBox class="tmField" visible="{= ${dialog>type} === 'Material'}">
+                                            <Label text="Item:" design="Bold" class="tmFieldLabel"/>
+                                            <Text text="{dialog>itemDisplayText}" class="tmFieldValue"/>
                                         </VBox>
                                         
                                         <VBox class="tmField">
@@ -87,7 +105,6 @@
                                             }" class="tmFieldValue"/>
                                         </VBox>
                                         
-                                        <!-- ✅ ADD NEW FIELD -->
                                         <VBox class="tmField">
                                             <Label text="Create Person:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{dialog>createPerson}" class="tmFieldValue tmFieldValueSmall"/>
@@ -100,7 +117,6 @@
                                             <l:GridData span="XL6 L6 M12 S12"/>
                                         </layoutData>
                                         
-                                        <!-- ✅ ADD NEW FIELD -->
                                         <VBox class="tmField">
                                             <Label text="Charge Option:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{dialog>chargeOption}" class="tmFieldValue"/>
@@ -111,7 +127,8 @@
                                             <Text text="{dialog>orgLevel}" class="tmFieldValue tmFieldValueSmall"/>
                                         </VBox>
                                         
-                                        <VBox class="tmField">
+                                        <!-- Time Effort specific field -->
+                                        <VBox class="tmField" visible="{= ${dialog>type} === 'Time Effort'}">
                                             <Label text="Task ID:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{dialog>task}" class="tmFieldValue tmFieldValueSmall"/>
                                         </VBox>
@@ -127,7 +144,7 @@
                                         </VBox>
                                         
                                         <!-- ✅ SPLIT REMARKS INTO TWO FIELDS -->
-                                        <VBox class="tmField">
+                                        <VBox class="tmField" visible="{= ${dialog>type} === 'Time Effort'}">
                                             <Label text="Internal Remarks:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{= ${dialog>internalRemarks} || 'N/A'}" class="tmFieldValue" wrapping="true"/>
                                         </VBox>
