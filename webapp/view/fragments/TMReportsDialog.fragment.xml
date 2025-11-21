@@ -1,13 +1,14 @@
-<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core">
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core" xmlns:l="sap.ui.layout">
     <Dialog 
         title="T&amp;M Reports - {dialog>/activityCode}"
         contentWidth="90%"
-        contentHeight="70%"
+        contentHeight="80%"
         draggable="true"
         resizable="true"
     >
         <content>
             <VBox class="sapUiMediumMargin">
+                
                 <!-- Header Info -->
                 <VBox class="sapUiSmallMarginBottom">
                     <Text text="Activity: {dialog>/activityCode}" class="sapUiMediumMarginBottom"/>
@@ -15,24 +16,134 @@
                     <Text text="Total Reports: {dialog>/reportCount}" class="sapUiMediumMarginBottom"/>
                 </VBox>
                 
-                <!-- Reports List -->
+                <!-- T&M Entry Cards -->
                 <List
                     items="{
                         path: 'dialog>/reports',
                         templateShareable: false
                     }"
                     mode="None"
-                    headerText="All T&amp;M Reports"
-                    growing="true"
-                    growingThreshold="50"
+                    showSeparators="None"
                 >
-                    <StandardListItem
-                        title="{dialog>type}"
-                        description="Created: {path: 'dialog>createDateTime', formatter: '.formatter.formatDateTime'}"
-                        info="{dialog>id}"
-                        infoState="None"
-                    />
+                    <CustomListItem type="Inactive">
+                        <Panel
+                            headerText="T&amp;M Entry - {dialog>type}"
+                            expandable="false"
+                            expanded="true"
+                            class="tmEntryPanel"
+                        >
+                            <headerToolbar>
+                                <Toolbar class="tmEntryHeader">
+                                    <Title 
+                                        text="T&amp;M Entry - {dialog>type}" 
+                                        level="H5" 
+                                        class="tmEntryHeaderTitle"
+                                    />
+                                    <ToolbarSpacer />
+                                    <!-- ✅ KEEP ID - Simple binding -->
+                                    <Label 
+                                        text="ID: {dialog>id}" 
+                                        class="tmEntryHeaderId"
+                                    />
+                                </Toolbar>
+                            </headerToolbar>
+                            
+                            <content>
+                                <!-- Card Content with 2-Column Layout -->
+                                <l:Grid defaultSpan="XL6 L6 M12 S12" hSpacing="1" vSpacing="0">
+                                    
+                                    <!-- Left Column -->
+                                    <VBox class="tmFieldGroup">
+                                        <layoutData>
+                                            <l:GridData span="XL6 L6 M12 S12"/>
+                                        </layoutData>
+                                        
+                                        <VBox class="tmField">
+                                            <Label text="Duration:" design="Bold" class="tmFieldLabel"/>
+                                            <Text text="{dialog>durationText}" class="tmFieldValue"/>
+                                        </VBox>
+                                        
+                                        <VBox class="tmField">
+                                            <Label text="Start:" design="Bold" class="tmFieldLabel"/>
+                                            <Text text="{
+                                                path: 'dialog>startDateTime', 
+                                                formatter: '.formatter.formatDateTime'
+                                            }" class="tmFieldValue"/>
+                                        </VBox>
+                                        
+                                        <VBox class="tmField">
+                                            <Label text="End:" design="Bold" class="tmFieldLabel"/>
+                                            <Text text="{
+                                                path: 'dialog>endDateTime', 
+                                                formatter: '.formatter.formatDateTime'
+                                            }" class="tmFieldValue"/>
+                                        </VBox>
+                                        
+                                        <VBox class="tmField">
+                                            <Label text="Created:" design="Bold" class="tmFieldLabel"/>
+                                            <Text text="{
+                                                path: 'dialog>createDateTime', 
+                                                formatter: '.formatter.formatDateTime'
+                                            }" class="tmFieldValue"/>
+                                        </VBox>
+                                        
+                                        <!-- ✅ ADD NEW FIELD -->
+                                        <VBox class="tmField">
+                                            <Label text="Create Person:" design="Bold" class="tmFieldLabel"/>
+                                            <Text text="{dialog>createPerson}" class="tmFieldValue tmFieldValueSmall"/>
+                                        </VBox>
+                                    </VBox>
+
+                                    <!-- Right Column -->
+                                    <VBox class="tmFieldGroup">
+                                        <layoutData>
+                                            <l:GridData span="XL6 L6 M12 S12"/>
+                                        </layoutData>
+                                        
+                                        <!-- ✅ ADD NEW FIELD -->
+                                        <VBox class="tmField">
+                                            <Label text="Charge Option:" design="Bold" class="tmFieldLabel"/>
+                                            <Text text="{dialog>chargeOption}" class="tmFieldValue"/>
+                                        </VBox>
+                                        
+                                        <VBox class="tmField">
+                                            <Label text="Org Level:" design="Bold" class="tmFieldLabel"/>
+                                            <Text text="{dialog>orgLevel}" class="tmFieldValue tmFieldValueSmall"/>
+                                        </VBox>
+                                        
+                                        <VBox class="tmField">
+                                            <Label text="Task ID:" design="Bold" class="tmFieldLabel"/>
+                                            <Text text="{dialog>task}" class="tmFieldValue tmFieldValueSmall"/>
+                                        </VBox>
+                                        
+                                        <VBox class="tmField">
+                                            <Label text="UDF Values:" design="Bold" class="tmFieldLabel"/>
+                                            <Text text="{dialog>udfValuesText}" class="tmFieldValue tmFieldValueSmall" wrapping="true"/>
+                                        </VBox>
+                                        
+                                        <VBox class="tmField">
+                                            <Label text="Sync Status:" design="Bold" class="tmFieldLabel"/>
+                                            <Text text="{dialog>syncStatus}" class="tmFieldValue"/>
+                                        </VBox>
+                                        
+                                        <!-- ✅ SPLIT REMARKS INTO TWO FIELDS -->
+                                        <VBox class="tmField">
+                                            <Label text="Internal Remarks:" design="Bold" class="tmFieldLabel"/>
+                                            <Text text="{= ${dialog>internalRemarks} || 'N/A'}" class="tmFieldValue" wrapping="true"/>
+                                        </VBox>
+                                        
+                                        <VBox class="tmField">
+                                            <Label text="Remarks:" design="Bold" class="tmFieldLabel"/>
+                                            <Text text="{= ${dialog>remarks} || 'N/A'}" class="tmFieldValue" wrapping="true"/>
+                                        </VBox>
+                                    </VBox>
+                                    
+                                </l:Grid>
+                            </content>
+                        </Panel>
+                    </CustomListItem>
                 </List>
+                
             </VBox>
         </content>
         

@@ -599,30 +599,82 @@ sap.ui.define([
             if (!oContext) return;
 
             const oActivity = oContext.getObject();
-            const reports = oActivity.tmReports || [];
 
-            // Create dialog model
-            const oDialogModel = new JSONModel({
-                activityCode: oActivity.code,
-                activitySubject: oActivity.subject,
-                reports: reports,
-                reportCount: reports.length
-            });
+            // DEBUG: Check what data we actually have
+            console.log('=== DEBUG T&M Dialog ===');
+            console.log('Activity:', oActivity.code);
+            console.log('T&M Reports Count:', oActivity.tmReportsCount);
+            console.log('T&M Reports Array:', oActivity.tmReports);
+            console.log('========================');
 
-            // Load and open dialog
-            if (!this._tmReportsDialog) {
-                Fragment.load({
-                    name: "mobileappsc.view.fragments.TMReportsDialog",
-                    controller: this
-                }).then((oDialog) => {
-                    this._tmReportsDialog = oDialog;
-                    this.getView().addDependent(oDialog);
-                    oDialog.setModel(oDialogModel, "dialog");
-                    oDialog.open();
-                });
+            // ✅ If reports aren't loaded yet, force load them
+            if (!oActivity.tmReportsLoaded || !oActivity.tmReports || oActivity.tmReports.length === 0) {
+                console.log('T&M reports not loaded, fetching fresh data...');
+
+                try {
+                    // Get fresh T&M data
+                    const reports = await ReportedItemsData.getReportedItems(oActivity.id);
+
+                    console.log('Fresh T&M data loaded:', reports);
+
+                    // Create dialog model with fresh data
+                    const oDialogModel = new JSONModel({
+                        activityCode: oActivity.code,
+                        activitySubject: oActivity.subject,
+                        reports: reports, // Use fresh data
+                        reportCount: reports.length
+                    });
+
+                    // Load and open dialog
+                    if (!this._tmReportsDialog) {
+                        Fragment.load({
+                            name: "mobileappsc.view.fragments.TMReportsDialog",
+                            controller: this
+                        }).then((oDialog) => {
+                            this._tmReportsDialog = oDialog;
+                            this.getView().addDependent(oDialog);
+                            oDialog.setModel(oDialogModel, "dialog");
+                            oDialog.open();
+                        });
+                    } else {
+                        this._tmReportsDialog.setModel(oDialogModel, "dialog");
+                        this._tmReportsDialog.open();
+                    }
+
+                } catch (error) {
+                    console.error('Error loading fresh T&M data:', error);
+                    MessageToast.show("Failed to load T&M data: " + error.message);
+                }
+
             } else {
-                this._tmReportsDialog.setModel(oDialogModel, "dialog");
-                this._tmReportsDialog.open();
+                // Use existing cached data
+                console.log('Using cached T&M data...');
+
+                const reports = oActivity.tmReports || [];
+
+                // Create dialog model
+                const oDialogModel = new JSONModel({
+                    activityCode: oActivity.code,
+                    activitySubject: oActivity.subject,
+                    reports: reports,
+                    reportCount: reports.length
+                });
+
+                // Load and open dialog
+                if (!this._tmReportsDialog) {
+                    Fragment.load({
+                        name: "mobileappsc.view.fragments.TMReportsDialog",
+                        controller: this
+                    }).then((oDialog) => {
+                        this._tmReportsDialog = oDialog;
+                        this.getView().addDependent(oDialog);
+                        oDialog.setModel(oDialogModel, "dialog");
+                        oDialog.open();
+                    });
+                } else {
+                    this._tmReportsDialog.setModel(oDialogModel, "dialog");
+                    this._tmReportsDialog.open();
+                }
             }
         },
 

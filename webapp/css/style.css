@@ -1,10 +1,10 @@
 /* ========================================
-   Enhanced Styling for Mobile App SC
-   Cleaned and Optimized Version
+   Mobile App SC - Fragment-Based Styles
+   Only includes classes used by actual fragments
    ======================================== */
 
 /* ========================================
-   SERVICE ORDER PANEL STYLING
+   SERVICE ORDER PANEL (ServiceCall fragment)
    ======================================== */
 
 .serviceOrderPanel {
@@ -29,7 +29,7 @@
 }
 
 /* ========================================
-   ORGANIZATION LEVEL PANEL STYLING
+   ORGANIZATION LEVEL PANEL (OrganizationLevel fragment)
    ======================================== */
 
 .organizationLevelPanel {
@@ -54,7 +54,7 @@
 }
 
 /* ========================================
-   PRODUCT GROUP PANEL STYLING
+   PRODUCT GROUP PANEL (ProductGroups fragment)
    ======================================== */
 
 .productGroupPanel {
@@ -83,22 +83,19 @@
     border-radius: 4px 4px 0 0;
 }
 
-.productGroupHeaderTitle,
-.productGroupHeaderLabel {
-    color: white !important;
-}
-
 .productGroupHeaderTitle {
+    color: white !important;
     font-weight: 600;
 }
 
 .productGroupHeaderLabel {
+    color: white !important;
     font-size: 0.95rem;
     font-weight: bold;
 }
 
 /* ========================================
-   ACTIVITIES TOOLBAR STYLING
+   ACTIVITIES TOOLBAR (ProductGroups fragment)
    ======================================== */
 
 .activitiesTableToolbar {
@@ -113,93 +110,9 @@
 }
 
 /* ========================================
-   STATUS COLORS
+   ACTIVITY CARDS (ProductGroups fragment)
    ======================================== */
 
-.sapMObjectStatus.sapMObjectStatusWarning {
-    color: #e09d00;
-    font-weight: 600;
-}
-
-.sapMObjectStatus.sapMObjectStatusSuccess {
-    color: #107e3e;
-    font-weight: 600;
-}
-
-.sapMObjectStatus.sapMObjectStatusError {
-    color: #b00;
-    font-weight: 600;
-}
-
-/* ========================================
-   LINK STYLING
-   ======================================== */
-
-.sapMLink {
-    color: #0854a0;
-    font-weight: 500;
-}
-
-.sapMLink:hover {
-    text-decoration: underline;
-    color: #1873cd;
-}
-
-/* ========================================
-   MESSAGE STRIP STYLING
-   ======================================== */
-
-.sapMMsgStrip.sapMMsgStripInformation {
-    background-color: #e5f4ff;
-    border-left: 3px solid #0854a0;
-}
-
-/* ========================================
-   COMBOBOX STYLING
-   ======================================== */
-
-.sapMComboBox:focus-within {
-    border-color: #0854a0;
-    box-shadow: 0 0 0 2px rgba(8, 84, 160, 0.1);
-}
-
-/* ========================================
-   TOUCH TARGETS
-   ======================================== */
-
-.sapMBtn,
-.sapMLink {
-    min-height: 44px;
-    min-width: 44px;
-}
-
-/* ========================================
-   SCROLLBAR STYLING
-   ======================================== */
-
-::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-}
-
-::-webkit-scrollbar-track {
-    background: #f1f1f1;
-}
-
-::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: #555;
-}
-
-/* ========================================
-   T&M-FOCUSED ACTIVITY CARDS
-   ======================================== */
-
-/* Activity Card Container */
 .activityCardContainer {
     padding: 0 !important;
     margin: 0 !important;
@@ -214,7 +127,6 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Activity Header */
 .activityHeader {
     padding-bottom: 0.75rem;
     border-bottom: 2px solid #0854a0;
@@ -233,7 +145,6 @@
     margin-top: 0.25rem;
 }
 
-/* Activity Subject */
 .activitySubject {
     font-size: 1rem;
     font-weight: 500;
@@ -242,7 +153,10 @@
     line-height: 1.4;
 }
 
-/* Quick Info Section */
+/* ========================================
+   ACTIVITY INFO SECTIONS (ProductGroups fragment)
+   ======================================== */
+
 .activityQuickInfo {
     background: #f7f7f7;
     padding: 0.75rem;
@@ -250,12 +164,9 @@
     margin: 0.75rem 0;
 }
 
-.infoRow {
-    margin-bottom: 0.5rem;
-}
-
-.infoRow:last-child {
-    margin-bottom: 0;
+.activityQuickInfo .sapUiLayoutGrid {
+    margin: 0 !important;
+    padding: 0.75rem !important;
 }
 
 .infoLabel {
@@ -272,7 +183,67 @@
     flex: 1;
 }
 
-/* T&M Summary Box */
+.activityExtendedDetails {
+    background: #f9f9f9;
+    border-top: 1px solid #e0e0e0;
+    padding: 1rem;
+    margin-top: 0.75rem;
+    border-radius: 0 0 6px 6px;
+}
+
+.activityExtendedDetails .sapUiLayoutGrid {
+    margin: 0 !important;
+    padding: 1rem !important;
+}
+
+.detailField {
+    margin-bottom: 0.75rem;
+    padding-right: 1rem;
+}
+
+.detailField:last-child {
+    margin-bottom: 0;
+}
+
+.detailField .sapMLabel {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #666;
+    margin-bottom: 0.25rem;
+    font-weight: 600;
+}
+
+.detailField .detailFieldValue {
+    font-size: 0.9375rem;
+    color: #333;
+    margin-bottom: 0.5rem;
+    line-height: 1.3;
+}
+
+.detailsToggleLink {
+    font-size: 0.875rem;
+    color: #0854a0 !important;
+    font-weight: 500;
+    text-decoration: none;
+    padding: 0.5rem;
+    display: inline-block;
+}
+
+.detailsToggleLink:hover {
+    text-decoration: underline !important;
+    color: #1873cd !important;
+}
+
+.detailsToggleLink:focus {
+    outline: 2px solid #0854a0;
+    outline-offset: 2px;
+}
+
+/* ========================================
+   T&M SUMMARY BOX (ProductGroups fragment)
+   ======================================== */
+
 .tmSummaryBox {
     background: linear-gradient(135deg, #e5f4ff 0%, #f0f8ff 100%);
     border: 2px solid #0854a0;
@@ -293,7 +264,10 @@
     line-height: 1.6;
 }
 
-/* Action Buttons */
+/* ========================================
+   ACTION BUTTONS (ProductGroups fragment)
+   ======================================== */
+
 .activityActions {
     display: flex;
     gap: 0.5rem;
@@ -305,73 +279,131 @@
     min-height: 48px;
 }
 
-/* Details Toggle Link */
-.detailsToggleLink {
-    text-align: center;
-    display: block;
-    padding: 0.5rem;
-    font-size: 0.875rem;
-}
+/* ========================================
+   T&M ENTRY CARDS (TMReportsDialog fragment)
+   ======================================== */
 
-/* Extended Details */
-.activityExtendedDetails {
-    background: #f9f9f9;
-    border-top: 1px solid #e0e0e0;
-    padding: 1rem;
-    margin-top: 0.75rem;
-    border-radius: 0 0 6px 6px;
-}
-
-.detailField {
+.tmEntryPanel {
+    border: 1px solid #d9d9d9;
+    border-radius: 6px;
     margin-bottom: 0.75rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.detailField:last-child {
+.tmEntryPanel:last-child {
     margin-bottom: 0;
 }
 
-.detailField .sapMLabel {
+.tmEntryHeader {
+    background: linear-gradient(to right, #0854a0, #1873cd) !important;
+    border-radius: 4px 4px 0 0;
+}
+
+.tmEntryHeaderTitle {
+    color: white !important;
+    font-weight: 600;
+}
+
+.tmEntryHeaderId {
+    color: white !important;
+    font-size: 0.875rem;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-family: monospace;
+}
+
+.tmFieldGroup {
+    padding: 1rem;
+}
+
+.tmField {
+    margin-bottom: 0.75rem;
+}
+
+.tmField:last-child {
+    margin-bottom: 0;
+}
+
+.tmFieldLabel {
     font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     color: #666;
     margin-bottom: 0.25rem;
+    font-weight: 600;
 }
 
-.detailField .sapMText {
+.tmFieldValue {
     font-size: 0.9375rem;
     color: #333;
+    line-height: 1.3;
+}
+
+.tmFieldValueSmall {
+    font-size: 0.8125rem;
+    color: #666;
+    word-break: break-all;
 }
 
 /* ========================================
-   CLOSED ACTIVITY STYLING
+   BASIC UI ELEMENTS
    ======================================== */
 
-.closedActivity .activityCard {
-    opacity: 0.65;
-    background: #f5f5f5;
-    border-color: #ccc;
+.sapMObjectStatus.sapMObjectStatusWarning {
+    color: #e09d00;
+    font-weight: 600;
 }
 
-.closedActivity .activityCode {
-    color: #999;
+.sapMObjectStatus.sapMObjectStatusSuccess {
+    color: #107e3e;
+    font-weight: 600;
 }
 
-.closedActivity .activitySubject {
-    color: #999;
+.sapMObjectStatus.sapMObjectStatusError {
+    color: #b00;
+    font-weight: 600;
 }
 
-.closedActivity .activityHeader {
-    border-bottom-color: #999;
+.sapMLink {
+    color: #0854a0;
+    font-weight: 500;
 }
 
-.closedActivity .tmSummaryBox {
-    background: #f0f0f0;
-    border-color: #999;
+.sapMLink:hover {
+    text-decoration: underline;
+    color: #1873cd;
 }
 
-.closedActivity .tmSummaryTitle {
-    color: #999;
+.sapMComboBox:focus-within {
+    border-color: #0854a0;
+    box-shadow: 0 0 0 2px rgba(8, 84, 160, 0.1);
+}
+
+.sapMMsgStrip.sapMMsgStripInformation {
+    background-color: #e5f4ff;
+    border-left: 3px solid #0854a0;
+}
+
+.sapMBtn,
+.sapMLink {
+    min-height: 44px;
+    min-width: 44px;
+}
+
+/* ========================================
+   GRID SPACING ADJUSTMENTS
+   ======================================== */
+
+.sapUiLayoutGrid[data-sap-ui-hspacing="2"] .sapUiLayoutGridInner {
+    margin-left: -1rem;
+    margin-right: -1rem;
+}
+
+.sapUiLayoutGrid[data-sap-ui-hspacing="2"] .sapUiLayoutGridInner > .sapUiLayoutGridSpan {
+    padding-left: 1rem;
+    padding-right: 1rem;
 }
 
 /* ========================================
@@ -379,15 +411,12 @@
    ======================================== */
 
 @media (max-width: 768px) {
-
-    /* Panel margins on mobile */
     .productGroupPanel,
     .serviceOrderPanel,
     .organizationLevelPanel {
         margin: 0.5rem 0.25rem !important;
     }
 
-    /* Activity cards on mobile */
     .activityCard {
         margin: 0.5rem 0.25rem;
         padding: 0.875rem;
@@ -406,7 +435,6 @@
         font-size: 0.875rem;
     }
 
-    /* Product header adjustments */
     .productGroupHeaderTitle {
         font-size: 0.85rem !important;
         line-height: 1.2;
@@ -416,28 +444,42 @@
         font-size: 0.75rem !important;
     }
 
-    /* Better text wrapping */
+    .detailField {
+        padding-right: 0;
+        margin-bottom: 0.5rem;
+    }
+    
+    .activityQuickInfo .sapUiLayoutGrid,
+    .activityExtendedDetails .sapUiLayoutGrid {
+        padding: 0.5rem !important;
+    }
+
+    .tmFieldGroup {
+        padding: 0.75rem;
+    }
+    
+    .tmField {
+        margin-bottom: 0.5rem;
+    }
+
+    .tmEntryHeaderId {
+        font-size: 0.75rem;
+        padding: 0.2rem 0.4rem;
+    }
+
     .sapMText {
         word-break: break-word;
         overflow-wrap: break-word;
     }
 }
 
-@media (max-width: 600px) {
-
-    .productGroupHeaderTitle,
-    .organizationLevelHeaderTitle,
-    .serviceOrderHeaderTitle {
-        font-size: 0.95rem;
-    }
-
-    .productGroupHeaderLabel {
-        font-size: 0.85rem;
+@media (max-width: 1024px) {
+    .detailField {
+        padding-right: 0.5rem;
     }
 }
 
 @media (min-width: 1025px) {
-
     .productGroupPanel:hover,
     .organizationLevelPanel:hover,
     .serviceOrderPanel:hover {
@@ -455,140 +497,10 @@
     outline-offset: 2px;
 }
 
-@media (prefers-contrast: high) {
-
-    .productGroupHeader,
-    .organizationLevelHeader,
-    .serviceOrderHeader {
-        border: 2px solid white;
-    }
-}
-
 @media (prefers-reduced-motion: reduce) {
-
     .productGroupPanel,
     .organizationLevelPanel,
     .serviceOrderPanel {
         transition: none;
     }
-}
-
-/* Loading state styling */
-.tmSummaryBox .sapMBusyIndicator {
-    --sapContent_BusyColor: #0854a0;
-}
-
-.tmSummaryItem[design="Bold"] {
-    color: #d32f2f;
-    /* Red for error state */
-    font-weight: 600;
-}
-
-/* Error state for T&M loading */
-.tmSummaryItemError {
-    font-size: 0.875rem;
-    color: #d32f2f; /* Red color for errors */
-    font-weight: 600;
-    line-height: 1.6;
-}
-
-/* Loading state styling */
-.tmSummaryBox .sapMBusyIndicator {
-    --sapContent_BusyColor: #0854a0;
-}
-
-/* ========================================
-   IMPROVED DETAIL FIELD SPACING
-   ======================================== */
-
-/* Detail field containers */
-.detailField {
-    margin-bottom: 0.75rem;
-    padding-right: 1rem; /* Add some right padding for better column separation */
-}
-
-.detailField:last-child {
-    margin-bottom: 0;
-}
-
-/* Labels */
-.detailField .sapMLabel {
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: #666;
-    margin-bottom: 0.25rem;
-    font-weight: 600;
-}
-
-/* Values */
-.detailField .detailFieldValue {
-    font-size: 0.9375rem;
-    color: #333;
-    margin-bottom: 0.5rem;
-    line-height: 1.3;
-}
-
-/* Quick info container adjustments */
-.activityQuickInfo .sapUiLayoutGrid {
-    margin: 0 !important;
-    padding: 0.75rem !important;
-}
-
-.activityExtendedDetails .sapUiLayoutGrid {
-    margin: 0 !important;
-    padding: 1rem !important;
-}
-
-/* Responsive adjustments */
-@media (max-width: 1024px) {
-    .detailField {
-        padding-right: 0.5rem;
-    }
-}
-
-@media (max-width: 768px) {
-    .detailField {
-        padding-right: 0;
-        margin-bottom: 0.5rem;
-    }
-    
-    .activityQuickInfo .sapUiLayoutGrid,
-    .activityExtendedDetails .sapUiLayoutGrid {
-        padding: 0.5rem !important;
-    }
-}
-
-/* Grid spacing adjustments */
-.sapUiLayoutGrid[data-sap-ui-hspacing="2"] .sapUiLayoutGridInner {
-    margin-left: -1rem;
-    margin-right: -1rem;
-}
-
-.sapUiLayoutGrid[data-sap-ui-hspacing="2"] .sapUiLayoutGridInner > .sapUiLayoutGridSpan {
-    padding-left: 1rem;
-    padding-right: 1rem;
-}
-
-/* ========================================
-   DETAILS TOGGLE LINK STYLING
-   ======================================== */
-
-.detailsToggleLink {
-    font-size: 0.875rem;
-    color: #0854a0 !important;
-    font-weight: 500;
-    text-decoration: none;
-    padding: 0.5rem;
-    display: inline-block;
-}
-
-.detailsToggleLink:hover {
-    text-decoration: underline !important;
-    color: #1873cd !important;
-}
-
-.detailsToggleLink:focus {
-    outline: 2px solid #0854a0;
-    outline-offset: 2px;
 }

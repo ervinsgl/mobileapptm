@@ -220,11 +220,65 @@ class FSMService {
             });
             console.log('============================\n');
 
-            return data.data.map(item => ({
-                id: item.timeEffort.id,
-                createDateTime: item.timeEffort.createDateTime,
-                fullData: item.timeEffort // ✅ Keep full object for analysis
-            }));
+            return data.data.map(item => {
+                const timeEffort = item.timeEffort;
+
+                // Extract ALL UDF values (there can be multiple)
+                const udfValues = timeEffort.udfValues || [];
+                const udfValuesText = udfValues.map(udf => `${udf.meta}: ${udf.value}`).join(', ') || 'N/A';
+
+                // Calculate duration in minutes
+                let durationMinutes = 'N/A';
+                if (timeEffort.startDateTime && timeEffort.endDateTime) {
+                    const startTime = new Date(timeEffort.startDateTime);
+                    const endTime = new Date(timeEffort.endDateTime);
+                    durationMinutes = Math.round((endTime - startTime) / (1000 * 60));
+                }
+
+                // Handle remarks - prioritize internalRemarks, then remarks
+                const remarks = timeEffort.internalRemarks || timeEffort.remarks || 'N/A';
+
+                console.log(`\n=== PROCESSED TIME EFFORT ===`);
+                console.log('ID:', timeEffort.id);
+                console.log('Duration Minutes:', durationMinutes);
+                console.log('Start:', timeEffort.startDateTime);
+                console.log('End:', timeEffort.endDateTime);
+                console.log('Charge Option:', timeEffort.chargeOption);
+                console.log('Create Person:', timeEffort.createPerson);
+                console.log('Org Level:', timeEffort.orgLevel);
+                console.log('Internal Remarks:', timeEffort.internalRemarks);
+                console.log('Remarks:', timeEffort.remarks);
+                console.log('UDF Values:', udfValuesText);
+                console.log('===============================\n');
+
+                return {
+                    id: timeEffort.id,
+                    createDateTime: timeEffort.createDateTime,
+
+                    // ✅ ADD REQUESTED FIELDS
+                    createPerson: timeEffort.createPerson || 'N/A',
+                    orgLevel: timeEffort.orgLevel || 'N/A',
+                    chargeOption: timeEffort.chargeOption || 'N/A',
+                    internalRemarksText: timeEffort.internalRemarks || 'N/A',
+                    remarksText: timeEffort.remarks || 'N/A',
+
+                    // Existing fields
+                    task: timeEffort.task || 'N/A',
+                    startDateTime: timeEffort.startDateTime || null,
+                    endDateTime: timeEffort.endDateTime || null,
+                    udfValues: udfValues, // Keep array for complex processing
+                    udfValuesText: udfValuesText, // Simple string for display
+                    durationMinutes: durationMinutes,
+                    syncStatus: timeEffort.syncStatus || 'N/A',
+                    type: 'Time Effort',
+
+                    // ✅ PRE-FORMATTED DISPLAY TEXT
+                    remarksText: remarks, // Already processed above
+                    durationText: typeof durationMinutes === 'number' ? `${durationMinutes} min` : 'N/A',
+
+                    fullData: timeEffort // Keep full object for debugging
+                };
+            });
         } catch (error) {
             console.error("Error fetching time efforts:", error.message);
             return [];

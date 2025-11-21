@@ -162,29 +162,23 @@ app.post("/api/get-reported-items", async (req, res) => {
             FSMService.getMileagesForActivity(activityId)
         ]);
 
-        // Combine all results
         const allItems = [
-            ...timeEfforts.map(item => ({
-                type: "Time Effort",
-                id: item.id,
-                createDateTime: item.createDateTime
-            })),
+            ...timeEfforts,
             ...materials.map(item => ({
-                type: "Material",
-                id: item.id,
-                createDateTime: item.createDateTime
+                ...item, // Keep all fields
+                type: "Material" // Ensure type is set
             })),
             ...expenses.map(item => ({
-                type: "Expense",
-                id: item.id,
-                createDateTime: item.createDateTime
+                ...item, // Keep all fields  
+                type: "Expense" // Ensure type is set
             })),
             ...mileages.map(item => ({
-                type: "Mileage",
-                id: item.id,
-                createDateTime: item.createDateTime
+                ...item, // Keep all fields
+                type: "Mileage" // Ensure type is set
             }))
         ];
+
+        console.log('Backend: Sending enhanced T&M data:', allItems);
 
         res.json({
             items: allItems,
