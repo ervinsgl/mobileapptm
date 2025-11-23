@@ -80,60 +80,38 @@ This application provides a mobile-optimized interface for viewing and managing 
 
 ---
 
-## 🎨 User Experience
+## ✨ Features
 
-### Progressive Disclosure UI Flow:
+### UI Components
 
-```
-┌─────────────────────────────┐
-│ 1. Initial Load             │
-│ ┌─────────────────────────┐ │
-│ │ Service Order Panel     │ │
-│ └─────────────────────────┘ │
-│ ┌─────────────────────────┐ │
-│ │ Organization Level      │ │
-│ │ [Choose org level... ▼] │ │
-│ │ ℹ Please select...      │ │
-│ └─────────────────────────┘ │
-└─────────────────────────────┘
-          ⬇️ Select Organization
-┌─────────────────────────────┐
-│ 2. Organization Selected    │
-│ ┌─────────────────────────┐ │
-│ │ Service Order Panel     │ │
-│ └─────────────────────────┘ │
-│ ┌─────────────────────────┐ │
-│ │ Organization Level      │ │
-│ │ [TUEV-NORD_S4E     ▼] │ │
-│ └─────────────────────────┘ │
-│ ┌─────────────────────────┐ │
-│ │ Activities - TUEV... (15)│ │
-│ │ [Choose activity... ▼] │ │
-│ │ ℹ Please select activity│ │
-│ └─────────────────────────┘ │
-└─────────────────────────────┘
-          ⬇️ Select Activity
-┌─────────────────────────────┐
-│ 3. Activity Selected        │
-│ ┌─────────────────────────┐ │
-│ │ Service Order Panel     │ │
-│ └─────────────────────────┘ │
-│ ┌─────────────────────────┐ │
-│ │ Organization Level      │ │
-│ │ [TUEV-NORD_S4E     ▼] │ │
-│ └─────────────────────────┘ │
-│ ┌─────────────────────────┐ │
-│ │ Activities - TUEV... (15)│ │
-│ │ [19709 - TEST APP #23▼] │ │
-│ └─────────────────────────┘ │
-│ ┌─────────────────────────┐ │
-│ │ Activity Selection      │ │
-│ └─────────────────────────┘ │
-│ ┌─────────────────────────┐ │
-│ │ Activity Details        │ │
-│ └─────────────────────────┘ │
-└─────────────────────────────┘
-```
+| Component | Description |
+|-----------|-------------|
+| **Service Order Panel** | Expandable panel showing Service Order details (ID, External ID, Subject, Business Partner, Responsible, Dates) |
+| **Organization Level** | Dropdown to select organizational level for filtering |
+| **Product Groups** | Activities grouped by Product Description and SO Item ID |
+| **Activity Cards** | Card view with Address, Responsible, Org Level, Service Product |
+| **T&M Summary Box** | Shows count of Time Effort, Material, Expense, Mileage reports |
+| **T&M Reports Dialog** | Detailed view of all T&M entries with expandable panels |
+
+### Lookup Services
+
+The app resolves FSM IDs to human-readable names:
+
+| Service | Resolves | Example |
+|---------|----------|---------|
+| **TimeTaskService** | Task ID → Name | `3010642C...` → `AZ - Arbeitszeit` |
+| **ItemService** | Item ID/ExternalId → Name | `MATNR001` → `MATNR001 - Schrauben M8` |
+| **ExpenseTypeService** | Expense Type ID → Name | `6DC882E6...` → `Z40000039 - Aktivierungs-/Einsatzpauschale` |
+| **UdfMetaService** | UDF Meta ID → ExternalId | `EB1C5C15...` → `Z_Mileage_MatID` |
+
+### T&M Report Types
+
+| Type | Key Fields |
+|------|------------|
+| **Time Effort** | Duration, Start/End, Task, Charge Option, UDF Values |
+| **Material** | Quantity, Item, Date, Remarks |
+| **Expense** | External/Internal Amount, Expense Type, Date |
+| **Mileage** | Distance, Route, Mileage Type, Driver, Private Car |
 
 ---
 
@@ -169,7 +147,7 @@ Create a destination named **FSM_S4E** in SAP BTP Cockpit:
 ```
 Name: FSM_S4E
 Type: HTTP
-URL: https://de.fsm.cloud.sap/api/data/v4
+URL: https://de.fsm.cloud.sap
 Authentication: OAuth2ClientCredentials
 Token Service URL: https://de.fsm.cloud.sap/api/oauth2/v1/token
 Client ID: <your-fsm-client-id>
@@ -258,7 +236,7 @@ Navigate to: **FSM Admin → Company → Business Rules → Create**
 #### 7.2 Trigger Configuration
 **Trigger on:**
 - **Event:** `FSM Event`
-- **FSM Event:** `ActivityCreatedEvent`
+- **FSM Event:** `ActivityCreatedEvent`, `ActivityReleasedEvent`
 
 **Variables:**
 | Variable Name | Variable Type | Object      | Object Version | CoreSQL WHERE Clause |
@@ -303,6 +281,11 @@ ${servicecall.typeName} == 'External App Testing'
 
 **On Activity Creation:**
 - When a new Activity is created with Service Call type = "External App Testing"
+- The Business Rule automatically populates `udf_Z_externalAppLink`
+- The UDF contains: `https://mobileappsc-delightful-tiger-mv.cfapps.eu10.hana.ondemand.com/?activityId=A98EA0FBFAB24F13B663A0EFB39A0DE5`
+
+**On Activity Released:**
+- When a new Activity is released with Service Call type = "External App Testing"
 - The Business Rule automatically populates `udf_Z_externalAppLink`
 - The UDF contains: `https://mobileappsc-delightful-tiger-mv.cfapps.eu10.hana.ondemand.com/?activityId=A98EA0FBFAB24F13B663A0EFB39A0DE5`
 
@@ -380,35 +363,76 @@ https://app.cfapps.eu10.../
 
 ```
 mobileappsc/
-├── webapp/                          # Frontend (UI5 Fiori app)
+├── webapp/                              # Frontend (UI5 Fiori app)
 │   ├── controller/
-│   │   ├── App.controller.js        # Root controller
-│   │   └── View1.controller.js      # Main controller (structured, enterprise-grade)
+│   │   ├── App.controller.js            # Root controller
+│   │   └── View1.controller.js          # Main controller (924 lines)
 │   ├── view/
-│   │   ├── App.view.xml             # Root view (router container)
-│   │   ├── View1.view.xml           # Main view (progressive disclosure layout)
+│   │   ├── App.view.xml                 # Root view
+│   │   ├── View1.view.xml               # Main view
 │   │   └── fragments/
-│   │       ├── ServiceCall.fragment.xml         # Service call panel (always visible)
-│   │       ├── OrganizationLevel.fragment.xml   # Organization dropdown (always visible)
-│   │       ├── ActivitiesList.fragment.xml      # Activities dropdown (conditional)
-│   │       ├── ActivitySelection.fragment.xml   # Activity selection (conditional)
-│   │       └── ActivityDetails.fragment.xml     # Activity details (conditional)
+│   │       ├── ServiceCall.fragment.xml         # Service Order panel (expandable)
+│   │       ├── OrganizationLevel.fragment.xml   # Organization dropdown
+│   │       ├── ProductGroups.fragment.xml       # Activity cards grouped by product
+│   │       └── TMReportsDialog.fragment.xml     # T&M Reports dialog
 │   ├── utils/
-│   │   ├── formatter.js             # Data formatting utilities
-│   │   ├── ActivityService.js       # Activity data management
-│   │   ├── URLHelper.js             # URL parameter handling
-│   │   └── OrganizationService.js   # Organization level management
+│   │   ├── formatter.js                 # Date/number formatting
+│   │   ├── ActivityService.js           # Activity data management
+│   │   ├── ServiceOrderService.js       # Service order/composite tree
+│   │   ├── ProductGroupService.js       # Activity grouping by product
+│   │   ├── OrganizationService.js       # Organization level management
+│   │   ├── ReportedItemsData.js         # T&M data fetching
+│   │   ├── TimeTaskService.js           # Time task ID lookup
+│   │   ├── ItemService.js               # Item ID/ExternalId lookup
+│   │   ├── ExpenseTypeService.js        # Expense type ID lookup
+│   │   ├── UdfMetaService.js            # UDF Meta ID lookup
+│   │   └── URLHelper.js                 # URL parameter handling
 │   ├── css/
-│   │   └── style.css                # Custom styles
-│   ├── index.html                   # App entry point
-│   ├── manifest.json                # App descriptor (flexEnabled: true)
-│   └── Component.js                 # UI5 Component (with mobile router fix)
+│   │   └── style.css                    # Custom styles (10KB)
+│   ├── index.html                       # App entry point
+│   ├── manifest.json                    # App descriptor
+│   └── Component.js                     # UI5 Component
 │
-├── index.js                         # Express server + FSM API integration
-├── package.json                     # Node.js dependencies
-├── manifest.yaml                    # Cloud Foundry deployment config
-└── README.md                        # This file
+├── utils/                               # Backend utilities
+│   ├── FSMService.js                    # FSM API integration (27KB)
+│   ├── DestinationService.js            # BTP Destination handling
+│   └── TokenCache.js                    # OAuth token caching
+│
+├── index.js                             # Express server (288 lines)
+├── package.json                         # Node.js dependencies
+├── manifest.yaml                        # Cloud Foundry deployment
+└── README.md                            # This file
 ```
+
+---
+
+## 🔌 API Reference
+
+### Backend Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/get-organizational-levels` | Fetch organization levels |
+| POST | `/api/get-activity-by-id` | Fetch activity by ID |
+| POST | `/api/get-activity-by-code` | Fetch activity by code |
+| POST | `/api/get-activities-by-service-call` | Fetch composite tree for service call |
+| PUT | `/api/update-activity` | Update activity |
+| POST | `/api/get-reported-items` | Fetch T&M reports for activity |
+| GET | `/api/get-time-tasks` | Fetch time tasks for lookup |
+| GET | `/api/get-items` | Fetch items for lookup |
+| GET | `/api/get-expense-types` | Fetch expense types for lookup |
+| POST | `/api/get-udf-meta` | Resolve UDF Meta ID to externalId |
+
+### FSM APIs Used
+
+| API | Endpoint | Purpose |
+|-----|----------|---------|
+| **Data API v4** | `/api/data/v4/Activity` | Activity CRUD |
+| **Data API v4** | `/api/data/v4/TimeTask` | Time task lookup |
+| **Data API v4** | `/api/data/v4/ExpenseType` | Expense type lookup |
+| **Query API v1** | `/api/query/v1` | TimeEffort, Material, Expense, Mileage, Item, UdfMeta queries |
+| **Service Management v2** | `/api/service-management/v2/composite-tree` | Service call with activities |
+| **Org Level Service v1** | `/cloud-org-level-service/api/v1/levels` | Organization hierarchy |
 
 ### Key Files Explained:
 
@@ -442,70 +466,31 @@ mobileappsc/
 
 ## 🔌 API Reference
 
-### Backend Endpoints:
+### Backend Endpoints
 
-#### **GET /api/get-organizational-levels**
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/get-organizational-levels` | Fetch organization levels |
+| POST | `/api/get-activity-by-id` | Fetch activity by ID |
+| POST | `/api/get-activity-by-code` | Fetch activity by code |
+| POST | `/api/get-activities-by-service-call` | Fetch composite tree for service call |
+| PUT | `/api/update-activity` | Update activity |
+| POST | `/api/get-reported-items` | Fetch T&M reports for activity |
+| GET | `/api/get-time-tasks` | Fetch time tasks for lookup |
+| GET | `/api/get-items` | Fetch items for lookup |
+| GET | `/api/get-expense-types` | Fetch expense types for lookup |
+| POST | `/api/get-udf-meta` | Resolve UDF Meta ID to externalId |
 
-Fetch available organization levels.
+### FSM APIs Used
 
-**Response:**
-```json
-{
-  "levels": [
-    {
-      "id": "6fcb305c-17dc-428a-8b7b-cad767938560",
-      "name": "2130 - MPA Leuna GmbH",
-      "shortDescription": "2130",
-      "longDescription": "2130 - MPA Leuna GmbH"
-    }
-  ]
-}
-```
-
-#### **POST /api/get-activity-by-id**
-
-Fetch activity by ID.
-
-**Request:**
-```json
-{
-  "activityId": "9D92E0B18FDC4A27A213401FEEA89FDA"
-}
-```
-
-**Response:**
-```json
-{
-  "data": [{
-    "activity": {
-      "id": "9D92E0B18FDC4A27A213401FEEA89FDA",
-      "code": "19687",
-      "subject": "TEST APP #17",
-      "status": "IN_PROGRESS",
-      "type": "INSTALLATION"
-    }
-  }]
-}
-```
-
-#### **POST /api/get-activities-by-service-call**
-
-Fetch all activities for a service call.
-
-**Request:**
-```json
-{
-  "serviceCallId": "ABC123"
-}
-```
-
-**Response:**
-```json
-{
-  "activities": [...],
-  "responsibles": [...]
-}
-```
+| API | Endpoint | Purpose |
+|-----|----------|---------|
+| **Data API v4** | `/api/data/v4/Activity` | Activity CRUD |
+| **Data API v4** | `/api/data/v4/TimeTask` | Time task lookup |
+| **Data API v4** | `/api/data/v4/ExpenseType` | Expense type lookup |
+| **Query API v1** | `/api/query/v1` | TimeEffort, Material, Expense, Mileage, Item, UdfMeta queries |
+| **Service Management v2** | `/api/service-management/v2/composite-tree` | Service call with activities |
+| **Org Level Service v1** | `/cloud-org-level-service/api/v1/levels` | Organization hierarchy |
 
 ---
 
@@ -514,127 +499,97 @@ Fetch all activities for a service call.
 ### Local Development
 
 ```bash
-# Install dependencies
 npm install
-
-# Start local server
 npm start
-
 # App runs on http://localhost:3000
 ```
 
-**Note:** Local development requires BTP Destination Service. Use `cf push` for testing.
+**Note:** Local development requires BTP Destination Service binding. Use `cf push` for full testing.
 
-### Testing in Browser
+### URL Parameters
 
-Open the app with test parameters:
+The app receives context from FSM Mobile via URL:
 
 ```
-http://localhost:3000/?activityId=YOUR_ACTIVITY_ID
+https://app.cfapps.eu10.../
+  ?activityId=9D92E0B18FDC4A27A213401FEEA89FDA
 ```
 
-The app will:
-1. Show Service Order and Organization Level panels
-2. Load organization levels automatically
-3. Allow progressive navigation through organization → activities → details
+### Adding a New Lookup Service
 
-### Making Changes
-
-#### 1. **Add a new panel to the progressive disclosure:**
-
-Edit `webapp/view/View1.view.xml` and add to the conditional containers:
-
-```xml
-<VBox id="yourNewPanelContainer" visible="{view>/yourCondition}" width="100%">
-    <core:Fragment fragmentName="mobileappsc.view.fragments.YourPanel" type="XML" />
-</VBox>
-```
-
-#### 2. **Add a new dropdown service:**
-
-Create `webapp/utils/YourService.js`:
-
+1. **Create frontend service** (`webapp/utils/YourService.js`):
 ```javascript
 sap.ui.define([], () => {
     "use strict";
     return {
-        async fetchYourData() {
+        _cache: new Map(),
+        
+        async fetchData() {
             const response = await fetch("/api/your-endpoint");
-            return response.json();
+            const data = await response.json();
+            data.items.forEach(item => {
+                this._cache.set(item.id, item);
+            });
         },
-        transformForDropdown(data) {
-            return data.map(item => ({
-                key: item.id,
-                text: item.name
-            }));
+        
+        getNameById(id) {
+            const item = this._cache.get(id);
+            return item ? item.name : id;
         }
     };
 });
 ```
 
-#### 3. **Add controller methods following the established pattern:**
-
+2. **Add backend method** (`utils/FSMService.js`):
 ```javascript
-/* ========================================
- * YOUR FEATURE MANAGEMENT
- * ======================================== */
-
-async _loadYourData() {
-    // Follow the pattern from _loadOrganizationLevels()
-},
-
-_populateYourComboBox(items) {
-    // Follow the pattern from _populateOrganizationLevelComboBox()
-},
-
-async onYourSelectionChange(oEvent) {
-    // Follow the pattern from onOrganizationLevelChange()
+async getYourData() {
+    return this.makeRequest('/YourEntity', { dtos: 'YourEntity.version' });
 }
+```
+
+3. **Add API endpoint** (`index.js`):
+```javascript
+app.get("/api/your-endpoint", async (req, res) => {
+    const data = await FSMService.getYourData();
+    res.json({ items: data });
+});
+```
+
+4. **Import and load in controller** (`View1.controller.js`):
+```javascript
+// Add to imports
+"mobileappsc/utils/YourService"
+
+// Add to onInit
+this._loadYourData();
 ```
 
 ---
 
 ## 🐛 Troubleshooting
 
-### Issue: Organization dropdown not populating
-
-**Cause:** FSM API credentials or organizational levels API failure.
-
-**Solution:** Check logs and verify FSM_S4E destination configuration.
-
-### Issue: Activities dropdown shows no items
-
-**Cause:** No activities found for the service call or organization filter.
-
-**Solution:** Verify the service call has activities in FSM.
-
-### Issue: Panels not showing after selection
-
-**Cause:** Model binding issue or conditional visibility not updating.
-
-**Solution:** Check browser console for binding errors. Verify model properties are set correctly.
-
-### Issue: Dropdown selection gets corrupted
-
-**Cause:** ComboBox items binding conflict.
-
-**Solution:** Already handled with manual item population and restoration logic.
-
-### View Logs:
+### View Logs
 
 ```bash
 cf logs mobileappsc --recent
 ```
 
----
+### Common Issues
 
-## 🔐 Security Notes
+| Issue | Cause | Solution |
+|-------|-------|----------|
+| Empty organization dropdown | FSM API credentials invalid | Verify FSM_S4E destination |
+| No activities shown | No EXECUTION/CLOSED activities | Check activity execution stages |
+| T&M shows IDs instead of names | Lookup service not loaded | Check console for fetch errors |
+| Dialog shows "No data" | API timeout | Refresh and try again |
 
-- OAuth tokens are **cached in memory** (not persisted)
-- Destination credentials stored in **VCAP_SERVICES** (secure)
-- **No sensitive data** logged to console (production-clean)
-- App uses **HTTPS only** (enforced by Cloud Foundry)
-- Unique IDs enforced for **flexEnabled** compliance
+### Debug Console Logs
+
+The app logs detailed information to browser console:
+- `SERVICE ORDER:` - Service call data
+- `PRODUCT GROUP:` - Activity grouping
+- `ReportedItemsData:` - T&M fetching
+- `Backend:` - Server-side operations
 
 ---
 
@@ -642,50 +597,42 @@ cf logs mobileappsc --recent
 
 |                                    |                                                          |
 |------------------------------------|----------------------------------------------------------|
-| **App Name**                       | FSM Mobile Integration                                   |
+| **App Name**                       | FSM Mobile Integration - Service Confirmation            |
 | **Module Name**                    | mobileappsc                                              |
 | **Framework**                      | SAP UI5 (Fiori) + Node.js Express                        |
-| **UI Design Pattern**              | Progressive Disclosure                                   |
 | **UI5 Theme**                      | sap_horizon                                              |
 | **UI5 Version**                    | Latest (loaded from CDN)                                 |
 | **Deployment Platform**            | SAP Business Technology Platform (Cloud Foundry)         |
-| **Development Platform**           | SAP Business Application Studio                          |
-| **Code Quality**                   | Enterprise-grade, structured, production-ready          |
+| **Node.js Version**                | 18+                                                      |
 
 ---
 
-## 🚀 Current Features
+## 🚀 Current Status
 
-### ✅ **Implemented:**
-- Progressive disclosure UI (Organization → Activities → Details)
-- Organization level selection with FSM API integration
-- Activity dropdown with filtering by service call
-- Conditional panel visibility based on user selections
-- Clean, structured controller with enterprise coding standards
-- Production-ready error handling and user feedback
-- Mobile-optimized responsive design
-- Dropdown corruption prevention with manual item management
+### ✅ Implemented:
+- Service Order panel (expandable, collapsed by default)
+- Organization level selection
+- Activities grouped by Product Description
+- Activity cards with key fields (Address, Responsible, Org Level, Service Product)
+- T&M Summary with type breakdown
+- T&M Reports Dialog with:
+  - Activity details header (Planned Start/End, Duration, Quantity, UoM)
+  - Expandable T&M Entry panels
+  - Human-readable headers (e.g., "T&M Entry - Mileage - Z40000008 - gefahrene Kilometer")
+  - All T&M fields with resolved names
+- Lookup services for ID resolution
 
-### 🔄 **In Development:**
-- Activity Selection panel functionality
-- Activity Details panel enhancements
-
-### 📋 **Planned:**
-- Service confirmation creation
-- Materials tracking
-- Time entry logging
-- Expense tracking
+### 📋 Planned:
+- T&M report creation
 
 ---
 
-## 📞 Support
+## 🔐 Security Notes
 
-For issues or questions:
-1. Check logs: `cf logs mobileappsc --recent`
-2. Verify BTP Destination configuration
-3. Test progressive disclosure flow: Organization → Activities → Details
-4. Check browser console for model binding issues
-5. Contact your SAP BTP administrator
+- OAuth tokens cached in memory (not persisted)
+- Destination credentials in VCAP_SERVICES (secure)
+- HTTPS only (enforced by Cloud Foundry)
+- No sensitive data logged
 
 ---
 
