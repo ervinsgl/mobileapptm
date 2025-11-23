@@ -11,8 +11,12 @@ sap.ui.define([
     "mobileappsc/utils/ProductGroupService",
     "mobileappsc/utils/URLHelper",
     "mobileappsc/utils/OrganizationService",
-    "mobileappsc/utils/ReportedItemsData"
-], (Controller, JSONModel, MessageToast, MessageBox, Item, Fragment, formatter, ActivityService, ServiceOrderService, ProductGroupService, URLHelper, OrganizationService, ReportedItemsData) => {
+    "mobileappsc/utils/ReportedItemsData",
+    "mobileappsc/utils/TimeTaskService",
+    "mobileappsc/utils/ItemService",
+    "mobileappsc/utils/ExpenseTypeService",
+    "mobileappsc/utils/UdfMetaService"
+], (Controller, JSONModel, MessageToast, MessageBox, Item, Fragment, formatter, ActivityService, ServiceOrderService, ProductGroupService, URLHelper, OrganizationService, ReportedItemsData, TimeTaskService, ItemService, ExpenseTypeService, UdfMetaService) => {
     "use strict";
 
     return Controller.extend("mobileappsc.controller.View1", {
@@ -22,6 +26,9 @@ sap.ui.define([
         onInit() {
             this._initializeModel();
             this._loadOrganizationLevels();
+            this._loadTimeTasks(); // Load time tasks for lookup
+            this._loadItems(); // Load items for lookup
+            this._loadExpenseTypes(); // Load expense types for lookup
             this._loadActivityFromURL();
         },
 
@@ -73,6 +80,51 @@ sap.ui.define([
                 MessageToast.show("Failed to load organization levels");
             } finally {
                 viewModel.setProperty("/organizationLevelsLoading", false);
+            }
+        },
+
+        /**
+         * Load Time Tasks for lookup (runs in background)
+         * Used to resolve Task IDs to human-readable names in T&M reports
+         */
+        async _loadTimeTasks() {
+            try {
+                console.log('Loading time tasks for lookup...');
+                await TimeTaskService.fetchTimeTasks();
+                console.log('Time tasks loaded successfully');
+            } catch (error) {
+                console.error("Failed to load time tasks:", error);
+                // Non-blocking - app continues without task name resolution
+            }
+        },
+
+        /**
+         * Load Items for lookup (runs in background)
+         * Used to resolve Item IDs to human-readable names in T&M reports and activities
+         */
+        async _loadItems() {
+            try {
+                console.log('Loading items for lookup...');
+                await ItemService.fetchItems();
+                console.log('Items loaded successfully');
+            } catch (error) {
+                console.error("Failed to load items:", error);
+                // Non-blocking - app continues without item name resolution
+            }
+        },
+
+        /**
+         * Load Expense Types for lookup (runs in background)
+         * Used to resolve Expense Type IDs to human-readable names in T&M reports
+         */
+        async _loadExpenseTypes() {
+            try {
+                console.log('Loading expense types for lookup...');
+                await ExpenseTypeService.fetchExpenseTypes();
+                console.log('Expense types loaded successfully');
+            } catch (error) {
+                console.error("Failed to load expense types:", error);
+                // Non-blocking - app continues without expense type name resolution
             }
         },
 
@@ -290,6 +342,42 @@ sap.ui.define([
             try {
                 const reports = await ReportedItemsData.getReportedItems(activityId);
 
+                // Pre-load UDF Meta for all reports (to resolve meta IDs to externalIds)
+                await UdfMetaService.preloadUdfMetaForReports(reports);
+
+                // Enrich reports with resolved names
+                reports.forEach(report => {
+                    // Time Effort: resolve task name
+                    if (report.type === "Time Effort" && report.task) {
+                        report.taskDisplayText = TimeTaskService.getTaskDisplayTextById(report.task);
+                    }
+                    // Material: resolve item name (item field contains the item ID)
+                    if (report.type === "Material" && report.fullData?.item) {
+                        report.itemDisplayText = ItemService.getItemDisplayTextById(report.fullData.item);
+                    }
+                    // Expense: resolve expense type name
+                    if (report.type === "Expense" && report.fullData?.type) {
+                        report.expenseTypeDisplayText = ExpenseTypeService.getExpenseTypeDisplayTextById(report.fullData.type);
+                    }
+                    // Mileage: resolve mileage type from UDF Z_Mileage_MatID
+                    if (report.type === "Mileage") {
+                        const mileageTypeValue = this._getUdfValueByExternalId(report.udfValues, "Z_Mileage_MatID");
+                        if (mileageTypeValue) {
+                            // mileageTypeValue is an Item externalId, resolve to name
+                            report.mileageTypeDisplayText = ItemService.getItemDisplayTextByExternalId(mileageTypeValue);
+                        } else {
+                            report.mileageTypeDisplayText = 'N/A';
+                        }
+                    }
+                    // Format UDF values with externalId instead of meta ID
+                    if (report.udfValues && report.udfValues.length > 0) {
+                        report.udfValuesText = UdfMetaService.formatUdfValuesForDisplay(report.udfValues);
+                    }
+
+                    // Build entry header text based on type
+                    report.entryHeaderText = this._buildEntryHeaderText(report);
+                });
+
                 // Calculate counts
                 const timeEffortCount = reports.filter(r => r.type === "Time Effort").length;
                 const materialCount = reports.filter(r => r.type === "Material").length;
@@ -329,7 +417,7 @@ sap.ui.define([
             const isClosed = activity.executionStage === 'CLOSED';
             const fullActivity = activity.fullActivity || {};
 
-            // ✅ Extract UDF values for Quantity and UoM
+            // Extract UDF values for Quantity and UoM
             const quantity = this._getUdfValue(fullActivity, 'Z_Quantity') || 'N/A';
             const quantityUoM = this._getUdfValue(fullActivity, 'Z_QuantityUoM') || 'N/A';
             const formattedQuantity = quantity !== 'N/A' && quantityUoM !== 'N/A'
@@ -377,6 +465,10 @@ sap.ui.define([
                 orgLevelId: fullActivity.orgLevelIds?.[0] || 'N/A',
                 responsibleId: fullActivity.responsibles?.[0]?.externalId || 'N/A',
                 serviceProductId: fullActivity.serviceProduct?.externalId || 'N/A',
+                // Resolve service product name from ItemService
+                serviceProductDisplayText: fullActivity.serviceProduct?.externalId 
+                    ? ItemService.getItemDisplayTextByExternalId(fullActivity.serviceProduct.externalId)
+                    : 'N/A',
                 plannedDuration: fullActivity.plannedDurationInMinutes || 0,
 
                 // Quantity fields
@@ -413,6 +505,70 @@ sap.ui.define([
             );
 
             return udfValue ? udfValue.value : null;
+        },
+
+        /**
+         * Helper method to extract UDF value by externalId from T&M report udfValues array
+         * T&M reports have udfValues with {meta: "ID", value: "..."} structure
+         * Uses UdfMetaService cache to resolve meta ID to externalId
+         * @param {Array} udfValues - Array of UDF value objects with {meta, value}
+         * @param {string} targetExternalId - The externalId to search for (e.g., "Z_Mileage_MatID")
+         * @returns {string|null} The UDF value or null if not found
+         */
+        _getUdfValueByExternalId(udfValues, targetExternalId) {
+            if (!udfValues || !Array.isArray(udfValues) || !targetExternalId) {
+                return null;
+            }
+
+            for (const udf of udfValues) {
+                if (udf.meta) {
+                    // Get the externalId from cached UdfMetaService
+                    const externalId = UdfMetaService.getExternalIdById(udf.meta);
+                    if (externalId === targetExternalId) {
+                        return udf.value;
+                    }
+                }
+            }
+
+            return null;
+        },
+
+        /**
+         * Build entry header text for T&M report based on type
+         * Format: "T&M Entry - {type} - {type-specific value}"
+         * @param {object} report - T&M report object
+         * @returns {string} Formatted header text
+         */
+        _buildEntryHeaderText(report) {
+            const baseText = `T&M Entry - ${report.type}`;
+            let typeSpecificText = '';
+
+            switch (report.type) {
+                case 'Time Effort':
+                    typeSpecificText = report.taskDisplayText && report.taskDisplayText !== 'N/A' 
+                        ? report.taskDisplayText 
+                        : '';
+                    break;
+                case 'Material':
+                    typeSpecificText = report.itemDisplayText && report.itemDisplayText !== 'N/A' 
+                        ? report.itemDisplayText 
+                        : '';
+                    break;
+                case 'Expense':
+                    typeSpecificText = report.expenseTypeDisplayText && report.expenseTypeDisplayText !== 'N/A' 
+                        ? report.expenseTypeDisplayText 
+                        : '';
+                    break;
+                case 'Mileage':
+                    typeSpecificText = report.mileageTypeDisplayText && report.mileageTypeDisplayText !== 'N/A' 
+                        ? report.mileageTypeDisplayText 
+                        : '';
+                    break;
+                default:
+                    typeSpecificText = '';
+            }
+
+            return typeSpecificText ? `${baseText} - ${typeSpecificText}` : baseText;
         },
 
         /**
@@ -607,13 +763,49 @@ sap.ui.define([
             console.log('T&M Reports Array:', oActivity.tmReports);
             console.log('========================');
 
-            // ✅ If reports aren't loaded yet, force load them
+            // If reports aren't loaded yet, force load them
             if (!oActivity.tmReportsLoaded || !oActivity.tmReports || oActivity.tmReports.length === 0) {
                 console.log('T&M reports not loaded, fetching fresh data...');
 
                 try {
                     // Get fresh T&M data
                     const reports = await ReportedItemsData.getReportedItems(oActivity.id);
+
+                    // Pre-load UDF Meta for all reports (to resolve meta IDs to externalIds)
+                    await UdfMetaService.preloadUdfMetaForReports(reports);
+
+                    // Enrich reports with resolved names
+                    reports.forEach(report => {
+                        // Time Effort: resolve task name
+                        if (report.type === "Time Effort" && report.task) {
+                            report.taskDisplayText = TimeTaskService.getTaskDisplayTextById(report.task);
+                        }
+                        // Material: resolve item name
+                        if (report.type === "Material" && report.fullData?.item) {
+                            report.itemDisplayText = ItemService.getItemDisplayTextById(report.fullData.item);
+                        }
+                        // Expense: resolve expense type name
+                        if (report.type === "Expense" && report.fullData?.type) {
+                            report.expenseTypeDisplayText = ExpenseTypeService.getExpenseTypeDisplayTextById(report.fullData.type);
+                        }
+                        // Mileage: resolve mileage type from UDF Z_Mileage_MatID
+                        if (report.type === "Mileage") {
+                            const mileageTypeValue = this._getUdfValueByExternalId(report.udfValues, "Z_Mileage_MatID");
+                            if (mileageTypeValue) {
+                                // mileageTypeValue is an Item externalId, resolve to name
+                                report.mileageTypeDisplayText = ItemService.getItemDisplayTextByExternalId(mileageTypeValue);
+                            } else {
+                                report.mileageTypeDisplayText = 'N/A';
+                            }
+                        }
+                        // Format UDF values with externalId instead of meta ID
+                        if (report.udfValues && report.udfValues.length > 0) {
+                            report.udfValuesText = UdfMetaService.formatUdfValuesForDisplay(report.udfValues);
+                        }
+
+                        // Build entry header text based on type
+                        report.entryHeaderText = this._buildEntryHeaderText(report);
+                    });
 
                     console.log('Fresh T&M data loaded:', reports);
 

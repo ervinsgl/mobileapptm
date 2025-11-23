@@ -255,7 +255,7 @@ class FSMService {
                     id: timeEffort.id,
                     createDateTime: timeEffort.createDateTime,
 
-                    // ✅ ADD REQUESTED FIELDS
+                    // ADD REQUESTED FIELDS
                     createPerson: timeEffort.createPerson || 'N/A',
                     orgLevel: timeEffort.orgLevel || 'N/A',
                     chargeOption: timeEffort.chargeOption || 'N/A',
@@ -272,7 +272,7 @@ class FSMService {
                     syncStatus: timeEffort.syncStatus || 'N/A',
                     type: 'Time Effort',
 
-                    // ✅ PRE-FORMATTED DISPLAY TEXT
+                    // PRE-FORMATTED DISPLAY TEXT
                     remarksText: remarks, // Already processed above
                     durationText: typeof durationMinutes === 'number' ? `${durationMinutes} min` : 'N/A',
 
@@ -402,34 +402,34 @@ class FSMService {
                     id: expense.id,
                     createDateTime: expense.createDateTime,
 
-                    // ✅ BASIC FIELDS (matching TimeEffort/Material pattern)
+                    // BASIC FIELDS (matching TimeEffort/Material pattern)
                     createPerson: expense.createPerson || 'N/A',
                     orgLevel: expense.orgLevel || 'N/A',
                     chargeOption: expense.chargeOption || 'N/A',
                     syncStatus: expense.syncStatus || 'N/A',
 
-                    // ✅ EXPENSE-SPECIFIC FIELDS
+                    // EXPENSE-SPECIFIC FIELDS
                     date: expense.date || null,
                     type: expense.type || 'N/A',
                     externalAmount: expense.externalAmount,
                     internalAmount: expense.internalAmount,
                     remarks: expense.remarks || null,
 
-                    // ✅ UDF INFORMATION
+                    // UDF INFORMATION
                     udfValues: udfValues,
                     udfValuesText: udfValuesText,
 
-                    // ✅ DISPLAY TYPE
+                    // DISPLAY TYPE
                     type: 'Expense',
 
-                    // ✅ PRE-FORMATTED DISPLAY TEXT (no complex expressions needed in UI)
+                    // PRE-FORMATTED DISPLAY TEXT (no complex expressions needed in UI)
                     dateText: expense.date || 'N/A',
                     expenseTypeText: expense.type || 'N/A',
                     externalAmountText: externalAmount,
                     internalAmountText: internalAmount,
                     remarksText: expense.remarks || 'N/A',
 
-                    // ✅ KEEP FULL DATA FOR REFERENCE
+                    // KEEP FULL DATA FOR REFERENCE
                     fullData: expense
                 };
             });
@@ -495,13 +495,13 @@ class FSMService {
                     id: mileage.id,
                     createDateTime: mileage.createDateTime,
 
-                    // ✅ BASIC FIELDS (matching TimeEffort/Material/Expense pattern)
+                    // BASIC FIELDS (matching TimeEffort/Material/Expense pattern)
                     createPerson: mileage.createPerson || 'N/A',
                     orgLevel: mileage.orgLevel || 'N/A',
                     chargeOption: mileage.chargeOption || 'N/A',
                     syncStatus: mileage.syncStatus || 'N/A',
 
-                    // ✅ MILEAGE-SPECIFIC FIELDS
+                    // MILEAGE-SPECIFIC FIELDS
                     date: mileage.date || null,
                     source: mileage.source || 'N/A',
                     destination: mileage.destination || 'N/A',
@@ -513,14 +513,14 @@ class FSMService {
                     travelEndDateTime: mileage.travelEndDateTime || null,
                     remarks: mileage.remarks || null,
 
-                    // ✅ UDF INFORMATION
+                    // UDF INFORMATION
                     udfValues: udfValues,
                     udfValuesText: udfValuesText,
 
-                    // ✅ DISPLAY TYPE
+                    // DISPLAY TYPE
                     type: 'Mileage',
 
-                    // ✅ PRE-FORMATTED DISPLAY TEXT (no complex expressions needed in UI)
+                    // PRE-FORMATTED DISPLAY TEXT (no complex expressions needed in UI)
                     dateText: mileage.date || 'N/A',
                     distanceText: distanceText,
                     routeText: routeText,
@@ -528,13 +528,145 @@ class FSMService {
                     privateCarText: mileage.privateCar ? 'Yes' : 'No',
                     remarksText: mileage.remarks || 'N/A',
 
-                    // ✅ KEEP FULL DATA FOR REFERENCE
+                    // KEEP FULL DATA FOR REFERENCE
                     fullData: mileage
                 };
             });
         } catch (error) {
             console.error("Error fetching mileages:", error.message);
             return [];
+        }
+    }
+
+    /**
+     * Get all Time Tasks for lookup/dropdown
+     * Used to resolve TimeEffort.task ID to human-readable name
+     */
+    async getTimeTasks() {
+        try {
+            console.log('FSMService: Fetching Time Tasks...');
+            
+            const data = await this.makeRequest('/TimeTask', {
+                dtos: 'TimeTask.18',
+                fields: 'name,id,code'
+            });
+
+            if (!data.data || data.data.length === 0) {
+                console.log('FSMService: No time tasks found');
+                return [];
+            }
+
+            console.log('FSMService: Found', data.data.length, 'time tasks');
+
+            // Transform to simple array of task objects
+            return data.data.map(item => ({
+                id: item.timeTask.id,
+                code: item.timeTask.code,
+                name: item.timeTask.name
+            }));
+
+        } catch (error) {
+            console.error("Error fetching time tasks:", error.message);
+            return [];
+        }
+    }
+
+    /**
+     * Get all Items for lookup/dropdown
+     * Used to resolve Material.item ID and Activity.serviceProduct to human-readable name
+     * Excludes tools and Z11% items
+     */
+    async getItems() {
+        try {
+            console.log('FSMService: Fetching Items...');
+            
+            // Query to get all items excluding tools and Z11% items
+            const query = `SELECT DISTINCT w.name, w.externalId, w.id 
+                           FROM Item w 
+                           WHERE w.tool = false 
+                           AND w.externalId NOT LIKE 'Z11%'`;
+            
+            const data = await this.makeQueryRequest(query, 'Item.24');
+
+            if (!data.data || data.data.length === 0) {
+                console.log('FSMService: No items found');
+                return [];
+            }
+
+            console.log('FSMService: Found', data.data.length, 'items');
+
+            // Transform to simple array of item objects
+            return data.data.map(item => ({
+                id: item.w.id,
+                externalId: item.w.externalId,
+                name: item.w.name
+            }));
+
+        } catch (error) {
+            console.error("Error fetching items:", error.message);
+            return [];
+        }
+    }
+
+    /**
+     * Get all Expense Types for lookup/dropdown
+     * Used to resolve Expense.type ID to human-readable name
+     */
+    async getExpenseTypes() {
+        try {
+            console.log('FSMService: Fetching Expense Types...');
+            
+            const data = await this.makeRequest('/ExpenseType', {
+                dtos: 'ExpenseType.17',
+                fields: 'name,id,code'
+            });
+
+            if (!data.data || data.data.length === 0) {
+                console.log('FSMService: No expense types found');
+                return [];
+            }
+
+            console.log('FSMService: Found', data.data.length, 'expense types');
+
+            // Transform to simple array of expense type objects
+            return data.data.map(item => ({
+                id: item.expenseType.id,
+                code: item.expenseType.code,
+                name: item.expenseType.name
+            }));
+
+        } catch (error) {
+            console.error("Error fetching expense types:", error.message);
+            return [];
+        }
+    }
+
+    /**
+     * Get UDF Meta externalId by ID
+     * Used to resolve UDF Meta IDs to human-readable externalId names
+     * @param {string} udfMetaId - UDF Meta ID
+     * @returns {string|null} externalId or null if not found
+     */
+    async getUdfMetaById(udfMetaId) {
+        try {
+            console.log('FSMService: Fetching UDF Meta for ID:', udfMetaId);
+            
+            const query = `SELECT w.externalId FROM UdfMeta w WHERE w.id = '${udfMetaId}'`;
+            const data = await this.makeQueryRequest(query, 'UdfMeta.20');
+
+            if (!data.data || data.data.length === 0) {
+                console.log('FSMService: No UDF Meta found for ID:', udfMetaId);
+                return null;
+            }
+
+            const externalId = data.data[0]?.w?.externalId || null;
+            console.log('FSMService: Resolved UDF Meta', udfMetaId, 'to externalId:', externalId);
+
+            return externalId;
+
+        } catch (error) {
+            console.error("Error fetching UDF Meta:", error.message);
+            return null;
         }
     }
 }

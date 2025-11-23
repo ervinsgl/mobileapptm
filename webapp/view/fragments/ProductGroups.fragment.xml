@@ -134,7 +134,7 @@
                                                     <l:GridData span="XL6 L6 M12 S12"/>
                                                 </layoutData>
                                                 <Label text="Service Product" design="Bold" class="infoLabel"/>
-                                                <Text text="{view>serviceProductId}" class="infoValue detailFieldValue"/>
+                                                <Text text="{view>serviceProductDisplayText}" class="infoValue detailFieldValue"/>
                                             </VBox>
                                             
                                             <VBox class="detailField">

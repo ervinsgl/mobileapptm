@@ -191,6 +191,96 @@ app.post("/api/get-reported-items", async (req, res) => {
     }
 });
 
+// Get Time Tasks (for lookup/dropdown)
+app.get("/api/get-time-tasks", async (req, res) => {
+    try {
+        const timeTasks = await FSMService.getTimeTasks();
+        
+        console.log('Backend: Sending', timeTasks.length, 'time tasks');
+        
+        res.json({
+            timeTasks: timeTasks,
+            count: timeTasks.length
+        });
+
+    } catch (error) {
+        console.error("Error fetching time tasks:", error.message);
+        res.status(error.response?.status || 500).json({
+            message: error.response?.data?.message || 'Failed to fetch time tasks',
+            error: error.response?.data || error.message
+        });
+    }
+});
+
+// Get Items (for lookup/dropdown - excludes tools and Z11% items)
+app.get("/api/get-items", async (req, res) => {
+    try {
+        const items = await FSMService.getItems();
+        
+        console.log('Backend: Sending', items.length, 'items');
+        
+        res.json({
+            items: items,
+            count: items.length
+        });
+
+    } catch (error) {
+        console.error("Error fetching items:", error.message);
+        res.status(error.response?.status || 500).json({
+            message: error.response?.data?.message || 'Failed to fetch items',
+            error: error.response?.data || error.message
+        });
+    }
+});
+
+// Get Expense Types (for lookup/dropdown)
+app.get("/api/get-expense-types", async (req, res) => {
+    try {
+        const expenseTypes = await FSMService.getExpenseTypes();
+        
+        console.log('Backend: Sending', expenseTypes.length, 'expense types');
+        
+        res.json({
+            expenseTypes: expenseTypes,
+            count: expenseTypes.length
+        });
+
+    } catch (error) {
+        console.error("Error fetching expense types:", error.message);
+        res.status(error.response?.status || 500).json({
+            message: error.response?.data?.message || 'Failed to fetch expense types',
+            error: error.response?.data || error.message
+        });
+    }
+});
+
+// Get UDF Meta externalId by ID
+app.post("/api/get-udf-meta", async (req, res) => {
+    const { udfMetaId } = req.body;
+
+    if (!udfMetaId) {
+        return res.status(400).json({ message: 'UDF Meta ID is required' });
+    }
+
+    try {
+        const externalId = await FSMService.getUdfMetaById(udfMetaId);
+        
+        console.log('Backend: Resolved UDF Meta', udfMetaId, 'to', externalId);
+        
+        res.json({
+            id: udfMetaId,
+            externalId: externalId
+        });
+
+    } catch (error) {
+        console.error("Error fetching UDF Meta:", error.message);
+        res.status(error.response?.status || 500).json({
+            message: error.response?.data?.message || 'Failed to fetch UDF Meta',
+            error: error.response?.data || error.message
+        });
+    }
+});
+
 // Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
