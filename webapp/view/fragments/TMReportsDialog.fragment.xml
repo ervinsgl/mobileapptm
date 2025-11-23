@@ -11,10 +11,57 @@
                 
                 <!-- Header Info -->
                 <VBox class="sapUiSmallMarginBottom">
-                    <Text text="Activity: {dialog>/activityCode}" class="sapUiMediumMarginBottom"/>
+                    <Text text="Activity: {dialog>/activityCode}" class="sapUiTinyMarginBottom"/>
                     <Text text="Subject: {dialog>/activitySubject}" class="sapUiSmallMarginBottom"/>
-                    <Text text="Total Reports: {dialog>/reportCount}" class="sapUiMediumMarginBottom"/>
                 </VBox>
+                
+                <!-- Activity Details Grid (moved from Activity card) -->
+                <VBox class="activityQuickInfo sapUiSmallMarginBottom">
+                    <l:Grid defaultSpan="XL6 L6 M12 S12" hSpacing="2" vSpacing="1" containerQuery="true">
+                        <VBox class="detailField">
+                            <layoutData>
+                                <l:GridData span="XL6 L6 M12 S12"/>
+                            </layoutData>
+                            <Label text="Planned Start:" design="Bold" class="infoLabel"/>
+                            <Text text="{dialog>/formattedStartDate}" class="infoValue detailFieldValue"/>
+                        </VBox>
+                        
+                        <VBox class="detailField">
+                            <layoutData>
+                                <l:GridData span="XL6 L6 M12 S12"/>
+                            </layoutData>
+                            <Label text="Planned End:" design="Bold" class="infoLabel"/>
+                            <Text text="{dialog>/formattedEndDate}" class="infoValue detailFieldValue"/>
+                        </VBox>
+                        
+                        <VBox class="detailField">
+                            <layoutData>
+                                <l:GridData span="XL6 L6 M12 S12"/>
+                            </layoutData>
+                            <Label text="Duration:" design="Bold" class="infoLabel"/>
+                            <Text text="{dialog>/formattedDuration}" class="infoValue detailFieldValue"/>
+                        </VBox>
+                        
+                        <VBox class="detailField">
+                            <layoutData>
+                                <l:GridData span="XL6 L6 M12 S12"/>
+                            </layoutData>
+                            <Label text="Quantity:" design="Bold" class="infoLabel"/>
+                            <Text text="{dialog>/quantity}" class="infoValue detailFieldValue"/>
+                        </VBox>
+                        
+                        <VBox class="detailField">
+                            <layoutData>
+                                <l:GridData span="XL6 L6 M12 S12"/>
+                            </layoutData>
+                            <Label text="Unit of Measure:" design="Bold" class="infoLabel"/>
+                            <Text text="{dialog>/quantityUoM}" class="infoValue detailFieldValue"/>
+                        </VBox>
+                    </l:Grid>
+                </VBox>
+                
+                <!-- Total Reports -->
+                <Text text="Total Reports: {dialog>/reportCount}" class="sapUiSmallMarginBottom"/>
                 
                 <!-- T&M Entry Cards -->
                 <List
@@ -28,7 +75,7 @@
                     <CustomListItem type="Inactive">
                         <Panel
                             headerText="{dialog>entryHeaderText}"
-                            expandable="false"
+                            expandable="true"
                             expanded="true"
                             class="tmEntryPanel"
                         >

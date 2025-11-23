@@ -62,7 +62,7 @@
                                     <!-- Subject -->
                                     <Text text="{view>subject}" wrapping="true" class="activitySubject"/>
                                     
-                                    <!-- Quick Info: Address + Time -->
+                                    <!-- Quick Info: Address, Responsible, Org Level, Service Product -->
 									<VBox class="activityQuickInfo">
                                         <l:Grid defaultSpan="XL6 L6 M12 S12" hSpacing="2" vSpacing="1" containerQuery="true">
                                             <!-- Left Column -->
@@ -87,16 +87,16 @@
                                                 <layoutData>
                                                     <l:GridData span="XL6 L6 M12 S12"/>
                                                 </layoutData>
-                                                <Label text="Planned Start:" design="Bold" class="infoLabel"/>
-                                                <Text text="{view>formattedStartDate}" class="infoValue detailFieldValue"/>
+                                                <Label text="Organization Level:" design="Bold" class="infoLabel"/>
+                                                <Text text="{view>orgLevelId}" class="infoValue detailFieldValue"/>
                                             </VBox>
                                             
                                             <VBox class="detailField">
                                                 <layoutData>
                                                     <l:GridData span="XL6 L6 M12 S12"/>
                                                 </layoutData>
-                                                <Label text="Planned End:" design="Bold" class="infoLabel"/>
-                                                <Text text="{view>formattedEndDate}" class="infoValue detailFieldValue"/>
+                                                <Label text="Service Product:" design="Bold" class="infoLabel"/>
+                                                <Text text="{view>serviceProductDisplayText}" class="infoValue detailFieldValue"/>
                                             </VBox>
                                         </l:Grid>
                                     </VBox>
@@ -110,49 +110,9 @@
                                         />
                                     </HBox>
 
-                                    <!-- Extended Details (Hidden) -->
+                                    <!-- Extended Details (Hidden) - Simplified for now -->
                                     <VBox visible="{view>detailsExpanded}" class="activityExtendedDetails">
-                                        <l:Grid defaultSpan="XL6 L6 M12 S12" hSpacing="2" vSpacing="1" containerQuery="true">
-                                            <VBox class="detailField">
-                                                <layoutData>
-                                                    <l:GridData span="XL6 L6 M12 S12"/>
-                                                </layoutData>
-                                                <Label text="Duration" design="Bold" class="infoLabel"/>
-                                                <Text text="{view>formattedDuration}" class="infoValue detailFieldValue"/>
-                                            </VBox>
-                                            
-                                            <VBox class="detailField">
-                                                <layoutData>
-                                                    <l:GridData span="XL6 L6 M12 S12"/>
-                                                </layoutData>
-                                                <Label text="Organization Level" design="Bold" class="infoLabel"/>
-                                                <Text text="{view>orgLevelId}" class="infoValue detailFieldValue"/>
-                                            </VBox>
-                                            
-                                            <VBox class="detailField">
-                                                <layoutData>
-                                                    <l:GridData span="XL6 L6 M12 S12"/>
-                                                </layoutData>
-                                                <Label text="Service Product" design="Bold" class="infoLabel"/>
-                                                <Text text="{view>serviceProductDisplayText}" class="infoValue detailFieldValue"/>
-                                            </VBox>
-                                            
-                                            <VBox class="detailField">
-                                                <layoutData>
-                                                    <l:GridData span="XL6 L6 M12 S12"/>
-                                                </layoutData>
-                                                <Label text="Quantity" design="Bold" class="infoLabel"/>
-                                                <Text text="{view>quantity}" class="infoValue detailFieldValue"/>
-                                            </VBox>
-                                            
-                                            <VBox class="detailField">
-                                                <layoutData>
-                                                    <l:GridData span="XL6 L6 M12 S12"/>
-                                                </layoutData>
-                                                <Label text="Unit of Measure" design="Bold" class="infoLabel"/>
-                                                <Text text="{view>quantityUoM}" class="infoValue detailFieldValue"/>
-                                            </VBox>
-                                        </l:Grid>
+                                        <Text text="No more details yet" class="infoValue"/>
                                     </VBox>
 
                                     <!-- T&M Summary Box -->

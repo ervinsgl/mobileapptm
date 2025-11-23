@@ -6,7 +6,7 @@
     <Panel
         id="serviceCallPanel"
         headerText="Service Order"
-        expandable="false"
+        expandable="true"
         expanded="true"
         class="sapUiResponsiveMargin sapUiSmallMarginBottom serviceOrderPanel"
         width="auto"

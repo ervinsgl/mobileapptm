@@ -809,12 +809,18 @@ sap.ui.define([
 
                     console.log('Fresh T&M data loaded:', reports);
 
-                    // Create dialog model with fresh data
+                    // Create dialog model with fresh data and activity details
                     const oDialogModel = new JSONModel({
                         activityCode: oActivity.code,
                         activitySubject: oActivity.subject,
-                        reports: reports, // Use fresh data
-                        reportCount: reports.length
+                        reports: reports,
+                        reportCount: reports.length,
+                        // Activity details for dialog header
+                        formattedStartDate: oActivity.formattedStartDate || 'N/A',
+                        formattedEndDate: oActivity.formattedEndDate || 'N/A',
+                        formattedDuration: oActivity.formattedDuration || 'N/A',
+                        quantity: oActivity.quantity || 'N/A',
+                        quantityUoM: oActivity.quantityUoM || 'N/A'
                     });
 
                     // Load and open dialog
@@ -844,12 +850,18 @@ sap.ui.define([
 
                 const reports = oActivity.tmReports || [];
 
-                // Create dialog model
+                // Create dialog model with activity details
                 const oDialogModel = new JSONModel({
                     activityCode: oActivity.code,
                     activitySubject: oActivity.subject,
                     reports: reports,
-                    reportCount: reports.length
+                    reportCount: reports.length,
+                    // Activity details for dialog header
+                    formattedStartDate: oActivity.formattedStartDate || 'N/A',
+                    formattedEndDate: oActivity.formattedEndDate || 'N/A',
+                    formattedDuration: oActivity.formattedDuration || 'N/A',
+                    quantity: oActivity.quantity || 'N/A',
+                    quantityUoM: oActivity.quantityUoM || 'N/A'
                 });
 
                 // Load and open dialog
