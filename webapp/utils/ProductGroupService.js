@@ -99,7 +99,7 @@ sap.ui.define([], () => {
             groupArray.forEach((group, index) => {
                 console.log(`\nGroup ${index + 1}:`);
                 console.log(`  Product: ${group.productDescription}`);
-                console.log(`  SO Item: ${group.soItemId}`);
+                console.log(`  ID: ${group.soItemId}`);
                 console.log(`  Activities: ${group.activities.length}`);
                 group.activities.forEach((act, actIndex) => {
                     console.log(`    ${actIndex + 1}. ${act.code} - ${act.subject}`);
@@ -113,7 +113,7 @@ sap.ui.define([], () => {
          * Format product group for display
          */
         formatProductGroupTitle(productDescription, soItemId) {
-            return `Product: ${productDescription} | SO Item: ${soItemId}`;
+            return `Product: ${productDescription} | ID: ${soItemId}`;
         }
     };
 });

@@ -25,7 +25,7 @@
                                 wrapping="true"
                             />
                             <ToolbarSpacer />
-                            <Title text="SO Item: {view>soItemId}" level="H5"/>
+                            <Title text="ID: {view>soItemId}" level="H5"/>
                         </OverflowToolbar>
                     </headerToolbar>
                     
@@ -43,128 +43,115 @@
                             growingThreshold="20"
                         >
                             <CustomListItem type="Inactive" class="activityListItem">
-                                <VBox class="activityCard">
+                                <Panel
+                                    expandable="true"
+                                    expanded="{view>detailsExpanded}"
+                                    class="activityEntryPanel"
+                                >
+                                    <headerToolbar>
+                                        <OverflowToolbar design="Info">
+                                            <core:Icon src="sap-icon://activity-individual" class="sapUiSmallMarginEnd"/>
+                                            <Title 
+                                                text="{view>code}  {view>subject}" 
+                                                level="H5"
+                                            />
+                                            <ToolbarSpacer />
+                                            <ObjectStatus text="{view>status}" state="{view>statusState}" class="sapUiTinyMarginEnd"/>
+                                            <ObjectStatus text="{view>executionStage}" state="{view>stageState}" class="sapUiTinyMarginEnd"/>
+                                            <Label text="ID: {view>externalId}"/>
+                                        </OverflowToolbar>
+                                    </headerToolbar>
                                     
-                                    <!-- Header: Code + Status -->
-                                    <HBox justifyContent="SpaceBetween" alignItems="Start" class="sapUiTinyMarginBottom">
-                                        <ObjectIdentifier
-                                            title="{view>code}"
-                                            text="ID: {view>externalId}"
-                                            titleActive="false"
-                                        />
-                                        <VBox alignItems="End" class="activityStatusBox">
-                                            <ObjectStatus text="{view>status}" state="{view>statusState}"/>
-                                            <ObjectStatus text="{view>executionStage}" state="{view>stageState}"/>
-                                        </VBox>
-                                    </HBox>
-                                    
-                                    <!-- Subject -->
-                                    <Text text="{view>subject}" wrapping="true" class="sapUiTinyMarginBottom"/>
-                                    
-                                    <!-- Quick Info: Address, Responsible, Org Level, Service Product -->
-									<VBox class="activityQuickInfo">
-                                        <l:Grid defaultSpan="XL6 L6 M12 S12" hSpacing="2" vSpacing="1" containerQuery="true">
-                                            <!-- Left Column -->
-                                            <VBox class="detailField">
-                                                <layoutData>
-                                                    <l:GridData span="XL6 L6 M12 S12"/>
-                                                </layoutData>
-                                                <Label text="Address:" design="Bold" class="infoLabel"/>
-                                                <Text text="{view>addressFull}" wrapping="true" class="infoValue detailFieldValue"/>
+                                    <content>
+                                        <!-- Activity Details - Compact 3-Column Layout -->
+                                        <HBox class="activityEntryContent">
+                                            <!-- Column 1: Service Product, Responsible -->
+                                            <VBox class="activityColumn">
+                                                <HBox class="activityFieldRow">
+                                                    <Label text="Service Product:" design="Bold" class="activityFieldLabel"/>
+                                                    <Text text="{view>serviceProductDisplayText}" class="activityFieldValue"/>
+                                                </HBox>
+                                                <HBox class="activityFieldRow">
+                                                    <Label text="Responsible:" design="Bold" class="activityFieldLabel"/>
+                                                    <Text text="{view>responsibleId}" class="activityFieldValue"/>
+                                                </HBox>
                                             </VBox>
                                             
-                                            <VBox class="detailField">
-                                                <layoutData>
-                                                    <l:GridData span="XL6 L6 M12 S12"/>
-                                                </layoutData>
-                                                <Label text="Responsible:" design="Bold" class="infoLabel"/>
-                                                <Text text="{view>responsibleId}" class="infoValue detailFieldValue"/>
+                                            <!-- Column 2: Address, Organization Level -->
+                                            <VBox class="activityColumn">
+                                                <HBox class="activityFieldRow">
+                                                    <Label text="Address:" design="Bold" class="activityFieldLabel"/>
+                                                    <Text text="{view>addressFull}" class="activityFieldValue" wrapping="true"/>
+                                                </HBox>
+                                                <HBox class="activityFieldRow">
+                                                    <Label text="Org Level:" design="Bold" class="activityFieldLabel"/>
+                                                    <Text text="{view>orgLevelId}" class="activityFieldValue"/>
+                                                </HBox>
                                             </VBox>
                                             
-                                            <!-- Right Column -->
-                                            <VBox class="detailField">
-                                                <layoutData>
-                                                    <l:GridData span="XL6 L6 M12 S12"/>
-                                                </layoutData>
-                                                <Label text="Organization Level:" design="Bold" class="infoLabel"/>
-                                                <Text text="{view>orgLevelId}" class="infoValue detailFieldValue"/>
+                                            <!-- Column 3: Planned Start/End, Duration -->
+                                            <VBox class="activityColumn">
+                                                <HBox class="activityFieldRow">
+                                                    <Label text="Planned Start:" design="Bold" class="activityFieldLabel"/>
+                                                    <Text text="{view>formattedStartDate}" class="activityFieldValue"/>
+                                                </HBox>
+                                                <HBox class="activityFieldRow">
+                                                    <Label text="Planned End:" design="Bold" class="activityFieldLabel"/>
+                                                    <Text text="{view>formattedEndDate}" class="activityFieldValue"/>
+                                                </HBox>
+                                                <HBox class="activityFieldRow">
+                                                    <Label text="Duration:" design="Bold" class="activityFieldLabel"/>
+                                                    <Text text="{view>formattedDuration}" class="activityFieldValue"/>
+                                                </HBox>
                                             </VBox>
-                                            
-                                            <VBox class="detailField">
-                                                <layoutData>
-                                                    <l:GridData span="XL6 L6 M12 S12"/>
-                                                </layoutData>
-                                                <Label text="Service Product:" design="Bold" class="infoLabel"/>
-                                                <Text text="{view>serviceProductDisplayText}" class="infoValue detailFieldValue"/>
-                                            </VBox>
-                                        </l:Grid>
-                                    </VBox>
-
-                                    <!-- More Details Link -->
-                                    <HBox class="activityActions">
-                                        <Link
-                                            text="{= ${view>detailsExpanded} ? 'Hide Details' : 'More Details...'}"
-                                            press=".onToggleDetails"
-                                            class="detailsToggleLink"
-                                        />
-                                    </HBox>
-
-                                    <!-- Extended Details (Hidden) - Simplified for now -->
-                                    <VBox visible="{view>detailsExpanded}" class="activityExtendedDetails">
-                                        <Text text="No more details yet" class="infoValue"/>
-                                    </VBox>
-
-                                    <!-- T&M Summary Box -->
-                                    <Panel backgroundDesign="Transparent" class="tmSummaryPanel">
-                                        <headerToolbar>
-                                            <Toolbar design="Transparent" height="2.5rem" class="tmSummaryToolbar">
+                                        </HBox>
+                                        
+                                        <!-- T&M Summary Section -->
+                                        <VBox class="tmSummarySection">
+                                            <HBox alignItems="Center" class="sapUiTinyMarginBottom">
                                                 <core:Icon src="sap-icon://timesheet" class="sapUiTinyMarginEnd"/>
                                                 <Label text="T&amp;M Reports:" design="Bold"/>
-                                                <ObjectNumber number="{view>tmReportsCount}" unit="items" state="{= ${view>tmReportsCount} > 0 ? 'Success' : 'None'}"/>
-                                                <ToolbarSpacer/>
-                                            </Toolbar>
-                                        </headerToolbar>
-                                        <content>
-                                            <HBox visible="{view>tmReportsLoaded}" class="sapUiTinyMargin">
+                                                <ObjectNumber number="{view>tmReportsCount}" unit="items" state="{= ${view>tmReportsCount} > 0 ? 'Success' : 'None'}" class="sapUiTinyMarginBegin"/>
+                                            </HBox>
+                                            <HBox visible="{view>tmReportsLoaded}" class="sapUiTinyMarginBottom">
                                                 <VBox class="sapUiSmallMarginEnd">
-                                                    <Label text="Time Effort" class="sapUiTinyMarginBottom"/>
+                                                    <Label text="Time Effort"/>
                                                     <ObjectNumber number="{view>tmTimeEffortCount}" state="Information"/>
                                                 </VBox>
                                                 <VBox class="sapUiSmallMarginEnd">
-                                                    <Label text="Material" class="sapUiTinyMarginBottom"/>
+                                                    <Label text="Material"/>
                                                     <ObjectNumber number="{view>tmMaterialCount}" state="Information"/>
                                                 </VBox>
                                                 <VBox class="sapUiSmallMarginEnd">
-                                                    <Label text="Expense" class="sapUiTinyMarginBottom"/>
+                                                    <Label text="Expense"/>
                                                     <ObjectNumber number="{view>tmExpenseCount}" state="Information"/>
                                                 </VBox>
                                                 <VBox>
-                                                    <Label text="Mileage" class="sapUiTinyMarginBottom"/>
+                                                    <Label text="Mileage"/>
                                                     <ObjectNumber number="{view>tmMileageCount}" state="Information"/>
                                                 </VBox>
                                             </HBox>
-                                        </content>
-                                    </Panel>
-                                    
-                                    <!-- Action Buttons -->
-                                    <HBox class="activityActions">
-                                        <Button
-                                            text="View T&amp;M"
-                                            icon="sap-icon://detail-view"
-                                            type="Emphasized"
-                                            press=".onViewTMReports"
-                                            class="tmActionButton"
-                                        />
-                                        <Button
-                                            text="Add T&amp;M"
-                                            icon="sap-icon://add"
-                                            type="Accept"
-                                            press=".onAddTMReport"
-                                            class="tmActionButton"
-                                        />
-                                    </HBox>
-                                    
-                                </VBox>
+                                            
+                                            <!-- Action Buttons -->
+                                            <HBox class="activityActions">
+                                                <Button
+                                                    text="View T&amp;M"
+                                                    icon="sap-icon://detail-view"
+                                                    type="Emphasized"
+                                                    press=".onViewTMReports"
+                                                    class="tmActionButton"
+                                                />
+                                                <Button
+                                                    text="Add T&amp;M"
+                                                    icon="sap-icon://add"
+                                                    type="Accept"
+                                                    press=".onAddTMReport"
+                                                    class="tmActionButton"
+                                                />
+                                            </HBox>
+                                        </VBox>
+                                    </content>
+                                </Panel>
                             </CustomListItem>
                         </List>
                     </content>

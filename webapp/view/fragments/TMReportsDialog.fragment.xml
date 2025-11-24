@@ -93,7 +93,7 @@
                                     />
                                     <ToolbarSpacer />
                                     <Button
-                                        text="{= ${dialog>approvalButtonPressed} ? 'Send for Approval' : 'Edit T&M Entry'}"
+                                        text="{= ${dialog>approvalButtonPressed} ? 'Send for Approval' : 'Edit T&amp;M Entry'}"
                                         type="Emphasized"
                                         icon="sap-icon://approvals"
                                         press=".onToggleApprovalButton"

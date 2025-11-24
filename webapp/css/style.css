@@ -18,6 +18,39 @@
     overflow: hidden;
 }
 
+/* Service Order Content - 3 column layout */
+.serviceOrderContent {
+    padding: 0.75rem 1rem;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.serviceOrderColumn {
+    flex: 1;
+    min-width: 200px;
+}
+
+.serviceOrderFieldRow {
+    margin-bottom: 0.5rem;
+    align-items: baseline;
+}
+
+.serviceOrderFieldRow:last-child {
+    margin-bottom: 0;
+}
+
+.serviceOrderFieldLabel {
+    font-size: 0.75rem;
+    color: #666;
+    min-width: 6.5rem;
+    margin-right: 0.5rem;
+}
+
+.serviceOrderFieldValue {
+    font-size: 0.875rem;
+    color: #333;
+}
+
 /* ========================================
    ORGANIZATION LEVEL PANEL (OrganizationLevel fragment)
    ======================================== */
@@ -74,88 +107,62 @@
 }
 
 /* ========================================
-   ACTIVITY CARDS (ProductGroups fragment)
+   ACTIVITY ENTRY PANELS (ProductGroups fragment)
    ======================================== */
 
 /* Activity List Item */
 .activityListItem {
-    border: none !important;
-    padding: 0.5rem !important;
+    padding: 0.25rem 0 !important;
 }
 
-/* Activity Card Container */
-.activityCard {
-    padding: 1rem;
-    background: #ffffff;
-    border: 1px solid #d9d9d9;
-    border-radius: 4px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+/* Activity Entry Panel - similar to T&M Entry */
+.activityEntryPanel {
+    margin-bottom: 0.5rem;
+    border: 1px solid #e0e0e0;
 }
 
-/* Activity Subject - Bold */
-.activityCard .sapMText {
-    font-weight: 600;
+.activityEntryPanel:last-child {
+    margin-bottom: 0;
 }
 
-/* Status box - prevent overflow */
-.activityStatusBox {
-    flex-shrink: 0;
-    max-width: 120px;
-    text-align: right;
+/* Activity Entry Content - 3 column layout */
+.activityEntryContent {
+    padding: 0.75rem 1rem;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    border-bottom: 1px solid #f0f0f0;
 }
 
-.activityStatusBox .sapMObjStatus {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+.activityColumn {
+    flex: 1;
+    min-width: 200px;
 }
 
-/* Activity Quick Info section */
-.activityQuickInfo {
-    background: #f7f7f7;
-    padding: 0.75rem;
-    border-radius: 4px;
-    margin: 0.5rem 0;
+.activityFieldRow {
+    margin-bottom: 0.5rem;
+    align-items: baseline;
 }
 
-/* Reset font weight for labels and values inside quick info */
-.activityQuickInfo .sapMText,
-.activityQuickInfo .sapMLabel {
-    font-weight: normal;
+.activityFieldRow:last-child {
+    margin-bottom: 0;
 }
 
-.activityQuickInfo .sapMLabel[design="Bold"] {
-    font-weight: 600;
+.activityFieldLabel {
+    font-size: 0.75rem;
+    color: #666;
+    min-width: 6.5rem;
+    margin-right: 0.5rem;
 }
 
-/* ========================================
-   ACTIVITY INFO SECTIONS (ProductGroups fragment)
-   ======================================== */
-
-.activityExtendedDetails {
-    background: #f9f9f9;
-    border-top: 1px solid #e0e0e0;
-    padding: 0.75rem;
-    margin-top: 0.5rem;
+.activityFieldValue {
+    font-size: 0.875rem;
+    color: #333;
 }
 
-.detailsToggleLink {
-    color: #0854a0 !important;
-}
-
-/* T&M Summary Panel */
-.tmSummaryPanel {
-    margin-top: 0.5rem;
-    border-top: 1px solid #e0e0e0;
-    border-radius: 0;
-}
-
-.tmSummaryPanel .sapMPanelContent {
-    padding: 0;
-}
-
-.tmSummaryToolbar {
-    border-bottom: none !important;
+/* T&M Summary Section inside Activity */
+.tmSummarySection {
+    padding: 0.75rem 1rem;
+    background: #fafafa;
 }
 
 /* ========================================

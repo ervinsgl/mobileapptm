@@ -1,7 +1,6 @@
 <core:FragmentDefinition
     xmlns="sap.m"
     xmlns:core="sap.ui.core"
-    xmlns:l="sap.ui.layout"
 >
     <Panel
         id="serviceCallPanel"
@@ -19,90 +18,50 @@
                     level="H4" 
                     titleStyle="H4"
                 />
+                <ToolbarSpacer />
+                <Title text="ID: {view>/serviceCall/externalId}" level="H5"/>
             </OverflowToolbar>
         </headerToolbar>
         
-        <l:Grid
-            id="serviceCallGrid"
-            defaultSpan="L6 M6 S12"
-            class="sapUiSmallMargin"
-        >
-            <VBox>
-                <Label text="ID" design="Bold" />
-                <Text 
-                    text="{view>/serviceCall/id}" 
-                />
-            </VBox>
-            
-            <VBox>
-                <Label 
-                    text="External ID" 
-                    design="Bold"
-                />
-                <Text 
-                    text="{view>/serviceCall/externalId}" 
-                />
-            </VBox>
-            
-            <VBox class="sapUiTinyMarginTop">
-                <layoutData>
-                    <l:GridData id="serviceCallSubjectGridData" span="L12 M12 S12" />
-                </layoutData>
-                <Label 
-                    text="Subject" 
-                    design="Bold"
-                />
-                <Text 
-                    text="{view>/serviceCall/subject}" 
-                />
-            </VBox>
-            
-            <VBox class="sapUiTinyMarginTop">
-                <Label 
-                    text="Business Partner" 
-                    design="Bold"
-                />
-                <Text 
-                    text="{view>/serviceCall/businessPartnerExternalId}" 
-                />
-            </VBox>
-            
-            <VBox class="sapUiTinyMarginTop">
-                <Label 
-                    text="Responsible" 
-                    design="Bold"
-                />
-                <Text 
-                    text="{view>/serviceCall/responsibleExternalId}" 
-                />
-            </VBox>
-            
-            <VBox class="sapUiTinyMarginTop">
-                <Label 
-                    text="Earliest Start" 
-                    design="Bold"
-                />
-                <Text 
-                    text="{
-                        path: 'view>/serviceCall/earliestStartDateTime',
-                        formatter: '.formatter.formatDateTime'
-                    }" 
-                />
-            </VBox>
-            
-            <VBox class="sapUiTinyMarginTop">
-                <Label 
-                    text="Due Date" 
-                    design="Bold"
-                />
-                <Text 
-                    text="{
-                        path: 'view>/serviceCall/dueDateTime',
-                        formatter: '.formatter.formatDateTime'
-                    }" 
-                />
-            </VBox>
-            
-        </l:Grid>
+        <content>
+            <!-- Service Order Details - Compact 3-Column Layout -->
+            <HBox class="serviceOrderContent">
+                <!-- Column 1: ID, Subject -->
+                <VBox class="serviceOrderColumn">
+                    <HBox class="serviceOrderFieldRow">
+                        <Label text="ID:" design="Bold" class="serviceOrderFieldLabel"/>
+                        <Text text="{view>/serviceCall/id}" class="serviceOrderFieldValue"/>
+                    </HBox>
+                    <HBox class="serviceOrderFieldRow">
+                        <Label text="Subject:" design="Bold" class="serviceOrderFieldLabel"/>
+                        <Text text="{view>/serviceCall/subject}" class="serviceOrderFieldValue" wrapping="true"/>
+                    </HBox>
+                </VBox>
+                
+                <!-- Column 2: Business Partner, Responsible -->
+                <VBox class="serviceOrderColumn">
+                    <HBox class="serviceOrderFieldRow">
+                        <Label text="Business Partner:" design="Bold" class="serviceOrderFieldLabel"/>
+                        <Text text="{view>/serviceCall/businessPartnerExternalId}" class="serviceOrderFieldValue"/>
+                    </HBox>
+                    <HBox class="serviceOrderFieldRow">
+                        <Label text="Responsible:" design="Bold" class="serviceOrderFieldLabel"/>
+                        <Text text="{view>/serviceCall/responsibleExternalId}" class="serviceOrderFieldValue"/>
+                    </HBox>
+                </VBox>
+                
+                <!-- Column 3: Earliest Start, Due Date -->
+                <VBox class="serviceOrderColumn">
+                    <HBox class="serviceOrderFieldRow">
+                        <Label text="Earliest Start:" design="Bold" class="serviceOrderFieldLabel"/>
+                        <Text text="{path: 'view>/serviceCall/earliestStartDateTime', formatter: '.formatter.formatDateTime'}" class="serviceOrderFieldValue"/>
+                    </HBox>
+                    <HBox class="serviceOrderFieldRow">
+                        <Label text="Due Date:" design="Bold" class="serviceOrderFieldLabel"/>
+                        <Text text="{path: 'view>/serviceCall/dueDateTime', formatter: '.formatter.formatDateTime'}" class="serviceOrderFieldValue"/>
+                    </HBox>
+                </VBox>
+            </HBox>
+        </content>
     </Panel>
 </core:FragmentDefinition>
