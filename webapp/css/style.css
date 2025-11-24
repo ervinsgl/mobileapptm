@@ -181,29 +181,33 @@
     margin-bottom: 0;
 }
 
-/* T&M Field Groups (columns) */
-.tmFieldGroup {
+/* Compact 3-Column Layout */
+.tmEntryContent {
     padding: 0.75rem 1rem;
+    gap: 1.5rem;
+    flex-wrap: wrap;
 }
 
-/* Individual T&M Field */
-.tmField {
-    margin-bottom: 0.75rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid #f0f0f0;
+.tmColumn {
+    flex: 1;
+    min-width: 200px;
 }
 
-.tmField:last-child {
+.tmFieldRow {
+    margin-bottom: 0.5rem;
+    align-items: baseline;
+}
+
+.tmFieldRow:last-child {
     margin-bottom: 0;
-    padding-bottom: 0;
-    border-bottom: none;
 }
 
-/* T&M Field Label */
+/* T&M Field Label - Compact */
 .tmFieldLabel {
     font-size: 0.75rem;
     color: #666;
-    margin-bottom: 0.25rem;
+    min-width: 5.5rem;
+    margin-right: 0.5rem;
 }
 
 /* T&M Field Value */

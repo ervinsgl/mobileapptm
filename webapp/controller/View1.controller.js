@@ -351,6 +351,9 @@ sap.ui.define([
 
                 // Enrich reports with resolved names
                 reports.forEach(report => {
+                    // Add technician display text for all types
+                    report.createPersonDisplayText = report.createPerson || 'N/A';
+                    
                     // Time Effort: resolve task name
                     if (report.type === "Time Effort" && report.task) {
                         report.taskDisplayText = TimeTaskService.getTaskDisplayTextById(report.task);
@@ -908,6 +911,29 @@ sap.ui.define([
             if (this._tmReportsDialog) {
                 this._tmReportsDialog.close();
             }
+        },
+
+        /**
+         * Toggle Approval Button text
+         */
+        onToggleApprovalButton(oEvent) {
+            const oButton = oEvent.getSource();
+            const oContext = oButton.getBindingContext("dialog");
+
+            if (!oContext) {
+                return;
+            }
+
+            const sPath = oContext.getPath();
+            const oModel = this._tmReportsDialog.getModel("dialog");
+            const bCurrentState = oModel.getProperty(sPath + "/approvalButtonPressed");
+
+            // Toggle the state
+            oModel.setProperty(sPath + "/approvalButtonPressed", !bCurrentState);
+
+            // Show feedback
+            const sNewText = !bCurrentState ? "Send for Approval" : "Request Approval";
+            MessageToast.show(`Button changed to: ${sNewText}`);
         },
 
         /**
