@@ -11,8 +11,8 @@
                 
                 <!-- Header Info -->
                 <VBox class="sapUiSmallMarginBottom">
-                    <Text text="Activity: {dialog>/activityCode}" class="sapUiTinyMarginBottom"/>
-                    <Text text="Subject: {dialog>/activitySubject}" class="sapUiSmallMarginBottom"/>
+                    <Title text="Activity: {dialog>/activityCode}" level="H4" class="sapUiTinyMarginBottom"/>
+                    <Title text="{dialog>/activitySubject}" level="H5" class="sapUiSmallMarginBottom"/>
                 </VBox>
                 
                 <!-- Activity Details Grid (moved from Activity card) -->
@@ -80,18 +80,25 @@
                             class="tmEntryPanel"
                         >
                             <headerToolbar>
-                                <Toolbar class="tmEntryHeader">
+                                <OverflowToolbar design="Info">
+                                    <core:Icon 
+                                        src="{= ${dialog>type} === 'Time Effort' ? 'sap-icon://time-entry-request' : 
+                                              ${dialog>type} === 'Material' ? 'sap-icon://product' :
+                                              ${dialog>type} === 'Expense' ? 'sap-icon://money-bills' : 'sap-icon://car-rental'}"
+                                        class="sapUiSmallMarginEnd"
+                                    />
                                     <Title 
                                         text="{dialog>entryHeaderText}" 
-                                        level="H5" 
-                                        class="tmEntryHeaderTitle"
+                                        level="H5"
                                     />
                                     <ToolbarSpacer />
-                                    <Label 
-                                        text="ID: {dialog>id}" 
-                                        class="tmEntryHeaderId"
+                                    <ObjectStatus
+                                        text="{dialog>decisionStatusText}"
+                                        state="{dialog>decisionStatusState}"
+                                        class="decisionStatusValue sapUiSmallMarginEnd"
                                     />
-                                </Toolbar>
+                                    <Label text="ID: {dialog>id}"/>
+                                </OverflowToolbar>
                             </headerToolbar>
                             
                             <content>
@@ -216,16 +223,6 @@
                                             <Label text="Task:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{dialog>taskDisplayText}" class="tmFieldValue"/>
                                         </VBox>
-                                        
-                                        <!-- ===============================
-                                             MATERIAL FIELDS (RIGHT)
-                                             =============================== -->
-                                        <!-- (No additional material-specific fields for right column) -->
-                                        
-                                        <!-- ===============================
-                                             EXPENSE FIELDS (RIGHT)
-                                             =============================== -->
-                                        <!-- (Expense fields are all in left column) -->
                                         
                                         <!-- ===============================
                                              MILEAGE FIELDS (RIGHT)

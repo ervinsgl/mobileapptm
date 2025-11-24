@@ -7,19 +7,17 @@
         id="serviceCallPanel"
         headerText="Service Order"
         expandable="true"
-        expanded="true"
+        expanded="false"
         class="sapUiResponsiveMargin sapUiSmallMarginBottom serviceOrderPanel"
         width="auto"
     >
         <headerToolbar>
-            <OverflowToolbar 
-                design="Solid"
-                class="serviceOrderHeader">
+            <OverflowToolbar design="Info">
+                <core:Icon src="sap-icon://sales-order" class="sapUiSmallMarginEnd"/>
                 <Title 
                     text="Service Order" 
                     level="H4" 
                     titleStyle="H4"
-                    class="sapUiTinyMarginBegin serviceOrderHeaderTitle"
                 />
             </OverflowToolbar>
         </headerToolbar>

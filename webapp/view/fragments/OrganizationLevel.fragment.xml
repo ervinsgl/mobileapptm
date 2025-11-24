@@ -11,14 +11,12 @@
         width="auto"
     >
         <headerToolbar>
-            <OverflowToolbar 
-                design="Solid"
-                class="organizationLevelHeader">
+            <OverflowToolbar design="Info">
+                <core:Icon src="sap-icon://org-chart" class="sapUiSmallMarginEnd"/>
                 <Title 
                     text="Organization Level" 
                     level="H4" 
                     titleStyle="H4"
-                    class="sapUiTinyMarginBegin organizationLevelHeaderTitle"
                 />
             </OverflowToolbar>
         </headerToolbar>

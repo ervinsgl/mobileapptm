@@ -18,49 +18,48 @@
                     class="productGroupPanel"
                 >
                     <headerToolbar>
-                        <OverflowToolbar class="productGroupHeader">
+                        <OverflowToolbar design="Info">
+                            <core:Icon src="sap-icon://product" class="sapUiSmallMarginEnd"/>
                             <Title 
                                 text="Product: {view>productDescription}"
                                 wrapping="true"
-                                class="productGroupHeaderTitle"
                             />
                             <ToolbarSpacer />
-                            <Label 
-                                text="SO Item: {view>soItemId}" 
-                                class="productGroupHeaderLabel"
-                            />
+                            <Title text="SO Item: {view>soItemId}" level="H5"/>
                         </OverflowToolbar>
                     </headerToolbar>
                     
                     <content>
-                        <Toolbar class="activitiesTableToolbar">
-                            <Title text="{view>activityCount} Activities"/>
+                        <Toolbar design="Transparent" height="2rem">
+                            <Label text="{view>activityCount} Activities" design="Bold"/>
                         </Toolbar>
                         
-                        <!-- SIMPLIFIED ACTIVITIES LIST -->
+                        <!-- ACTIVITIES LIST -->
                         <List
                             items="{path: 'view>activities', templateShareable: false}"
                             mode="None"
+                            showSeparators="None"
                             growing="true"
                             growingThreshold="20"
                         >
-                            <CustomListItem type="Inactive" class="activityCardContainer">
-                                <VBox width="100%" class="activityCard">
+                            <CustomListItem type="Inactive" class="activityListItem">
+                                <VBox class="activityCard">
                                     
-                                    <!-- Header: Code + External ID + Status -->
-                                    <HBox justifyContent="SpaceBetween" alignItems="Center" class="activityHeader">
-                                        <VBox>
-                                            <Text text="{view>code}" class="activityCode"/>
-                                            <Text text="ID: {view>externalId}" class="activityExternalId"/>
-                                        </VBox>
-                                        <HBox>
+                                    <!-- Header: Code + Status -->
+                                    <HBox justifyContent="SpaceBetween" alignItems="Start" class="sapUiTinyMarginBottom">
+                                        <ObjectIdentifier
+                                            title="{view>code}"
+                                            text="ID: {view>externalId}"
+                                            titleActive="false"
+                                        />
+                                        <VBox alignItems="End" class="activityStatusBox">
                                             <ObjectStatus text="{view>status}" state="{view>statusState}"/>
-                                            <ObjectStatus text="{view>executionStage}" state="{view>stageState}" class="sapUiTinyMarginBegin"/>
-                                        </HBox>
+                                            <ObjectStatus text="{view>executionStage}" state="{view>stageState}"/>
+                                        </VBox>
                                     </HBox>
                                     
                                     <!-- Subject -->
-                                    <Text text="{view>subject}" wrapping="true" class="activitySubject"/>
+                                    <Text text="{view>subject}" wrapping="true" class="sapUiTinyMarginBottom"/>
                                     
                                     <!-- Quick Info: Address, Responsible, Org Level, Service Product -->
 									<VBox class="activityQuickInfo">
@@ -116,20 +115,36 @@
                                     </VBox>
 
                                     <!-- T&M Summary Box -->
-                                    <VBox class="tmSummaryBox">
-                                        <HBox justifyContent="SpaceBetween" alignItems="Center">
-                                            <Text text="T&amp;M Reports: {view>tmReportsCount} items" class="tmSummaryTitle"/>
-                                            <core:Icon src="sap-icon://chart-table-view" size="1.25rem" color="#0854a0"/>
-                                        </HBox>
-                                        
-                                        <!-- T&M Type Breakdown (show when loaded) -->
-                                        <VBox visible="{view>tmReportsLoaded}" class="sapUiTinyMarginTop">
-                                            <Text text="• Time Effort: {view>tmTimeEffortCount}" class="tmSummaryItem"/>
-                                            <Text text="• Material: {view>tmMaterialCount}" class="tmSummaryItem"/>
-                                            <Text text="• Expense: {view>tmExpenseCount}" class="tmSummaryItem"/>
-                                            <Text text="• Mileage: {view>tmMileageCount}" class="tmSummaryItem"/>
-                                        </VBox>
-                                    </VBox>
+                                    <Panel backgroundDesign="Transparent" class="tmSummaryPanel">
+                                        <headerToolbar>
+                                            <Toolbar design="Transparent" height="2.5rem" class="tmSummaryToolbar">
+                                                <core:Icon src="sap-icon://timesheet" class="sapUiTinyMarginEnd"/>
+                                                <Label text="T&amp;M Reports:" design="Bold"/>
+                                                <ObjectNumber number="{view>tmReportsCount}" unit="items" state="{= ${view>tmReportsCount} > 0 ? 'Success' : 'None'}"/>
+                                                <ToolbarSpacer/>
+                                            </Toolbar>
+                                        </headerToolbar>
+                                        <content>
+                                            <HBox visible="{view>tmReportsLoaded}" class="sapUiTinyMargin">
+                                                <VBox class="sapUiSmallMarginEnd">
+                                                    <Label text="Time Effort" class="sapUiTinyMarginBottom"/>
+                                                    <ObjectNumber number="{view>tmTimeEffortCount}" state="Information"/>
+                                                </VBox>
+                                                <VBox class="sapUiSmallMarginEnd">
+                                                    <Label text="Material" class="sapUiTinyMarginBottom"/>
+                                                    <ObjectNumber number="{view>tmMaterialCount}" state="Information"/>
+                                                </VBox>
+                                                <VBox class="sapUiSmallMarginEnd">
+                                                    <Label text="Expense" class="sapUiTinyMarginBottom"/>
+                                                    <ObjectNumber number="{view>tmExpenseCount}" state="Information"/>
+                                                </VBox>
+                                                <VBox>
+                                                    <Label text="Mileage" class="sapUiTinyMarginBottom"/>
+                                                    <ObjectNumber number="{view>tmMileageCount}" state="Information"/>
+                                                </VBox>
+                                            </HBox>
+                                        </content>
+                                    </Panel>
                                     
                                     <!-- Action Buttons -->
                                     <HBox class="activityActions">

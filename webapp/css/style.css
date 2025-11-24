@@ -18,16 +18,6 @@
     overflow: hidden;
 }
 
-.serviceOrderHeader {
-    background: linear-gradient(to right, #0854a0, #1873cd) !important;
-    border-radius: 4px 4px 0 0;
-}
-
-.serviceOrderHeaderTitle {
-    color: white !important;
-    font-weight: 600;
-}
-
 /* ========================================
    ORGANIZATION LEVEL PANEL (OrganizationLevel fragment)
    ======================================== */
@@ -41,16 +31,6 @@
 .organizationLevelPanel .sapMPanelHdr {
     border-radius: 4px 4px 0 0;
     overflow: hidden;
-}
-
-.organizationLevelHeader {
-    background: linear-gradient(to right, #0854a0, #1873cd) !important;
-    border-radius: 4px 4px 0 0;
-}
-
-.organizationLevelHeaderTitle {
-    color: white !important;
-    font-weight: 600;
 }
 
 /* ========================================
@@ -78,22 +58,6 @@
     background-color: #ffffff;
 }
 
-.productGroupHeader {
-    background: linear-gradient(to right, #0854a0, #1873cd) !important;
-    border-radius: 4px 4px 0 0;
-}
-
-.productGroupHeaderTitle {
-    color: white !important;
-    font-weight: 600;
-}
-
-.productGroupHeaderLabel {
-    color: white !important;
-    font-size: 0.95rem;
-    font-weight: bold;
-}
-
 /* ========================================
    ACTIVITIES TOOLBAR (ProductGroups fragment)
    ======================================== */
@@ -113,155 +77,85 @@
    ACTIVITY CARDS (ProductGroups fragment)
    ======================================== */
 
-.activityCardContainer {
-    padding: 0 !important;
-    margin: 0 !important;
+/* Activity List Item */
+.activityListItem {
+    border: none !important;
+    padding: 0.5rem !important;
 }
 
+/* Activity Card Container */
 .activityCard {
-    background: white;
-    border: 1px solid #d9d9d9;
-    border-radius: 8px;
     padding: 1rem;
-    margin: 0.5rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    background: #ffffff;
+    border: 1px solid #d9d9d9;
+    border-radius: 4px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
-.activityHeader {
-    padding-bottom: 0.75rem;
-    border-bottom: 2px solid #0854a0;
-    margin-bottom: 0.75rem;
+/* Activity Subject - Bold */
+.activityCard .sapMText {
+    font-weight: 600;
 }
 
-.activityCode {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: #0854a0;
+/* Status box - prevent overflow */
+.activityStatusBox {
+    flex-shrink: 0;
+    max-width: 120px;
+    text-align: right;
 }
 
-.activityExternalId {
-    font-size: 0.875rem;
-    color: #666;
-    margin-top: 0.25rem;
+.activityStatusBox .sapMObjStatus {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.activitySubject {
-    font-size: 1rem;
-    font-weight: 500;
-    color: #333;
-    margin: 0.75rem 0;
-    line-height: 1.4;
+/* Activity Quick Info section */
+.activityQuickInfo {
+    background: #f7f7f7;
+    padding: 0.75rem;
+    border-radius: 4px;
+    margin: 0.5rem 0;
+}
+
+/* Reset font weight for labels and values inside quick info */
+.activityQuickInfo .sapMText,
+.activityQuickInfo .sapMLabel {
+    font-weight: normal;
+}
+
+.activityQuickInfo .sapMLabel[design="Bold"] {
+    font-weight: 600;
 }
 
 /* ========================================
    ACTIVITY INFO SECTIONS (ProductGroups fragment)
    ======================================== */
 
-.activityQuickInfo {
-    background: #f7f7f7;
-    padding: 0.75rem;
-    border-radius: 4px;
-    margin: 0.75rem 0;
-}
-
-.activityQuickInfo .sapUiLayoutGrid {
-    margin: 0 !important;
-    padding: 0.75rem !important;
-}
-
-.infoLabel {
-    font-size: 0.8125rem;
-    font-weight: 600;
-    color: #666;
-    min-width: 110px;
-    margin-right: 0.5rem;
-}
-
-.infoValue {
-    font-size: 0.875rem;
-    color: #333;
-    flex: 1;
-}
-
 .activityExtendedDetails {
     background: #f9f9f9;
     border-top: 1px solid #e0e0e0;
-    padding: 1rem;
-    margin-top: 0.75rem;
-    border-radius: 0 0 6px 6px;
-}
-
-.activityExtendedDetails .sapUiLayoutGrid {
-    margin: 0 !important;
-    padding: 1rem !important;
-}
-
-.detailField {
-    margin-bottom: 0.75rem;
-    padding-right: 1rem;
-}
-
-.detailField:last-child {
-    margin-bottom: 0;
-}
-
-.detailField .sapMLabel {
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: #666;
-    margin-bottom: 0.25rem;
-    font-weight: 600;
-}
-
-.detailField .detailFieldValue {
-    font-size: 0.9375rem;
-    color: #333;
-    margin-bottom: 0.5rem;
-    line-height: 1.3;
+    padding: 0.75rem;
+    margin-top: 0.5rem;
 }
 
 .detailsToggleLink {
-    font-size: 0.875rem;
     color: #0854a0 !important;
-    font-weight: 500;
-    text-decoration: none;
-    padding: 0.5rem;
-    display: inline-block;
 }
 
-.detailsToggleLink:hover {
-    text-decoration: underline !important;
-    color: #1873cd !important;
+/* T&M Summary Panel */
+.tmSummaryPanel {
+    margin-top: 0.5rem;
+    border-top: 1px solid #e0e0e0;
+    border-radius: 0;
 }
 
-.detailsToggleLink:focus {
-    outline: 2px solid #0854a0;
-    outline-offset: 2px;
+.tmSummaryPanel .sapMPanelContent {
+    padding: 0;
 }
 
-/* ========================================
-   T&M SUMMARY BOX (ProductGroups fragment)
-   ======================================== */
-
-.tmSummaryBox {
-    background: linear-gradient(135deg, #e5f4ff 0%, #f0f8ff 100%);
-    border: 2px solid #0854a0;
-    border-radius: 6px;
-    padding: 1rem;
-    margin: 0.75rem 0;
-}
-
-.tmSummaryTitle {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #0854a0;
-}
-
-.tmSummaryItem {
-    font-size: 0.875rem;
-    color: #333;
-    line-height: 1.6;
+.tmSummaryToolbar {
+    border-bottom: none !important;
 }
 
 /* ========================================
@@ -271,12 +165,7 @@
 .activityActions {
     display: flex;
     gap: 0.5rem;
-    margin: 1rem 0 0.5rem 0;
-}
-
-.tmActionButton {
-    flex: 1;
-    min-height: 48px;
+    margin-top: 0.75rem;
 }
 
 /* ========================================
@@ -284,67 +173,49 @@
    ======================================== */
 
 .tmEntryPanel {
-    border: 1px solid #d9d9d9;
-    border-radius: 6px;
     margin-bottom: 0.75rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e0e0e0;
 }
 
 .tmEntryPanel:last-child {
     margin-bottom: 0;
 }
 
-.tmEntryHeader {
-    background: linear-gradient(to right, #0854a0, #1873cd) !important;
-    border-radius: 4px 4px 0 0;
-}
-
-.tmEntryHeaderTitle {
-    color: white !important;
-    font-weight: 600;
-}
-
-.tmEntryHeaderId {
-    color: white !important;
-    font-size: 0.875rem;
-    font-weight: 600;
-    background: rgba(255, 255, 255, 0.2);
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    font-family: monospace;
-}
-
+/* T&M Field Groups (columns) */
 .tmFieldGroup {
-    padding: 1rem;
+    padding: 0.75rem 1rem;
 }
 
+/* Individual T&M Field */
 .tmField {
     margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #f0f0f0;
 }
 
 .tmField:last-child {
     margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
 }
 
+/* T&M Field Label */
 .tmFieldLabel {
     font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
     color: #666;
     margin-bottom: 0.25rem;
-    font-weight: 600;
 }
 
+/* T&M Field Value */
 .tmFieldValue {
-    font-size: 0.9375rem;
+    font-size: 0.875rem;
     color: #333;
-    line-height: 1.3;
 }
 
 .tmFieldValueSmall {
     font-size: 0.8125rem;
-    color: #666;
-    word-break: break-all;
+    color: #555;
+    word-break: break-word;
 }
 
 /* ========================================
