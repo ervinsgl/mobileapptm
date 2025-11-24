@@ -513,14 +513,14 @@ class FSMService {
                     travelEndDateTime: mileage.travelEndDateTime || null,
                     remarks: mileage.remarks || null,
 
-                    // UDF INFORMATION
+                    // âœ… UDF INFORMATION
                     udfValues: udfValues,
                     udfValuesText: udfValuesText,
 
-                    // DISPLAY TYPE
+                    // âœ… DISPLAY TYPE
                     type: 'Mileage',
 
-                    // PRE-FORMATTED DISPLAY TEXT (no complex expressions needed in UI)
+                    // âœ… PRE-FORMATTED DISPLAY TEXT (no complex expressions needed in UI)
                     dateText: mileage.date || 'N/A',
                     distanceText: distanceText,
                     routeText: routeText,
@@ -528,7 +528,7 @@ class FSMService {
                     privateCarText: mileage.privateCar ? 'Yes' : 'No',
                     remarksText: mileage.remarks || 'N/A',
 
-                    // KEEP FULL DATA FOR REFERENCE
+                    // âœ… KEEP FULL DATA FOR REFERENCE
                     fullData: mileage
                 };
             });
@@ -667,6 +667,79 @@ class FSMService {
         } catch (error) {
             console.error("Error fetching UDF Meta:", error.message);
             return null;
+        }
+    }
+
+    /**
+     * Get Approval Decision Status for a T&M entry
+     * @param {string} objectId - The T&M entry ID (TimeEffort, Material, Expense, or Mileage)
+     * @returns {string|null} Decision status (PENDING, REVIEW, APPROVED, DECLINED, etc.)
+     */
+    async getApprovalStatus(objectId) {
+        try {
+            console.log('FSMService: Fetching Approval status for object:', objectId);
+            
+            const query = `SELECT w.decisionStatus FROM Approval w WHERE w.object.objectId = '${objectId}'`;
+            const data = await this.makeQueryRequest(query, 'Approval.15');
+
+            if (!data.data || data.data.length === 0) {
+                console.log('FSMService: No Approval found for object:', objectId);
+                return null;
+            }
+
+            const decisionStatus = data.data[0]?.w?.decisionStatus || null;
+            console.log('FSMService: Approval status for', objectId, ':', decisionStatus);
+
+            return decisionStatus;
+
+        } catch (error) {
+            console.error("Error fetching Approval status:", error.message);
+            return null;
+        }
+    }
+
+    /**
+     * Get Approval Decision Status for multiple T&M entries (individual queries)
+     * @param {string[]} objectIds - Array of T&M entry IDs
+     * @returns {Object} Map of objectId -> decisionStatus
+     */
+    async getApprovalStatusBatch(objectIds) {
+        try {
+            if (!objectIds || objectIds.length === 0) {
+                return {};
+            }
+
+            console.log('FSMService: Fetching Approval status for', objectIds.length, 'objects');
+            
+            const statusMap = {};
+            
+            // Process in parallel with Promise.all for better performance
+            const promises = objectIds.map(async (objectId) => {
+                try {
+                    const query = `SELECT w.decisionStatus FROM Approval w WHERE w.object.objectId = '${objectId}'`;
+                    const data = await this.makeQueryRequest(query, 'Approval.15');
+                    
+                    if (data.data && data.data.length > 0) {
+                        const decisionStatus = data.data[0]?.w?.decisionStatus;
+                        if (decisionStatus) {
+                            statusMap[objectId] = decisionStatus;
+                            console.log('FSMService: Approval for', objectId, ':', decisionStatus);
+                        }
+                    }
+                } catch (err) {
+                    console.error('FSMService: Error fetching approval for', objectId, ':', err.message);
+                }
+            });
+            
+            await Promise.all(promises);
+
+            console.log('FSMService: Retrieved approval statuses:', Object.keys(statusMap).length);
+
+            return statusMap;
+
+        } catch (error) {
+            console.error("Error fetching Approval statuses batch:", error.message);
+            return {};
         }
     }
 }

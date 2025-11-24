@@ -348,6 +348,35 @@
 }
 
 /* ========================================
+   DECISION STATUS STYLING
+   ======================================== */
+
+.decisionStatusValue {
+    font-weight: 700;
+    font-size: 0.9375rem;
+}
+
+.decisionStatusValue.sapMObjectStatusWarning {
+    color: #e09d00 !important;
+}
+
+.decisionStatusValue.sapMObjectStatusSuccess {
+    color: #107e3e !important;
+}
+
+.decisionStatusValue.sapMObjectStatusError {
+    color: #bb0000 !important;
+}
+
+.decisionStatusValue.sapMObjectStatusInformation {
+    color: #0854a0 !important;
+}
+
+.decisionStatusValue.sapMObjectStatusNone {
+    color: #666 !important;
+}
+
+/* ========================================
    BASIC UI ELEMENTS
    ======================================== */
 

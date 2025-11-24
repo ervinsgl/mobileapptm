@@ -15,8 +15,9 @@ sap.ui.define([
     "mobileappsc/utils/TimeTaskService",
     "mobileappsc/utils/ItemService",
     "mobileappsc/utils/ExpenseTypeService",
-    "mobileappsc/utils/UdfMetaService"
-], (Controller, JSONModel, MessageToast, MessageBox, Item, Fragment, formatter, ActivityService, ServiceOrderService, ProductGroupService, URLHelper, OrganizationService, ReportedItemsData, TimeTaskService, ItemService, ExpenseTypeService, UdfMetaService) => {
+    "mobileappsc/utils/UdfMetaService",
+    "mobileappsc/utils/ApprovalService"
+], (Controller, JSONModel, MessageToast, MessageBox, Item, Fragment, formatter, ActivityService, ServiceOrderService, ProductGroupService, URLHelper, OrganizationService, ReportedItemsData, TimeTaskService, ItemService, ExpenseTypeService, UdfMetaService, ApprovalService) => {
     "use strict";
 
     return Controller.extend("mobileappsc.controller.View1", {
@@ -345,6 +346,9 @@ sap.ui.define([
                 // Pre-load UDF Meta for all reports (to resolve meta IDs to externalIds)
                 await UdfMetaService.preloadUdfMetaForReports(reports);
 
+                // Pre-load Approval statuses for all reports
+                await ApprovalService.preloadStatusesForReports(reports);
+
                 // Enrich reports with resolved names
                 reports.forEach(report => {
                     // Time Effort: resolve task name
@@ -373,6 +377,12 @@ sap.ui.define([
                     if (report.udfValues && report.udfValues.length > 0) {
                         report.udfValuesText = UdfMetaService.formatUdfValuesForDisplay(report.udfValues);
                     }
+
+                    // Add approval status
+                    const approvalStatus = ApprovalService.getStatusById(report.id);
+                    report.decisionStatus = approvalStatus;
+                    report.decisionStatusText = ApprovalService.getStatusDisplayText(approvalStatus);
+                    report.decisionStatusState = ApprovalService.getStatusState(approvalStatus);
 
                     // Build entry header text based on type
                     report.entryHeaderText = this._buildEntryHeaderText(report);
@@ -417,7 +427,7 @@ sap.ui.define([
             const isClosed = activity.executionStage === 'CLOSED';
             const fullActivity = activity.fullActivity || {};
 
-            // Extract UDF values for Quantity and UoM
+            // âœ… Extract UDF values for Quantity and UoM
             const quantity = this._getUdfValue(fullActivity, 'Z_Quantity') || 'N/A';
             const quantityUoM = this._getUdfValue(fullActivity, 'Z_QuantityUoM') || 'N/A';
             const formattedQuantity = quantity !== 'N/A' && quantityUoM !== 'N/A'
@@ -763,7 +773,7 @@ sap.ui.define([
             console.log('T&M Reports Array:', oActivity.tmReports);
             console.log('========================');
 
-            // If reports aren't loaded yet, force load them
+            // ✅ If reports aren't loaded yet, force load them
             if (!oActivity.tmReportsLoaded || !oActivity.tmReports || oActivity.tmReports.length === 0) {
                 console.log('T&M reports not loaded, fetching fresh data...');
 
@@ -773,6 +783,9 @@ sap.ui.define([
 
                     // Pre-load UDF Meta for all reports (to resolve meta IDs to externalIds)
                     await UdfMetaService.preloadUdfMetaForReports(reports);
+
+                    // Pre-load Approval statuses for all reports
+                    await ApprovalService.preloadStatusesForReports(reports);
 
                     // Enrich reports with resolved names
                     reports.forEach(report => {
@@ -802,6 +815,12 @@ sap.ui.define([
                         if (report.udfValues && report.udfValues.length > 0) {
                             report.udfValuesText = UdfMetaService.formatUdfValuesForDisplay(report.udfValues);
                         }
+
+                        // Add approval status
+                        const approvalStatus = ApprovalService.getStatusById(report.id);
+                        report.decisionStatus = approvalStatus;
+                        report.decisionStatusText = ApprovalService.getStatusDisplayText(approvalStatus);
+                        report.decisionStatusState = ApprovalService.getStatusState(approvalStatus);
 
                         // Build entry header text based on type
                         report.entryHeaderText = this._buildEntryHeaderText(report);

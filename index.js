@@ -281,6 +281,33 @@ app.post("/api/get-udf-meta", async (req, res) => {
     }
 });
 
+// Get Approval Status for T&M entries (batch)
+app.post("/api/get-approval-status", async (req, res) => {
+    const { objectIds } = req.body;
+
+    if (!objectIds || !Array.isArray(objectIds) || objectIds.length === 0) {
+        return res.status(400).json({ message: 'Object IDs array is required' });
+    }
+
+    try {
+        const statusMap = await FSMService.getApprovalStatusBatch(objectIds);
+        
+        console.log('Backend: Retrieved approval statuses for', Object.keys(statusMap).length, 'objects');
+        
+        res.json({
+            statuses: statusMap,
+            count: Object.keys(statusMap).length
+        });
+
+    } catch (error) {
+        console.error("Error fetching Approval statuses:", error.message);
+        res.status(error.response?.status || 500).json({
+            message: error.response?.data?.message || 'Failed to fetch Approval statuses',
+            error: error.response?.data || error.message
+        });
+    }
+});
+
 // Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

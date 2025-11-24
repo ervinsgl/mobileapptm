@@ -201,21 +201,6 @@
                                             <Label text="Date:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{dialog>dateText}" class="tmFieldValue"/>
                                         </VBox>
-                                        
-                                        <!-- Created (All types) -->
-                                        <VBox class="tmField">
-                                            <Label text="Created:" design="Bold" class="tmFieldLabel"/>
-                                            <Text text="{
-                                                path: 'dialog>createDateTime', 
-                                                formatter: '.formatter.formatDateTime'
-                                            }" class="tmFieldValue"/>
-                                        </VBox>
-                                        
-                                        <!-- Create Person (All types) -->
-                                        <VBox class="tmField">
-                                            <Label text="Create Person:" design="Bold" class="tmFieldLabel"/>
-                                            <Text text="{dialog>createPerson}" class="tmFieldValue tmFieldValueSmall"/>
-                                        </VBox>
                                     </VBox>
 
                                     <!-- Right Column -->
@@ -258,28 +243,26 @@
                                         <!-- ===============================
                                              SHARED FIELDS (RIGHT)
                                              =============================== -->
+                                        <!-- Decision Status (All types) - with colored styling -->
+                                        <VBox class="tmField">
+                                            <Label text="Decision Status:" design="Bold" class="tmFieldLabel"/>
+                                            <ObjectStatus 
+                                                text="{dialog>decisionStatusText}" 
+                                                state="{dialog>decisionStatusState}"
+                                                class="decisionStatusValue"
+                                            />
+                                        </VBox>
+                                        
                                         <!-- Charge Option (All types) -->
                                         <VBox class="tmField">
                                             <Label text="Charge Option:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{dialog>chargeOption}" class="tmFieldValue"/>
                                         </VBox>
                                         
-                                        <!-- Org Level (All types) -->
-                                        <VBox class="tmField">
-                                            <Label text="Org Level:" design="Bold" class="tmFieldLabel"/>
-                                            <Text text="{dialog>orgLevel}" class="tmFieldValue tmFieldValueSmall"/>
-                                        </VBox>
-                                        
-                                        <!-- UDF Values (All types) -->
-                                        <VBox class="tmField">
+                                        <!-- UDF Values (Time Effort and Mileage only) -->
+                                        <VBox class="tmField" visible="{= ${dialog>type} === 'Time Effort' || ${dialog>type} === 'Mileage'}">
                                             <Label text="UDF Values:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{dialog>udfValuesText}" class="tmFieldValue tmFieldValueSmall" wrapping="true"/>
-                                        </VBox>
-                                        
-                                        <!-- Sync Status (All types) -->
-                                        <VBox class="tmField">
-                                            <Label text="Sync Status:" design="Bold" class="tmFieldLabel"/>
-                                            <Text text="{dialog>syncStatus}" class="tmFieldValue"/>
                                         </VBox>
                                         
                                         <!-- Internal Remarks (Time Effort only) -->
