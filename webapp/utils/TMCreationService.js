@@ -13,6 +13,11 @@ sap.ui.define([
                 type: "Time Effort",
                 icon: "sap-icon://time-entry-request",
                 expanded: true,
+                // Button state properties
+                saveButtonText: "Save",
+                saveButtonIcon: "sap-icon://save",
+                saveButtonType: "Emphasized",
+                saveButtonState: "unsaved",
                 // Empty fields - to be filled by user
                 task: "",
                 technician: "",
@@ -33,6 +38,11 @@ sap.ui.define([
                 type: "Material",
                 icon: "sap-icon://product",
                 expanded: true,
+                // Button state properties
+                saveButtonText: "Save",
+                saveButtonIcon: "sap-icon://save",
+                saveButtonType: "Emphasized",
+                saveButtonState: "unsaved",
                 // Empty fields - to be filled by user
                 item: "",
                 technician: "",
@@ -52,6 +62,11 @@ sap.ui.define([
                 type: "Expense",
                 icon: "sap-icon://money-bills",
                 expanded: true,
+                // Button state properties
+                saveButtonText: "Save",
+                saveButtonIcon: "sap-icon://save",
+                saveButtonType: "Emphasized",
+                saveButtonState: "unsaved",
                 // Empty fields - to be filled by user
                 expenseType: "",
                 technician: "",
@@ -72,6 +87,11 @@ sap.ui.define([
                 type: "Mileage",
                 icon: "sap-icon://car-rental",
                 expanded: true,
+                // Button state properties
+                saveButtonText: "Save",
+                saveButtonIcon: "sap-icon://save",
+                saveButtonType: "Emphasized",
+                saveButtonState: "unsaved",
                 // Empty fields - to be filled by user
                 route: "",
                 technician: "",

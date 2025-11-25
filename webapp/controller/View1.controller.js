@@ -151,7 +151,7 @@ sap.ui.define([
 
         /**
          * Load Persons for lookup (runs in background)
-         * Used to resolve Person IDs/externalIds to readable names
+         * Used to resolve Person IDs/externalIds to human-readable names
          */
         _populateOrganizationLevelComboBox(levels) {
             const comboBox = this.byId("organizationLevelComboBox");
@@ -402,7 +402,7 @@ sap.ui.define([
             const isClosed = activity.executionStage === 'CLOSED';
             const fullActivity = activity.fullActivity || {};
 
-            // Extract UDF values for Quantity and UoM
+            // âœ… Extract UDF values for Quantity and UoM
             const quantity = this._getUdfValue(fullActivity, 'Z_Quantity') || 'N/A';
             const quantityUoM = this._getUdfValue(fullActivity, 'Z_QuantityUoM') || 'N/A';
             const formattedQuantity = quantity !== 'N/A' && quantityUoM !== 'N/A'
@@ -935,22 +935,127 @@ sap.ui.define([
             TMDialogService.closeTMCreationDialog();
         },
 
-        /**
-         * Save all T&M entries
-         */
-        async onSaveAllTMEntries() {
-            const oModel = this._tmCreateDialog.getModel("createTM");
-            const aEntries = oModel.getProperty("/entries");
-            const activityCode = oModel.getProperty("/activityCode");
+        /* ========================================
+         * PER-ENTRY ACTION BUTTONS
+         * ======================================== */
 
-            try {
-                const result = await TMCreationService.saveAllEntries(aEntries, activityCode);
-                MessageToast.show(`Saved ${result.savedCount} T&M entry(ies)`);
-                TMDialogService.closeTMCreationDialog();
-                // TODO: Refresh T&M Reports
-            } catch (error) {
-                MessageBox.error(error.message);
+        /**
+         * Close/Remove individual T&M entry (no save, just remove)
+         */
+        onCloseEntry(oEvent) {
+            const oButton = oEvent.getSource();
+            const oContext = oButton.getBindingContext("createTM");
+
+            if (!oContext) {
+                MessageToast.show("Could not identify entry to close");
+                return;
             }
+
+            const sPath = oContext.getPath();
+            const oModel = this._tmCreateDialog.getModel("createTM");
+            const oEntry = oContext.getObject();
+
+            // Show confirmation dialog
+            MessageBox.confirm(
+                `Close this ${oEntry.type} entry without saving?`,
+                {
+                    title: "Close Entry",
+                    onClose: (sAction) => {
+                        if (sAction === MessageBox.Action.OK) {
+                            // Get current entries array
+                            const aEntries = oModel.getProperty("/entries");
+                            
+                            // Find index of entry to remove
+                            const iIndex = parseInt(sPath.split("/").pop());
+                            
+                            // Remove entry (no save)
+                            aEntries.splice(iIndex, 1);
+                            
+                            // Update model
+                            oModel.setProperty("/entries", aEntries);
+                            
+                            MessageToast.show(`${oEntry.type} entry closed`);
+                        }
+                    }
+                }
+            );
+        },
+
+        /**
+         * Save individual T&M entry (Simplified: Save → Show JSON → Done!)
+         */
+        onSaveEntry(oEvent) {
+            const oButton = oEvent.getSource();
+            const oContext = oButton.getBindingContext("createTM");
+
+            if (!oContext) {
+                MessageToast.show("Could not identify entry to save");
+                return;
+            }
+
+            const sPath = oContext.getPath();
+            const oModel = this._tmCreateDialog.getModel("createTM");
+            const oEntry = oContext.getObject();
+            const sCurrentState = oEntry.saveButtonState || "unsaved";
+
+            switch (sCurrentState) {
+                case "unsaved":
+                    // STATE 1: Change button to "Send for Approval"
+                    oModel.setProperty(sPath + "/saveButtonState", "ready");
+                    oModel.setProperty(sPath + "/saveButtonText", "Send for Approval");
+                    oModel.setProperty(sPath + "/saveButtonIcon", "sap-icon://paper-plane");
+                    MessageToast.show("Ready to send");
+                    break;
+
+                case "ready":
+                    // STATE 2: Show JSON in dialog
+                    this._showEntryJSON(oEntry);
+                    
+                    // Update button to "Done!"
+                    oModel.setProperty(sPath + "/saveButtonState", "done");
+                    oModel.setProperty(sPath + "/saveButtonText", "Done!");
+                    oModel.setProperty(sPath + "/saveButtonIcon", "sap-icon://accept");
+                    oModel.setProperty(sPath + "/saveButtonType", "Success");
+                    break;
+
+                case "done":
+                    // STATE 3: Already done
+                    MessageToast.show("Entry already processed");
+                    break;
+
+                default:
+                    MessageToast.show("Unknown entry state");
+            }
+        },
+
+        /**
+         * Helper: Show entry JSON in dialog
+         */
+        _showEntryJSON(oEntry) {
+            // Create a clean copy without internal UI properties
+            const cleanEntry = {};
+            
+            // Copy all properties except UI-specific ones
+            Object.keys(oEntry).forEach(key => {
+                if (!key.startsWith("saveButton") && 
+                    key !== "expanded" && 
+                    key !== "icon") {
+                    cleanEntry[key] = oEntry[key];
+                }
+            });
+
+            // Format JSON with indentation
+            const jsonString = JSON.stringify(cleanEntry, null, 2);
+
+            // Show in dialog
+            MessageBox.information(
+                jsonString,
+                {
+                    title: `${oEntry.type} Entry Data`,
+                    contentWidth: "500px",
+                    styleClass: "sapUiSizeCompact"
+                }
+            );
         }
     });
 });

@@ -15,11 +15,11 @@
                     <Title text="{createTM>/activitySubject}" level="H5" class="sapUiSmallMarginBottom"/>
                 </VBox>
                 
-                <!-- Activity Details Grid (3-column structure - MATCHING TMReportsDialog) -->
+                <!-- Activity Details Grid (3-column structure) -->
                 <VBox class="activityQuickInfo sapUiSmallMarginBottom">
                     <l:Grid defaultSpan="XL4 L4 M12 S12" hSpacing="2" vSpacing="1" containerQuery="true">
                         
-                        <!-- Column 1: Service Product, Duration -->
+                        <!-- Row 1 -->
                         <VBox class="detailField">
                             <layoutData>
                                 <l:GridData span="XL4 L4 M12 S12"/>
@@ -119,11 +119,28 @@
                                 <OverflowToolbar design="Info">
                                     <core:Icon src="{createTM>icon}" class="sapUiSmallMarginEnd"/>
                                     <Title text="T&amp;M Entry - {createTM>type}" level="H5"/>
+                                    <ToolbarSpacer />
+                                    <!-- Close Entry Button -->
+                                    <Button
+                                        text="Close Entry"
+                                        icon="sap-icon://decline"
+                                        type="Reject"
+                                        press=".onCloseEntry"
+                                        class="sapUiTinyMarginEnd"
+                                    />
+                                    <!-- Progressive Save Button -->
+                                    <Button
+                                        text="{createTM>saveButtonText}"
+                                        icon="{createTM>saveButtonIcon}"
+                                        type="{createTM>saveButtonType}"
+                                        press=".onSaveEntry"
+                                        enabled="{createTM>saveButtonEnabled}"
+                                    />
                                 </OverflowToolbar>
                             </headerToolbar>
                             
                             <content>
-                                <!-- TIME EFFORT LAYOUT -->
+                                <!-- TIME EFFORT LAYOUT (Keep your existing 3-column HBox layout) -->
                                 <HBox class="tmEntryContent" visible="{= ${createTM>type} === 'Time Effort'}">
                                     <!-- Column 1 -->
                                     <VBox class="tmColumn">
@@ -312,7 +329,7 @@
         
         <buttons>
             <Button text="Close" press=".onCancelCreateTM"/>
-            <Button text="Save All" type="Emphasized" press=".onSaveAllTMEntries"/>
+            <!-- "Save All" button REMOVED as requested -->
         </buttons>
     </Dialog>
 </core:FragmentDefinition>
