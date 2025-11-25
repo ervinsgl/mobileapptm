@@ -191,6 +191,120 @@ app.post("/api/get-reported-items", async (req, res) => {
     }
 });
 
+// Get all Persons (Technicians)
+app.post("/api/get-persons", async (req, res) => {
+    try {
+        const persons = await FSMService.getPersons();
+
+        console.log(`Backend: Loaded ${persons.length} persons`);
+
+        res.json({ persons });
+
+    } catch (error) {
+        console.error("Error fetching persons:", error.message);
+        res.status(error.response?.status || 500).json({
+            message: error.response?.data?.message || 'Failed to fetch persons',
+            error: error.response?.data || error.message
+        });
+    }
+});
+
+// Get Person by ID
+app.post("/api/get-person-by-id", async (req, res) => {
+    const { personId } = req.body;
+
+    if (!personId) {
+        return res.status(400).json({ message: 'Person ID is required' });
+    }
+
+    try {
+        const person = await FSMService.getPersonById(personId);
+
+        if (person) {
+            res.json({ person });
+        } else {
+            res.status(404).json({ message: 'Person not found' });
+        }
+
+    } catch (error) {
+        console.error("Error fetching person by ID:", error.message);
+        res.status(error.response?.status || 500).json({
+            message: error.response?.data?.message || 'Failed to fetch person',
+            error: error.response?.data || error.message
+        });
+    }
+});
+
+// Get Person by External ID
+app.post("/api/get-person-by-external-id", async (req, res) => {
+    const { externalId } = req.body;
+
+    if (!externalId) {
+        return res.status(400).json({ message: 'External ID is required' });
+    }
+
+    try {
+        const person = await FSMService.getPersonByExternalId(externalId);
+
+        if (person) {
+            res.json({ person });
+        } else {
+            res.status(404).json({ message: 'Person not found' });
+        }
+
+    } catch (error) {
+        console.error("Error fetching person by external ID:", error.message);
+        res.status(error.response?.status || 500).json({
+            message: error.response?.data?.message || 'Failed to fetch person',
+            error: error.response?.data || error.message
+        });
+    }
+});
+
+// Get Business Partner by External ID
+app.post("/api/get-business-partner-by-external-id", async (req, res) => {
+    const { externalId } = req.body;
+
+    if (!externalId) {
+        return res.status(400).json({ message: 'External ID is required' });
+    }
+
+    try {
+        const businessPartner = await FSMService.getBusinessPartnerByExternalId(externalId);
+
+        if (businessPartner) {
+            res.json({ businessPartner });
+        } else {
+            res.status(404).json({ message: 'Business Partner not found' });
+        }
+
+    } catch (error) {
+        console.error("Error fetching business partner by external ID:", error.message);
+        res.status(error.response?.status || 500).json({
+            message: error.response?.data?.message || 'Failed to fetch business partner',
+            error: error.response?.data || error.message
+        });
+    }
+});
+
+// Get Organization Level by ID (returns full hierarchy with all sublevels)
+app.get("/api/get-organization-levels-full", async (req, res) => {
+    try {
+        const data = await FSMService.getOrganizationLevels();
+        
+        console.log('Backend: Sending full organization levels hierarchy');
+
+        res.json(data);
+
+    } catch (error) {
+        console.error("Error fetching organization levels:", error.message);
+        res.status(error.response?.status || 500).json({
+            message: error.response?.data?.message || 'Failed to fetch organization levels',
+            error: error.response?.data || error.message
+        });
+    }
+});
+
 // Get Time Tasks (for lookup/dropdown)
 app.get("/api/get-time-tasks", async (req, res) => {
     try {

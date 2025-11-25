@@ -513,14 +513,14 @@ class FSMService {
                     travelEndDateTime: mileage.travelEndDateTime || null,
                     remarks: mileage.remarks || null,
 
-                    // âœ… UDF INFORMATION
+                    // UDF INFORMATION
                     udfValues: udfValues,
                     udfValuesText: udfValuesText,
 
-                    // âœ… DISPLAY TYPE
+                    // DISPLAY TYPE
                     type: 'Mileage',
 
-                    // âœ… PRE-FORMATTED DISPLAY TEXT (no complex expressions needed in UI)
+                    // PRE-FORMATTED DISPLAY TEXT (no complex expressions needed in UI)
                     dateText: mileage.date || 'N/A',
                     distanceText: distanceText,
                     routeText: routeText,
@@ -528,7 +528,7 @@ class FSMService {
                     privateCarText: mileage.privateCar ? 'Yes' : 'No',
                     remarksText: mileage.remarks || 'N/A',
 
-                    // âœ… KEEP FULL DATA FOR REFERENCE
+                    // KEEP FULL DATA FOR REFERENCE
                     fullData: mileage
                 };
             });
@@ -740,6 +740,179 @@ class FSMService {
         } catch (error) {
             console.error("Error fetching Approval statuses batch:", error.message);
             return {};
+        }
+    }
+
+    /**
+     * Get all Persons (Technicians)
+     * Used for loading all persons for search/dropdown
+     * @returns {Promise<Array>} Array of person objects
+     */
+    async getPersons() {
+        try {
+            console.log('FSMService: Fetching all Persons...');
+            
+            const query = `SELECT w.id, w.externalId, w.firstName, w.lastName FROM Person w WHERE w.externalId IS NOT NULL`;
+            const data = await this.makeQueryRequest(query, 'Person.25');
+
+            if (!data.data || data.data.length === 0) {
+                console.log('FSMService: No persons found');
+                return [];
+            }
+
+            console.log('FSMService: Found', data.data.length, 'persons');
+
+            // Transform to simple array of person objects
+            return data.data.map(item => ({
+                id: item.w.id,
+                externalId: item.w.externalId,
+                firstName: item.w.firstName || '',
+                lastName: item.w.lastName || ''
+            }));
+
+        } catch (error) {
+            console.error("Error fetching persons:", error.message);
+            return [];
+        }
+    }
+
+    /**
+     * Get Person by ID
+     * @param {string} personId - Person ID
+     * @returns {Promise<Object|null>} Person object or null if not found
+     */
+    async getPersonById(personId) {
+        try {
+            if (!personId) return null;
+
+            console.log('FSMService: Fetching Person by ID:', personId);
+            
+            const query = `SELECT w.id, w.externalId, w.firstName, w.lastName FROM Person w WHERE w.id = '${personId}'`;
+            const data = await this.makeQueryRequest(query, 'Person.25');
+
+            if (!data.data || data.data.length === 0) {
+                console.log('FSMService: Person not found for ID:', personId);
+                return null;
+            }
+
+            const person = {
+                id: data.data[0].w.id,
+                externalId: data.data[0].w.externalId,
+                firstName: data.data[0].w.firstName || '',
+                lastName: data.data[0].w.lastName || ''
+            };
+
+            console.log('FSMService: Found person:', person);
+
+            return person;
+
+        } catch (error) {
+            console.error("Error fetching person by ID:", error.message);
+            return null;
+        }
+    }
+
+    /**
+     * Get Person by External ID
+     * @param {string} externalId - Person External ID
+     * @returns {Promise<Object|null>} Person object or null if not found
+     */
+    async getPersonByExternalId(externalId) {
+        try {
+            if (!externalId) return null;
+
+            console.log('FSMService: Fetching Person by externalId:', externalId);
+            
+            const query = `SELECT w.id, w.externalId, w.firstName, w.lastName FROM Person w WHERE w.externalId = '${externalId}'`;
+            const data = await this.makeQueryRequest(query, 'Person.25');
+
+            if (!data.data || data.data.length === 0) {
+                console.log('FSMService: Person not found for externalId:', externalId);
+                return null;
+            }
+
+            const person = {
+                id: data.data[0].w.id,
+                externalId: data.data[0].w.externalId,
+                firstName: data.data[0].w.firstName || '',
+                lastName: data.data[0].w.lastName || ''
+            };
+
+            console.log('FSMService: Found person:', person);
+
+            return person;
+
+        } catch (error) {
+            console.error("Error fetching person by externalId:", error.message);
+            return null;
+        }
+    }
+
+    /**
+     * Get Business Partner by External ID
+     * @param {string} externalId - Business Partner External ID
+     * @returns {Promise<Object|null>} Business Partner object or null if not found
+     */
+    async getBusinessPartnerByExternalId(externalId) {
+        try {
+            if (!externalId) return null;
+
+            console.log('FSMService: Fetching Business Partner by externalId:', externalId);
+            
+            const query = `SELECT w.name FROM BusinessPartner w WHERE w.externalId = '${externalId}'`;
+            const data = await this.makeQueryRequest(query, 'BusinessPartner.25');
+
+            if (!data.data || data.data.length === 0) {
+                console.log('FSMService: Business Partner not found for externalId:', externalId);
+                return null;
+            }
+
+            const businessPartner = {
+                externalId: externalId,
+                name: data.data[0].w.name || ''
+            };
+
+            console.log('FSMService: Found business partner:', businessPartner);
+
+            return businessPartner;
+
+        } catch (error) {
+            console.error("Error fetching business partner by externalId:", error.message);
+            return null;
+        }
+    }
+
+    /**
+     * Get Organization Level by ID
+     * Returns the full organizational hierarchy with all sublevels
+     * @returns {Promise<Object|null>} Organization level hierarchy or null if not found
+     */
+    async getOrganizationLevels() {
+        try {
+            const destination = await DestinationService.getDestination('FSM_S4E');
+            const token = await TokenCache.getToken(destination);
+
+            const baseUrl = destination.destinationConfiguration.URL;
+            const fullUrl = `${baseUrl}/cloud-org-level-service/api/v1/levels`;
+
+            console.log('FSMService: Fetching organizational levels from:', fullUrl);
+
+            const headers = {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+                'X-Account-ID': destination.destinationConfiguration['URL.headers.X-Account-ID'],
+                'X-Company-ID': destination.destinationConfiguration['URL.headers.X-Company-ID']
+            };
+
+            const response = await axios.get(fullUrl, { headers });
+
+            console.log('FSMService: Organizational levels response:', response.data);
+
+            return response.data;
+
+        } catch (error) {
+            console.error('FSM API Error (organizational-levels):', error.response?.data || error.message);
+            throw error;
         }
     }
 }

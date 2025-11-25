@@ -16,8 +16,13 @@ sap.ui.define([
     "mobileappsc/utils/ItemService",
     "mobileappsc/utils/ExpenseTypeService",
     "mobileappsc/utils/UdfMetaService",
-    "mobileappsc/utils/ApprovalService"
-], (Controller, JSONModel, MessageToast, MessageBox, Item, Fragment, formatter, ActivityService, ServiceOrderService, ProductGroupService, URLHelper, OrganizationService, ReportedItemsData, TimeTaskService, ItemService, ExpenseTypeService, UdfMetaService, ApprovalService) => {
+    "mobileappsc/utils/ApprovalService",
+    "mobileappsc/utils/TMDialogService",
+    "mobileappsc/utils/TMCreationService",
+    "mobileappsc/utils/TMDataService",
+    "mobileappsc/utils/PersonService",
+    "mobileappsc/utils/BusinessPartnerService"
+], (Controller, JSONModel, MessageToast, MessageBox, Item, Fragment, formatter, ActivityService, ServiceOrderService, ProductGroupService, URLHelper, OrganizationService, ReportedItemsData, TimeTaskService, ItemService, ExpenseTypeService, UdfMetaService, ApprovalService, TMDialogService, TMCreationService, TMDataService, PersonService, BusinessPartnerService) => {
     "use strict";
 
     return Controller.extend("mobileappsc.controller.View1", {
@@ -25,11 +30,15 @@ sap.ui.define([
         formatter: formatter,
 
         onInit() {
+            TMDialogService.init(this);
+            
             this._initializeModel();
             this._loadOrganizationLevels();
+            this._loadOrganizationalHierarchy(); // Load full hierarchy for org level lookups
             this._loadTimeTasks(); // Load time tasks for lookup
             this._loadItems(); // Load items for lookup
             this._loadExpenseTypes(); // Load expense types for lookup
+            // Persons will be loaded on-demand when needed
             this._loadActivityFromURL();
         },
 
@@ -84,6 +93,17 @@ sap.ui.define([
             }
         },
 
+        async _loadOrganizationalHierarchy() {
+            try {
+                console.log('Loading full organizational hierarchy...');
+                await OrganizationService.loadOrganizationalHierarchy();
+                console.log('Organizational hierarchy loaded successfully');
+            } catch (error) {
+                console.error("Failed to load organizational hierarchy:", error);
+                // Non-blocking - app continues without org level name resolution
+            }
+        },
+
         /**
          * Load Time Tasks for lookup (runs in background)
          * Used to resolve Task IDs to human-readable names in T&M reports
@@ -129,6 +149,10 @@ sap.ui.define([
             }
         },
 
+        /**
+         * Load Persons for lookup (runs in background)
+         * Used to resolve Person IDs/externalIds to readable names
+         */
         _populateOrganizationLevelComboBox(levels) {
             const comboBox = this.byId("organizationLevelComboBox");
             if (!comboBox) return;
@@ -260,6 +284,22 @@ sap.ui.define([
                 const viewModel = this.getView().getModel("view");
 
                 if (serviceOrderData) {
+                    // Preload and enrich with responsible person name
+                    if (serviceOrderData.responsibleExternalId && serviceOrderData.responsibleExternalId !== 'N/A') {
+                        await PersonService.preloadPersonsByExternalId([serviceOrderData.responsibleExternalId]);
+                        serviceOrderData.responsibleDisplayText = PersonService.getPersonDisplayTextByExternalId(serviceOrderData.responsibleExternalId);
+                    } else {
+                        serviceOrderData.responsibleDisplayText = serviceOrderData.responsibleExternalId;
+                    }
+                    
+                    // Preload and enrich with business partner name
+                    if (serviceOrderData.businessPartnerExternalId && serviceOrderData.businessPartnerExternalId !== 'N/A') {
+                        await BusinessPartnerService.preloadBusinessPartnersByExternalId([serviceOrderData.businessPartnerExternalId]);
+                        serviceOrderData.businessPartnerDisplayText = BusinessPartnerService.getBusinessPartnerDisplayTextByExternalId(serviceOrderData.businessPartnerExternalId);
+                    } else {
+                        serviceOrderData.businessPartnerDisplayText = serviceOrderData.businessPartnerExternalId;
+                    }
+                    
                     viewModel.setProperty("/serviceCall", serviceOrderData);
                 }
 
@@ -280,9 +320,8 @@ sap.ui.define([
         async _batchLoadTMReports(productGroups) {
             console.log('Starting batch T&M loading...');
 
-            // Collect all activity IDs
+            // Collect all activity IDs with paths
             const allActivities = [];
-            const activityPaths = new Map();
 
             productGroups.forEach((group, groupIndex) => {
                 group.activities.forEach((activity, activityIndex) => {
@@ -291,135 +330,68 @@ sap.ui.define([
                         code: activity.code,
                         path: `/productGroups/${groupIndex}/activities/${activityIndex}`
                     });
-                    activityPaths.set(activity.id, `/productGroups/${groupIndex}/activities/${activityIndex}`);
                 });
             });
 
             console.log(`Batch loading T&M for ${allActivities.length} activities`);
 
-            // Process in chunks of 10 to avoid overwhelming the API
-            const chunkSize = 10;
             const model = this.getView().getModel("view");
-
-            for (let i = 0; i < allActivities.length; i += chunkSize) {
-                const chunk = allActivities.slice(i, i + chunkSize);
-
-                // Set loading state for this chunk
-                chunk.forEach(activity => {
-                    const path = activityPaths.get(activity.id);
-                    model.setProperty(`${path}/tmReportsLoadingState`, 'loading');
-                    model.setProperty(`${path}/tmReportsLoading`, true);
-                });
-
-                // Load T&M reports for this chunk in parallel
-                const promises = chunk.map(activity =>
-                    this._loadSingleActivityTMReports(activity.id, activityPaths.get(activity.id))
-                );
-
-                try {
-                    await Promise.allSettled(promises); // Continue even if some fail
-                } catch (error) {
-                    console.error('Error in batch loading chunk:', error);
-                }
-
-                // Small delay between chunks to avoid API rate limiting
-                if (i + chunkSize < allActivities.length) {
-                    await new Promise(resolve => setTimeout(resolve, 100));
-                }
-            }
+            
+            // Use TMDataService for batch loading with enrichment
+            await this._batchLoadWithEnrichment(allActivities, model);
 
             console.log('Batch T&M loading completed');
-
-            // Single model refresh at the end
             model.refresh(true);
         },
 
         /**
-         * Load T&M for single activity
+         * Batch load with enrichment
          */
-        async _loadSingleActivityTMReports(activityId, activityPath) {
-            const model = this.getView().getModel("view");
+        async _batchLoadWithEnrichment(activities, model) {
+            const chunkSize = 10;
 
+            for (let i = 0; i < activities.length; i += chunkSize) {
+                const chunk = activities.slice(i, i + chunkSize);
+
+                // Set loading state
+                chunk.forEach(activity => {
+                    TMDataService.setLoadingState(model, activity.path, true);
+                });
+
+                // Load in parallel with enrichment
+                const promises = chunk.map(activity =>
+                    this._loadAndEnrichSingleActivity(activity.id, activity.path, model)
+                );
+
+                try {
+                    await Promise.allSettled(promises);
+                } catch (error) {
+                    console.error('Error in batch loading chunk:', error);
+                }
+
+                // Delay between chunks
+                if (i + chunkSize < activities.length) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+            }
+        },
+
+        /**
+         * Load and enrich T&M for single activity
+         */
+        async _loadAndEnrichSingleActivity(activityId, activityPath, model) {
             try {
-                const reports = await ReportedItemsData.getReportedItems(activityId);
-
-                // Pre-load UDF Meta for all reports (to resolve meta IDs to externalIds)
-                await UdfMetaService.preloadUdfMetaForReports(reports);
-
-                // Pre-load Approval statuses for all reports
-                await ApprovalService.preloadStatusesForReports(reports);
-
-                // Enrich reports with resolved names
-                reports.forEach(report => {
-                    // Add technician display text for all types
-                    report.createPersonDisplayText = report.createPerson || 'N/A';
-                    
-                    // Time Effort: resolve task name
-                    if (report.type === "Time Effort" && report.task) {
-                        report.taskDisplayText = TimeTaskService.getTaskDisplayTextById(report.task);
-                    }
-                    // Material: resolve item name (item field contains the item ID)
-                    if (report.type === "Material" && report.fullData?.item) {
-                        report.itemDisplayText = ItemService.getItemDisplayTextById(report.fullData.item);
-                    }
-                    // Expense: resolve expense type name
-                    if (report.type === "Expense" && report.fullData?.type) {
-                        report.expenseTypeDisplayText = ExpenseTypeService.getExpenseTypeDisplayTextById(report.fullData.type);
-                    }
-                    // Mileage: resolve mileage type from UDF Z_Mileage_MatID
-                    if (report.type === "Mileage") {
-                        const mileageTypeValue = this._getUdfValueByExternalId(report.udfValues, "Z_Mileage_MatID");
-                        if (mileageTypeValue) {
-                            // mileageTypeValue is an Item externalId, resolve to name
-                            report.mileageTypeDisplayText = ItemService.getItemDisplayTextByExternalId(mileageTypeValue);
-                        } else {
-                            report.mileageTypeDisplayText = 'N/A';
-                        }
-                    }
-                    // Format UDF values with externalId instead of meta ID
-                    if (report.udfValues && report.udfValues.length > 0) {
-                        report.udfValuesText = UdfMetaService.formatUdfValuesForDisplay(report.udfValues);
-                    }
-
-                    // Add approval status
-                    const approvalStatus = ApprovalService.getStatusById(report.id);
-                    report.decisionStatus = approvalStatus;
-                    report.decisionStatusText = ApprovalService.getStatusDisplayText(approvalStatus);
-                    report.decisionStatusState = ApprovalService.getStatusState(approvalStatus);
-
-                    // Build entry header text based on type
-                    report.entryHeaderText = this._buildEntryHeaderText(report);
-                });
-
-                // Calculate counts
-                const timeEffortCount = reports.filter(r => r.type === "Time Effort").length;
-                const materialCount = reports.filter(r => r.type === "Material").length;
-                const expenseCount = reports.filter(r => r.type === "Expense").length;
-                const mileageCount = reports.filter(r => r.type === "Mileage").length;
-
-                // Update model in batch
-                const updates = {
-                    [`${activityPath}/tmReports`]: reports,
-                    [`${activityPath}/tmReportsCount`]: reports.length,
-                    [`${activityPath}/tmReportsLoaded`]: true,
-                    [`${activityPath}/tmReportsLoading`]: false,
-                    [`${activityPath}/tmReportsLoadingState`]: 'loaded',
-                    [`${activityPath}/tmTimeEffortCount`]: timeEffortCount,
-                    [`${activityPath}/tmMaterialCount`]: materialCount,
-                    [`${activityPath}/tmExpenseCount`]: expenseCount,
-                    [`${activityPath}/tmMileageCount`]: mileageCount
-                };
-
-                // Apply all updates at once
-                Object.keys(updates).forEach(path => {
-                    model.setProperty(path, updates[path]);
-                });
+                const tmData = await TMDataService.loadTMReports(activityId);
+                
+                // Enrich reports with lookup data
+                await this._enrichTMReports(tmData.reports);
+                
+                // Update model
+                TMDataService.updateActivityWithTMData(model, activityPath, tmData);
 
             } catch (error) {
                 console.error(`Error loading T&M for activity ${activityId}:`, error);
-                model.setProperty(`${activityPath}/tmReportsLoadingState`, 'error');
-                model.setProperty(`${activityPath}/tmReportsLoading`, false);
-                model.setProperty(`${activityPath}/tmReportsCount`, 0);
+                TMDataService.setErrorState(model, activityPath);
             }
         },
 
@@ -430,7 +402,7 @@ sap.ui.define([
             const isClosed = activity.executionStage === 'CLOSED';
             const fullActivity = activity.fullActivity || {};
 
-            // âœ… Extract UDF values for Quantity and UoM
+            // Extract UDF values for Quantity and UoM
             const quantity = this._getUdfValue(fullActivity, 'Z_Quantity') || 'N/A';
             const quantityUoM = this._getUdfValue(fullActivity, 'Z_QuantityUoM') || 'N/A';
             const formattedQuantity = quantity !== 'N/A' && quantityUoM !== 'N/A'
@@ -476,7 +448,13 @@ sap.ui.define([
                 // Flattened and pre-formatted fields
                 externalId: fullActivity.externalId || 'N/A',
                 orgLevelId: fullActivity.orgLevelIds?.[0] || 'N/A',
+                orgLevelDisplayText: fullActivity.orgLevelIds?.[0] 
+                    ? OrganizationService.getOrgLevelDisplayTextById(fullActivity.orgLevelIds[0])
+                    : 'N/A',
                 responsibleId: fullActivity.responsibles?.[0]?.externalId || 'N/A',
+                responsibleDisplayText: fullActivity.responsibles?.[0]?.externalId 
+                    ? PersonService.getPersonDisplayTextByExternalId(fullActivity.responsibles[0].externalId)
+                    : 'N/A',
                 serviceProductId: fullActivity.serviceProduct?.externalId || 'N/A',
                 // Resolve service product name from ItemService
                 serviceProductDisplayText: fullActivity.serviceProduct?.externalId 
@@ -769,148 +747,103 @@ sap.ui.define([
 
             const oActivity = oContext.getObject();
 
-            // DEBUG: Check what data we actually have
-            console.log('=== DEBUG T&M Dialog ===');
-            console.log('Activity:', oActivity.code);
-            console.log('T&M Reports Count:', oActivity.tmReportsCount);
-            console.log('T&M Reports Array:', oActivity.tmReports);
-            console.log('========================');
-
-            // ✅ If reports aren't loaded yet, force load them
-            if (!oActivity.tmReportsLoaded || !oActivity.tmReports || oActivity.tmReports.length === 0) {
-                console.log('T&M reports not loaded, fetching fresh data...');
-
-                try {
-                    // Get fresh T&M data
-                    const reports = await ReportedItemsData.getReportedItems(oActivity.id);
-
-                    // Pre-load UDF Meta for all reports (to resolve meta IDs to externalIds)
-                    await UdfMetaService.preloadUdfMetaForReports(reports);
-
-                    // Pre-load Approval statuses for all reports
-                    await ApprovalService.preloadStatusesForReports(reports);
-
-                    // Enrich reports with resolved names
-                    reports.forEach(report => {
-                        // Time Effort: resolve task name
-                        if (report.type === "Time Effort" && report.task) {
-                            report.taskDisplayText = TimeTaskService.getTaskDisplayTextById(report.task);
-                        }
-                        // Material: resolve item name
-                        if (report.type === "Material" && report.fullData?.item) {
-                            report.itemDisplayText = ItemService.getItemDisplayTextById(report.fullData.item);
-                        }
-                        // Expense: resolve expense type name
-                        if (report.type === "Expense" && report.fullData?.type) {
-                            report.expenseTypeDisplayText = ExpenseTypeService.getExpenseTypeDisplayTextById(report.fullData.type);
-                        }
-                        // Mileage: resolve mileage type from UDF Z_Mileage_MatID
-                        if (report.type === "Mileage") {
-                            const mileageTypeValue = this._getUdfValueByExternalId(report.udfValues, "Z_Mileage_MatID");
-                            if (mileageTypeValue) {
-                                // mileageTypeValue is an Item externalId, resolve to name
-                                report.mileageTypeDisplayText = ItemService.getItemDisplayTextByExternalId(mileageTypeValue);
-                            } else {
-                                report.mileageTypeDisplayText = 'N/A';
-                            }
-                        }
-                        // Format UDF values with externalId instead of meta ID
-                        if (report.udfValues && report.udfValues.length > 0) {
-                            report.udfValuesText = UdfMetaService.formatUdfValuesForDisplay(report.udfValues);
-                        }
-
-                        // Add approval status
-                        const approvalStatus = ApprovalService.getStatusById(report.id);
-                        report.decisionStatus = approvalStatus;
-                        report.decisionStatusText = ApprovalService.getStatusDisplayText(approvalStatus);
-                        report.decisionStatusState = ApprovalService.getStatusState(approvalStatus);
-
-                        // Build entry header text based on type
-                        report.entryHeaderText = this._buildEntryHeaderText(report);
-                    });
-
-                    console.log('Fresh T&M data loaded:', reports);
-
-                    // Create dialog model with fresh data and activity details
-                    const oDialogModel = new JSONModel({
-                        activityCode: oActivity.code,
-                        activitySubject: oActivity.subject,
-                        reports: reports,
-                        reportCount: reports.length,
-                        // Activity details for dialog header
-                        formattedStartDate: oActivity.formattedStartDate || 'N/A',
-                        formattedEndDate: oActivity.formattedEndDate || 'N/A',
-                        formattedDuration: oActivity.formattedDuration || 'N/A',
-                        quantity: oActivity.quantity || 'N/A',
-                        quantityUoM: oActivity.quantityUoM || 'N/A'
-                    });
-
-                    // Load and open dialog
-                    if (!this._tmReportsDialog) {
-                        Fragment.load({
-                            name: "mobileappsc.view.fragments.TMReportsDialog",
-                            controller: this
-                        }).then((oDialog) => {
-                            this._tmReportsDialog = oDialog;
-                            this.getView().addDependent(oDialog);
-                            oDialog.setModel(oDialogModel, "dialog");
-                            oDialog.open();
-                        });
-                    } else {
-                        this._tmReportsDialog.setModel(oDialogModel, "dialog");
-                        this._tmReportsDialog.open();
-                    }
-
-                } catch (error) {
-                    console.error('Error loading fresh T&M data:', error);
-                    MessageToast.show("Failed to load T&M data: " + error.message);
+            try {
+                // Load fresh data if not loaded
+                let reports = oActivity.tmReports;
+                
+                if (!oActivity.tmReportsLoaded || !reports || reports.length === 0) {
+                    console.log('Loading fresh T&M data for activity:', oActivity.code);
+                    const tmData = await TMDataService.loadTMReports(oActivity.id);
+                    reports = tmData.reports;
                 }
 
-            } else {
-                // Use existing cached data
-                console.log('Using cached T&M data...');
+                // Enrich reports with lookup data
+                await this._enrichTMReports(reports);
 
-                const reports = oActivity.tmReports || [];
+                // Open dialog using service
+                await TMDialogService.openTMReportsDialog(oActivity, reports);
 
-                // Create dialog model with activity details
-                const oDialogModel = new JSONModel({
-                    activityCode: oActivity.code,
-                    activitySubject: oActivity.subject,
-                    reports: reports,
-                    reportCount: reports.length,
-                    // Activity details for dialog header
-                    formattedStartDate: oActivity.formattedStartDate || 'N/A',
-                    formattedEndDate: oActivity.formattedEndDate || 'N/A',
-                    formattedDuration: oActivity.formattedDuration || 'N/A',
-                    quantity: oActivity.quantity || 'N/A',
-                    quantityUoM: oActivity.quantityUoM || 'N/A'
-                });
-
-                // Load and open dialog
-                if (!this._tmReportsDialog) {
-                    Fragment.load({
-                        name: "mobileappsc.view.fragments.TMReportsDialog",
-                        controller: this
-                    }).then((oDialog) => {
-                        this._tmReportsDialog = oDialog;
-                        this.getView().addDependent(oDialog);
-                        oDialog.setModel(oDialogModel, "dialog");
-                        oDialog.open();
-                    });
-                } else {
-                    this._tmReportsDialog.setModel(oDialogModel, "dialog");
-                    this._tmReportsDialog.open();
-                }
+            } catch (error) {
+                console.error('Error loading T&M data:', error);
+                MessageToast.show("Failed to load T&M data: " + error.message);
             }
+        },
+
+        /**
+         * Enrich T&M reports with lookup data
+         */
+        async _enrichTMReports(reports) {
+            // Pre-load UDF Meta for all reports
+            await UdfMetaService.preloadUdfMetaForReports(reports);
+
+            // Pre-load Approval statuses for all reports
+            await ApprovalService.preloadStatusesForReports(reports);
+
+            // Collect all person IDs for batch preloading
+            const personIds = reports
+                .map(r => r.createPerson)
+                .filter(id => id && id !== 'N/A');
+
+            // Preload all persons in batch
+            if (personIds.length > 0) {
+                await PersonService.preloadPersonsById(personIds);
+            }
+
+            // Enrich each report
+            reports.forEach(report => {
+                // Technician: resolve person name from createPerson (ID)
+                if (report.createPerson) {
+                    report.createPersonDisplayText = PersonService.getPersonDisplayTextById(report.createPerson);
+                } else {
+                    report.createPersonDisplayText = 'N/A';
+                }
+                
+                // Time Effort: resolve task name
+                if (report.type === "Time Effort" && report.task) {
+                    report.taskDisplayText = TimeTaskService.getTaskDisplayTextById(report.task);
+                }
+                
+                // Material: resolve item name
+                if (report.type === "Material" && report.fullData?.item) {
+                    report.itemDisplayText = ItemService.getItemDisplayTextById(report.fullData.item);
+                }
+                
+                // Expense: resolve expense type name
+                if (report.type === "Expense" && report.fullData?.type) {
+                    report.expenseTypeDisplayText = ExpenseTypeService.getExpenseTypeDisplayTextById(report.fullData.type);
+                }
+                
+                // Mileage: resolve mileage type from UDF
+                if (report.type === "Mileage") {
+                    const mileageTypeValue = this._getUdfValueByExternalId(report.udfValues, "Z_Mileage_MatID");
+                    if (mileageTypeValue) {
+                        report.mileageTypeDisplayText = ItemService.getItemDisplayTextByExternalId(mileageTypeValue);
+                    } else {
+                        report.mileageTypeDisplayText = 'N/A';
+                    }
+                }
+                
+                // Format UDF values
+                if (report.udfValues && report.udfValues.length > 0) {
+                    report.udfValuesText = UdfMetaService.formatUdfValuesForDisplay(report.udfValues);
+                }
+
+                // Add approval status
+                const approvalStatus = ApprovalService.getStatusById(report.id);
+                report.decisionStatus = approvalStatus;
+                report.decisionStatusText = ApprovalService.getStatusDisplayText(approvalStatus);
+                report.decisionStatusState = ApprovalService.getStatusState(approvalStatus);
+
+                // Build entry header text
+                report.entryHeaderText = this._buildEntryHeaderText(report);
+            });
         },
 
         /**
          * Close T&M Reports Dialog
          */
         onCloseTMReportsDialog() {
-            if (this._tmReportsDialog) {
-                this._tmReportsDialog.close();
-            }
+            TMDialogService.closeTMReportsDialog();
         },
 
         /**
@@ -937,33 +870,87 @@ sap.ui.define([
         },
 
         /**
-         * Add new T&M Report
+         * Add new T&M Report - Opens unified creation dialog
          */
-        onAddTMReport(oEvent) {
+        async onAddTMReport(oEvent) {
             const oButton = oEvent.getSource();
             const oContext = oButton.getBindingContext("view");
 
-            if (!oContext) {
-                MessageToast.show("Please select an activity first");
+            // Extract activity data
+            const activityData = TMDialogService.extractActivityData(oContext, this._tmReportsDialog);
+
+            if (!activityData.activityCode) {
+                MessageToast.show("Activity information not available");
                 return;
             }
 
-            const oActivity = oContext.getObject();
+            // Open creation dialog
+            await TMDialogService.openTMCreationDialog(activityData);
+        },
 
-            // TODO: Open T&M Creation Dialog
-            MessageBox.information(
-                `Add T&M Report for:\n\nActivity: ${oActivity.code}\nSubject: ${oActivity.subject}`,
-                {
-                    title: "Add T&M Report",
-                    actions: ["Time Effort", "Material", "Expense", "Mileage", MessageBox.Action.CANCEL],
-                    onClose: (sAction) => {
-                        if (sAction !== MessageBox.Action.CANCEL) {
-                            MessageToast.show(`Creating ${sAction} report...`);
-                            // TODO: Implement T&M creation
-                        }
-                    }
-                }
-            );
+        /* ========================================
+         * T&M CREATION DIALOG METHODS
+         * ======================================== */
+
+        /**
+         * Add Time Effort Entry
+         */
+        onAddTimeEffortEntry() {
+            const oModel = this._tmCreateDialog.getModel("createTM");
+            const entry = TMCreationService.createTimeEffortEntry();
+            TMCreationService.addEntryToModel(oModel, entry, "Time Effort");
+        },
+
+        /**
+         * Add Material Entry
+         */
+        onAddMaterialEntry() {
+            const oModel = this._tmCreateDialog.getModel("createTM");
+            const entry = TMCreationService.createMaterialEntry();
+            TMCreationService.addEntryToModel(oModel, entry, "Material");
+        },
+
+        /**
+         * Add Expense Entry
+         */
+        onAddExpenseEntry() {
+            const oModel = this._tmCreateDialog.getModel("createTM");
+            const entry = TMCreationService.createExpenseEntry();
+            TMCreationService.addEntryToModel(oModel, entry, "Expense");
+        },
+
+        /**
+         * Add Mileage Entry
+         */
+        onAddMileageEntry() {
+            const oModel = this._tmCreateDialog.getModel("createTM");
+            const entry = TMCreationService.createMileageEntry();
+            TMCreationService.addEntryToModel(oModel, entry, "Mileage");
+        },
+
+        /**
+         * Cancel T&M Creation Dialog
+         */
+        onCancelCreateTM() {
+            TMDialogService.closeTMCreationDialog();
+        },
+
+        /**
+         * Save all T&M entries
+         */
+        async onSaveAllTMEntries() {
+            const oModel = this._tmCreateDialog.getModel("createTM");
+            const aEntries = oModel.getProperty("/entries");
+            const activityCode = oModel.getProperty("/activityCode");
+
+            try {
+                const result = await TMCreationService.saveAllEntries(aEntries, activityCode);
+                MessageToast.show(`Saved ${result.savedCount} T&M entry(ies)`);
+                TMDialogService.closeTMCreationDialog();
+                // TODO: Refresh T&M Reports
+            } catch (error) {
+                MessageBox.error(error.message);
+            }
         }
     });
 });

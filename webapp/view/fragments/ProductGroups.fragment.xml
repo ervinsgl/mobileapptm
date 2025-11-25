@@ -73,7 +73,7 @@
                                                 </HBox>
                                                 <HBox class="activityFieldRow">
                                                     <Label text="Responsible:" design="Bold" class="activityFieldLabel"/>
-                                                    <Text text="{view>responsibleId}" class="activityFieldValue"/>
+                                                    <Text text="{view>responsibleDisplayText}" class="activityFieldValue"/>
                                                 </HBox>
                                             </VBox>
                                             
@@ -85,7 +85,7 @@
                                                 </HBox>
                                                 <HBox class="activityFieldRow">
                                                     <Label text="Org Level:" design="Bold" class="activityFieldLabel"/>
-                                                    <Text text="{view>orgLevelId}" class="activityFieldValue"/>
+                                                    <Text text="{view>orgLevelDisplayText}" class="activityFieldValue"/>
                                                 </HBox>
                                             </VBox>
                                             
@@ -139,13 +139,6 @@
                                                     icon="sap-icon://detail-view"
                                                     type="Emphasized"
                                                     press=".onViewTMReports"
-                                                    class="tmActionButton"
-                                                />
-                                                <Button
-                                                    text="Add T&amp;M"
-                                                    icon="sap-icon://add"
-                                                    type="Accept"
-                                                    press=".onAddTMReport"
                                                     class="tmActionButton"
                                                 />
                                             </HBox>

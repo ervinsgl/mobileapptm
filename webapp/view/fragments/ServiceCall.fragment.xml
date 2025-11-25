@@ -42,11 +42,11 @@
                 <VBox class="serviceOrderColumn">
                     <HBox class="serviceOrderFieldRow">
                         <Label text="Business Partner:" design="Bold" class="serviceOrderFieldLabel"/>
-                        <Text text="{view>/serviceCall/businessPartnerExternalId}" class="serviceOrderFieldValue"/>
+                        <Text text="{view>/serviceCall/businessPartnerDisplayText}" class="serviceOrderFieldValue"/>
                     </HBox>
                     <HBox class="serviceOrderFieldRow">
                         <Label text="Responsible:" design="Bold" class="serviceOrderFieldLabel"/>
-                        <Text text="{view>/serviceCall/responsibleExternalId}" class="serviceOrderFieldValue"/>
+                        <Text text="{view>/serviceCall/responsibleDisplayText}" class="serviceOrderFieldValue"/>
                     </HBox>
                 </VBox>
                 
