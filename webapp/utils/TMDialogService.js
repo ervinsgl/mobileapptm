@@ -3,8 +3,9 @@ sap.ui.define([
     "sap/ui/model/json/JSONModel",
     "sap/m/MessageToast",
     "mobileappsc/utils/TechnicianService",
-    "mobileappsc/utils/TMCreationService"
-], (Fragment, JSONModel, MessageToast, TechnicianService, TMCreationService) => {
+    "mobileappsc/utils/TMCreationService",
+    "mobileappsc/utils/TimeTaskService"
+], (Fragment, JSONModel, MessageToast, TechnicianService, TMCreationService, TimeTaskService) => {
     "use strict";
 
     return {
@@ -81,6 +82,27 @@ sap.ui.define([
                 MessageToast.show("Warning: Technician search may not be available");
             }
 
+            // Load Time Tasks for dropdown
+            let taskSuggestions = [];
+            let taskSuggestionsAZ = [];
+            let taskSuggestionsFZ = [];
+            let taskSuggestionsWZ = [];
+            try {
+                await TimeTaskService.fetchTimeTasks();
+                taskSuggestions = TimeTaskService.getTasksForDropdown();
+                
+                // Filter tasks by prefix for Time & Material entry columns
+                taskSuggestionsAZ = taskSuggestions.filter(task => task.code && task.code.startsWith('AZ'));
+                taskSuggestionsFZ = taskSuggestions.filter(task => task.code && task.code.startsWith('FZ'));
+                taskSuggestionsWZ = taskSuggestions.filter(task => task.code && task.code.startsWith('WZ'));
+                
+                console.log('TMDialogService: Loaded', taskSuggestions.length, 'time tasks');
+                console.log('TMDialogService: Filtered - AZ:', taskSuggestionsAZ.length, 'FZ:', taskSuggestionsFZ.length, 'WZ:', taskSuggestionsWZ.length);
+            } catch (error) {
+                console.error('TMDialogService: Failed to load time tasks:', error);
+                MessageToast.show("Warning: Time tasks may not be available");
+            }
+
             // Create dialog model with empty entries array
             const oCreateTMDialogModel = new JSONModel({
                 activityCode: activityData.activityCode,
@@ -93,8 +115,14 @@ sap.ui.define([
                 quantityUoM: activityData.quantityUoM,
                 responsibleExternalId: activityData.responsibleExternalId,
                 entries: [],  // Dynamic array for T&M entries
-                // Technician suggestions for ComboBox
-                technicianSuggestions: TechnicianService.getAllForDropdown()
+                // Technician suggestions for Input with suggestions
+                technicianSuggestions: TechnicianService.getAllForDropdown(),
+                // Time Task suggestions for Select dropdown (all tasks - for Time Effort)
+                taskSuggestions: taskSuggestions,
+                // Filtered task suggestions for Time & Material columns
+                taskSuggestionsAZ: taskSuggestionsAZ,  // Arbeitszeit
+                taskSuggestionsFZ: taskSuggestionsFZ,  // Fahrzeit
+                taskSuggestionsWZ: taskSuggestionsWZ   // Wartezeit
             });
 
             // Load and open dialog

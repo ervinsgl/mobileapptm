@@ -51,8 +51,10 @@ sap.ui.define([
                 // Technician fields
                 technicianId: defaultTech ? defaultTech.id : "",
                 technicianDisplay: defaultTech ? defaultTech.displayText : "",
+                // Task fields (stores code for API, display shows name)
+                taskCode: "",
+                taskDisplay: "",
                 // Other fields
-                task: "",
                 duration: "",
                 start: "",
                 end: "",
@@ -170,17 +172,20 @@ sap.ui.define([
                 item: "",
                 quantity: "",
                 // Time Effort 1 fields (Column 2)
-                task1: "",
+                task1Code: "",
+                task1Display: "",
                 duration1: "",
                 start1: "",
                 end1: "",
                 // Time Effort 2 fields (Column 3)
-                task2: "",
+                task2Code: "",
+                task2Display: "",
                 duration2: "",
                 start2: "",
                 end2: "",
                 // Time Effort 3 fields (Column 4)
-                task3: "",
+                task3Code: "",
+                task3Display: "",
                 duration3: "",
                 start3: "",
                 end3: "",

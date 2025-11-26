@@ -154,7 +154,18 @@
                                     <VBox class="tmColumn">
                                         <HBox class="tmFieldRow">
                                             <Label text="Task:" design="Bold" class="tmFieldLabel tmFieldLabelRequired"/>
-                                            <Input value="{createTM>task}" placeholder="Enter task..." class="tmFieldInput"/>
+                                            <Select
+                                                selectedKey="{createTM>taskCode}"
+                                                items="{
+                                                    path: 'createTM>/taskSuggestions',
+                                                    templateShareable: false
+                                                }"
+                                                change=".onTaskSelect"
+                                                forceSelection="false"
+                                                class="tmFieldInput"
+                                            >
+                                                <core:Item key="{createTM>code}" text="{createTM>name}"/>
+                                            </Select>
                                         </HBox>
                                         <HBox class="tmFieldRow">
                                             <Label text="Technician:" design="Bold" class="tmFieldLabel"/>
@@ -389,7 +400,7 @@
                                 </HBox>
                                 
                                 <!-- TIME & MATERIAL LAYOUT (5-Column) -->
-                                <HBox class="tmEntryContent tmEntryContent5Col" visible="{= ${createTM>type} === 'Time &amp; Material'}">
+                                <HBox class="tmEntryContent tmEntryContent5Col" visible="{= ${createTM>type} === 'Time &amp; Material'}" width="100%">
                                     <!-- Column 1: Material Info -->
                                     <VBox class="tmColumn tmColumnNarrow">
                                         <Title text="Material" level="H6" class="tmColumnHeader sapUiTinyMarginBottom"/>
@@ -431,7 +442,18 @@
                                         <Title text="Time - Arbeitszeit" level="H6" class="tmColumnHeader sapUiTinyMarginBottom"/>
                                         <HBox class="tmFieldRow">
                                             <Label text="Task:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>task1}" placeholder="Task..." class="tmFieldInput tmFieldInputNarrow"/>
+                                            <Select
+                                                selectedKey="{createTM>task1Code}"
+                                                items="{
+                                                    path: 'createTM>/taskSuggestionsAZ',
+                                                    templateShareable: false
+                                                }"
+                                                change=".onTaskSelect"
+                                                forceSelection="false"
+                                                class="tmFieldInput tmFieldInputNarrow"
+                                            >
+                                                <core:Item key="{createTM>code}" text="{createTM>name}"/>
+                                            </Select>
                                         </HBox>
                                         <HBox class="tmFieldRow">
                                             <Label text="Duration:" design="Bold" class="tmFieldLabel"/>
@@ -452,7 +474,18 @@
                                         <Title text="Time - Fahrzeit" level="H6" class="tmColumnHeader sapUiTinyMarginBottom"/>
                                         <HBox class="tmFieldRow">
                                             <Label text="Task:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>task2}" placeholder="Task..." class="tmFieldInput tmFieldInputNarrow"/>
+                                            <Select
+                                                selectedKey="{createTM>task2Code}"
+                                                items="{
+                                                    path: 'createTM>/taskSuggestionsFZ',
+                                                    templateShareable: false
+                                                }"
+                                                change=".onTaskSelect"
+                                                forceSelection="false"
+                                                class="tmFieldInput tmFieldInputNarrow"
+                                            >
+                                                <core:Item key="{createTM>code}" text="{createTM>name}"/>
+                                            </Select>
                                         </HBox>
                                         <HBox class="tmFieldRow">
                                             <Label text="Duration:" design="Bold" class="tmFieldLabel"/>
@@ -473,7 +506,18 @@
                                         <Title text="Time - Wartezeit" level="H6" class="tmColumnHeader sapUiTinyMarginBottom"/>
                                         <HBox class="tmFieldRow">
                                             <Label text="Task:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>task3}" placeholder="Task..." class="tmFieldInput tmFieldInputNarrow"/>
+                                            <Select
+                                                selectedKey="{createTM>task3Code}"
+                                                items="{
+                                                    path: 'createTM>/taskSuggestionsWZ',
+                                                    templateShareable: false
+                                                }"
+                                                change=".onTaskSelect"
+                                                forceSelection="false"
+                                                class="tmFieldInput tmFieldInputNarrow"
+                                            >
+                                                <core:Item key="{createTM>code}" text="{createTM>name}"/>
+                                            </Select>
                                         </HBox>
                                         <HBox class="tmFieldRow">
                                             <Label text="Duration:" design="Bold" class="tmFieldLabel"/>

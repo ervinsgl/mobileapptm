@@ -403,7 +403,7 @@ sap.ui.define([
             const isClosed = activity.executionStage === 'CLOSED';
             const fullActivity = activity.fullActivity || {};
 
-            // Ã¢Å“â€¦ Extract UDF values for Quantity and UoM
+            // Extract UDF values for Quantity and UoM
             const quantity = this._getUdfValue(fullActivity, 'Z_Quantity') || 'N/A';
             const quantityUoM = this._getUdfValue(fullActivity, 'Z_QuantityUoM') || 'N/A';
             const formattedQuantity = quantity !== 'N/A' && quantityUoM !== 'N/A'
@@ -1017,6 +1017,44 @@ sap.ui.define([
         },
 
         /**
+         * Handle task selection from Select dropdown
+         * Stores task code for API and display name
+         */
+        onTaskSelect(oEvent) {
+            const oSelectedItem = oEvent.getParameter("selectedItem");
+            const oSelect = oEvent.getSource();
+            const oContext = oSelect.getBindingContext("createTM");
+            
+            if (!oContext) {
+                console.warn('TaskSelect: No binding context found');
+                return;
+            }
+            
+            const sPath = oContext.getPath();
+            const oModel = this._tmCreateDialog.getModel("createTM");
+            
+            if (oSelectedItem) {
+                // Get the selected task data from the item's binding context
+                const oItemContext = oSelectedItem.getBindingContext("createTM");
+                if (oItemContext) {
+                    const oTask = oItemContext.getObject();
+                    
+                    // Determine which task field this is based on the Select's selectedKey binding
+                    const sBinding = oSelect.getBindingPath("selectedKey");
+                    
+                    // For Time Effort: taskCode/taskDisplay
+                    // For Time & Material: task1Code/task1Display, task2Code/task2Display, task3Code/task3Display
+                    if (sBinding) {
+                        const sDisplayPath = sBinding.replace("Code", "Display");
+                        oModel.setProperty(sPath + "/" + sDisplayPath, oTask.name);
+                        
+                        console.log('TaskSelect: Selected', oTask.name, 'Code:', oTask.code, 'Path:', sPath + "/" + sBinding);
+                    }
+                }
+            }
+        },
+
+        /**
          * Handle technician selection from ComboBox (legacy - keep for compatibility)
          * Updates both display text and ID in the entry
          */
@@ -1131,7 +1169,7 @@ sap.ui.define([
         },
 
         /**
-         * Save individual T&M entry (Simplified: Save â†’ Show JSON â†’ Done!)
+         * Save individual T&M entry
          */
         onSaveEntry(oEvent) {
             const oButton = oEvent.getSource();
@@ -1189,7 +1227,9 @@ sap.ui.define([
             const excludeProps = [
                 "saveButtonText", "saveButtonIcon", "saveButtonType", 
                 "saveButtonState", "saveButtonEnabled",
-                "expanded", "icon", "technicianDisplay"
+                "expanded", "icon", 
+                "technicianDisplay", "taskDisplay",
+                "task1Display", "task2Display", "task3Display"
             ];
             
             // Copy all properties except UI-specific ones
@@ -1198,7 +1238,26 @@ sap.ui.define([
                     // Rename technicianId to technician for API
                     if (key === "technicianId") {
                         cleanEntry["technician"] = oEntry[key];
-                    } else {
+                    }
+                    // Format taskCode as nested object: "task": { "code": "AZ" }
+                    else if (key === "taskCode" && oEntry[key]) {
+                        cleanEntry["task"] = { code: oEntry[key] };
+                    }
+                    // Format task1Code, task2Code, task3Code as nested objects
+                    else if (key === "task1Code" && oEntry[key]) {
+                        cleanEntry["task1"] = { code: oEntry[key] };
+                    }
+                    else if (key === "task2Code" && oEntry[key]) {
+                        cleanEntry["task2"] = { code: oEntry[key] };
+                    }
+                    else if (key === "task3Code" && oEntry[key]) {
+                        cleanEntry["task3"] = { code: oEntry[key] };
+                    }
+                    // Skip empty taskCode fields
+                    else if (key.endsWith("Code") && !oEntry[key]) {
+                        // Skip empty code fields
+                    }
+                    else {
                         cleanEntry[key] = oEntry[key];
                     }
                 }
