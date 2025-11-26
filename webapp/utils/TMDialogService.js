@@ -1,8 +1,10 @@
 sap.ui.define([
     "sap/ui/core/Fragment",
     "sap/ui/model/json/JSONModel",
-    "sap/m/MessageToast"
-], (Fragment, JSONModel, MessageToast) => {
+    "sap/m/MessageToast",
+    "mobileappsc/utils/TechnicianService",
+    "mobileappsc/utils/TMCreationService"
+], (Fragment, JSONModel, MessageToast, TechnicianService, TMCreationService) => {
     "use strict";
 
     return {
@@ -42,7 +44,9 @@ sap.ui.define([
                 formattedEndDate: oActivity.formattedEndDate || 'N/A',
                 formattedDuration: oActivity.formattedDuration || 'N/A',
                 quantity: oActivity.quantity || 'N/A',
-                quantityUoM: oActivity.quantityUoM || 'N/A'
+                quantityUoM: oActivity.quantityUoM || 'N/A',
+                // Store responsible for default technician
+                responsibleExternalId: oActivity.responsibleId || 'N/A'
             });
 
             // Load and open dialog
@@ -60,6 +64,23 @@ sap.ui.define([
 
             console.log('Opening T&M Creation Dialog for activity:', activityData.activityCode);
 
+            // Initialize TechnicianService (load all persons in background)
+            try {
+                await TechnicianService.initialize();
+                
+                // Set default technician from activity responsible
+                if (activityData.responsibleExternalId && activityData.responsibleExternalId !== 'N/A') {
+                    const defaultTech = TechnicianService.getTechnicianByExternalId(activityData.responsibleExternalId);
+                    if (defaultTech) {
+                        TMCreationService.setDefaultTechnician(defaultTech);
+                        console.log('TMDialogService: Default technician set from responsible:', defaultTech.displayText);
+                    }
+                }
+            } catch (error) {
+                console.error('TMDialogService: Failed to initialize TechnicianService:', error);
+                MessageToast.show("Warning: Technician search may not be available");
+            }
+
             // Create dialog model with empty entries array
             const oCreateTMDialogModel = new JSONModel({
                 activityCode: activityData.activityCode,
@@ -70,7 +91,10 @@ sap.ui.define([
                 formattedDuration: activityData.formattedDuration,
                 quantity: activityData.quantity,
                 quantityUoM: activityData.quantityUoM,
-                entries: []  // Dynamic array for T&M entries
+                responsibleExternalId: activityData.responsibleExternalId,
+                entries: [],  // Dynamic array for T&M entries
+                // Technician suggestions for ComboBox
+                technicianSuggestions: TechnicianService.getAllForDropdown()
             });
 
             // Load and open dialog
@@ -114,6 +138,8 @@ sap.ui.define([
                 if (oModel) {
                     oModel.setProperty("/entries", []);
                 }
+                // Clear default technician
+                TMCreationService.clearDefaultTechnician();
             }
         },
 
@@ -137,7 +163,8 @@ sap.ui.define([
                     formattedEndDate: oActivity.formattedEndDate || 'N/A',
                     formattedDuration: oActivity.formattedDuration || 'N/A',
                     quantity: oActivity.quantity || 'N/A',
-                    quantityUoM: oActivity.quantityUoM || 'N/A'
+                    quantityUoM: oActivity.quantityUoM || 'N/A',
+                    responsibleExternalId: oActivity.responsibleId || 'N/A'
                 };
             } else if (tmReportsDialog) {
                 // Called from TMReportsDialog - get from dialog model
@@ -151,7 +178,8 @@ sap.ui.define([
                         formattedEndDate: oDialogModel.getProperty("/formattedEndDate") || 'N/A',
                         formattedDuration: oDialogModel.getProperty("/formattedDuration") || 'N/A',
                         quantity: oDialogModel.getProperty("/quantity") || 'N/A',
-                        quantityUoM: oDialogModel.getProperty("/quantityUoM") || 'N/A'
+                        quantityUoM: oDialogModel.getProperty("/quantityUoM") || 'N/A',
+                        responsibleExternalId: oDialogModel.getProperty("/responsibleExternalId") || 'N/A'
                     };
                 }
             }

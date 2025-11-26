@@ -230,6 +230,148 @@
 }
 
 /* ========================================
+   T&M INPUT FIELDS STYLING
+   ======================================== */
+
+/* Input field in T&M forms */
+.tmFieldInput {
+    flex: 1;
+    min-width: 120px;
+}
+
+.tmFieldInput .sapMInputBaseInner {
+    font-size: 0.875rem;
+}
+
+/* Narrower inputs for 5-column layout */
+.tmFieldInputNarrow {
+    flex: 1;
+    min-width: 80px;
+    max-width: 140px;
+}
+
+.tmFieldInputNarrow .sapMInputBaseInner {
+    font-size: 0.8125rem;
+}
+
+/* Required field indicator */
+.tmFieldLabelRequired::after {
+    content: " *";
+    color: #bb0000;
+    font-weight: bold;
+}
+
+/* Input placeholder styling */
+.tmFieldInput input::placeholder,
+.tmFieldInputNarrow input::placeholder {
+    color: #999;
+    font-style: italic;
+}
+
+/* Focus state for inputs */
+.tmFieldInput.sapMInputFocused,
+.tmFieldInputNarrow.sapMInputFocused {
+    border-color: #0854a0;
+}
+
+/* ComboBox styling for technician search */
+.tmFieldInput.sapMComboBox,
+.tmFieldInputNarrow.sapMComboBox {
+    flex: 1;
+}
+
+.tmFieldInput.sapMComboBox .sapMInputBaseInner,
+.tmFieldInputNarrow.sapMComboBox .sapMInputBaseInner {
+    font-size: 0.875rem;
+}
+
+/* ComboBox dropdown list styling */
+.sapMComboBoxBasePicker .sapMListItem {
+    padding: 0.5rem 0.75rem;
+}
+
+.sapMComboBoxBasePicker .sapMSLITitleOnly {
+    font-size: 0.875rem;
+}
+
+.sapMComboBoxBasePicker .sapMSLIInfo {
+    font-size: 0.75rem;
+    color: #666;
+}
+
+/* ========================================
+   TIME & MATERIAL 5-COLUMN LAYOUT
+   ======================================== */
+
+/* 5-Column container */
+.tmEntryContent5Col {
+    gap: 0.75rem;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+}
+
+/* Narrower columns for 5-col layout */
+.tmColumnNarrow {
+    flex: 1;
+    min-width: 140px;
+    max-width: 200px;
+    padding-right: 0.75rem;
+    border-right: 1px solid #f0f0f0;
+}
+
+.tmColumnNarrow:last-child {
+    border-right: none;
+    padding-right: 0;
+}
+
+/* Column header styling */
+.tmColumnHeader {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #0854a0;
+    border-bottom: 2px solid #0854a0;
+    padding-bottom: 0.25rem;
+}
+
+/* Smaller labels for 5-column layout */
+.tmEntryContent5Col .tmFieldLabel {
+    min-width: 4rem;
+    font-size: 0.6875rem;
+}
+
+.tmEntryContent5Col .tmFieldValue {
+    font-size: 0.8125rem;
+}
+
+/* Responsive: Stack columns on smaller screens */
+@media (max-width: 1024px) {
+    .tmEntryContent5Col {
+        flex-wrap: wrap;
+    }
+    
+    .tmColumnNarrow {
+        min-width: calc(50% - 1rem);
+        max-width: none;
+        margin-bottom: 0.75rem;
+        border-right: none;
+        border-bottom: 1px solid #f0f0f0;
+        padding-bottom: 0.75rem;
+    }
+    
+    .tmColumnNarrow:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+        margin-bottom: 0;
+    }
+}
+
+@media (max-width: 600px) {
+    .tmColumnNarrow {
+        min-width: 100%;
+    }
+}
+
+/* ========================================
    DECISION STATUS STYLING
    ======================================== */
 

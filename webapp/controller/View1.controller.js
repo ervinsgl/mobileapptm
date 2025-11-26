@@ -21,8 +21,9 @@ sap.ui.define([
     "mobileappsc/utils/TMCreationService",
     "mobileappsc/utils/TMDataService",
     "mobileappsc/utils/PersonService",
-    "mobileappsc/utils/BusinessPartnerService"
-], (Controller, JSONModel, MessageToast, MessageBox, Item, Fragment, formatter, ActivityService, ServiceOrderService, ProductGroupService, URLHelper, OrganizationService, ReportedItemsData, TimeTaskService, ItemService, ExpenseTypeService, UdfMetaService, ApprovalService, TMDialogService, TMCreationService, TMDataService, PersonService, BusinessPartnerService) => {
+    "mobileappsc/utils/BusinessPartnerService",
+    "mobileappsc/utils/TechnicianService"
+], (Controller, JSONModel, MessageToast, MessageBox, Item, Fragment, formatter, ActivityService, ServiceOrderService, ProductGroupService, URLHelper, OrganizationService, ReportedItemsData, TimeTaskService, ItemService, ExpenseTypeService, UdfMetaService, ApprovalService, TMDialogService, TMCreationService, TMDataService, PersonService, BusinessPartnerService, TechnicianService) => {
     "use strict";
 
     return Controller.extend("mobileappsc.controller.View1", {
@@ -402,7 +403,7 @@ sap.ui.define([
             const isClosed = activity.executionStage === 'CLOSED';
             const fullActivity = activity.fullActivity || {};
 
-            // âœ… Extract UDF values for Quantity and UoM
+            // Ã¢Å“â€¦ Extract UDF values for Quantity and UoM
             const quantity = this._getUdfValue(fullActivity, 'Z_Quantity') || 'N/A';
             const quantityUoM = this._getUdfValue(fullActivity, 'Z_QuantityUoM') || 'N/A';
             const formattedQuantity = quantity !== 'N/A' && quantityUoM !== 'N/A'
@@ -929,10 +930,158 @@ sap.ui.define([
         },
 
         /**
+         * Add Time & Material Entry (combined)
+         */
+        onAddTimeAndMaterialEntry() {
+            const oModel = this._tmCreateDialog.getModel("createTM");
+            const entry = TMCreationService.createTimeAndMaterialEntry();
+            TMCreationService.addEntryToModel(oModel, entry, "Time & Material");
+        },
+
+        /**
          * Cancel T&M Creation Dialog
          */
         onCancelCreateTM() {
             TMDialogService.closeTMCreationDialog();
+        },
+
+        /* ========================================
+         * TECHNICIAN SEARCH HANDLERS
+         * ======================================== */
+
+        /**
+         * Handle technician live change (as user types)
+         * Updates suggestions in real-time
+         */
+        onTechnicianLiveChange(oEvent) {
+            const sValue = oEvent.getParameter("value") || "";
+            
+            // Get filtered suggestions from TechnicianService
+            const aSuggestions = TechnicianService.searchTechnicians(sValue);
+            
+            // Update the model with new suggestions
+            const oModel = this._tmCreateDialog.getModel("createTM");
+            oModel.setProperty("/technicianSuggestions", aSuggestions);
+            
+            console.log('TechnicianLiveChange:', sValue, '- Found:', aSuggestions.length, 'results');
+        },
+
+        /**
+         * Handle technician search/filter in ComboBox
+         * Called when user types in the technician field
+         */
+        onTechnicianSearch(oEvent) {
+            const sValue = oEvent.getParameter("value") || "";
+            const oComboBox = oEvent.getSource();
+            
+            // Get filtered suggestions from TechnicianService
+            const aSuggestions = TechnicianService.searchTechnicians(sValue);
+            
+            // Update the model with new suggestions
+            const oModel = this._tmCreateDialog.getModel("createTM");
+            oModel.setProperty("/technicianSuggestions", aSuggestions);
+            
+            console.log('TechnicianSearch:', sValue, '- Found:', aSuggestions.length, 'results');
+        },
+
+        /**
+         * Handle technician suggestion selection from Input
+         * Called when user selects from suggestion list
+         */
+        onTechnicianSuggestionSelect(oEvent) {
+            const oSelectedItem = oEvent.getParameter("selectedItem");
+            const oInput = oEvent.getSource();
+            const oContext = oInput.getBindingContext("createTM");
+            
+            if (!oContext) {
+                console.warn('TechnicianSuggestionSelect: No binding context found');
+                return;
+            }
+            
+            const sPath = oContext.getPath();
+            const oModel = this._tmCreateDialog.getModel("createTM");
+            
+            if (oSelectedItem) {
+                // Get the selected technician data from the item's binding context
+                const oItemContext = oSelectedItem.getBindingContext("createTM");
+                if (oItemContext) {
+                    const oTechnician = oItemContext.getObject();
+                    
+                    // Update the entry with technician ID and display text
+                    oModel.setProperty(sPath + "/technicianId", oTechnician.id);
+                    oModel.setProperty(sPath + "/technicianDisplay", oTechnician.displayText);
+                    
+                    console.log('TechnicianSuggestionSelect: Selected', oTechnician.displayText, 'ID:', oTechnician.id);
+                }
+            }
+        },
+
+        /**
+         * Handle technician selection from ComboBox (legacy - keep for compatibility)
+         * Updates both display text and ID in the entry
+         */
+        onTechnicianSelect(oEvent) {
+            const oSelectedItem = oEvent.getParameter("selectedItem");
+            const oComboBox = oEvent.getSource();
+            const oContext = oComboBox.getBindingContext("createTM");
+            
+            if (!oContext) {
+                console.warn('TechnicianSelect: No binding context found');
+                return;
+            }
+            
+            const sPath = oContext.getPath();
+            const oModel = this._tmCreateDialog.getModel("createTM");
+            
+            if (oSelectedItem) {
+                // Get the selected technician data from the item's binding context
+                const oItemContext = oSelectedItem.getBindingContext("createTM");
+                if (oItemContext) {
+                    const oTechnician = oItemContext.getObject();
+                    
+                    // Update the entry with technician ID and display text
+                    oModel.setProperty(sPath + "/technicianId", oTechnician.id);
+                    oModel.setProperty(sPath + "/technicianDisplay", oTechnician.displayText);
+                    
+                    console.log('TechnicianSelect: Selected', oTechnician.displayText, 'ID:', oTechnician.id);
+                }
+            } else {
+                // Clear selection
+                oModel.setProperty(sPath + "/technicianId", "");
+                oModel.setProperty(sPath + "/technicianDisplay", "");
+            }
+        },
+
+        /**
+         * Handle technician ComboBox change (manual input)
+         * Called when user types a value that doesn't match any suggestion
+         */
+        onTechnicianChange(oEvent) {
+            const sValue = oEvent.getParameter("value") || "";
+            const oComboBox = oEvent.getSource();
+            const oContext = oComboBox.getBindingContext("createTM");
+            
+            if (!oContext) return;
+            
+            const sPath = oContext.getPath();
+            const oModel = this._tmCreateDialog.getModel("createTM");
+            
+            // If no item selected but value entered, try to find matching technician
+            if (sValue && !oComboBox.getSelectedItem()) {
+                const technicians = TechnicianService.searchTechnicians(sValue);
+                if (technicians.length === 1) {
+                    // Auto-select if exactly one match
+                    const tech = technicians[0];
+                    oModel.setProperty(sPath + "/technicianId", tech.id);
+                    oModel.setProperty(sPath + "/technicianDisplay", tech.displayText);
+                    oComboBox.setValue(tech.displayText);
+                    console.log('TechnicianChange: Auto-selected', tech.displayText);
+                } else if (technicians.length === 0) {
+                    // Clear ID if no match found
+                    oModel.setProperty(sPath + "/technicianId", "");
+                    console.log('TechnicianChange: No match found for', sValue);
+                }
+            }
         },
 
         /* ========================================
@@ -982,7 +1131,7 @@ sap.ui.define([
         },
 
         /**
-         * Save individual T&M entry (Simplified: Save → Show JSON → Done!)
+         * Save individual T&M entry (Simplified: Save â†’ Show JSON â†’ Done!)
          */
         onSaveEntry(oEvent) {
             const oButton = oEvent.getSource();
@@ -1030,17 +1179,28 @@ sap.ui.define([
 
         /**
          * Helper: Show entry JSON in dialog
+         * Prepares entry data for API submission
          */
         _showEntryJSON(oEntry) {
-            // Create a clean copy without internal UI properties
+            // Create a clean copy for API submission
             const cleanEntry = {};
+            
+            // Properties to exclude from JSON output
+            const excludeProps = [
+                "saveButtonText", "saveButtonIcon", "saveButtonType", 
+                "saveButtonState", "saveButtonEnabled",
+                "expanded", "icon", "technicianDisplay"
+            ];
             
             // Copy all properties except UI-specific ones
             Object.keys(oEntry).forEach(key => {
-                if (!key.startsWith("saveButton") && 
-                    key !== "expanded" && 
-                    key !== "icon") {
-                    cleanEntry[key] = oEntry[key];
+                if (!excludeProps.includes(key)) {
+                    // Rename technicianId to technician for API
+                    if (key === "technicianId") {
+                        cleanEntry["technician"] = oEntry[key];
+                    } else {
+                        cleanEntry[key] = oEntry[key];
+                    }
                 }
             });
 

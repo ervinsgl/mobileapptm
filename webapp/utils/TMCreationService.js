@@ -5,10 +5,40 @@ sap.ui.define([
 
     return {
         /**
+         * Default technician data (set from activity responsible)
+         */
+        _defaultTechnician: null,
+
+        /**
+         * Set default technician from activity responsible
+         * @param {object} technician - Technician object {id, externalId, displayText}
+         */
+        setDefaultTechnician(technician) {
+            this._defaultTechnician = technician;
+            console.log('TMCreationService: Default technician set:', technician);
+        },
+
+        /**
+         * Get default technician
+         * @returns {object|null}
+         */
+        getDefaultTechnician() {
+            return this._defaultTechnician;
+        },
+
+        /**
+         * Clear default technician
+         */
+        clearDefaultTechnician() {
+            this._defaultTechnician = null;
+        },
+
+        /**
          * Create Time Effort entry template
          * @returns {object} Empty Time Effort entry
          */
         createTimeEffortEntry() {
+            const defaultTech = this._defaultTechnician;
             return {
                 type: "Time Effort",
                 icon: "sap-icon://time-entry-request",
@@ -18,9 +48,11 @@ sap.ui.define([
                 saveButtonIcon: "sap-icon://save",
                 saveButtonType: "Emphasized",
                 saveButtonState: "unsaved",
-                // Empty fields - to be filled by user
+                // Technician fields
+                technicianId: defaultTech ? defaultTech.id : "",
+                technicianDisplay: defaultTech ? defaultTech.displayText : "",
+                // Other fields
                 task: "",
-                technician: "",
                 duration: "",
                 start: "",
                 end: "",
@@ -34,6 +66,7 @@ sap.ui.define([
          * @returns {object} Empty Material entry
          */
         createMaterialEntry() {
+            const defaultTech = this._defaultTechnician;
             return {
                 type: "Material",
                 icon: "sap-icon://product",
@@ -43,9 +76,11 @@ sap.ui.define([
                 saveButtonIcon: "sap-icon://save",
                 saveButtonType: "Emphasized",
                 saveButtonState: "unsaved",
-                // Empty fields - to be filled by user
+                // Technician fields
+                technicianId: defaultTech ? defaultTech.id : "",
+                technicianDisplay: defaultTech ? defaultTech.displayText : "",
+                // Other fields
                 item: "",
-                technician: "",
                 date: "",
                 quantity: "",
                 chargeOption: "",
@@ -58,6 +93,7 @@ sap.ui.define([
          * @returns {object} Empty Expense entry
          */
         createExpenseEntry() {
+            const defaultTech = this._defaultTechnician;
             return {
                 type: "Expense",
                 icon: "sap-icon://money-bills",
@@ -67,9 +103,11 @@ sap.ui.define([
                 saveButtonIcon: "sap-icon://save",
                 saveButtonType: "Emphasized",
                 saveButtonState: "unsaved",
-                // Empty fields - to be filled by user
+                // Technician fields
+                technicianId: defaultTech ? defaultTech.id : "",
+                technicianDisplay: defaultTech ? defaultTech.displayText : "",
+                // Other fields
                 expenseType: "",
-                technician: "",
                 date: "",
                 externalAmount: "",
                 internalAmount: "",
@@ -83,6 +121,7 @@ sap.ui.define([
          * @returns {object} Empty Mileage entry
          */
         createMileageEntry() {
+            const defaultTech = this._defaultTechnician;
             return {
                 type: "Mileage",
                 icon: "sap-icon://car-rental",
@@ -92,9 +131,11 @@ sap.ui.define([
                 saveButtonIcon: "sap-icon://save",
                 saveButtonType: "Emphasized",
                 saveButtonState: "unsaved",
-                // Empty fields - to be filled by user
+                // Technician fields
+                technicianId: defaultTech ? defaultTech.id : "",
+                technicianDisplay: defaultTech ? defaultTech.displayText : "",
+                // Other fields
                 route: "",
-                technician: "",
                 distance: "",
                 date: "",
                 travelStart: "",
@@ -103,6 +144,50 @@ sap.ui.define([
                 privateCar: "",
                 chargeOption: "",
                 remarks: ""
+            };
+        },
+
+        /**
+         * Create Time & Material entry template (combined entry)
+         * @returns {object} Empty Time & Material entry
+         */
+        createTimeAndMaterialEntry() {
+            const defaultTech = this._defaultTechnician;
+            return {
+                type: "Time & Material",
+                icon: "sap-icon://checklist-item-2",
+                expanded: true,
+                // Button state properties
+                saveButtonText: "Save",
+                saveButtonIcon: "sap-icon://save",
+                saveButtonType: "Emphasized",
+                saveButtonState: "unsaved",
+                // Technician fields
+                technicianId: defaultTech ? defaultTech.id : "",
+                technicianDisplay: defaultTech ? defaultTech.displayText : "",
+                // Material fields (Column 1)
+                date: "",
+                item: "",
+                quantity: "",
+                // Time Effort 1 fields (Column 2)
+                task1: "",
+                duration1: "",
+                start1: "",
+                end1: "",
+                // Time Effort 2 fields (Column 3)
+                task2: "",
+                duration2: "",
+                start2: "",
+                end2: "",
+                // Time Effort 3 fields (Column 4)
+                task3: "",
+                duration3: "",
+                start3: "",
+                end3: "",
+                // Shared fields (Column 5)
+                chargeOption: "",
+                remarksTime: "",
+                remarksMaterial: ""
             };
         },
 
@@ -147,6 +232,15 @@ sap.ui.define([
                         break;
                     case "Mileage":
                         if (!entry.distance) errors.push(`Entry ${index + 1}: Distance is required`);
+                        break;
+                    case "Time & Material":
+                        // Material validation
+                        if (!entry.item) errors.push(`Entry ${index + 1}: Item is required`);
+                        if (!entry.quantity) errors.push(`Entry ${index + 1}: Quantity is required`);
+                        // At least one time entry required
+                        if (!entry.task1 && !entry.task2 && !entry.task3) {
+                            errors.push(`Entry ${index + 1}: At least one Time Task is required`);
+                        }
                         break;
                 }
             });
