@@ -10,6 +10,23 @@ sap.ui.define([
         _defaultTechnician: null,
 
         /**
+         * Default item data (set from activity service product)
+         */
+        _defaultItem: null,
+
+        /**
+         * Get today's date in yyyy-MM-dd format for API
+         * @returns {string} Date string like "2025-10-29"
+         */
+        getTodayDateString() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        },
+
+        /**
          * Set default technician from activity responsible
          * @param {object} technician - Technician object {id, externalId, displayText}
          */
@@ -31,6 +48,59 @@ sap.ui.define([
          */
         clearDefaultTechnician() {
             this._defaultTechnician = null;
+        },
+
+        /**
+         * Set default item from activity service product
+         * @param {object} item - Item object {id, displayText}
+         */
+        setDefaultItem(item) {
+            this._defaultItem = item;
+            console.log('TMCreationService: Default item set:', item);
+        },
+
+        /**
+         * Get default item
+         * @returns {object|null}
+         */
+        getDefaultItem() {
+            return this._defaultItem;
+        },
+
+        /**
+         * Clear default item
+         */
+        clearDefaultItem() {
+            this._defaultItem = null;
+        },
+
+        /**
+         * Default expense type data
+         */
+        _defaultExpenseType: null,
+
+        /**
+         * Set default expense type
+         * @param {object} expenseType - Expense type object {id, code, displayText}
+         */
+        setDefaultExpenseType(expenseType) {
+            this._defaultExpenseType = expenseType;
+            console.log('TMCreationService: Default expense type set:', expenseType);
+        },
+
+        /**
+         * Get default expense type
+         * @returns {object|null}
+         */
+        getDefaultExpenseType() {
+            return this._defaultExpenseType;
+        },
+
+        /**
+         * Clear default expense type
+         */
+        clearDefaultExpenseType() {
+            this._defaultExpenseType = null;
         },
 
         /**
@@ -69,6 +139,7 @@ sap.ui.define([
          */
         createMaterialEntry() {
             const defaultTech = this._defaultTechnician;
+            const defaultItem = this._defaultItem;
             return {
                 type: "Material",
                 icon: "sap-icon://product",
@@ -81,9 +152,12 @@ sap.ui.define([
                 // Technician fields
                 technicianId: defaultTech ? defaultTech.id : "",
                 technicianDisplay: defaultTech ? defaultTech.displayText : "",
+                // Item fields (stores id for API, display shows externalId - name)
+                itemId: defaultItem ? defaultItem.id : "",
+                itemDisplay: defaultItem ? defaultItem.displayText : "",
+                // Date field - defaults to today
+                date: this.getTodayDateString(),
                 // Other fields
-                item: "",
-                date: "",
                 quantity: "",
                 chargeOption: "",
                 remarks: ""
@@ -96,6 +170,7 @@ sap.ui.define([
          */
         createExpenseEntry() {
             const defaultTech = this._defaultTechnician;
+            const defaultExpType = this._defaultExpenseType;
             return {
                 type: "Expense",
                 icon: "sap-icon://money-bills",
@@ -108,9 +183,12 @@ sap.ui.define([
                 // Technician fields
                 technicianId: defaultTech ? defaultTech.id : "",
                 technicianDisplay: defaultTech ? defaultTech.displayText : "",
+                // Expense Type fields
+                expenseTypeId: defaultExpType ? defaultExpType.id : "",
+                expenseTypeDisplay: defaultExpType ? defaultExpType.displayText : "",
+                // Date field - defaults to today
+                date: this.getTodayDateString(),
                 // Other fields
-                expenseType: "",
-                date: "",
                 externalAmount: "",
                 internalAmount: "",
                 chargeOption: "",
@@ -139,7 +217,8 @@ sap.ui.define([
                 // Other fields
                 route: "",
                 distance: "",
-                date: "",
+                // Date field - defaults to today
+                date: this.getTodayDateString(),
                 travelStart: "",
                 travelEnd: "",
                 driver: "",
@@ -155,6 +234,7 @@ sap.ui.define([
          */
         createTimeAndMaterialEntry() {
             const defaultTech = this._defaultTechnician;
+            const defaultItem = this._defaultItem;
             return {
                 type: "Time & Material",
                 icon: "sap-icon://checklist-item-2",
@@ -168,8 +248,9 @@ sap.ui.define([
                 technicianId: defaultTech ? defaultTech.id : "",
                 technicianDisplay: defaultTech ? defaultTech.displayText : "",
                 // Material fields (Column 1)
-                date: "",
-                item: "",
+                date: this.getTodayDateString(),
+                itemId: defaultItem ? defaultItem.id : "",
+                itemDisplay: defaultItem ? defaultItem.displayText : "",
                 quantity: "",
                 // Time Effort 1 fields (Column 2)
                 task1Code: "",

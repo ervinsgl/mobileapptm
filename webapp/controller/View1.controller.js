@@ -403,7 +403,7 @@ sap.ui.define([
             const isClosed = activity.executionStage === 'CLOSED';
             const fullActivity = activity.fullActivity || {};
 
-            // Extract UDF values for Quantity and UoM
+            // Ã¢Å“â€¦ Extract UDF values for Quantity and UoM
             const quantity = this._getUdfValue(fullActivity, 'Z_Quantity') || 'N/A';
             const quantityUoM = this._getUdfValue(fullActivity, 'Z_QuantityUoM') || 'N/A';
             const formattedQuantity = quantity !== 'N/A' && quantityUoM !== 'N/A'
@@ -634,6 +634,28 @@ sap.ui.define([
             this._loadOrganizationLevels();
 
             MessageToast.show("View refreshed");
+        },
+
+        /**
+         * Test T&M Dialog - Opens dialog with mock data for UI testing
+         * Remove this button in production
+         */
+        async onTestTMDialog() {
+            const mockActivityData = {
+                activityCode: "TEST-19608",
+                activitySubject: "Test Activity - UI Development",
+                serviceProduct: "Z12000005 - Vorbereitung",
+                serviceProductExternalId: "Z12000005",
+                formattedStartDate: "11/26/2025, 9:00:00 AM",
+                formattedEndDate: "11/26/2025, 5:00:00 PM",
+                formattedDuration: "480 min",
+                quantity: "1.0",
+                quantityUoM: "EA",
+                responsibleExternalId: "TEST001"
+            };
+
+            await TMDialogService.openTMCreationDialog(mockActivityData);
+            MessageToast.show("Test dialog opened");
         },
 
         onProductPanelExpand(oEvent) {
@@ -1055,6 +1077,85 @@ sap.ui.define([
         },
 
         /**
+         * Handle item live change for filtering suggestions
+         * Similar to technician search - filters as user types
+         */
+        onItemLiveChange(oEvent) {
+            const sValue = oEvent.getParameter("value");
+            const oInput = oEvent.getSource();
+            
+            // Filter items based on search term
+            const aFilteredItems = ItemService.filterBySearch(sValue);
+            
+            // Update suggestions in the model
+            const oModel = this._tmCreateDialog.getModel("createTM");
+            oModel.setProperty("/itemSuggestions", aFilteredItems);
+            
+            console.log('ItemLiveChange: Found', aFilteredItems.length, 'items for:', sValue);
+        },
+
+        /**
+         * Handle item suggestion selection
+         * Updates both itemId and itemDisplay in the entry
+         */
+        onItemSuggestionSelect(oEvent) {
+            const oSelectedItem = oEvent.getParameter("selectedItem");
+            const oInput = oEvent.getSource();
+            const oContext = oInput.getBindingContext("createTM");
+            
+            if (!oContext) {
+                console.warn('ItemSuggestionSelect: No binding context found');
+                return;
+            }
+            
+            const sPath = oContext.getPath();
+            const oModel = this._tmCreateDialog.getModel("createTM");
+            
+            if (oSelectedItem) {
+                // Get the selected item data from the item's binding context
+                const oItemContext = oSelectedItem.getBindingContext("createTM");
+                if (oItemContext) {
+                    const oItem = oItemContext.getObject();
+                    
+                    // Update the entry with item ID and display text
+                    oModel.setProperty(sPath + "/itemId", oItem.id);
+                    oModel.setProperty(sPath + "/itemDisplay", oItem.displayText);
+                    
+                    console.log('ItemSuggestionSelect: Selected', oItem.displayText, 'ID:', oItem.id);
+                }
+            }
+        },
+
+        /**
+         * Handle expense type selection from Select dropdown
+         * Updates both expenseTypeId and expenseTypeDisplay in the entry
+         */
+        onExpenseTypeChange(oEvent) {
+            const oSelect = oEvent.getSource();
+            const oSelectedItem = oSelect.getSelectedItem();
+            const oContext = oSelect.getBindingContext("createTM");
+            
+            if (!oContext) {
+                console.warn('ExpenseTypeChange: No binding context found');
+                return;
+            }
+            
+            const sPath = oContext.getPath();
+            const oModel = this._tmCreateDialog.getModel("createTM");
+            
+            if (oSelectedItem) {
+                const sKey = oSelectedItem.getKey();
+                const sText = oSelectedItem.getText();
+                
+                // Update the entry with expense type ID and display text
+                oModel.setProperty(sPath + "/expenseTypeId", sKey);
+                oModel.setProperty(sPath + "/expenseTypeDisplay", sText);
+                
+                console.log('ExpenseTypeChange: Selected', sText, 'ID:', sKey);
+            }
+        },
+
+        /**
          * Handle technician selection from ComboBox (legacy - keep for compatibility)
          * Updates both display text and ID in the entry
          */
@@ -1169,7 +1270,7 @@ sap.ui.define([
         },
 
         /**
-         * Save individual T&M entry
+         * Save individual T&M entry (Simplified: Save â†’ Show JSON â†’ Done!)
          */
         onSaveEntry(oEvent) {
             const oButton = oEvent.getSource();
@@ -1227,9 +1328,10 @@ sap.ui.define([
             const excludeProps = [
                 "saveButtonText", "saveButtonIcon", "saveButtonType", 
                 "saveButtonState", "saveButtonEnabled",
-                "expanded", "icon", 
-                "technicianDisplay", "taskDisplay",
-                "task1Display", "task2Display", "task3Display"
+                "expanded", "icon", "type",
+                "technicianDisplay", "taskDisplay", "itemDisplay", "itemId",
+                "task1Display", "task2Display", "task3Display",
+                "expenseTypeDisplay", "expenseTypeId"
             ];
             
             // Copy all properties except UI-specific ones
@@ -1262,6 +1364,24 @@ sap.ui.define([
                     }
                 }
             });
+
+            // Format item as nested object with externalId
+            // Extract externalId from itemDisplay (format: "externalId - name")
+            if (oEntry.itemDisplay) {
+                const externalId = oEntry.itemDisplay.split(' - ')[0];
+                if (externalId) {
+                    cleanEntry["item"] = { externalId: externalId };
+                }
+            }
+
+            // Format expenseType as nested object with code (API field name is "type")
+            // Extract code from expenseTypeDisplay (format: "code - name")
+            if (oEntry.expenseTypeDisplay) {
+                const code = oEntry.expenseTypeDisplay.split(' - ')[0];
+                if (code) {
+                    cleanEntry["type"] = { code: code };
+                }
+            }
 
             // Format JSON with indentation
             const jsonString = JSON.stringify(cleanEntry, null, 2);

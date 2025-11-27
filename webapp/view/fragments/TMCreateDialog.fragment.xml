@@ -148,11 +148,11 @@
                             </headerToolbar>
                             
                             <content>
-                                <!-- TIME EFFORT LAYOUT -->
-                                <HBox class="tmEntryContent" visible="{= ${createTM>type} === 'Time Effort'}">
-                                    <!-- Column 1 -->
-                                    <VBox class="tmColumn">
-                                        <HBox class="tmFieldRow">
+                                <!-- TIME EFFORT LAYOUT (3-Column, 3 rows each) -->
+                                <HBox class="tmEntryContent tmEntryContent3Col" visible="{= ${createTM>type} === 'Time Effort'}" width="100%">
+                                    <!-- Column 1: Task, Technician -->
+                                    <VBox class="tmColumn tmColumnNarrow">
+                                        <HBox class="tmFieldRow" width="100%">
                                             <Label text="Task:" design="Bold" class="tmFieldLabel tmFieldLabelRequired"/>
                                             <Select
                                                 selectedKey="{createTM>taskCode}"
@@ -162,249 +162,12 @@
                                                 }"
                                                 change=".onTaskSelect"
                                                 forceSelection="false"
-                                                class="tmFieldInput"
+                                                class="tmFieldSelectNarrow"
                                             >
                                                 <core:Item key="{createTM>code}" text="{createTM>name}"/>
                                             </Select>
                                         </HBox>
-                                        <HBox class="tmFieldRow">
-                                            <Label text="Technician:" design="Bold" class="tmFieldLabel"/>
-                                            <Input
-                                                value="{createTM>technicianDisplay}"
-                                                showSuggestion="true"
-                                                suggestionItems="{
-                                                    path: 'createTM>/technicianSuggestions',
-                                                    templateShareable: false
-                                                }"
-                                                liveChange=".onTechnicianLiveChange"
-                                                suggestionItemSelected=".onTechnicianSuggestionSelect"
-                                                placeholder="Search technician..."
-                                                class="tmFieldInput"
-                                            >
-                                                <suggestionItems>
-                                                    <core:ListItem key="{createTM>id}" text="{createTM>displayText}" additionalText="{createTM>externalId}"/>
-                                                </suggestionItems>
-                                            </Input>
-                                        </HBox>
-                                    </VBox>
-                                    
-                                    <!-- Column 2 -->
-                                    <VBox class="tmColumn">
-                                        <HBox class="tmFieldRow">
-                                            <Label text="Duration:" design="Bold" class="tmFieldLabel tmFieldLabelRequired"/>
-                                            <Input value="{createTM>duration}" placeholder="e.g. 30 min" class="tmFieldInput"/>
-                                        </HBox>
-                                        <HBox class="tmFieldRow">
-                                            <Label text="Start:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>start}" placeholder="Start time..." class="tmFieldInput"/>
-                                        </HBox>
-                                        <HBox class="tmFieldRow">
-                                            <Label text="End:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>end}" placeholder="End time..." class="tmFieldInput"/>
-                                        </HBox>
-                                    </VBox>
-                                    
-                                    <!-- Column 3 -->
-                                    <VBox class="tmColumn">
-                                        <HBox class="tmFieldRow">
-                                            <Label text="Charge Option:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>chargeOption}" placeholder="Charge option..." class="tmFieldInput"/>
-                                        </HBox>
-                                        <HBox class="tmFieldRow">
-                                            <Label text="Remarks:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>remarks}" placeholder="Remarks..." class="tmFieldInput"/>
-                                        </HBox>
-                                    </VBox>
-                                </HBox>
-                                
-                                <!-- MATERIAL LAYOUT -->
-                                <HBox class="tmEntryContent" visible="{= ${createTM>type} === 'Material'}">
-                                    <!-- Column 1 -->
-                                    <VBox class="tmColumn">
-                                        <HBox class="tmFieldRow">
-                                            <Label text="Item:" design="Bold" class="tmFieldLabel tmFieldLabelRequired"/>
-                                            <Input value="{createTM>item}" placeholder="Enter item..." class="tmFieldInput"/>
-                                        </HBox>
-                                        <HBox class="tmFieldRow">
-                                            <Label text="Technician:" design="Bold" class="tmFieldLabel"/>
-                                            <Input
-                                                value="{createTM>technicianDisplay}"
-                                                showSuggestion="true"
-                                                suggestionItems="{
-                                                    path: 'createTM>/technicianSuggestions',
-                                                    templateShareable: false
-                                                }"
-                                                liveChange=".onTechnicianLiveChange"
-                                                suggestionItemSelected=".onTechnicianSuggestionSelect"
-                                                placeholder="Search technician..."
-                                                class="tmFieldInput"
-                                            >
-                                                <suggestionItems>
-                                                    <core:ListItem key="{createTM>id}" text="{createTM>displayText}" additionalText="{createTM>externalId}"/>
-                                                </suggestionItems>
-                                            </Input>
-                                        </HBox>
-                                    </VBox>
-                                    
-                                    <!-- Column 2 -->
-                                    <VBox class="tmColumn">
-                                        <HBox class="tmFieldRow">
-                                            <Label text="Date:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>date}" placeholder="Enter date..." class="tmFieldInput"/>
-                                        </HBox>
-                                        <HBox class="tmFieldRow">
-                                            <Label text="Quantity:" design="Bold" class="tmFieldLabel tmFieldLabelRequired"/>
-                                            <Input value="{createTM>quantity}" placeholder="Enter quantity..." class="tmFieldInput"/>
-                                        </HBox>
-                                    </VBox>
-                                    
-                                    <!-- Column 3 -->
-                                    <VBox class="tmColumn">
-                                        <HBox class="tmFieldRow">
-                                            <Label text="Charge Option:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>chargeOption}" placeholder="Charge option..." class="tmFieldInput"/>
-                                        </HBox>
-                                        <HBox class="tmFieldRow">
-                                            <Label text="Remarks:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>remarks}" placeholder="Remarks..." class="tmFieldInput"/>
-                                        </HBox>
-                                    </VBox>
-                                </HBox>
-                                
-                                <!-- EXPENSE LAYOUT -->
-                                <HBox class="tmEntryContent" visible="{= ${createTM>type} === 'Expense'}">
-                                    <!-- Column 1 -->
-                                    <VBox class="tmColumn">
-                                        <HBox class="tmFieldRow">
-                                            <Label text="Expense Type:" design="Bold" class="tmFieldLabel tmFieldLabelRequired"/>
-                                            <Input value="{createTM>expenseType}" placeholder="Enter expense type..." class="tmFieldInput"/>
-                                        </HBox>
-                                        <HBox class="tmFieldRow">
-                                            <Label text="Technician:" design="Bold" class="tmFieldLabel"/>
-                                            <Input
-                                                value="{createTM>technicianDisplay}"
-                                                showSuggestion="true"
-                                                suggestionItems="{
-                                                    path: 'createTM>/technicianSuggestions',
-                                                    templateShareable: false
-                                                }"
-                                                liveChange=".onTechnicianLiveChange"
-                                                suggestionItemSelected=".onTechnicianSuggestionSelect"
-                                                placeholder="Search technician..."
-                                                class="tmFieldInput"
-                                            >
-                                                <suggestionItems>
-                                                    <core:ListItem key="{createTM>id}" text="{createTM>displayText}" additionalText="{createTM>externalId}"/>
-                                                </suggestionItems>
-                                            </Input>
-                                        </HBox>
-                                    </VBox>
-                                    
-                                    <!-- Column 2 -->
-                                    <VBox class="tmColumn">
-                                        <HBox class="tmFieldRow">
-                                            <Label text="Date:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>date}" placeholder="Enter date..." class="tmFieldInput"/>
-                                        </HBox>
-                                        <HBox class="tmFieldRow">
-                                            <Label text="External Amount:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>externalAmount}" placeholder="External amount..." class="tmFieldInput"/>
-                                        </HBox>
-                                        <HBox class="tmFieldRow">
-                                            <Label text="Internal Amount:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>internalAmount}" placeholder="Internal amount..." class="tmFieldInput"/>
-                                        </HBox>
-                                    </VBox>
-                                    
-                                    <!-- Column 3 -->
-                                    <VBox class="tmColumn">
-                                        <HBox class="tmFieldRow">
-                                            <Label text="Charge Option:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>chargeOption}" placeholder="Charge option..." class="tmFieldInput"/>
-                                        </HBox>
-                                        <HBox class="tmFieldRow">
-                                            <Label text="Remarks:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>remarks}" placeholder="Remarks..." class="tmFieldInput"/>
-                                        </HBox>
-                                    </VBox>
-                                </HBox>
-                                
-                                <!-- MILEAGE LAYOUT -->
-                                <HBox class="tmEntryContent" visible="{= ${createTM>type} === 'Mileage'}">
-                                    <!-- Column 1 -->
-                                    <VBox class="tmColumn">
-                                        <HBox class="tmFieldRow">
-                                            <Label text="Route:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>route}" placeholder="Enter route..." class="tmFieldInput"/>
-                                        </HBox>
-                                        <HBox class="tmFieldRow">
-                                            <Label text="Technician:" design="Bold" class="tmFieldLabel"/>
-                                            <Input
-                                                value="{createTM>technicianDisplay}"
-                                                showSuggestion="true"
-                                                suggestionItems="{
-                                                    path: 'createTM>/technicianSuggestions',
-                                                    templateShareable: false
-                                                }"
-                                                liveChange=".onTechnicianLiveChange"
-                                                suggestionItemSelected=".onTechnicianSuggestionSelect"
-                                                placeholder="Search technician..."
-                                                class="tmFieldInput"
-                                            >
-                                                <suggestionItems>
-                                                    <core:ListItem key="{createTM>id}" text="{createTM>displayText}" additionalText="{createTM>externalId}"/>
-                                                </suggestionItems>
-                                            </Input>
-                                        </HBox>
-                                        <HBox class="tmFieldRow">
-                                            <Label text="Distance:" design="Bold" class="tmFieldLabel tmFieldLabelRequired"/>
-                                            <Input value="{createTM>distance}" placeholder="e.g. 50 km" class="tmFieldInput"/>
-                                        </HBox>
-                                    </VBox>
-                                    
-                                    <!-- Column 2 -->
-                                    <VBox class="tmColumn">
-                                        <HBox class="tmFieldRow">
-                                            <Label text="Date:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>date}" placeholder="Enter date..." class="tmFieldInput"/>
-                                        </HBox>
-                                        <HBox class="tmFieldRow">
-                                            <Label text="Travel Start:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>travelStart}" placeholder="Travel start time..." class="tmFieldInput"/>
-                                        </HBox>
-                                        <HBox class="tmFieldRow">
-                                            <Label text="Travel End:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>travelEnd}" placeholder="Travel end time..." class="tmFieldInput"/>
-                                        </HBox>
-                                    </VBox>
-                                    
-                                    <!-- Column 3 -->
-                                    <VBox class="tmColumn">
-                                        <HBox class="tmFieldRow">
-                                            <Label text="Driver:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>driver}" placeholder="Driver..." class="tmFieldInput"/>
-                                        </HBox>
-                                        <HBox class="tmFieldRow">
-                                            <Label text="Private Car:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>privateCar}" placeholder="Yes/No..." class="tmFieldInput"/>
-                                        </HBox>
-                                        <HBox class="tmFieldRow">
-                                            <Label text="Charge Option:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>chargeOption}" placeholder="Charge option..." class="tmFieldInput"/>
-                                        </HBox>
-                                        <HBox class="tmFieldRow">
-                                            <Label text="Remarks:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>remarks}" placeholder="Remarks..." class="tmFieldInput"/>
-                                        </HBox>
-                                    </VBox>
-                                </HBox>
-                                
-                                <!-- TIME & MATERIAL LAYOUT (5-Column) -->
-                                <HBox class="tmEntryContent tmEntryContent5Col" visible="{= ${createTM>type} === 'Time &amp; Material'}" width="100%">
-                                    <!-- Column 1: Material Info -->
-                                    <VBox class="tmColumn tmColumnNarrow">
-                                        <Title text="Material" level="H6" class="tmColumnHeader sapUiTinyMarginBottom"/>
-                                        <HBox class="tmFieldRow">
+                                        <HBox class="tmFieldRow" width="100%">
                                             <Label text="Technician:" design="Bold" class="tmFieldLabel"/>
                                             <Input
                                                 value="{createTM>technicianDisplay}"
@@ -423,15 +186,321 @@
                                                 </suggestionItems>
                                             </Input>
                                         </HBox>
-                                        <HBox class="tmFieldRow">
-                                            <Label text="Date:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>date}" placeholder="Date..." class="tmFieldInput tmFieldInputNarrow"/>
+                                        <HBox class="tmFieldRow tmFieldRowSpacer" width="100%" height="2rem"/>
+                                    </VBox>
+                                    
+                                    <!-- Column 2: Duration, Start, End -->
+                                    <VBox class="tmColumn tmColumnNarrow">
+                                        <HBox class="tmFieldRow" width="100%">
+                                            <Label text="Duration:" design="Bold" class="tmFieldLabel tmFieldLabelRequired"/>
+                                            <Input value="{createTM>duration}" placeholder="e.g. 30 min" class="tmFieldInput tmFieldInputNarrow"/>
                                         </HBox>
-                                        <HBox class="tmFieldRow">
+                                        <HBox class="tmFieldRow" width="100%">
+                                            <Label text="Start:" design="Bold" class="tmFieldLabel"/>
+                                            <Input value="{createTM>start}" placeholder="Start time..." class="tmFieldInput tmFieldInputNarrow"/>
+                                        </HBox>
+                                        <HBox class="tmFieldRow" width="100%">
+                                            <Label text="End:" design="Bold" class="tmFieldLabel"/>
+                                            <Input value="{createTM>end}" placeholder="End time..." class="tmFieldInput tmFieldInputNarrow"/>
+                                        </HBox>
+                                    </VBox>
+                                    
+                                    <!-- Column 3: Charge Option, Remarks -->
+                                    <VBox class="tmColumn tmColumnNarrow">
+                                        <HBox class="tmFieldRow" width="100%">
+                                            <Label text="Charge:" design="Bold" class="tmFieldLabel"/>
+                                            <Input value="{createTM>chargeOption}" placeholder="Charge..." class="tmFieldInput tmFieldInputNarrow"/>
+                                        </HBox>
+                                        <HBox class="tmFieldRow" width="100%">
+                                            <Label text="Remarks:" design="Bold" class="tmFieldLabel"/>
+                                            <Input value="{createTM>remarks}" placeholder="Remarks..." class="tmFieldInput tmFieldInputNarrow"/>
+                                        </HBox>
+                                        <HBox class="tmFieldRow tmFieldRowSpacer" width="100%" height="2rem"/>
+                                    </VBox>
+                                </HBox>
+                                
+                                <!-- MATERIAL LAYOUT (3-Column Narrow) -->
+                                <HBox class="tmEntryContent tmEntryContent3Col" visible="{= ${createTM>type} === 'Material'}" width="100%">
+                                    <!-- Column 1: Item & Technician -->
+                                    <VBox class="tmColumn tmColumnNarrow">
+                                        <HBox class="tmFieldRow" width="100%">
                                             <Label text="Item:" design="Bold" class="tmFieldLabel tmFieldLabelRequired"/>
-                                            <Input value="{createTM>item}" placeholder="Item..." class="tmFieldInput tmFieldInputNarrow"/>
+                                            <Input
+                                                value="{createTM>itemDisplay}"
+                                                showSuggestion="true"
+                                                suggestionItems="{
+                                                    path: 'createTM>/itemSuggestions',
+                                                    templateShareable: false
+                                                }"
+                                                liveChange=".onItemLiveChange"
+                                                suggestionItemSelected=".onItemSuggestionSelect"
+                                                placeholder="Search item..."
+                                                class="tmFieldInput tmFieldInputNarrow"
+                                            >
+                                                <suggestionItems>
+                                                    <core:ListItem key="{createTM>id}" text="{createTM>displayText}" additionalText="{createTM>externalId}"/>
+                                                </suggestionItems>
+                                            </Input>
                                         </HBox>
-                                        <HBox class="tmFieldRow">
+                                        <HBox class="tmFieldRow" width="100%">
+                                            <Label text="Technician:" design="Bold" class="tmFieldLabel"/>
+                                            <Input
+                                                value="{createTM>technicianDisplay}"
+                                                showSuggestion="true"
+                                                suggestionItems="{
+                                                    path: 'createTM>/technicianSuggestions',
+                                                    templateShareable: false
+                                                }"
+                                                liveChange=".onTechnicianLiveChange"
+                                                suggestionItemSelected=".onTechnicianSuggestionSelect"
+                                                placeholder="Search..."
+                                                class="tmFieldInput tmFieldInputNarrow"
+                                            >
+                                                <suggestionItems>
+                                                    <core:ListItem key="{createTM>id}" text="{createTM>displayText}" additionalText="{createTM>externalId}"/>
+                                                </suggestionItems>
+                                            </Input>
+                                        </HBox>
+                                        <HBox class="tmFieldRow tmFieldRowSpacer" width="100%" height="2rem"/>
+                                    </VBox>
+                                    
+                                    <!-- Column 2: Date, Quantity -->
+                                    <VBox class="tmColumn tmColumnNarrow">
+                                        <HBox class="tmFieldRow" width="100%">
+                                            <Label text="Date:" design="Bold" class="tmFieldLabel"/>
+                                            <DatePicker
+                                                value="{createTM>date}"
+                                                valueFormat="yyyy-MM-dd"
+                                                displayFormat="dd.MM.yyyy"
+                                                class="tmFieldInputNarrow"
+                                            />
+                                        </HBox>
+                                        <HBox class="tmFieldRow" width="100%">
+                                            <Label text="Quantity:" design="Bold" class="tmFieldLabel tmFieldLabelRequired"/>
+                                            <Input value="{createTM>quantity}" placeholder="Qty..." class="tmFieldInput tmFieldInputNarrow"/>
+                                        </HBox>
+                                        <HBox class="tmFieldRow tmFieldRowSpacer" width="100%" height="2rem"/>
+                                    </VBox>
+                                    
+                                    <!-- Column 3: Charge Option, Remarks -->
+                                    <VBox class="tmColumn tmColumnNarrow">
+                                        <HBox class="tmFieldRow" width="100%">
+                                            <Label text="Charge:" design="Bold" class="tmFieldLabel"/>
+                                            <Input value="{createTM>chargeOption}" placeholder="Charge..." class="tmFieldInput tmFieldInputNarrow"/>
+                                        </HBox>
+                                        <HBox class="tmFieldRow" width="100%">
+                                            <Label text="Remarks:" design="Bold" class="tmFieldLabel"/>
+                                            <Input value="{createTM>remarks}" placeholder="Remarks..." class="tmFieldInput tmFieldInputNarrow"/>
+                                        </HBox>
+                                        <HBox class="tmFieldRow tmFieldRowSpacer" width="100%" height="2rem"/>
+                                    </VBox>
+                                </HBox>
+                                
+                                <!-- EXPENSE LAYOUT (3-Column Narrow) -->
+                                <HBox class="tmEntryContent tmEntryContent3Col" visible="{= ${createTM>type} === 'Expense'}" width="100%">
+                                    <!-- Column 1: Expense Type, Technician, Date -->
+                                    <VBox class="tmColumn tmColumnNarrow">
+                                        <HBox class="tmFieldRow" width="100%">
+                                            <Label text="Type:" design="Bold" class="tmFieldLabel tmFieldLabelRequired"/>
+                                            <Select
+                                                selectedKey="{createTM>expenseTypeId}"
+                                                items="{
+                                                    path: 'createTM>/expenseTypeSuggestions',
+                                                    templateShareable: false
+                                                }"
+                                                change=".onExpenseTypeChange"
+                                                class="tmFieldSelectNarrow"
+                                            >
+                                                <core:Item key="{createTM>key}" text="{createTM>text}"/>
+                                            </Select>
+                                        </HBox>
+                                        <HBox class="tmFieldRow" width="100%">
+                                            <Label text="Technician:" design="Bold" class="tmFieldLabel"/>
+                                            <Input
+                                                value="{createTM>technicianDisplay}"
+                                                showSuggestion="true"
+                                                suggestionItems="{
+                                                    path: 'createTM>/technicianSuggestions',
+                                                    templateShareable: false
+                                                }"
+                                                liveChange=".onTechnicianLiveChange"
+                                                suggestionItemSelected=".onTechnicianSuggestionSelect"
+                                                placeholder="Search..."
+                                                class="tmFieldInput tmFieldInputNarrow"
+                                            >
+                                                <suggestionItems>
+                                                    <core:ListItem key="{createTM>id}" text="{createTM>displayText}" additionalText="{createTM>externalId}"/>
+                                                </suggestionItems>
+                                            </Input>
+                                        </HBox>
+                                        <HBox class="tmFieldRow" width="100%">
+                                            <Label text="Date:" design="Bold" class="tmFieldLabel"/>
+                                            <DatePicker
+                                                value="{createTM>date}"
+                                                valueFormat="yyyy-MM-dd"
+                                                displayFormat="dd.MM.yyyy"
+                                                class="tmFieldInputNarrow"
+                                            />
+                                        </HBox>
+                                    </VBox>
+                                    
+                                    <!-- Column 2: External Amount, Internal Amount -->
+                                    <VBox class="tmColumn tmColumnNarrow">
+                                        <HBox class="tmFieldRow" width="100%">
+                                            <Label text="External:" design="Bold" class="tmFieldLabel"/>
+                                            <Input value="{createTM>externalAmount}" placeholder="External..." class="tmFieldInput tmFieldInputNarrow"/>
+                                        </HBox>
+                                        <HBox class="tmFieldRow" width="100%">
+                                            <Label text="Internal:" design="Bold" class="tmFieldLabel"/>
+                                            <Input value="{createTM>internalAmount}" placeholder="Internal..." class="tmFieldInput tmFieldInputNarrow"/>
+                                        </HBox>
+                                        <HBox class="tmFieldRow tmFieldRowSpacer" width="100%" height="2rem"/>
+                                    </VBox>
+                                    
+                                    <!-- Column 3: Charge Option, Remarks -->
+                                    <VBox class="tmColumn tmColumnNarrow">
+                                        <HBox class="tmFieldRow" width="100%">
+                                            <Label text="Charge:" design="Bold" class="tmFieldLabel"/>
+                                            <Input value="{createTM>chargeOption}" placeholder="Charge..." class="tmFieldInput tmFieldInputNarrow"/>
+                                        </HBox>
+                                        <HBox class="tmFieldRow" width="100%">
+                                            <Label text="Remarks:" design="Bold" class="tmFieldLabel"/>
+                                            <Input value="{createTM>remarks}" placeholder="Remarks..." class="tmFieldInput tmFieldInputNarrow"/>
+                                        </HBox>
+                                        <HBox class="tmFieldRow tmFieldRowSpacer" width="100%" height="2rem"/>
+                                    </VBox>
+                                </HBox>
+                                
+                                <!-- MILEAGE LAYOUT (3-Column Narrow) -->
+                                <HBox class="tmEntryContent tmEntryContent3Col" visible="{= ${createTM>type} === 'Mileage'}" width="100%">
+                                    <!-- Column 1: Route, Technician, Distance -->
+                                    <VBox class="tmColumn tmColumnNarrow">
+                                        <HBox class="tmFieldRow" width="100%">
+                                            <Label text="Route:" design="Bold" class="tmFieldLabel"/>
+                                            <Input value="{createTM>route}" placeholder="Route..." class="tmFieldInput tmFieldInputNarrow"/>
+                                        </HBox>
+                                        <HBox class="tmFieldRow" width="100%">
+                                            <Label text="Technician:" design="Bold" class="tmFieldLabel"/>
+                                            <Input
+                                                value="{createTM>technicianDisplay}"
+                                                showSuggestion="true"
+                                                suggestionItems="{
+                                                    path: 'createTM>/technicianSuggestions',
+                                                    templateShareable: false
+                                                }"
+                                                liveChange=".onTechnicianLiveChange"
+                                                suggestionItemSelected=".onTechnicianSuggestionSelect"
+                                                placeholder="Search..."
+                                                class="tmFieldInput tmFieldInputNarrow"
+                                            >
+                                                <suggestionItems>
+                                                    <core:ListItem key="{createTM>id}" text="{createTM>displayText}" additionalText="{createTM>externalId}"/>
+                                                </suggestionItems>
+                                            </Input>
+                                        </HBox>
+                                        <HBox class="tmFieldRow" width="100%">
+                                            <Label text="Distance:" design="Bold" class="tmFieldLabel tmFieldLabelRequired"/>
+                                            <Input value="{createTM>distance}" placeholder="e.g. 50 km" class="tmFieldInput tmFieldInputNarrow"/>
+                                        </HBox>
+                                        <HBox class="tmFieldRow tmFieldRowSpacer" width="100%" height="2rem"/>
+                                    </VBox>
+                                    
+                                    <!-- Column 2: Date, Travel Start, Travel End -->
+                                    <VBox class="tmColumn tmColumnNarrow">
+                                        <HBox class="tmFieldRow" width="100%">
+                                            <Label text="Date:" design="Bold" class="tmFieldLabel"/>
+                                            <DatePicker
+                                                value="{createTM>date}"
+                                                valueFormat="yyyy-MM-dd"
+                                                displayFormat="dd.MM.yyyy"
+                                                class="tmFieldInputNarrow"
+                                            />
+                                        </HBox>
+                                        <HBox class="tmFieldRow" width="100%">
+                                            <Label text="Start:" design="Bold" class="tmFieldLabel"/>
+                                            <Input value="{createTM>travelStart}" placeholder="Start..." class="tmFieldInput tmFieldInputNarrow"/>
+                                        </HBox>
+                                        <HBox class="tmFieldRow" width="100%">
+                                            <Label text="End:" design="Bold" class="tmFieldLabel"/>
+                                            <Input value="{createTM>travelEnd}" placeholder="End..." class="tmFieldInput tmFieldInputNarrow"/>
+                                        </HBox>
+                                        <HBox class="tmFieldRow tmFieldRowSpacer" width="100%" height="2rem"/>
+                                    </VBox>
+                                    
+                                    <!-- Column 3: Driver, Private Car, Charge Option, Remarks -->
+                                    <VBox class="tmColumn tmColumnNarrow">
+                                        <HBox class="tmFieldRow" width="100%">
+                                            <Label text="Driver:" design="Bold" class="tmFieldLabel"/>
+                                            <Input value="{createTM>driver}" placeholder="Driver..." class="tmFieldInput tmFieldInputNarrow"/>
+                                        </HBox>
+                                        <HBox class="tmFieldRow" width="100%">
+                                            <Label text="Private:" design="Bold" class="tmFieldLabel"/>
+                                            <Input value="{createTM>privateCar}" placeholder="Yes/No..." class="tmFieldInput tmFieldInputNarrow"/>
+                                        </HBox>
+                                        <HBox class="tmFieldRow" width="100%">
+                                            <Label text="Charge:" design="Bold" class="tmFieldLabel"/>
+                                            <Input value="{createTM>chargeOption}" placeholder="Charge..." class="tmFieldInput tmFieldInputNarrow"/>
+                                        </HBox>
+                                        <HBox class="tmFieldRow" width="100%">
+                                            <Label text="Remarks:" design="Bold" class="tmFieldLabel"/>
+                                            <Input value="{createTM>remarks}" placeholder="Remarks..." class="tmFieldInput tmFieldInputNarrow"/>
+                                        </HBox>
+                                    </VBox>
+                                </HBox>
+                                
+                                <!-- TIME & MATERIAL LAYOUT (5-Column) -->
+                                <HBox class="tmEntryContent tmEntryContent5Col" visible="{= ${createTM>type} === 'Time &amp; Material'}" width="100%">
+                                    <!-- Column 1: Material Info -->
+                                    <VBox class="tmColumn tmColumnNarrow">
+                                        <Title text="Material" level="H6" class="tmColumnHeader sapUiTinyMarginBottom"/>
+                                        <HBox class="tmFieldRow" width="100%">
+                                            <Label text="Technician:" design="Bold" class="tmFieldLabel"/>
+                                            <Input
+                                                value="{createTM>technicianDisplay}"
+                                                showSuggestion="true"
+                                                suggestionItems="{
+                                                    path: 'createTM>/technicianSuggestions',
+                                                    templateShareable: false
+                                                }"
+                                                liveChange=".onTechnicianLiveChange"
+                                                suggestionItemSelected=".onTechnicianSuggestionSelect"
+                                                placeholder="Search..."
+                                                class="tmFieldInput tmFieldInputNarrow"
+                                            >
+                                                <suggestionItems>
+                                                    <core:ListItem key="{createTM>id}" text="{createTM>displayText}" additionalText="{createTM>externalId}"/>
+                                                </suggestionItems>
+                                            </Input>
+                                        </HBox>
+                                        <HBox class="tmFieldRow" width="100%">
+                                            <Label text="Date:" design="Bold" class="tmFieldLabel"/>
+                                            <DatePicker
+                                                value="{createTM>date}"
+                                                valueFormat="yyyy-MM-dd"
+                                                displayFormat="dd.MM.yyyy"
+                                                class="tmFieldInputNarrow"
+                                            />
+                                        </HBox>
+                                        <HBox class="tmFieldRow" width="100%">
+                                            <Label text="Item:" design="Bold" class="tmFieldLabel tmFieldLabelRequired"/>
+                                            <Input
+                                                value="{createTM>itemDisplay}"
+                                                showSuggestion="true"
+                                                suggestionItems="{
+                                                    path: 'createTM>/itemSuggestions',
+                                                    templateShareable: false
+                                                }"
+                                                liveChange=".onItemLiveChange"
+                                                suggestionItemSelected=".onItemSuggestionSelect"
+                                                placeholder="Search..."
+                                                class="tmFieldInput tmFieldInputNarrow"
+                                            >
+                                                <suggestionItems>
+                                                    <core:ListItem key="{createTM>id}" text="{createTM>displayText}" additionalText="{createTM>externalId}"/>
+                                                </suggestionItems>
+                                            </Input>
+                                        </HBox>
+                                        <HBox class="tmFieldRow" width="100%">
                                             <Label text="Quantity:" design="Bold" class="tmFieldLabel tmFieldLabelRequired"/>
                                             <Input value="{createTM>quantity}" placeholder="Qty..." class="tmFieldInput tmFieldInputNarrow"/>
                                         </HBox>
@@ -440,7 +509,7 @@
                                     <!-- Column 2: Time - Arbeitszeit -->
                                     <VBox class="tmColumn tmColumnNarrow">
                                         <Title text="Time - Arbeitszeit" level="H6" class="tmColumnHeader sapUiTinyMarginBottom"/>
-                                        <HBox class="tmFieldRow">
+                                        <HBox class="tmFieldRow" width="100%">
                                             <Label text="Task:" design="Bold" class="tmFieldLabel"/>
                                             <Select
                                                 selectedKey="{createTM>task1Code}"
@@ -450,20 +519,20 @@
                                                 }"
                                                 change=".onTaskSelect"
                                                 forceSelection="false"
-                                                class="tmFieldInput tmFieldInputNarrow"
+                                                class="tmFieldSelectNarrow"
                                             >
                                                 <core:Item key="{createTM>code}" text="{createTM>name}"/>
                                             </Select>
                                         </HBox>
-                                        <HBox class="tmFieldRow">
+                                        <HBox class="tmFieldRow" width="100%">
                                             <Label text="Duration:" design="Bold" class="tmFieldLabel"/>
                                             <Input value="{createTM>duration1}" placeholder="Duration..." class="tmFieldInput tmFieldInputNarrow"/>
                                         </HBox>
-                                        <HBox class="tmFieldRow">
+                                        <HBox class="tmFieldRow" width="100%">
                                             <Label text="Start:" design="Bold" class="tmFieldLabel"/>
                                             <Input value="{createTM>start1}" placeholder="Start..." class="tmFieldInput tmFieldInputNarrow"/>
                                         </HBox>
-                                        <HBox class="tmFieldRow">
+                                        <HBox class="tmFieldRow" width="100%">
                                             <Label text="End:" design="Bold" class="tmFieldLabel"/>
                                             <Input value="{createTM>end1}" placeholder="End..." class="tmFieldInput tmFieldInputNarrow"/>
                                         </HBox>
@@ -472,7 +541,7 @@
                                     <!-- Column 3: Time - Fahrzeit -->
                                     <VBox class="tmColumn tmColumnNarrow">
                                         <Title text="Time - Fahrzeit" level="H6" class="tmColumnHeader sapUiTinyMarginBottom"/>
-                                        <HBox class="tmFieldRow">
+                                        <HBox class="tmFieldRow" width="100%">
                                             <Label text="Task:" design="Bold" class="tmFieldLabel"/>
                                             <Select
                                                 selectedKey="{createTM>task2Code}"
@@ -482,20 +551,20 @@
                                                 }"
                                                 change=".onTaskSelect"
                                                 forceSelection="false"
-                                                class="tmFieldInput tmFieldInputNarrow"
+                                                class="tmFieldSelectNarrow"
                                             >
                                                 <core:Item key="{createTM>code}" text="{createTM>name}"/>
                                             </Select>
                                         </HBox>
-                                        <HBox class="tmFieldRow">
+                                        <HBox class="tmFieldRow" width="100%">
                                             <Label text="Duration:" design="Bold" class="tmFieldLabel"/>
                                             <Input value="{createTM>duration2}" placeholder="Duration..." class="tmFieldInput tmFieldInputNarrow"/>
                                         </HBox>
-                                        <HBox class="tmFieldRow">
+                                        <HBox class="tmFieldRow" width="100%">
                                             <Label text="Start:" design="Bold" class="tmFieldLabel"/>
                                             <Input value="{createTM>start2}" placeholder="Start..." class="tmFieldInput tmFieldInputNarrow"/>
                                         </HBox>
-                                        <HBox class="tmFieldRow">
+                                        <HBox class="tmFieldRow" width="100%">
                                             <Label text="End:" design="Bold" class="tmFieldLabel"/>
                                             <Input value="{createTM>end2}" placeholder="End..." class="tmFieldInput tmFieldInputNarrow"/>
                                         </HBox>
@@ -504,7 +573,7 @@
                                     <!-- Column 4: Time - Wartezeit -->
                                     <VBox class="tmColumn tmColumnNarrow">
                                         <Title text="Time - Wartezeit" level="H6" class="tmColumnHeader sapUiTinyMarginBottom"/>
-                                        <HBox class="tmFieldRow">
+                                        <HBox class="tmFieldRow" width="100%">
                                             <Label text="Task:" design="Bold" class="tmFieldLabel"/>
                                             <Select
                                                 selectedKey="{createTM>task3Code}"
@@ -514,20 +583,20 @@
                                                 }"
                                                 change=".onTaskSelect"
                                                 forceSelection="false"
-                                                class="tmFieldInput tmFieldInputNarrow"
+                                                class="tmFieldSelectNarrow"
                                             >
                                                 <core:Item key="{createTM>code}" text="{createTM>name}"/>
                                             </Select>
                                         </HBox>
-                                        <HBox class="tmFieldRow">
+                                        <HBox class="tmFieldRow" width="100%">
                                             <Label text="Duration:" design="Bold" class="tmFieldLabel"/>
                                             <Input value="{createTM>duration3}" placeholder="Duration..." class="tmFieldInput tmFieldInputNarrow"/>
                                         </HBox>
-                                        <HBox class="tmFieldRow">
+                                        <HBox class="tmFieldRow" width="100%">
                                             <Label text="Start:" design="Bold" class="tmFieldLabel"/>
                                             <Input value="{createTM>start3}" placeholder="Start..." class="tmFieldInput tmFieldInputNarrow"/>
                                         </HBox>
-                                        <HBox class="tmFieldRow">
+                                        <HBox class="tmFieldRow" width="100%">
                                             <Label text="End:" design="Bold" class="tmFieldLabel"/>
                                             <Input value="{createTM>end3}" placeholder="End..." class="tmFieldInput tmFieldInputNarrow"/>
                                         </HBox>
@@ -536,16 +605,16 @@
                                     <!-- Column 5: Shared Fields -->
                                     <VBox class="tmColumn tmColumnNarrow">
                                         <Title text="Options" level="H6" class="tmColumnHeader sapUiTinyMarginBottom"/>
-                                        <HBox class="tmFieldRow">
-                                            <Label text="Charge Option:" design="Bold" class="tmFieldLabel"/>
+                                        <HBox class="tmFieldRow" width="100%">
+                                            <Label text="Charge:" design="Bold" class="tmFieldLabel"/>
                                             <Input value="{createTM>chargeOption}" placeholder="Charge..." class="tmFieldInput tmFieldInputNarrow"/>
                                         </HBox>
-                                        <HBox class="tmFieldRow">
-                                            <Label text="Remarks Time:" design="Bold" class="tmFieldLabel"/>
+                                        <HBox class="tmFieldRow" width="100%">
+                                            <Label text="Rem. Time:" design="Bold" class="tmFieldLabel"/>
                                             <Input value="{createTM>remarksTime}" placeholder="Remarks..." class="tmFieldInput tmFieldInputNarrow"/>
                                         </HBox>
-                                        <HBox class="tmFieldRow">
-                                            <Label text="Remarks Material:" design="Bold" class="tmFieldLabel"/>
+                                        <HBox class="tmFieldRow" width="100%">
+                                            <Label text="Rem. Mat:" design="Bold" class="tmFieldLabel"/>
                                             <Input value="{createTM>remarksMaterial}" placeholder="Remarks..." class="tmFieldInput tmFieldInputNarrow"/>
                                         </HBox>
                                     </VBox>

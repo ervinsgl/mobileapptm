@@ -48,6 +48,13 @@
             <OverflowToolbar id="mobileAppFooterToolbar">
                 <ToolbarSpacer id="mobileAppFooterSpacer" />
                 <Button
+                    id="mobileAppTestTMButton"
+                    icon="sap-icon://add"
+                    text="Test T&amp;M Dialog"
+                    type="Emphasized"
+                    press=".onTestTMDialog"
+                />
+                <Button
                     id="mobileAppRefreshButton"
                     icon="sap-icon://refresh"
                     text="Refresh"

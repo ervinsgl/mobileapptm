@@ -217,6 +217,81 @@ sap.ui.define([], () => {
         },
 
         /**
+         * Get all items formatted for Input suggestions
+         * @returns {Array} Array of {id, externalId, name, displayText} objects
+         */
+        getAllForSuggestions() {
+            if (!_itemsCache) {
+                return [];
+            }
+
+            return _itemsCache.map(item => ({
+                id: item.id,
+                externalId: item.externalId,
+                name: item.name,
+                displayText: `${item.externalId} - ${item.name}`
+            }));
+        },
+
+        /**
+         * Filter items by search term for suggestions (optimized for liveChange)
+         * @param {string} searchTerm - Search term (min 2 chars)
+         * @returns {Array} Filtered array of suggestion items
+         */
+        filterBySearch(searchTerm) {
+            if (!searchTerm || searchTerm.length < 2) {
+                return [];
+            }
+
+            const lowerSearch = searchTerm.toLowerCase();
+            const results = [];
+
+            if (_itemsCache) {
+                _itemsCache.forEach(item => {
+                    const nameMatch = item.name && item.name.toLowerCase().includes(lowerSearch);
+                    const externalIdMatch = item.externalId && item.externalId.toLowerCase().includes(lowerSearch);
+
+                    if (nameMatch || externalIdMatch) {
+                        results.push({
+                            id: item.id,
+                            externalId: item.externalId,
+                            name: item.name,
+                            displayText: `${item.externalId} - ${item.name}`
+                        });
+                    }
+                });
+            }
+
+            // Sort by externalId
+            results.sort((a, b) => a.externalId.localeCompare(b.externalId));
+
+            // Limit results for performance
+            return results.slice(0, 50);
+        },
+
+        /**
+         * Get item by externalId for default value lookup
+         * @param {string} externalId - Item external ID
+         * @returns {object|null} Item suggestion object or null
+         */
+        getItemSuggestionByExternalId(externalId) {
+            if (!externalId || !_itemsMapByExternalId) {
+                return null;
+            }
+            
+            const item = _itemsMapByExternalId.get(externalId);
+            if (item) {
+                return {
+                    id: item.id,
+                    externalId: item.externalId,
+                    name: item.name,
+                    displayText: `${item.externalId} - ${item.name}`
+                };
+            }
+            return null;
+        },
+
+        /**
          * Check if items are loaded
          * @returns {boolean} True if cache is populated
          */

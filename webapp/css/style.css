@@ -202,18 +202,30 @@
 
 .tmFieldRow {
     margin-bottom: 0.5rem;
-    align-items: baseline;
+    align-items: center;
+    width: 100%;
+    display: flex;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .tmFieldRow:last-child {
     margin-bottom: 0;
 }
 
-/* T&M Field Label - Compact */
+/* Spacer row for equal column heights */
+.tmFieldRowSpacer {
+    visibility: hidden;
+    min-height: 2rem;
+}
+
+/* T&M Field Label - Fixed width for alignment */
 .tmFieldLabel {
     font-size: 0.75rem;
     color: #666;
-    min-width: 5.5rem;
+    min-width: 5rem;
+    max-width: 5rem;
+    flex-shrink: 0;
     margin-right: 0.5rem;
 }
 
@@ -233,24 +245,41 @@
    T&M INPUT FIELDS STYLING
    ======================================== */
 
-/* Input field in T&M forms */
+/* Input field in T&M forms - FIXED WIDTH */
 .tmFieldInput {
-    flex: 1;
-    min-width: 120px;
+    width: 200px !important;
+    min-width: 200px !important;
+    max-width: 200px !important;
+    flex: 0 0 200px !important;
 }
 
 .tmFieldInput .sapMInputBaseInner {
     font-size: 0.875rem;
 }
 
-/* Narrower inputs for 5-column layout */
+/* Narrow inputs - SAME FIXED WIDTH */
 .tmFieldInputNarrow {
-    flex: 1;
-    min-width: 80px;
-    max-width: 140px;
+    width: 200px !important;
+    min-width: 200px !important;
+    max-width: 200px !important;
+    flex: 0 0 200px !important;
 }
 
 .tmFieldInputNarrow .sapMInputBaseInner {
+    font-size: 0.8125rem;
+}
+
+/* DatePicker styling - SAME FIXED WIDTH as inputs */
+.tmFieldInputNarrow.sapMDP,
+.tmFieldInputNarrow.sapMDatePicker {
+    width: 200px !important;
+    min-width: 200px !important;
+    max-width: 200px !important;
+    flex: 0 0 200px !important;
+}
+
+.tmFieldInputNarrow.sapMDP .sapMInputBaseInner,
+.tmFieldInputNarrow.sapMDatePicker .sapMInputBaseInner {
     font-size: 0.8125rem;
 }
 
@@ -276,8 +305,12 @@
 
 /* ComboBox styling for technician search */
 .tmFieldInput.sapMComboBox,
-.tmFieldInputNarrow.sapMComboBox {
+.tmFieldInputNarrow.sapMComboBox,
+.tmFieldInput.sapMInput,
+.tmFieldInputNarrow.sapMInput {
     flex: 1;
+    min-width: 0;
+    width: 100%;
 }
 
 .tmFieldInput.sapMComboBox .sapMInputBaseInner,
@@ -285,10 +318,25 @@
     font-size: 0.875rem;
 }
 
-/* Select dropdown for Task in narrow columns */
+/* Select dropdown - SAME FIXED WIDTH as inputs */
 .tmFieldSelectNarrow {
-    flex: 1;
-    min-width: 80px;
+    width: 200px !important;
+    min-width: 200px !important;
+    max-width: 200px !important;
+    flex: 0 0 200px !important;
+}
+
+/* Force UI5 Select to respect fixed width */
+.tmFieldSelectNarrow.sapMSlt {
+    width: 200px !important;
+    min-width: 200px !important;
+    max-width: 200px !important;
+}
+
+.tmFieldSelectNarrow .sapMSltLabel {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .tmFieldSelectNarrow .sapMSltLabel,
@@ -311,22 +359,48 @@
 }
 
 /* ========================================
+   3-COLUMN LAYOUT (Time Effort, Material, Expense, Mileage)
+   ======================================== */
+
+/* Container for 3-column layouts */
+.tmEntryContent3Col {
+    gap: 1rem;
+    flex-wrap: nowrap;
+    width: 100%;
+    padding: 0.75rem 1rem;
+}
+
+/* Constrained field widths in 3-column layout - FIXED WIDTH */
+.tmEntryContent3Col .tmFieldInput,
+.tmEntryContent3Col .tmFieldInputNarrow,
+.tmEntryContent3Col .tmFieldSelectNarrow {
+    width: 200px !important;
+    min-width: 200px !important;
+    max-width: 200px !important;
+    flex: 0 0 200px !important;
+}
+
+/* ========================================
    TIME & MATERIAL 5-COLUMN LAYOUT
    ======================================== */
 
-/* 5-Column container - fills entire width */
+/* Container - fills entire width with even column distribution */
 .tmEntryContent5Col {
-    gap: 0.5rem;
+    gap: 1rem;
     flex-wrap: nowrap;
     width: 100%;
+    padding: 0.75rem 1rem;
 }
 
-/* Columns for 5-col layout - equal width distribution */
+/* Columns - equal width distribution */
 .tmColumnNarrow {
     flex: 1 1 0;
     min-width: 0;
-    padding-right: 0.5rem;
-    border-right: 1px solid #f0f0f0;
+    padding-right: 1rem;
+    border-right: 1px solid #e8e8e8;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 .tmColumnNarrow:last-child {
@@ -345,7 +419,8 @@
 
 /* Smaller labels for 5-column layout */
 .tmEntryContent5Col .tmFieldLabel {
-    min-width: 3.5rem;
+    min-width: 4.5rem;
+    max-width: 4.5rem;
     font-size: 0.6875rem;
 }
 
@@ -353,13 +428,16 @@
     font-size: 0.8125rem;
 }
 
-/* Inputs and Selects fill available space in 5-col layout */
+/* Inputs and Selects in 5-column layout - FIXED WIDTH (smaller) */
 .tmEntryContent5Col .tmFieldInput,
 .tmEntryContent5Col .tmFieldInputNarrow,
-.tmEntryContent5Col .tmFieldSelectNarrow {
-    flex: 1;
-    min-width: 0;
-    max-width: none;
+.tmEntryContent5Col .tmFieldSelectNarrow,
+.tmEntryContent5Col .sapMDP,
+.tmEntryContent5Col .sapMDatePicker {
+    width: 160px !important;
+    min-width: 160px !important;
+    max-width: 160px !important;
+    flex: 0 0 160px !important;
 }
 
 /* Responsive: Stack columns on smaller screens */

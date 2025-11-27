@@ -124,6 +124,7 @@ sap.ui.define([], () => {
 
         /**
          * Transform expense types for dropdown/select control
+         * Sorted by code to ensure consistent order
          * @returns {Array} Array of {key, text} objects for dropdown binding
          */
         getExpenseTypesForDropdown() {
@@ -131,12 +132,19 @@ sap.ui.define([], () => {
                 return [];
             }
 
-            return _expenseTypesCache.map(expenseType => ({
+            const items = _expenseTypesCache.map(expenseType => ({
                 key: expenseType.id,
                 text: `${expenseType.code} - ${expenseType.name}`,
                 code: expenseType.code,
                 name: expenseType.name
             }));
+
+            // Sort by code to ensure consistent order (Z40000001 before Z40000039)
+            items.sort((a, b) => a.code.localeCompare(b.code));
+            
+            console.log('ExpenseTypeService: Sorted dropdown items:', items.map(i => i.code));
+            
+            return items;
         },
 
         /**

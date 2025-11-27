@@ -4,8 +4,10 @@ sap.ui.define([
     "sap/m/MessageToast",
     "mobileappsc/utils/TechnicianService",
     "mobileappsc/utils/TMCreationService",
-    "mobileappsc/utils/TimeTaskService"
-], (Fragment, JSONModel, MessageToast, TechnicianService, TMCreationService, TimeTaskService) => {
+    "mobileappsc/utils/TimeTaskService",
+    "mobileappsc/utils/ItemService",
+    "mobileappsc/utils/ExpenseTypeService"
+], (Fragment, JSONModel, MessageToast, TechnicianService, TMCreationService, TimeTaskService, ItemService, ExpenseTypeService) => {
     "use strict";
 
     return {
@@ -38,6 +40,7 @@ sap.ui.define([
                 activityCode: oActivity.code,
                 activitySubject: oActivity.subject,
                 serviceProduct: oActivity.serviceProductDisplayText || 'N/A',
+                serviceProductExternalId: oActivity.serviceProductId || null,
                 reports: reports,
                 reportCount: reports.length,
                 // Activity details for dialog header
@@ -66,17 +69,32 @@ sap.ui.define([
             console.log('Opening T&M Creation Dialog for activity:', activityData.activityCode);
 
             // Initialize TechnicianService (load all persons in background)
+            let defaultTechDisplay = "";
+            let defaultTechId = "";
             try {
                 await TechnicianService.initialize();
+                console.log('TMDialogService: TechnicianService initialized');
                 
                 // Set default technician from activity responsible
-                if (activityData.responsibleExternalId && activityData.responsibleExternalId !== 'N/A') {
-                    const defaultTech = TechnicianService.getTechnicianByExternalId(activityData.responsibleExternalId);
+                const responsibleExtId = activityData.responsibleExternalId;
+                console.log('TMDialogService: Looking for responsibleExternalId:', responsibleExtId);
+                
+                if (responsibleExtId && responsibleExtId !== 'N/A') {
+                    const defaultTech = TechnicianService.getTechnicianByExternalId(responsibleExtId);
+                    console.log('TMDialogService: getTechnicianByExternalId returned:', defaultTech);
                     if (defaultTech) {
+                        defaultTechId = defaultTech.id;
+                        defaultTechDisplay = defaultTech.displayText;
                         TMCreationService.setDefaultTechnician(defaultTech);
-                        console.log('TMDialogService: Default technician set from responsible:', defaultTech.displayText);
+                        console.log('TMDialogService: Default technician SET:', defaultTechDisplay);
+                    } else {
+                        console.warn('TMDialogService: Technician NOT FOUND for externalId:', responsibleExtId);
                     }
+                } else {
+                    console.log('TMDialogService: No valid responsibleExternalId provided');
                 }
+                
+                console.log('TMDialogService: Final default technician:', { id: defaultTechId, displayText: defaultTechDisplay });
             } catch (error) {
                 console.error('TMDialogService: Failed to initialize TechnicianService:', error);
                 MessageToast.show("Warning: Technician search may not be available");
@@ -103,11 +121,96 @@ sap.ui.define([
                 MessageToast.show("Warning: Time tasks may not be available");
             }
 
+            // Load Items for dropdown (with search/filter support)
+            let itemSuggestions = [];
+            let defaultItemDisplay = "";
+            let defaultItemId = "";
+            try {
+                await ItemService.fetchItems();
+                itemSuggestions = ItemService.getAllForSuggestions();
+                console.log('TMDialogService: Loaded', itemSuggestions.length, 'items');
+                
+                // Debug: Log first few items to verify data structure
+                if (itemSuggestions.length > 0) {
+                    console.log('TMDialogService: Sample items:', itemSuggestions.slice(0, 3));
+                }
+                
+                // Set default item from Service Product (externalId)
+                const serviceProductExtId = activityData.serviceProductExternalId;
+                console.log('TMDialogService: Looking for serviceProductExternalId:', serviceProductExtId);
+                console.log('TMDialogService: activityData.serviceProduct:', activityData.serviceProduct);
+                
+                if (serviceProductExtId && serviceProductExtId !== 'N/A') {
+                    const defaultItem = ItemService.getItemSuggestionByExternalId(serviceProductExtId);
+                    console.log('TMDialogService: getItemSuggestionByExternalId returned:', defaultItem);
+                    if (defaultItem) {
+                        defaultItemDisplay = defaultItem.displayText;
+                        defaultItemId = defaultItem.id;
+                        console.log('TMDialogService: Default item SET:', defaultItemDisplay);
+                    } else {
+                        console.warn('TMDialogService: Item NOT FOUND for externalId:', serviceProductExtId);
+                        // Try to find if item exists with different case
+                        const allItems = ItemService.getAllForSuggestions();
+                        const matchingItem = allItems.find(i => 
+                            i.externalId && i.externalId.toLowerCase() === serviceProductExtId.toLowerCase()
+                        );
+                        if (matchingItem) {
+                            console.log('TMDialogService: Found case-insensitive match:', matchingItem);
+                        }
+                    }
+                } else {
+                    console.log('TMDialogService: No valid serviceProductExternalId provided');
+                }
+                
+                // Set default item in TMCreationService for new entries
+                TMCreationService.setDefaultItem({
+                    id: defaultItemId,
+                    displayText: defaultItemDisplay
+                });
+                console.log('TMDialogService: Final default item:', { id: defaultItemId, displayText: defaultItemDisplay });
+            } catch (error) {
+                console.error('TMDialogService: Failed to load items:', error);
+                MessageToast.show("Warning: Item search may not be available");
+            }
+
+            // Load Expense Types for dropdown (only 6 items)
+            let expenseTypeSuggestions = [];
+            try {
+                await ExpenseTypeService.fetchExpenseTypes();
+                expenseTypeSuggestions = ExpenseTypeService.getExpenseTypesForDropdown();
+                console.log('TMDialogService: Loaded', expenseTypeSuggestions.length, 'expense types');
+                console.log('TMDialogService: Available expense type codes:', expenseTypeSuggestions.map(et => et.code));
+                
+                // Set default expense type to Z40000001 - Reisenebenkosten (should be first after sorting)
+                if (expenseTypeSuggestions.length > 0) {
+                    // Find Z40000001 specifically, fallback to first if not found
+                    let defaultExpType = expenseTypeSuggestions.find(et => et.code === 'Z40000001');
+                    console.log('TMDialogService: Find result for Z40000001:', defaultExpType);
+                    
+                    if (!defaultExpType) {
+                        // Use first item (which should be Z40000001 after sorting, but fallback if not)
+                        defaultExpType = expenseTypeSuggestions[0];
+                        console.log('TMDialogService: Z40000001 not found, using first:', defaultExpType.code);
+                    }
+                    
+                    TMCreationService.setDefaultExpenseType({
+                        id: defaultExpType.key,
+                        code: defaultExpType.code,
+                        displayText: defaultExpType.text
+                    });
+                    console.log('TMDialogService: Default expense type SET:', defaultExpType.text);
+                }
+            } catch (error) {
+                console.error('TMDialogService: Failed to load expense types:', error);
+                MessageToast.show("Warning: Expense types may not be available");
+            }
+
             // Create dialog model with empty entries array
             const oCreateTMDialogModel = new JSONModel({
                 activityCode: activityData.activityCode,
                 activitySubject: activityData.activitySubject,
                 serviceProduct: activityData.serviceProduct,
+                serviceProductExternalId: activityData.serviceProductExternalId,
                 formattedStartDate: activityData.formattedStartDate,
                 formattedEndDate: activityData.formattedEndDate,
                 formattedDuration: activityData.formattedDuration,
@@ -117,12 +220,16 @@ sap.ui.define([
                 entries: [],  // Dynamic array for T&M entries
                 // Technician suggestions for Input with suggestions
                 technicianSuggestions: TechnicianService.getAllForDropdown(),
+                // Item suggestions for Input with suggestions
+                itemSuggestions: itemSuggestions,
                 // Time Task suggestions for Select dropdown (all tasks - for Time Effort)
                 taskSuggestions: taskSuggestions,
                 // Filtered task suggestions for Time & Material columns
                 taskSuggestionsAZ: taskSuggestionsAZ,  // Arbeitszeit
                 taskSuggestionsFZ: taskSuggestionsFZ,  // Fahrzeit
-                taskSuggestionsWZ: taskSuggestionsWZ   // Wartezeit
+                taskSuggestionsWZ: taskSuggestionsWZ,  // Wartezeit
+                // Expense type suggestions for Select dropdown
+                expenseTypeSuggestions: expenseTypeSuggestions
             });
 
             // Load and open dialog
@@ -166,8 +273,10 @@ sap.ui.define([
                 if (oModel) {
                     oModel.setProperty("/entries", []);
                 }
-                // Clear default technician
+                // Clear default values
                 TMCreationService.clearDefaultTechnician();
+                TMCreationService.clearDefaultItem();
+                TMCreationService.clearDefaultExpenseType();
             }
         },
 
@@ -187,6 +296,7 @@ sap.ui.define([
                     activityCode: oActivity.code,
                     activitySubject: oActivity.subject,
                     serviceProduct: oActivity.serviceProductDisplayText || 'N/A',
+                    serviceProductExternalId: oActivity.serviceProductId || null,
                     formattedStartDate: oActivity.formattedStartDate || 'N/A',
                     formattedEndDate: oActivity.formattedEndDate || 'N/A',
                     formattedDuration: oActivity.formattedDuration || 'N/A',
@@ -202,6 +312,7 @@ sap.ui.define([
                         activityCode: oDialogModel.getProperty("/activityCode"),
                         activitySubject: oDialogModel.getProperty("/activitySubject"),
                         serviceProduct: oDialogModel.getProperty("/serviceProduct") || 'N/A',
+                        serviceProductExternalId: oDialogModel.getProperty("/serviceProductExternalId") || null,
                         formattedStartDate: oDialogModel.getProperty("/formattedStartDate") || 'N/A',
                         formattedEndDate: oDialogModel.getProperty("/formattedEndDate") || 'N/A',
                         formattedDuration: oDialogModel.getProperty("/formattedDuration") || 'N/A',
