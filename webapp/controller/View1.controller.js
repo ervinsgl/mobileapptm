@@ -23,8 +23,9 @@ sap.ui.define([
     "mobileappsc/utils/PersonService",
     "mobileappsc/utils/BusinessPartnerService",
     "mobileappsc/utils/TechnicianService",
-    "mobileappsc/utils/DateTimeService"
-], (Controller, JSONModel, MessageToast, MessageBox, Item, Fragment, formatter, ActivityService, ServiceOrderService, ProductGroupService, URLHelper, OrganizationService, ReportedItemsData, TimeTaskService, ItemService, ExpenseTypeService, UdfMetaService, ApprovalService, TMDialogService, TMCreationService, TMDataService, PersonService, BusinessPartnerService, TechnicianService, DateTimeService) => {
+    "mobileappsc/utils/DateTimeService",
+    "mobileappsc/utils/TMPayloadService"
+], (Controller, JSONModel, MessageToast, MessageBox, Item, Fragment, formatter, ActivityService, ServiceOrderService, ProductGroupService, URLHelper, OrganizationService, ReportedItemsData, TimeTaskService, ItemService, ExpenseTypeService, UdfMetaService, ApprovalService, TMDialogService, TMCreationService, TMDataService, PersonService, BusinessPartnerService, TechnicianService, DateTimeService, TMPayloadService) => {
     "use strict";
 
     return Controller.extend("mobileappsc.controller.View1", {
@@ -1030,11 +1031,12 @@ sap.ui.define([
                 if (oItemContext) {
                     const oTechnician = oItemContext.getObject();
                     
-                    // Update the entry with technician ID and display text
+                    // Update the entry with technician ID, externalId, and display text
                     oModel.setProperty(sPath + "/technicianId", oTechnician.id);
+                    oModel.setProperty(sPath + "/technicianExternalId", oTechnician.externalId);
                     oModel.setProperty(sPath + "/technicianDisplay", oTechnician.displayText);
                     
-                    console.log('TechnicianSuggestionSelect: Selected', oTechnician.displayText, 'ID:', oTechnician.id);
+                    console.log('TechnicianSuggestionSelect: Selected', oTechnician.displayText, 'ID:', oTechnician.id, 'ExtID:', oTechnician.externalId);
                 }
             }
         },
@@ -1179,15 +1181,17 @@ sap.ui.define([
                 if (oItemContext) {
                     const oTechnician = oItemContext.getObject();
                     
-                    // Update the entry with technician ID and display text
+                    // Update the entry with technician ID, externalId, and display text
                     oModel.setProperty(sPath + "/technicianId", oTechnician.id);
+                    oModel.setProperty(sPath + "/technicianExternalId", oTechnician.externalId);
                     oModel.setProperty(sPath + "/technicianDisplay", oTechnician.displayText);
                     
-                    console.log('TechnicianSelect: Selected', oTechnician.displayText, 'ID:', oTechnician.id);
+                    console.log('TechnicianSelect: Selected', oTechnician.displayText, 'ID:', oTechnician.id, 'ExtID:', oTechnician.externalId);
                 }
             } else {
                 // Clear selection
                 oModel.setProperty(sPath + "/technicianId", "");
+                oModel.setProperty(sPath + "/technicianExternalId", "");
                 oModel.setProperty(sPath + "/technicianDisplay", "");
             }
         },
@@ -1213,12 +1217,14 @@ sap.ui.define([
                     // Auto-select if exactly one match
                     const tech = technicians[0];
                     oModel.setProperty(sPath + "/technicianId", tech.id);
+                    oModel.setProperty(sPath + "/technicianExternalId", tech.externalId);
                     oModel.setProperty(sPath + "/technicianDisplay", tech.displayText);
                     oComboBox.setValue(tech.displayText);
-                    console.log('TechnicianChange: Auto-selected', tech.displayText);
+                    console.log('TechnicianChange: Auto-selected', tech.displayText, 'ExtID:', tech.externalId);
                 } else if (technicians.length === 0) {
                     // Clear ID if no match found
                     oModel.setProperty(sPath + "/technicianId", "");
+                    oModel.setProperty(sPath + "/technicianExternalId", "");
                     console.log('TechnicianChange: No match found for', sValue);
                 }
             }
@@ -1319,98 +1325,17 @@ sap.ui.define([
 
         /**
          * Helper: Show entry JSON in dialog
-         * Prepares entry data for API submission
+         * Delegates to TMPayloadService for payload building
          */
         _showEntryJSON(oEntry) {
-            // Create a clean copy for API submission
-            const cleanEntry = {};
-            
-            // Properties to exclude from JSON output
-            const excludeProps = [
-                "saveButtonText", "saveButtonIcon", "saveButtonType", 
-                "saveButtonState", "saveButtonEnabled",
-                "expanded", "icon", "type",
-                "technicianDisplay", "taskDisplay", "itemDisplay", "itemId",
-                "task1Display", "task2Display", "task3Display",
-                "expenseTypeDisplay", "expenseTypeId",
-                // Duration is calculated, not sent to API
-                "duration", "duration1", "duration2", "duration3", "travelDuration",
-                // Amount values are transformed to nested objects
-                "externalAmountValue", "internalAmountValue"
-            ];
-            
-            // Copy all properties except UI-specific ones
-            Object.keys(oEntry).forEach(key => {
-                if (!excludeProps.includes(key)) {
-                    // Rename technicianId to technician for API
-                    if (key === "technicianId") {
-                        cleanEntry["technician"] = oEntry[key];
-                    }
-                    // Format taskCode as nested object: "task": { "code": "AZ" }
-                    else if (key === "taskCode" && oEntry[key]) {
-                        cleanEntry["task"] = { code: oEntry[key] };
-                    }
-                    // Format task1Code, task2Code, task3Code as nested objects
-                    else if (key === "task1Code" && oEntry[key]) {
-                        cleanEntry["task1"] = { code: oEntry[key] };
-                    }
-                    else if (key === "task2Code" && oEntry[key]) {
-                        cleanEntry["task2"] = { code: oEntry[key] };
-                    }
-                    else if (key === "task3Code" && oEntry[key]) {
-                        cleanEntry["task3"] = { code: oEntry[key] };
-                    }
-                    // Skip empty taskCode fields
-                    else if (key.endsWith("Code") && !oEntry[key]) {
-                        // Skip empty code fields
-                    }
-                    else {
-                        cleanEntry[key] = oEntry[key];
-                    }
-                }
-            });
+            // Get activity context from dialog model
+            const oDialogModel = this._tmCreateDialog.getModel("createTM");
+            const activityId = oDialogModel.getProperty("/activityId");
+            const orgLevelId = oDialogModel.getProperty("/orgLevelId");
 
-            // Format item as nested object with externalId
-            // Extract externalId from itemDisplay (format: "externalId - name")
-            if (oEntry.itemDisplay) {
-                const externalId = oEntry.itemDisplay.split(' - ')[0];
-                if (externalId) {
-                    cleanEntry["item"] = { externalId: externalId };
-                }
-            }
-
-            // Format expenseType as nested object with code (API field name is "type")
-            // Extract code from expenseTypeDisplay (format: "code - name")
-            if (oEntry.expenseTypeDisplay) {
-                const code = oEntry.expenseTypeDisplay.split(' - ')[0];
-                if (code) {
-                    cleanEntry["type"] = { code: code };
-                }
-            }
-
-            // Format externalAmount as nested object { amount, currency }
-            if (oEntry.externalAmountValue !== undefined) {
-                cleanEntry["externalAmount"] = {
-                    amount: oEntry.externalAmountValue,
-                    currency: "EUR"
-                };
-            }
-
-            // Format internalAmount as nested object { amount, currency }
-            if (oEntry.internalAmountValue !== undefined) {
-                cleanEntry["internalAmount"] = {
-                    amount: oEntry.internalAmountValue,
-                    currency: "EUR"
-                };
-            }
-
-            // Add distanceUnit for Mileage entries (distance is already a number)
-            if (oEntry.distance !== undefined && oEntry.type === "Mileage") {
-                cleanEntry["distanceUnit"] = "KM";
-            }
-
-            // Format JSON with indentation
-            const jsonString = JSON.stringify(cleanEntry, null, 2);
+            // Build payload using TMPayloadService
+            const payload = TMPayloadService.buildPayload(oEntry, activityId, orgLevelId);
+            const jsonString = TMPayloadService.formatPayloadJSON(payload);
 
             // Show in dialog
             MessageBox.information(

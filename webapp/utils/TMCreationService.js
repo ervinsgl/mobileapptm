@@ -153,6 +153,7 @@ sap.ui.define([
                 saveButtonState: "unsaved",
                 // Technician fields
                 technicianId: defaultTech ? defaultTech.id : "",
+                technicianExternalId: defaultTech ? defaultTech.externalId : "",
                 technicianDisplay: defaultTech ? defaultTech.displayText : "",
                 // Task fields (stores code for API, display shows name)
                 taskCode: "",
@@ -184,6 +185,7 @@ sap.ui.define([
                 saveButtonState: "unsaved",
                 // Technician fields
                 technicianId: defaultTech ? defaultTech.id : "",
+                technicianExternalId: defaultTech ? defaultTech.externalId : "",
                 technicianDisplay: defaultTech ? defaultTech.displayText : "",
                 // Item fields (stores id for API, display shows externalId - name)
                 itemId: defaultItem ? defaultItem.id : "",
@@ -215,6 +217,7 @@ sap.ui.define([
                 saveButtonState: "unsaved",
                 // Technician fields
                 technicianId: defaultTech ? defaultTech.id : "",
+                technicianExternalId: defaultTech ? defaultTech.externalId : "",
                 technicianDisplay: defaultTech ? defaultTech.displayText : "",
                 // Expense Type fields
                 expenseTypeId: defaultExpType ? defaultExpType.id : "",
@@ -246,6 +249,7 @@ sap.ui.define([
                 saveButtonState: "unsaved",
                 // Technician fields
                 technicianId: defaultTech ? defaultTech.id : "",
+                technicianExternalId: defaultTech ? defaultTech.externalId : "",
                 technicianDisplay: defaultTech ? defaultTech.displayText : "",
                 // Source and Destination fields
                 source: "",
@@ -281,6 +285,7 @@ sap.ui.define([
                 saveButtonState: "unsaved",
                 // Technician fields
                 technicianId: defaultTech ? defaultTech.id : "",
+                technicianExternalId: defaultTech ? defaultTech.externalId : "",
                 technicianDisplay: defaultTech ? defaultTech.displayText : "",
                 // Material fields (Column 1)
                 date: this.getTodayDateString(),

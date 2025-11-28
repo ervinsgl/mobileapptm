@@ -37,8 +37,10 @@ sap.ui.define([
 
             // Create dialog model
             const oDialogModel = new JSONModel({
+                activityId: oActivity.id,
                 activityCode: oActivity.code,
                 activitySubject: oActivity.subject,
+                orgLevelId: oActivity.orgLevelId || null,
                 serviceProduct: oActivity.serviceProductDisplayText || 'N/A',
                 serviceProductExternalId: oActivity.serviceProductId || null,
                 reports: reports,
@@ -217,8 +219,10 @@ sap.ui.define([
             console.log('TMDialogService: Max quantity set to:', maxQuantity);
 
             const oCreateTMDialogModel = new JSONModel({
+                activityId: activityData.activityId,
                 activityCode: activityData.activityCode,
                 activitySubject: activityData.activitySubject,
+                orgLevelId: activityData.orgLevelId,
                 serviceProduct: activityData.serviceProduct,
                 serviceProductExternalId: activityData.serviceProductExternalId,
                 formattedStartDate: activityData.formattedStartDate,
@@ -304,8 +308,10 @@ sap.ui.define([
                 // Called from ProductGroups - get from view model
                 const oActivity = oContext.getObject();
                 activityData = {
+                    activityId: oActivity.id,
                     activityCode: oActivity.code,
                     activitySubject: oActivity.subject,
+                    orgLevelId: oActivity.orgLevelId || null,
                     serviceProduct: oActivity.serviceProductDisplayText || 'N/A',
                     serviceProductExternalId: oActivity.serviceProductId || null,
                     formattedStartDate: oActivity.formattedStartDate || 'N/A',
@@ -320,8 +326,10 @@ sap.ui.define([
                 const oDialogModel = tmReportsDialog.getModel("dialog");
                 if (oDialogModel) {
                     activityData = {
+                        activityId: oDialogModel.getProperty("/activityId"),
                         activityCode: oDialogModel.getProperty("/activityCode"),
                         activitySubject: oDialogModel.getProperty("/activitySubject"),
+                        orgLevelId: oDialogModel.getProperty("/orgLevelId") || null,
                         serviceProduct: oDialogModel.getProperty("/serviceProduct") || 'N/A',
                         serviceProductExternalId: oDialogModel.getProperty("/serviceProductExternalId") || null,
                         formattedStartDate: oDialogModel.getProperty("/formattedStartDate") || 'N/A',
