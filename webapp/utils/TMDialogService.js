@@ -206,6 +206,16 @@ sap.ui.define([
             }
 
             // Create dialog model with empty entries array
+            // Parse quantity for max constraint (handle "1.0" or "N/A")
+            let maxQuantity = 9999; // Default high value if not parseable
+            if (activityData.quantity && activityData.quantity !== 'N/A') {
+                const parsed = parseFloat(activityData.quantity);
+                if (!isNaN(parsed) && parsed > 0) {
+                    maxQuantity = parsed;
+                }
+            }
+            console.log('TMDialogService: Max quantity set to:', maxQuantity);
+
             const oCreateTMDialogModel = new JSONModel({
                 activityCode: activityData.activityCode,
                 activitySubject: activityData.activitySubject,
@@ -216,6 +226,7 @@ sap.ui.define([
                 formattedDuration: activityData.formattedDuration,
                 quantity: activityData.quantity,
                 quantityUoM: activityData.quantityUoM,
+                maxQuantity: maxQuantity,  // Max quantity for StepInput constraint
                 responsibleExternalId: activityData.responsibleExternalId,
                 entries: [],  // Dynamic array for T&M entries
                 // Technician suggestions for Input with suggestions

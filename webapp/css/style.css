@@ -283,11 +283,47 @@
     font-size: 0.8125rem;
 }
 
+/* DateTimePicker styling - SAME FIXED WIDTH as inputs */
+.tmFieldInputNarrow.sapMDTI {
+    width: 200px !important;
+    min-width: 200px !important;
+    max-width: 200px !important;
+    flex: 0 0 200px !important;
+}
+
+.tmFieldInputNarrow.sapMDTI .sapMInputBaseInner {
+    font-size: 0.8125rem;
+}
+
+/* TextArea styling - SAME FIXED WIDTH as inputs */
+.tmFieldInputNarrow.sapMTextArea {
+    width: 200px !important;
+    min-width: 200px !important;
+    max-width: 200px !important;
+    flex: 0 0 200px !important;
+}
+
+.tmFieldInputNarrow.sapMTextArea .sapMTextAreaInner {
+    font-size: 0.8125rem;
+}
+
 /* Required field indicator */
 .tmFieldLabelRequired::after {
     content: " *";
     color: #bb0000;
     font-weight: bold;
+}
+
+/* StepInput styling - SAME FIXED WIDTH as inputs */
+.tmFieldInputNarrow.sapMStepInput {
+    width: 200px !important;
+    min-width: 200px !important;
+    max-width: 200px !important;
+    flex: 0 0 200px !important;
+}
+
+.tmFieldInputNarrow.sapMStepInput .sapMInputBaseInner {
+    font-size: 0.8125rem;
 }
 
 /* Input placeholder styling */
@@ -433,7 +469,10 @@
 .tmEntryContent5Col .tmFieldInputNarrow,
 .tmEntryContent5Col .tmFieldSelectNarrow,
 .tmEntryContent5Col .sapMDP,
-.tmEntryContent5Col .sapMDatePicker {
+.tmEntryContent5Col .sapMDatePicker,
+.tmEntryContent5Col .sapMDTI,
+.tmEntryContent5Col .sapMStepInput,
+.tmEntryContent5Col .sapMTextArea {
     width: 160px !important;
     min-width: 160px !important;
     max-width: 160px !important;

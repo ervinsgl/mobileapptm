@@ -22,8 +22,9 @@ sap.ui.define([
     "mobileappsc/utils/TMDataService",
     "mobileappsc/utils/PersonService",
     "mobileappsc/utils/BusinessPartnerService",
-    "mobileappsc/utils/TechnicianService"
-], (Controller, JSONModel, MessageToast, MessageBox, Item, Fragment, formatter, ActivityService, ServiceOrderService, ProductGroupService, URLHelper, OrganizationService, ReportedItemsData, TimeTaskService, ItemService, ExpenseTypeService, UdfMetaService, ApprovalService, TMDialogService, TMCreationService, TMDataService, PersonService, BusinessPartnerService, TechnicianService) => {
+    "mobileappsc/utils/TechnicianService",
+    "mobileappsc/utils/DateTimeService"
+], (Controller, JSONModel, MessageToast, MessageBox, Item, Fragment, formatter, ActivityService, ServiceOrderService, ProductGroupService, URLHelper, OrganizationService, ReportedItemsData, TimeTaskService, ItemService, ExpenseTypeService, UdfMetaService, ApprovalService, TMDialogService, TMCreationService, TMDataService, PersonService, BusinessPartnerService, TechnicianService, DateTimeService) => {
     "use strict";
 
     return Controller.extend("mobileappsc.controller.View1", {
@@ -1331,7 +1332,11 @@ sap.ui.define([
                 "expanded", "icon", "type",
                 "technicianDisplay", "taskDisplay", "itemDisplay", "itemId",
                 "task1Display", "task2Display", "task3Display",
-                "expenseTypeDisplay", "expenseTypeId"
+                "expenseTypeDisplay", "expenseTypeId",
+                // Duration is calculated, not sent to API
+                "duration", "duration1", "duration2", "duration3", "travelDuration",
+                // Amount values are transformed to nested objects
+                "externalAmountValue", "internalAmountValue"
             ];
             
             // Copy all properties except UI-specific ones
@@ -1383,6 +1388,27 @@ sap.ui.define([
                 }
             }
 
+            // Format externalAmount as nested object { amount, currency }
+            if (oEntry.externalAmountValue !== undefined) {
+                cleanEntry["externalAmount"] = {
+                    amount: oEntry.externalAmountValue,
+                    currency: "EUR"
+                };
+            }
+
+            // Format internalAmount as nested object { amount, currency }
+            if (oEntry.internalAmountValue !== undefined) {
+                cleanEntry["internalAmount"] = {
+                    amount: oEntry.internalAmountValue,
+                    currency: "EUR"
+                };
+            }
+
+            // Add distanceUnit for Mileage entries (distance is already a number)
+            if (oEntry.distance !== undefined && oEntry.type === "Mileage") {
+                cleanEntry["distanceUnit"] = "KM";
+            }
+
             // Format JSON with indentation
             const jsonString = JSON.stringify(cleanEntry, null, 2);
 
@@ -1394,6 +1420,135 @@ sap.ui.define([
                     contentWidth: "500px",
                     styleClass: "sapUiSizeCompact"
                 }
+            );
+        },
+
+        /* ========================================
+         * DURATION / DATETIME CHANGE HANDLERS
+         * Delegated to DateTimeService for business logic
+         * ======================================== */
+
+        /**
+         * Handle duration change for Time Effort - updates endDateTime
+         */
+        onDurationChange(oEvent) {
+            const oContext = oEvent.getSource().getBindingContext("createTM");
+            if (!oContext) return;
+
+            const oModel = this._tmCreateDialog.getModel("createTM");
+            const iDuration = oEvent.getParameter("value");
+            DateTimeService.handleDurationChange(oModel, oContext.getPath(), iDuration, "startDateTime", "endDateTime");
+        },
+
+        /**
+         * Handle start datetime change for Time Effort - updates endDateTime based on duration
+         */
+        onStartDateTimeChange(oEvent) {
+            const oContext = oEvent.getSource().getBindingContext("createTM");
+            if (!oContext) return;
+
+            const oModel = this._tmCreateDialog.getModel("createTM");
+            DateTimeService.handleStartDateTimeChange(oModel, oContext.getPath(), "startDateTime", "duration", "endDateTime", 30);
+        },
+
+        /**
+         * Handle travel duration change for Mileage - updates travelEndDateTime
+         */
+        onTravelDurationChange(oEvent) {
+            const oContext = oEvent.getSource().getBindingContext("createTM");
+            if (!oContext) return;
+
+            const oModel = this._tmCreateDialog.getModel("createTM");
+            const iDuration = oEvent.getParameter("value");
+            DateTimeService.handleDurationChange(oModel, oContext.getPath(), iDuration, "travelStartDateTime", "travelEndDateTime");
+        },
+
+        /**
+         * Handle travel start datetime change for Mileage - updates travelEndDateTime
+         */
+        onTravelStartDateTimeChange(oEvent) {
+            const oContext = oEvent.getSource().getBindingContext("createTM");
+            if (!oContext) return;
+
+            const oModel = this._tmCreateDialog.getModel("createTM");
+            DateTimeService.handleStartDateTimeChange(oModel, oContext.getPath(), "travelStartDateTime", "travelDuration", "travelEndDateTime", 30);
+        },
+
+        /**
+         * Handle duration1 change for Time & Material Arbeitszeit
+         */
+        onDuration1Change(oEvent) {
+            this._handleTimeAndMaterialDurationChange(oEvent, 1);
+        },
+
+        /**
+         * Handle duration2 change for Time & Material Fahrzeit
+         */
+        onDuration2Change(oEvent) {
+            this._handleTimeAndMaterialDurationChange(oEvent, 2);
+        },
+
+        /**
+         * Handle duration3 change for Time & Material Wartezeit
+         */
+        onDuration3Change(oEvent) {
+            this._handleTimeAndMaterialDurationChange(oEvent, 3);
+        },
+
+        /**
+         * Handle start datetime change for Time & Material column 1
+         */
+        onStartDateTime1Change(oEvent) {
+            this._handleTimeAndMaterialStartChange(oEvent, 1);
+        },
+
+        /**
+         * Handle start datetime change for Time & Material column 2
+         */
+        onStartDateTime2Change(oEvent) {
+            this._handleTimeAndMaterialStartChange(oEvent, 2);
+        },
+
+        /**
+         * Handle start datetime change for Time & Material column 3
+         */
+        onStartDateTime3Change(oEvent) {
+            this._handleTimeAndMaterialStartChange(oEvent, 3);
+        },
+
+        /**
+         * Generic handler for Time & Material duration changes
+         */
+        _handleTimeAndMaterialDurationChange(oEvent, iColumnIndex) {
+            const oContext = oEvent.getSource().getBindingContext("createTM");
+            if (!oContext) return;
+
+            const oModel = this._tmCreateDialog.getModel("createTM");
+            const iDuration = oEvent.getParameter("value");
+            DateTimeService.handleDurationChange(
+                oModel, 
+                oContext.getPath(), 
+                iDuration, 
+                "startDateTime" + iColumnIndex, 
+                "endDateTime" + iColumnIndex
+            );
+        },
+
+        /**
+         * Generic handler for Time & Material start datetime changes
+         */
+        _handleTimeAndMaterialStartChange(oEvent, iColumnIndex) {
+            const oContext = oEvent.getSource().getBindingContext("createTM");
+            if (!oContext) return;
+
+            const oModel = this._tmCreateDialog.getModel("createTM");
+            DateTimeService.handleStartDateTimeChange(
+                oModel, 
+                oContext.getPath(), 
+                "startDateTime" + iColumnIndex, 
+                "duration" + iColumnIndex, 
+                "endDateTime" + iColumnIndex, 
+                30
             );
         }
     });

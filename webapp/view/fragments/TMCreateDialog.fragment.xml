@@ -193,15 +193,33 @@
                                     <VBox class="tmColumn tmColumnNarrow">
                                         <HBox class="tmFieldRow" width="100%">
                                             <Label text="Duration:" design="Bold" class="tmFieldLabel tmFieldLabelRequired"/>
-                                            <Input value="{createTM>duration}" placeholder="e.g. 30 min" class="tmFieldInput tmFieldInputNarrow"/>
+                                            <StepInput
+                                                value="{createTM>duration}"
+                                                min="0"
+                                                step="5"
+                                                description="minutes"
+                                                change=".onDurationChange"
+                                                class="tmFieldInputNarrow"
+                                            />
                                         </HBox>
                                         <HBox class="tmFieldRow" width="100%">
                                             <Label text="Start:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>start}" placeholder="Start time..." class="tmFieldInput tmFieldInputNarrow"/>
+                                            <DateTimePicker
+                                                value="{createTM>startDateTime}"
+                                                valueFormat="yyyy-MM-dd'T'HH:mm:ss'Z'"
+                                                displayFormat="dd.MM.yyyy HH:mm"
+                                                change=".onStartDateTimeChange"
+                                                class="tmFieldInputNarrow"
+                                            />
                                         </HBox>
                                         <HBox class="tmFieldRow" width="100%">
                                             <Label text="End:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>end}" placeholder="End time..." class="tmFieldInput tmFieldInputNarrow"/>
+                                            <DateTimePicker
+                                                value="{createTM>endDateTime}"
+                                                valueFormat="yyyy-MM-dd'T'HH:mm:ss'Z'"
+                                                displayFormat="dd.MM.yyyy HH:mm"
+                                                class="tmFieldInputNarrow"
+                                            />
                                         </HBox>
                                     </VBox>
                                     
@@ -209,11 +227,25 @@
                                     <VBox class="tmColumn tmColumnNarrow">
                                         <HBox class="tmFieldRow" width="100%">
                                             <Label text="Charge:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>chargeOption}" placeholder="Charge..." class="tmFieldInput tmFieldInputNarrow"/>
+                                            <Select
+                                                selectedKey="{createTM>chargeOption}"
+                                                forceSelection="false"
+                                                class="tmFieldSelectNarrow"
+                                            >
+                                                <core:Item key="" text=""/>
+                                                <core:Item key="CHARGEABLE" text="Chargeable"/>
+                                                <core:Item key="NONCHARGEABLE" text="Non-Chargeable"/>
+                                                <core:Item key="UNKNOWN" text="Unknown"/>
+                                            </Select>
                                         </HBox>
                                         <HBox class="tmFieldRow" width="100%">
                                             <Label text="Remarks:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>remarks}" placeholder="Remarks..." class="tmFieldInput tmFieldInputNarrow"/>
+                                            <TextArea 
+                                                value="{createTM>remarks}" 
+                                                rows="2" 
+                                                placeholder="Remarks..." 
+                                                class="tmFieldInputNarrow"
+                                            />
                                         </HBox>
                                         <HBox class="tmFieldRow tmFieldRowSpacer" width="100%" height="2rem"/>
                                     </VBox>
@@ -277,7 +309,15 @@
                                         </HBox>
                                         <HBox class="tmFieldRow" width="100%">
                                             <Label text="Quantity:" design="Bold" class="tmFieldLabel tmFieldLabelRequired"/>
-                                            <Input value="{createTM>quantity}" placeholder="Qty..." class="tmFieldInput tmFieldInputNarrow"/>
+                                            <StepInput
+                                                value="{createTM>quantity}"
+                                                min="0"
+                                                step="1"
+                                                displayValuePrecision="2"
+                                                valueState="{= ${createTM>quantity} > ${createTM>/maxQuantity} ? 'Warning' : 'None'}"
+                                                valueStateText="{= ${createTM>quantity} > ${createTM>/maxQuantity} ? 'Exceeds activity quantity (' + ${createTM>/maxQuantity} + ')' : ''}"
+                                                class="tmFieldInputNarrow"
+                                            />
                                         </HBox>
                                         <HBox class="tmFieldRow tmFieldRowSpacer" width="100%" height="2rem"/>
                                     </VBox>
@@ -286,11 +326,25 @@
                                     <VBox class="tmColumn tmColumnNarrow">
                                         <HBox class="tmFieldRow" width="100%">
                                             <Label text="Charge:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>chargeOption}" placeholder="Charge..." class="tmFieldInput tmFieldInputNarrow"/>
+                                            <Select
+                                                selectedKey="{createTM>chargeOption}"
+                                                forceSelection="false"
+                                                class="tmFieldSelectNarrow"
+                                            >
+                                                <core:Item key="" text=""/>
+                                                <core:Item key="CHARGEABLE" text="Chargeable"/>
+                                                <core:Item key="NONCHARGEABLE" text="Non-Chargeable"/>
+                                                <core:Item key="UNKNOWN" text="Unknown"/>
+                                            </Select>
                                         </HBox>
                                         <HBox class="tmFieldRow" width="100%">
                                             <Label text="Remarks:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>remarks}" placeholder="Remarks..." class="tmFieldInput tmFieldInputNarrow"/>
+                                            <TextArea 
+                                                value="{createTM>remarks}" 
+                                                rows="2" 
+                                                placeholder="Remarks..." 
+                                                class="tmFieldInputNarrow"
+                                            />
                                         </HBox>
                                         <HBox class="tmFieldRow tmFieldRowSpacer" width="100%" height="2rem"/>
                                     </VBox>
@@ -348,11 +402,23 @@
                                     <VBox class="tmColumn tmColumnNarrow">
                                         <HBox class="tmFieldRow" width="100%">
                                             <Label text="External:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>externalAmount}" placeholder="External..." class="tmFieldInput tmFieldInputNarrow"/>
+                                            <StepInput
+                                                value="{createTM>externalAmountValue}"
+                                                min="0"
+                                                step="1"
+                                                description="EUR"
+                                                class="tmFieldInputNarrow"
+                                            />
                                         </HBox>
                                         <HBox class="tmFieldRow" width="100%">
                                             <Label text="Internal:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>internalAmount}" placeholder="Internal..." class="tmFieldInput tmFieldInputNarrow"/>
+                                            <StepInput
+                                                value="{createTM>internalAmountValue}"
+                                                min="0"
+                                                step="1"
+                                                description="EUR"
+                                                class="tmFieldInputNarrow"
+                                            />
                                         </HBox>
                                         <HBox class="tmFieldRow tmFieldRowSpacer" width="100%" height="2rem"/>
                                     </VBox>
@@ -361,11 +427,25 @@
                                     <VBox class="tmColumn tmColumnNarrow">
                                         <HBox class="tmFieldRow" width="100%">
                                             <Label text="Charge:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>chargeOption}" placeholder="Charge..." class="tmFieldInput tmFieldInputNarrow"/>
+                                            <Select
+                                                selectedKey="{createTM>chargeOption}"
+                                                forceSelection="false"
+                                                class="tmFieldSelectNarrow"
+                                            >
+                                                <core:Item key="" text=""/>
+                                                <core:Item key="CHARGEABLE" text="Chargeable"/>
+                                                <core:Item key="NONCHARGEABLE" text="Non-Chargeable"/>
+                                                <core:Item key="UNKNOWN" text="Unknown"/>
+                                            </Select>
                                         </HBox>
                                         <HBox class="tmFieldRow" width="100%">
                                             <Label text="Remarks:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>remarks}" placeholder="Remarks..." class="tmFieldInput tmFieldInputNarrow"/>
+                                            <TextArea 
+                                                value="{createTM>remarks}" 
+                                                rows="2" 
+                                                placeholder="Remarks..." 
+                                                class="tmFieldInputNarrow"
+                                            />
                                         </HBox>
                                         <HBox class="tmFieldRow tmFieldRowSpacer" width="100%" height="2rem"/>
                                     </VBox>
@@ -373,11 +453,15 @@
                                 
                                 <!-- MILEAGE LAYOUT (3-Column Narrow) -->
                                 <HBox class="tmEntryContent tmEntryContent3Col" visible="{= ${createTM>type} === 'Mileage'}" width="100%">
-                                    <!-- Column 1: Route, Technician, Distance -->
+                                    <!-- Column 1: Source, Destination, Technician, Distance -->
                                     <VBox class="tmColumn tmColumnNarrow">
                                         <HBox class="tmFieldRow" width="100%">
-                                            <Label text="Route:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>route}" placeholder="Route..." class="tmFieldInput tmFieldInputNarrow"/>
+                                            <Label text="Source:" design="Bold" class="tmFieldLabel"/>
+                                            <Input value="{createTM>source}" placeholder="Start location..." class="tmFieldInput tmFieldInputNarrow"/>
+                                        </HBox>
+                                        <HBox class="tmFieldRow" width="100%">
+                                            <Label text="Destination:" design="Bold" class="tmFieldLabel"/>
+                                            <Input value="{createTM>destination}" placeholder="End location..." class="tmFieldInput tmFieldInputNarrow"/>
                                         </HBox>
                                         <HBox class="tmFieldRow" width="100%">
                                             <Label text="Technician:" design="Bold" class="tmFieldLabel"/>
@@ -400,50 +484,81 @@
                                         </HBox>
                                         <HBox class="tmFieldRow" width="100%">
                                             <Label text="Distance:" design="Bold" class="tmFieldLabel tmFieldLabelRequired"/>
-                                            <Input value="{createTM>distance}" placeholder="e.g. 50 km" class="tmFieldInput tmFieldInputNarrow"/>
+                                            <StepInput
+                                                value="{createTM>distance}"
+                                                min="0"
+                                                step="1"
+                                                description="KM"
+                                                class="tmFieldInputNarrow"
+                                            />
                                         </HBox>
-                                        <HBox class="tmFieldRow tmFieldRowSpacer" width="100%" height="2rem"/>
                                     </VBox>
                                     
-                                    <!-- Column 2: Date, Travel Start, Travel End -->
+                                    <!-- Column 2: Duration, Travel Start, Travel End -->
                                     <VBox class="tmColumn tmColumnNarrow">
                                         <HBox class="tmFieldRow" width="100%">
-                                            <Label text="Date:" design="Bold" class="tmFieldLabel"/>
-                                            <DatePicker
-                                                value="{createTM>date}"
-                                                valueFormat="yyyy-MM-dd"
-                                                displayFormat="dd.MM.yyyy"
+                                            <Label text="Duration:" design="Bold" class="tmFieldLabel"/>
+                                            <StepInput
+                                                value="{createTM>travelDuration}"
+                                                min="0"
+                                                step="5"
+                                                description="minutes"
+                                                change=".onTravelDurationChange"
                                                 class="tmFieldInputNarrow"
                                             />
                                         </HBox>
                                         <HBox class="tmFieldRow" width="100%">
                                             <Label text="Start:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>travelStart}" placeholder="Start..." class="tmFieldInput tmFieldInputNarrow"/>
+                                            <DateTimePicker
+                                                value="{createTM>travelStartDateTime}"
+                                                valueFormat="yyyy-MM-dd'T'HH:mm:ss'Z'"
+                                                displayFormat="dd.MM.yyyy HH:mm"
+                                                change=".onTravelStartDateTimeChange"
+                                                class="tmFieldInputNarrow"
+                                            />
                                         </HBox>
                                         <HBox class="tmFieldRow" width="100%">
                                             <Label text="End:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>travelEnd}" placeholder="End..." class="tmFieldInput tmFieldInputNarrow"/>
+                                            <DateTimePicker
+                                                value="{createTM>travelEndDateTime}"
+                                                valueFormat="yyyy-MM-dd'T'HH:mm:ss'Z'"
+                                                displayFormat="dd.MM.yyyy HH:mm"
+                                                class="tmFieldInputNarrow"
+                                            />
                                         </HBox>
-                                        <HBox class="tmFieldRow tmFieldRowSpacer" width="100%" height="2rem"/>
                                     </VBox>
                                     
                                     <!-- Column 3: Driver, Private Car, Charge Option, Remarks -->
                                     <VBox class="tmColumn tmColumnNarrow">
                                         <HBox class="tmFieldRow" width="100%">
                                             <Label text="Driver:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>driver}" placeholder="Driver..." class="tmFieldInput tmFieldInputNarrow"/>
+                                            <CheckBox selected="{createTM>driver}" text="I am the driver"/>
                                         </HBox>
                                         <HBox class="tmFieldRow" width="100%">
-                                            <Label text="Private:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>privateCar}" placeholder="Yes/No..." class="tmFieldInput tmFieldInputNarrow"/>
+                                            <Label text="Private Car:" design="Bold" class="tmFieldLabel"/>
+                                            <CheckBox selected="{createTM>privateCar}" text="Private car used"/>
                                         </HBox>
                                         <HBox class="tmFieldRow" width="100%">
                                             <Label text="Charge:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>chargeOption}" placeholder="Charge..." class="tmFieldInput tmFieldInputNarrow"/>
+                                            <Select
+                                                selectedKey="{createTM>chargeOption}"
+                                                forceSelection="false"
+                                                class="tmFieldSelectNarrow"
+                                            >
+                                                <core:Item key="" text=""/>
+                                                <core:Item key="CHARGEABLE" text="Chargeable"/>
+                                                <core:Item key="NONCHARGEABLE" text="Non-Chargeable"/>
+                                                <core:Item key="UNKNOWN" text="Unknown"/>
+                                            </Select>
                                         </HBox>
                                         <HBox class="tmFieldRow" width="100%">
                                             <Label text="Remarks:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>remarks}" placeholder="Remarks..." class="tmFieldInput tmFieldInputNarrow"/>
+                                            <TextArea 
+                                                value="{createTM>remarks}" 
+                                                rows="2" 
+                                                placeholder="Remarks..." 
+                                                class="tmFieldInputNarrow"
+                                            />
                                         </HBox>
                                     </VBox>
                                 </HBox>
@@ -502,7 +617,15 @@
                                         </HBox>
                                         <HBox class="tmFieldRow" width="100%">
                                             <Label text="Quantity:" design="Bold" class="tmFieldLabel tmFieldLabelRequired"/>
-                                            <Input value="{createTM>quantity}" placeholder="Qty..." class="tmFieldInput tmFieldInputNarrow"/>
+                                            <StepInput
+                                                value="{createTM>quantity}"
+                                                min="0"
+                                                step="1"
+                                                displayValuePrecision="2"
+                                                valueState="{= ${createTM>quantity} > ${createTM>/maxQuantity} ? 'Warning' : 'None'}"
+                                                valueStateText="{= ${createTM>quantity} > ${createTM>/maxQuantity} ? 'Exceeds activity quantity (' + ${createTM>/maxQuantity} + ')' : ''}"
+                                                class="tmFieldInputNarrow"
+                                            />
                                         </HBox>
                                     </VBox>
                                     
@@ -526,15 +649,33 @@
                                         </HBox>
                                         <HBox class="tmFieldRow" width="100%">
                                             <Label text="Duration:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>duration1}" placeholder="Duration..." class="tmFieldInput tmFieldInputNarrow"/>
+                                            <StepInput
+                                                value="{createTM>duration1}"
+                                                min="0"
+                                                step="5"
+                                                description="minutes"
+                                                change=".onDuration1Change"
+                                                class="tmFieldInputNarrow"
+                                            />
                                         </HBox>
                                         <HBox class="tmFieldRow" width="100%">
                                             <Label text="Start:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>start1}" placeholder="Start..." class="tmFieldInput tmFieldInputNarrow"/>
+                                            <DateTimePicker
+                                                value="{createTM>startDateTime1}"
+                                                valueFormat="yyyy-MM-dd'T'HH:mm:ss'Z'"
+                                                displayFormat="dd.MM.yyyy HH:mm"
+                                                change=".onStartDateTime1Change"
+                                                class="tmFieldInputNarrow"
+                                            />
                                         </HBox>
                                         <HBox class="tmFieldRow" width="100%">
                                             <Label text="End:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>end1}" placeholder="End..." class="tmFieldInput tmFieldInputNarrow"/>
+                                            <DateTimePicker
+                                                value="{createTM>endDateTime1}"
+                                                valueFormat="yyyy-MM-dd'T'HH:mm:ss'Z'"
+                                                displayFormat="dd.MM.yyyy HH:mm"
+                                                class="tmFieldInputNarrow"
+                                            />
                                         </HBox>
                                     </VBox>
                                     
@@ -558,15 +699,33 @@
                                         </HBox>
                                         <HBox class="tmFieldRow" width="100%">
                                             <Label text="Duration:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>duration2}" placeholder="Duration..." class="tmFieldInput tmFieldInputNarrow"/>
+                                            <StepInput
+                                                value="{createTM>duration2}"
+                                                min="0"
+                                                step="5"
+                                                description="minutes"
+                                                change=".onDuration2Change"
+                                                class="tmFieldInputNarrow"
+                                            />
                                         </HBox>
                                         <HBox class="tmFieldRow" width="100%">
                                             <Label text="Start:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>start2}" placeholder="Start..." class="tmFieldInput tmFieldInputNarrow"/>
+                                            <DateTimePicker
+                                                value="{createTM>startDateTime2}"
+                                                valueFormat="yyyy-MM-dd'T'HH:mm:ss'Z'"
+                                                displayFormat="dd.MM.yyyy HH:mm"
+                                                change=".onStartDateTime2Change"
+                                                class="tmFieldInputNarrow"
+                                            />
                                         </HBox>
                                         <HBox class="tmFieldRow" width="100%">
                                             <Label text="End:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>end2}" placeholder="End..." class="tmFieldInput tmFieldInputNarrow"/>
+                                            <DateTimePicker
+                                                value="{createTM>endDateTime2}"
+                                                valueFormat="yyyy-MM-dd'T'HH:mm:ss'Z'"
+                                                displayFormat="dd.MM.yyyy HH:mm"
+                                                class="tmFieldInputNarrow"
+                                            />
                                         </HBox>
                                     </VBox>
                                     
@@ -590,15 +749,33 @@
                                         </HBox>
                                         <HBox class="tmFieldRow" width="100%">
                                             <Label text="Duration:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>duration3}" placeholder="Duration..." class="tmFieldInput tmFieldInputNarrow"/>
+                                            <StepInput
+                                                value="{createTM>duration3}"
+                                                min="0"
+                                                step="5"
+                                                description="minutes"
+                                                change=".onDuration3Change"
+                                                class="tmFieldInputNarrow"
+                                            />
                                         </HBox>
                                         <HBox class="tmFieldRow" width="100%">
                                             <Label text="Start:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>start3}" placeholder="Start..." class="tmFieldInput tmFieldInputNarrow"/>
+                                            <DateTimePicker
+                                                value="{createTM>startDateTime3}"
+                                                valueFormat="yyyy-MM-dd'T'HH:mm:ss'Z'"
+                                                displayFormat="dd.MM.yyyy HH:mm"
+                                                change=".onStartDateTime3Change"
+                                                class="tmFieldInputNarrow"
+                                            />
                                         </HBox>
                                         <HBox class="tmFieldRow" width="100%">
                                             <Label text="End:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>end3}" placeholder="End..." class="tmFieldInput tmFieldInputNarrow"/>
+                                            <DateTimePicker
+                                                value="{createTM>endDateTime3}"
+                                                valueFormat="yyyy-MM-dd'T'HH:mm:ss'Z'"
+                                                displayFormat="dd.MM.yyyy HH:mm"
+                                                class="tmFieldInputNarrow"
+                                            />
                                         </HBox>
                                     </VBox>
                                     
@@ -607,15 +784,34 @@
                                         <Title text="Options" level="H6" class="tmColumnHeader sapUiTinyMarginBottom"/>
                                         <HBox class="tmFieldRow" width="100%">
                                             <Label text="Charge:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>chargeOption}" placeholder="Charge..." class="tmFieldInput tmFieldInputNarrow"/>
+                                            <Select
+                                                selectedKey="{createTM>chargeOption}"
+                                                forceSelection="false"
+                                                class="tmFieldSelectNarrow"
+                                            >
+                                                <core:Item key="" text=""/>
+                                                <core:Item key="CHARGEABLE" text="Chargeable"/>
+                                                <core:Item key="NONCHARGEABLE" text="Non-Chargeable"/>
+                                                <core:Item key="UNKNOWN" text="Unknown"/>
+                                            </Select>
                                         </HBox>
                                         <HBox class="tmFieldRow" width="100%">
                                             <Label text="Rem. Time:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>remarksTime}" placeholder="Remarks..." class="tmFieldInput tmFieldInputNarrow"/>
+                                            <TextArea 
+                                                value="{createTM>remarksTime}" 
+                                                rows="2" 
+                                                placeholder="Remarks..." 
+                                                class="tmFieldInputNarrow"
+                                            />
                                         </HBox>
                                         <HBox class="tmFieldRow" width="100%">
                                             <Label text="Rem. Mat:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>remarksMaterial}" placeholder="Remarks..." class="tmFieldInput tmFieldInputNarrow"/>
+                                            <TextArea 
+                                                value="{createTM>remarksMaterial}" 
+                                                rows="2" 
+                                                placeholder="Remarks..." 
+                                                class="tmFieldInputNarrow"
+                                            />
                                         </HBox>
                                     </VBox>
                                 </HBox>

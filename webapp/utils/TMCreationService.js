@@ -1,6 +1,7 @@
 sap.ui.define([
-    "sap/m/MessageToast"
-], (MessageToast) => {
+    "sap/m/MessageToast",
+    "mobileappsc/utils/DateTimeService"
+], (MessageToast, DateTimeService) => {
     "use strict";
 
     return {
@@ -16,14 +17,46 @@ sap.ui.define([
 
         /**
          * Get today's date in yyyy-MM-dd format for API
+         * Delegated to DateTimeService
          * @returns {string} Date string like "2025-10-29"
          */
         getTodayDateString() {
-            const today = new Date();
-            const year = today.getFullYear();
-            const month = String(today.getMonth() + 1).padStart(2, '0');
-            const day = String(today.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
+            return DateTimeService.getTodayDateString();
+        },
+
+        /**
+         * Get current datetime in ISO format for API
+         * Delegated to DateTimeService
+         * @returns {string} ISO datetime string like "2025-11-28T12:30:00Z"
+         */
+        getNowDateTimeString() {
+            return DateTimeService.getNowDateTimeString();
+        },
+
+        /**
+         * Get datetime + offset minutes in ISO format
+         * Delegated to DateTimeService
+         * @param {number} offsetMinutes - Minutes to add (can be negative)
+         * @returns {string} ISO datetime string
+         */
+        getDateTimeWithOffset(offsetMinutes) {
+            return DateTimeService.getDateTimeWithOffset(offsetMinutes);
+        },
+
+        /**
+         * Calculate end datetime from start datetime and duration
+         * Delegated to DateTimeService
+         */
+        calculateEndDateTime(startDateTime, durationMinutes) {
+            return DateTimeService.calculateEndDateTime(startDateTime, durationMinutes);
+        },
+
+        /**
+         * Calculate duration in minutes between two datetimes
+         * Delegated to DateTimeService
+         */
+        calculateDurationMinutes(startDateTime, endDateTime) {
+            return DateTimeService.calculateDurationMinutes(startDateTime, endDateTime);
         },
 
         /**
@@ -124,10 +157,10 @@ sap.ui.define([
                 // Task fields (stores code for API, display shows name)
                 taskCode: "",
                 taskDisplay: "",
-                // Other fields
-                duration: "",
-                start: "",
-                end: "",
+                // Duration and DateTime fields
+                duration: 30, // Default 30 minutes
+                startDateTime: this.getNowDateTimeString(),
+                endDateTime: this.getDateTimeWithOffset(30),
                 chargeOption: "",
                 remarks: ""
             };
@@ -188,9 +221,9 @@ sap.ui.define([
                 expenseTypeDisplay: defaultExpType ? defaultExpType.displayText : "",
                 // Date field - defaults to today
                 date: this.getTodayDateString(),
-                // Other fields
-                externalAmount: "",
-                internalAmount: "",
+                // Amount fields (integer values, currency is always EUR)
+                externalAmountValue: 0,
+                internalAmountValue: 0,
                 chargeOption: "",
                 remarks: ""
             };
@@ -214,15 +247,17 @@ sap.ui.define([
                 // Technician fields
                 technicianId: defaultTech ? defaultTech.id : "",
                 technicianDisplay: defaultTech ? defaultTech.displayText : "",
-                // Other fields
-                route: "",
-                distance: "",
-                // Date field - defaults to today
-                date: this.getTodayDateString(),
-                travelStart: "",
-                travelEnd: "",
-                driver: "",
-                privateCar: "",
+                // Source and Destination fields
+                source: "",
+                destination: "",
+                distance: 0, // Integer value, unit is always KM
+                // Duration and DateTime fields for travel
+                travelDuration: 30, // Default 30 minutes
+                travelStartDateTime: this.getNowDateTimeString(),
+                travelEndDateTime: this.getDateTimeWithOffset(30),
+                // Boolean fields
+                driver: false,
+                privateCar: false,
                 chargeOption: "",
                 remarks: ""
             };
@@ -252,24 +287,24 @@ sap.ui.define([
                 itemId: defaultItem ? defaultItem.id : "",
                 itemDisplay: defaultItem ? defaultItem.displayText : "",
                 quantity: "",
-                // Time Effort 1 fields (Column 2)
+                // Time Effort 1 fields - Arbeitszeit (Column 2)
                 task1Code: "",
                 task1Display: "",
-                duration1: "",
-                start1: "",
-                end1: "",
-                // Time Effort 2 fields (Column 3)
+                duration1: 30,
+                startDateTime1: this.getNowDateTimeString(),
+                endDateTime1: this.getDateTimeWithOffset(30),
+                // Time Effort 2 fields - Fahrzeit (Column 3)
                 task2Code: "",
                 task2Display: "",
-                duration2: "",
-                start2: "",
-                end2: "",
-                // Time Effort 3 fields (Column 4)
+                duration2: 30,
+                startDateTime2: this.getNowDateTimeString(),
+                endDateTime2: this.getDateTimeWithOffset(30),
+                // Time Effort 3 fields - Wartezeit (Column 4)
                 task3Code: "",
                 task3Display: "",
-                duration3: "",
-                start3: "",
-                end3: "",
+                duration3: 30,
+                startDateTime3: this.getNowDateTimeString(),
+                endDateTime3: this.getDateTimeWithOffset(30),
                 // Shared fields (Column 5)
                 chargeOption: "",
                 remarksTime: "",
