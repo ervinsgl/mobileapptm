@@ -86,6 +86,7 @@ sap.ui.define([], () => {
 
             return {
                 chargeOption: oEntry.chargeOption || "",
+                inactive: false,
                 orgLevel: orgLevelId || "",
                 date: oEntry.date || "",
                 quantity: oEntry.quantity || 0,
@@ -118,6 +119,7 @@ sap.ui.define([], () => {
 
             return {
                 chargeOption: oEntry.chargeOption || "",
+                inactive: false,
                 orgLevel: orgLevelId || "",
                 date: oEntry.date || "",
                 externalAmount: {
@@ -149,20 +151,37 @@ sap.ui.define([], () => {
          * @returns {object} Mileage payload
          */
         buildMileagePayload(oEntry, activityId, orgLevelId) {
+            // Derive date from travelEndDateTime (format: YYYY-MM-DD)
+            let dateValue = "";
+            if (oEntry.travelEndDateTime) {
+                dateValue = oEntry.travelEndDateTime.split('T')[0];
+            }
+
             return {
-                chargeOption: oEntry.chargeOption || "",
+                date: dateValue,
                 orgLevel: orgLevelId || "",
-                source: oEntry.source || "",
-                destination: oEntry.destination || "",
-                distance: oEntry.distance || 0,
                 distanceUnit: "KM",
-                travelStartDateTime: oEntry.travelStartDateTime || "",
+                distance: oEntry.distance || 0,
+                destination: oEntry.destination || "",
+                source: oEntry.source || "",
+                type: null,
                 travelEndDateTime: oEntry.travelEndDateTime || "",
-                driver: oEntry.driver || false,
-                privateCar: oEntry.privateCar || false,
+                chargeOption: oEntry.chargeOption || "",
+                travelEndDateTimeTimeZoneId: "Europe/Berlin",
+                inactive: false,
+                travelStartDateTime: oEntry.travelStartDateTime || "",
+                travelStartDateTimeTimeZoneId: "Europe/Berlin",
                 createPerson: {
                     externalId: oEntry.technicianExternalId || ""
                 },
+                driver: oEntry.driver || false,
+                privateCar: oEntry.privateCar || false,
+                udfValues: [{
+                    udfMeta: {
+                        externalId: "Z_Mileage_MatID"
+                    },
+                    value: "Z40000008"
+                }],
                 remarks: oEntry.remarks || "",
                 syncStatus: "REQUIRES_APPROVAL",
                 object: {
