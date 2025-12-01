@@ -24,8 +24,9 @@ sap.ui.define([
     "mobileappsc/utils/BusinessPartnerService",
     "mobileappsc/utils/TechnicianService",
     "mobileappsc/utils/DateTimeService",
-    "mobileappsc/utils/TMPayloadService"
-], (Controller, JSONModel, MessageToast, MessageBox, Item, Fragment, formatter, ActivityService, ServiceOrderService, ProductGroupService, URLHelper, OrganizationService, ReportedItemsData, TimeTaskService, ItemService, ExpenseTypeService, UdfMetaService, ApprovalService, TMDialogService, TMCreationService, TMDataService, PersonService, BusinessPartnerService, TechnicianService, DateTimeService, TMPayloadService) => {
+    "mobileappsc/utils/TMPayloadService",
+    "mobileappsc/utils/TMEditService"
+], (Controller, JSONModel, MessageToast, MessageBox, Item, Fragment, formatter, ActivityService, ServiceOrderService, ProductGroupService, URLHelper, OrganizationService, ReportedItemsData, TimeTaskService, ItemService, ExpenseTypeService, UdfMetaService, ApprovalService, TMDialogService, TMCreationService, TMDataService, PersonService, BusinessPartnerService, TechnicianService, DateTimeService, TMPayloadService, TMEditService) => {
     "use strict";
 
     return Controller.extend("mobileappsc.controller.View1", {
@@ -816,6 +817,9 @@ sap.ui.define([
 
             // Enrich each report
             reports.forEach(report => {
+                // Initialize edit mode to false
+                report.editMode = false;
+                
                 // Technician: resolve person name from createPerson (ID)
                 if (report.createPerson) {
                     report.createPersonDisplayText = PersonService.getPersonDisplayTextById(report.createPerson);
@@ -846,6 +850,17 @@ sap.ui.define([
                     } else {
                         report.mileageTypeDisplayText = 'N/A';
                     }
+                    
+                    // Calculate travel duration in minutes
+                    if (report.travelStartDateTime && report.travelEndDateTime) {
+                        const startTime = new Date(report.travelStartDateTime);
+                        const endTime = new Date(report.travelEndDateTime);
+                        report.travelDurationMinutes = Math.round((endTime - startTime) / (1000 * 60));
+                        report.travelDurationText = `${report.travelDurationMinutes} min`;
+                    } else {
+                        report.travelDurationMinutes = 0;
+                        report.travelDurationText = 'N/A';
+                    }
                 }
                 
                 // Format UDF values
@@ -872,9 +887,11 @@ sap.ui.define([
         },
 
         /**
-         * Toggle Approval Button text
+         * Toggle Edit Mode for T&M Entry
+         * - In View mode: "Edit T&M Entry" -> enters edit mode
+         * - In Edit mode: "Send for Approval" -> shows JSON and exits edit mode
          */
-        onToggleApprovalButton(oEvent) {
+        onToggleEditMode(oEvent) {
             const oButton = oEvent.getSource();
             const oContext = oButton.getBindingContext("dialog");
 
@@ -884,14 +901,66 @@ sap.ui.define([
 
             const sPath = oContext.getPath();
             const oModel = this._tmReportsDialog.getModel("dialog");
-            const bCurrentState = oModel.getProperty(sPath + "/approvalButtonPressed");
+            const bCurrentEditMode = oModel.getProperty(sPath + "/editMode") || false;
+            const sType = oModel.getProperty(sPath + "/type");
+            const oEntry = oContext.getObject();
 
-            // Toggle the state
-            oModel.setProperty(sPath + "/approvalButtonPressed", !bCurrentState);
+            if (!bCurrentEditMode) {
+                // Entering edit mode - use TMEditService to get edit field values
+                const editValues = TMEditService.initEditMode(sType, oEntry);
+                TMEditService.applyEditValues(oModel, sPath, editValues);
+                
+                oModel.setProperty(sPath + "/editMode", true);
+                MessageToast.show("Edit mode enabled");
+            } else {
+                // "Send for Approval" pressed - use TMEditService
+                const editedValues = TMEditService.getEditedValues(sType, oModel, sPath);
+                const payload = TMEditService.buildUpdatePayload(sType, oEntry.id, editedValues);
+                const displayUpdates = TMEditService.getDisplayUpdates(sType, editedValues);
 
-            // Show feedback
-            const sNewText = !bCurrentState ? "Send for Approval" : "Request Approval";
-            MessageToast.show(`Button changed to: ${sNewText}`);
+                // Apply display updates
+                TMEditService.applyDisplayUpdates(oModel, sPath, displayUpdates);
+
+                // Show payload
+                MessageBox.information(
+                    TMEditService.formatPayloadJSON(payload),
+                    {
+                        title: "Send for Approval - Update Payload",
+                        contentWidth: "400px"
+                    }
+                );
+
+                // Exit edit mode
+                oModel.setProperty(sPath + "/editMode", false);
+            }
+        },
+
+        /**
+         * Handle Duration change in Edit mode - recalculates End DateTime (Time Effort)
+         */
+        onEditDurationChange(oEvent) {
+            const oContext = oEvent.getSource().getBindingContext("dialog");
+            if (!oContext) return;
+
+            const sPath = oContext.getPath();
+            const oModel = this._tmReportsDialog.getModel("dialog");
+            const iNewDuration = oEvent.getParameter("value");
+
+            TMEditService.handleDurationChange(oModel, sPath, "Time Effort", iNewDuration);
+        },
+
+        /**
+         * Handle Mileage Duration change in Edit mode - recalculates Travel End DateTime
+         */
+        onEditMileageDurationChange(oEvent) {
+            const oContext = oEvent.getSource().getBindingContext("dialog");
+            if (!oContext) return;
+
+            const sPath = oContext.getPath();
+            const oModel = this._tmReportsDialog.getModel("dialog");
+            const iNewDuration = oEvent.getParameter("value");
+
+            TMEditService.handleDurationChange(oModel, sPath, "Mileage", iNewDuration);
         },
 
         /**
