@@ -473,10 +473,10 @@
 .tmEntryContent5Col .sapMDTI,
 .tmEntryContent5Col .sapMStepInput,
 .tmEntryContent5Col .sapMTextArea {
-    width: 160px !important;
-    min-width: 160px !important;
-    max-width: 160px !important;
-    flex: 0 0 160px !important;
+    width: 140px !important;
+    min-width: 140px !important;
+    max-width: 140px !important;
+    flex: 0 0 140px !important;
 }
 
 /* Responsive: Stack columns on smaller screens */

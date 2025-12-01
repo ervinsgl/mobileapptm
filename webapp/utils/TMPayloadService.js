@@ -193,44 +193,107 @@ sap.ui.define([], () => {
 
         /**
          * Build Time & Material API payload
-         * Returns combined structure for multiple API calls
+         * Returns combined structure for multiple API calls (1 Material + 3 Time Efforts)
          * @param {object} oEntry - Time & Material entry data
          * @param {string} activityId - Activity ID
          * @param {string} orgLevelId - Organization Level ID
          * @returns {object} Combined T&M payload structure
          */
         buildTimeAndMaterialPayload(oEntry, activityId, orgLevelId) {
+            // Extract item externalId from itemDisplay
+            let itemExternalId = "";
+            if (oEntry.itemDisplay) {
+                itemExternalId = oEntry.itemDisplay.split(' - ')[0];
+            }
+
+            // Common values used across all payloads
+            const technicianExternalId = oEntry.technicianExternalId || "";
+            const chargeOption = oEntry.chargeOption || "";
+
+            // Object reference (same for all)
+            const objectRef = {
+                objectId: activityId || "",
+                objectType: "ACTIVITY"
+            };
+
+            // Time Effort constants
+            const timeEffortConstants = {
+                inactive: false,
+                startDateTimeTimeZoneId: "Europe/Berlin",
+                endDateTimeTimeZoneId: "Europe/Berlin",
+                breakInMinutes: 0,
+                unitPrice: null,
+                timeZoneId: "UTC+02:00",
+                internalRemarks: null,
+                breakStartDateTime: null,
+                udfValues: [{
+                    udfMeta: {
+                        externalId: "Z_TimeEffort_MatID"
+                    },
+                    value: "Z13000000"
+                }],
+                syncStatus: "REQUIRES_APPROVAL"
+            };
+
             return {
                 note: "Time & Material creates multiple API calls",
-                activityId: activityId,
-                orgLevelId: orgLevelId,
-                // Material part
+                // Material payload
                 material: {
-                    item: oEntry.itemDisplay ? { externalId: oEntry.itemDisplay.split(' - ')[0] } : null,
+                    chargeOption: chargeOption,
+                    inactive: false,
+                    orgLevel: orgLevelId || "",
+                    item: itemExternalId ? { externalId: itemExternalId } : null,
                     quantity: oEntry.quantity || 0,
+                    createPerson: {
+                        externalId: technicianExternalId
+                    },
                     date: oEntry.date || "",
-                    remarks: oEntry.remarksMaterial || ""
+                    remarks: oEntry.remarksMaterial || "",
+                    syncStatus: "REQUIRES_APPROVAL",
+                    object: objectRef
                 },
-                // Time Effort parts (3 columns)
+                // Time Effort 1 - Arbeitszeit
                 timeEffort1: oEntry.task1Code ? {
+                    chargeOption: chargeOption,
+                    ...timeEffortConstants,
+                    orgLevel: orgLevelId || "",
                     task: { code: oEntry.task1Code },
-                    startDateTime: oEntry.startDateTime1,
-                    endDateTime: oEntry.endDateTime1,
-                    remarks: oEntry.remarksTime || ""
+                    startDateTime: oEntry.startDateTime1 || "",
+                    endDateTime: oEntry.endDateTime1 || "",
+                    remarks: oEntry.remarksTime || "",
+                    createPerson: {
+                        externalId: technicianExternalId
+                    },
+                    object: objectRef
                 } : null,
+                // Time Effort 2 - Fahrzeit
                 timeEffort2: oEntry.task2Code ? {
+                    chargeOption: chargeOption,
+                    ...timeEffortConstants,
+                    orgLevel: orgLevelId || "",
                     task: { code: oEntry.task2Code },
-                    startDateTime: oEntry.startDateTime2,
-                    endDateTime: oEntry.endDateTime2,
-                    remarks: oEntry.remarksTime || ""
+                    startDateTime: oEntry.startDateTime2 || "",
+                    endDateTime: oEntry.endDateTime2 || "",
+                    remarks: oEntry.remarksTime || "",
+                    createPerson: {
+                        externalId: technicianExternalId
+                    },
+                    object: objectRef
                 } : null,
+                // Time Effort 3 - Wartezeit
                 timeEffort3: oEntry.task3Code ? {
+                    chargeOption: chargeOption,
+                    ...timeEffortConstants,
+                    orgLevel: orgLevelId || "",
                     task: { code: oEntry.task3Code },
-                    startDateTime: oEntry.startDateTime3,
-                    endDateTime: oEntry.endDateTime3,
-                    remarks: oEntry.remarksTime || ""
-                } : null,
-                chargeOption: oEntry.chargeOption || ""
+                    startDateTime: oEntry.startDateTime3 || "",
+                    endDateTime: oEntry.endDateTime3 || "",
+                    remarks: oEntry.remarksTime || "",
+                    createPerson: {
+                        externalId: technicianExternalId
+                    },
+                    object: objectRef
+                } : null
             };
         },
 
