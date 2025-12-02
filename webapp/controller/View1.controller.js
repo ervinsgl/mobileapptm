@@ -51,6 +51,19 @@ sap.ui.define([
                 busy: false,
                 organizationLevelsLoading: false,
 
+                // Web Container Context (from FSM Mobile)
+                webContainerContext: {
+                    available: false,
+                    userName: null,
+                    language: null,
+                    cloudAccount: null,
+                    companyName: null,
+                    objectType: null,
+                    cloudId: null,
+                    authStatus: "Not Connected",
+                    authState: "None"
+                },
+
                 serviceCall: {
                     id: null,
                     externalId: null,
@@ -212,7 +225,7 @@ sap.ui.define([
             try {
                 this._resetActivityData();
 
-                const currentActivityId = this._getCurrentActivityId();
+                const currentActivityId = await this._getCurrentActivityId();
                 if (currentActivityId) {
                     await this._loadActivity(currentActivityId);
                 }
@@ -615,15 +628,39 @@ sap.ui.define([
             }
         },
 
-        _loadActivityFromURL() {
-            if (URLHelper.hasActivityId()) {
-                const activityId = URLHelper.getActivityId();
+        async _loadActivityFromURL() {
+            const viewModel = this.getView().getModel("view");
+            
+            // Check URL params first, then web container context
+            const activityId = await URLHelper.getActivityIdAsync();
+            
+            // Populate web container context in model if available
+            const webContext = URLHelper.getWebContainerContext();
+            if (webContext) {
+                console.log('Populating web container context in model');
+                viewModel.setProperty("/webContainerContext", {
+                    available: true,
+                    userName: webContext.userName || 'N/A',
+                    language: (webContext.language || 'N/A').toUpperCase(),
+                    cloudAccount: webContext.cloudAccount || 'N/A',
+                    companyName: webContext.companyName || 'N/A',
+                    objectType: webContext.objectType || 'N/A',
+                    cloudId: webContext.cloudId || 'N/A',
+                    authStatus: "FSM Mobile",
+                    authState: "Success"
+                });
+            }
+            
+            if (activityId) {
+                console.log('Loading activity from:', URLHelper.hasActivityId() ? 'URL params' : 'web container');
                 this._loadActivity(activityId);
+            } else {
+                console.log('No activity ID found in URL or web container context');
             }
         },
 
-        _getCurrentActivityId() {
-            return URLHelper.hasActivityId() ? URLHelper.getActivityId() : null;
+        async _getCurrentActivityId() {
+            return await URLHelper.getActivityIdAsync();
         },
 
         onRefresh() {
@@ -637,28 +674,6 @@ sap.ui.define([
             this._loadOrganizationLevels();
 
             MessageToast.show("View refreshed");
-        },
-
-        /**
-         * Test T&M Dialog - Opens dialog with mock data for UI testing
-         * Remove this button in production
-         */
-        async onTestTMDialog() {
-            const mockActivityData = {
-                activityCode: "TEST-19608",
-                activitySubject: "Test Activity - UI Development",
-                serviceProduct: "Z12000005 - Vorbereitung",
-                serviceProductExternalId: "Z12000005",
-                formattedStartDate: "11/26/2025, 9:00:00 AM",
-                formattedEndDate: "11/26/2025, 5:00:00 PM",
-                formattedDuration: "480 min",
-                quantity: "1.0",
-                quantityUoM: "EA",
-                responsibleExternalId: "TEST001"
-            };
-
-            await TMDialogService.openTMCreationDialog(mockActivityData);
-            MessageToast.show("Test dialog opened");
         },
 
         onProductPanelExpand(oEvent) {

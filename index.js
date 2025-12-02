@@ -4,6 +4,12 @@ const FSMService = require('./utils/FSMService');
 
 const app = express();
 
+// ===========================
+// FSM WEB CONTAINER CONTEXT STORAGE
+// ===========================
+// Stores context from FSM Mobile web container POST request
+let mobileAppContext = undefined;
+
 // Middleware
 app.use((req, res, next) => {
     res.removeHeader('X-Frame-Options');
@@ -13,7 +19,66 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.enable('trust proxy');
 
-// Serve static files (Fiori app)
+// ===========================
+// FSM WEB CONTAINER ENTRY POINT
+// ===========================
+// FSM Mobile sends POST request with context when opening web container
+// iOS: Content-Type: application/json
+// Android: Content-Type: application/x-www-form-urlencoded
+// Configure this URL in FSM Admin > Web Containers
+
+app.post("/web-container-access-point", (req, res) => {
+    console.log('\n========================================');
+    console.log('FSM WEB CONTAINER: POST Request Received');
+    console.log('========================================');
+    console.log('Content-Type:', req.headers['content-type']);
+    console.log('Body:', JSON.stringify(req.body, null, 2));
+    
+    // Store context in memory (for frontend Session Context panel and cloudId)
+    mobileAppContext = req.body || {};
+    
+    console.log('\n--- Stored Context ---');
+    console.log('cloudId (objectId):', mobileAppContext.cloudId);
+    console.log('objectType:', mobileAppContext.objectType);
+    console.log('userName:', mobileAppContext.userName);
+    console.log('cloudAccount:', mobileAppContext.cloudAccount);
+    console.log('companyName:', mobileAppContext.companyName);
+    console.log('language:', mobileAppContext.language);
+    
+    // Redirect to app root (frontend will fetch context via GET)
+    const redirectUrl = req.protocol + '://' + req.get('host');
+    console.log('\nRedirecting to:', redirectUrl);
+    
+    res.redirect(redirectUrl);
+});
+
+// GET endpoint for frontend to retrieve stored context
+app.get("/web-container-context", (req, res) => {
+    console.log('FSM WEB CONTAINER: Context requested');
+    
+    if (mobileAppContext === undefined) {
+        console.log('  -> No context available');
+        return res.status(404).json({ 
+            message: 'Context from mobile web container is not available.',
+            hint: 'Open this app from FSM Mobile web container, not directly in browser.'
+        });
+    }
+    
+    console.log('  -> Returning context for cloudId:', mobileAppContext.cloudId);
+    
+    // Return context (for Session Context panel and cloudId)
+    return res.json(mobileAppContext);
+});
+
+// Also handle POST to root "/" in case FSM sends there
+app.post("/", (req, res) => {
+    console.log('FSM WEB CONTAINER: POST to "/" - storing context');
+    mobileAppContext = req.body || {};
+    const redirectUrl = req.protocol + '://' + req.get('host');
+    res.redirect(redirectUrl);
+});
+
+// Serve static files (Fiori app) - serve from webapp folder
 app.use(express.static(path.join(__dirname, 'webapp')));
 
 // ===========================

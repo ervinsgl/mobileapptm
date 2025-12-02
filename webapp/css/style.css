@@ -4,6 +4,23 @@
    ======================================== */
 
 /* ========================================
+   SESSION CONTEXT PANEL (WebContainerContext fragment)
+   ======================================== */
+
+.sessionContextPanel {
+    border: 1px solid #c5cae9;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    background-color: #f8f9ff;
+}
+
+.sessionContextPanel .sapMPanelHdr {
+    border-radius: 4px 4px 0 0;
+    overflow: hidden;
+    background-color: #e8eaf6;
+}
+
+/* ========================================
    SERVICE ORDER PANEL (ServiceCall fragment)
    ======================================== */
 
@@ -422,17 +439,17 @@
 
 /* Container - fills entire width with even column distribution */
 .tmEntryContent5Col {
-    gap: 1rem;
+    gap: 0.75rem;
     flex-wrap: nowrap;
     width: 100%;
-    padding: 0.75rem 1rem;
+    padding: 0.5rem 0.75rem;
 }
 
 /* Columns - equal width distribution */
 .tmColumnNarrow {
     flex: 1 1 0;
     min-width: 0;
-    padding-right: 1rem;
+    padding-right: 0.75rem;
     border-right: 1px solid #e8e8e8;
     display: flex;
     flex-direction: column;
@@ -455,8 +472,8 @@
 
 /* Smaller labels for 5-column layout */
 .tmEntryContent5Col .tmFieldLabel {
-    min-width: 4.5rem;
-    max-width: 4.5rem;
+    min-width: 4rem;
+    max-width: 4rem;
     font-size: 0.6875rem;
 }
 
@@ -473,10 +490,10 @@
 .tmEntryContent5Col .sapMDTI,
 .tmEntryContent5Col .sapMStepInput,
 .tmEntryContent5Col .sapMTextArea {
-    width: 140px !important;
-    min-width: 140px !important;
-    max-width: 140px !important;
-    flex: 0 0 140px !important;
+    width: 130px !important;
+    min-width: 130px !important;
+    max-width: 130px !important;
+    flex: 0 0 130px !important;
 }
 
 /* Responsive: Stack columns on smaller screens */

@@ -470,7 +470,7 @@ class FSMService {
 
                 // Format route
                 const routeText = mileage.source && mileage.destination ?
-                    `${mileage.source} → ${mileage.destination}` : 'N/A';
+                    `${mileage.source} â†’ ${mileage.destination}` : 'N/A';
 
                 console.log(`\n=== PROCESSED MILEAGE ===`);
                 console.log('ID:', mileage.id);

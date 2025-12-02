@@ -17,6 +17,12 @@
                 width="100%"
                 class="sapUiContentPadding"
             >
+                <!-- Web Container Session Context Fragment -->
+                <core:Fragment
+                    fragmentName="mobileappsc.view.fragments.WebContainerContext"
+                    type="XML"
+                />
+
                 <!-- Service Order Details Fragment -->
                 <core:Fragment
                     fragmentName="mobileappsc.view.fragments.ServiceCall"
@@ -47,13 +53,6 @@
         <footer>
             <OverflowToolbar id="mobileAppFooterToolbar">
                 <ToolbarSpacer id="mobileAppFooterSpacer" />
-                <Button
-                    id="mobileAppTestTMButton"
-                    icon="sap-icon://add"
-                    text="Test T&amp;M Dialog"
-                    type="Emphasized"
-                    press=".onTestTMDialog"
-                />
                 <Button
                     id="mobileAppRefreshButton"
                     icon="sap-icon://refresh"

@@ -1,0 +1,71 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+>
+    <Panel
+        id="webContainerContextPanel"
+        headerText="Session Context"
+        expandable="true"
+        expanded="false"
+        class="sapUiResponsiveMargin sapUiSmallMarginBottom sessionContextPanel"
+        width="auto"
+        visible="{view>/webContainerContext/available}"
+    >
+        <headerToolbar>
+            <OverflowToolbar design="Info">
+                <core:Icon src="sap-icon://user-settings" class="sapUiSmallMarginEnd"/>
+                <Title 
+                    text="Session Context" 
+                    level="H4" 
+                    titleStyle="H4"
+                />
+                <ToolbarSpacer />
+                <ObjectStatus 
+                    text="{view>/webContainerContext/authStatus}" 
+                    state="{view>/webContainerContext/authState}"
+                />
+            </OverflowToolbar>
+        </headerToolbar>
+        
+        <content>
+            <!-- Session Context Details - Compact 2-Column Layout -->
+            <HBox class="serviceOrderContent">
+                <!-- Column 1: User, Language -->
+                <VBox class="serviceOrderColumn">
+                    <HBox class="serviceOrderFieldRow">
+                        <Label text="User:" design="Bold" class="serviceOrderFieldLabel"/>
+                        <Text text="{view>/webContainerContext/userName}" class="serviceOrderFieldValue"/>
+                    </HBox>
+                    <HBox class="serviceOrderFieldRow">
+                        <Label text="Language:" design="Bold" class="serviceOrderFieldLabel"/>
+                        <Text text="{view>/webContainerContext/language}" class="serviceOrderFieldValue"/>
+                    </HBox>
+                </VBox>
+                
+                <!-- Column 2: Account, Company -->
+                <VBox class="serviceOrderColumn">
+                    <HBox class="serviceOrderFieldRow">
+                        <Label text="Account:" design="Bold" class="serviceOrderFieldLabel"/>
+                        <Text text="{view>/webContainerContext/cloudAccount}" class="serviceOrderFieldValue"/>
+                    </HBox>
+                    <HBox class="serviceOrderFieldRow">
+                        <Label text="Company:" design="Bold" class="serviceOrderFieldLabel"/>
+                        <Text text="{view>/webContainerContext/companyName}" class="serviceOrderFieldValue"/>
+                    </HBox>
+                </VBox>
+                
+                <!-- Column 3: Object Info -->
+                <VBox class="serviceOrderColumn">
+                    <HBox class="serviceOrderFieldRow">
+                        <Label text="Object Type:" design="Bold" class="serviceOrderFieldLabel"/>
+                        <Text text="{view>/webContainerContext/objectType}" class="serviceOrderFieldValue"/>
+                    </HBox>
+                    <HBox class="serviceOrderFieldRow">
+                        <Label text="Object ID:" design="Bold" class="serviceOrderFieldLabel"/>
+                        <Text text="{view>/webContainerContext/cloudId}" class="serviceOrderFieldValue"/>
+                    </HBox>
+                </VBox>
+            </HBox>
+        </content>
+    </Panel>
+</core:FragmentDefinition>
