@@ -146,44 +146,6 @@ app.post("/api/get-activities-by-service-call", async (req, res) => {
     }
 });
 
-// Get Organizational Levels
-app.get("/api/get-organizational-levels", async (req, res) => {
-    try {
-        const data = await FSMService.getOrganizationalLevels();
-
-        // Extract subLevels
-        const subLevels = [];
-        if (data.level && data.level.subLevels && Array.isArray(data.level.subLevels)) {
-            data.level.subLevels.forEach((subLevel) => {
-                subLevels.push({
-                    id: subLevel.id,
-                    name: subLevel.name,
-                    shortDescription: subLevel.shortDescription || subLevel.name,
-                    longDescription: subLevel.longDescription || subLevel.name
-                });
-            });
-        }
-
-        // Verify no duplicate IDs
-        const ids = subLevels.map(s => s.id);
-        const uniqueIds = [...new Set(ids)];
-        if (ids.length !== uniqueIds.length) {
-            console.error("Backend: DUPLICATE IDs DETECTED in organizational levels!", ids);
-        }
-
-        res.json({
-            levels: subLevels
-        });
-
-    } catch (error) {
-        console.error("Error fetching organizational levels:", error.message);
-        res.status(error.response?.status || 500).json({
-            message: error.response?.data?.message || 'Failed to fetch organizational levels',
-            error: error.response?.data || error.message
-        });
-    }
-});
-
 // Update Activity
 app.put("/api/update-activity", async (req, res) => {
     const { activityId, startDateTime, endDateTime, remarks, status } = req.body;
@@ -482,6 +444,43 @@ app.post("/api/get-approval-status", async (req, res) => {
         console.error("Error fetching Approval statuses:", error.message);
         res.status(error.response?.status || 500).json({
             message: error.response?.data?.message || 'Failed to fetch Approval statuses',
+            error: error.response?.data || error.message
+        });
+    }
+});
+
+// Get User's Organization Level by username
+// Flow: username -> User API (get user ID) -> Query Person (get orgLevel)
+app.post("/api/get-user-org-level", async (req, res) => {
+    const { username } = req.body;
+
+    if (!username) {
+        return res.status(400).json({ message: 'Username is required' });
+    }
+
+    try {
+        console.log('Backend: Getting org level for user:', username);
+        
+        const userOrgLevel = await FSMService.getUserOrgLevel(username);
+        
+        if (!userOrgLevel) {
+            return res.status(404).json({ 
+                message: 'User or organization level not found',
+                username: username
+            });
+        }
+
+        console.log('Backend: Found org level for user:', userOrgLevel);
+        
+        res.json({
+            success: true,
+            data: userOrgLevel
+        });
+
+    } catch (error) {
+        console.error("Error fetching user org level:", error.message);
+        res.status(error.response?.status || 500).json({
+            message: error.response?.data?.message || 'Failed to fetch user organization level',
             error: error.response?.data || error.message
         });
     }

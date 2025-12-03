@@ -4,10 +4,29 @@
     xmlns:l="sap.ui.layout"
 >
     <VBox class="sapUiResponsiveMargin">
+        <!-- Empty State - No Activities for Org Level -->
+        <IllustratedMessage
+            illustrationType="sapIllus-NoEntries"
+            title="No Activities Found"
+            description="There are no activities assigned to your organization level."
+            visible="{= ${view>/productGroups}.length === 0 }"
+        >
+            <additionalContent>
+                <Button
+                    text="Refresh"
+                    type="Emphasized"
+                    icon="sap-icon://refresh"
+                    press=".onRefresh"
+                />
+            </additionalContent>
+        </IllustratedMessage>
+        
+        <!-- Activities List -->
         <List
             items="{view>/productGroups}"
             mode="None"
             showSeparators="None"
+            visible="{= ${view>/productGroups}.length > 0 }"
         >
             <CustomListItem type="Inactive">
                 <Panel

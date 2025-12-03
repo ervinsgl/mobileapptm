@@ -3,7 +3,6 @@ sap.ui.define([
     "sap/ui/model/json/JSONModel",
     "sap/m/MessageToast",
     "sap/m/MessageBox",
-    "sap/ui/core/Item",
     "sap/ui/core/Fragment",
     "mobileappsc/utils/formatter",
     "mobileappsc/utils/ActivityService",
@@ -26,7 +25,7 @@ sap.ui.define([
     "mobileappsc/utils/DateTimeService",
     "mobileappsc/utils/TMPayloadService",
     "mobileappsc/utils/TMEditService"
-], (Controller, JSONModel, MessageToast, MessageBox, Item, Fragment, formatter, ActivityService, ServiceOrderService, ProductGroupService, URLHelper, OrganizationService, ReportedItemsData, TimeTaskService, ItemService, ExpenseTypeService, UdfMetaService, ApprovalService, TMDialogService, TMCreationService, TMDataService, PersonService, BusinessPartnerService, TechnicianService, DateTimeService, TMPayloadService, TMEditService) => {
+], (Controller, JSONModel, MessageToast, MessageBox, Fragment, formatter, ActivityService, ServiceOrderService, ProductGroupService, URLHelper, OrganizationService, ReportedItemsData, TimeTaskService, ItemService, ExpenseTypeService, UdfMetaService, ApprovalService, TMDialogService, TMCreationService, TMDataService, PersonService, BusinessPartnerService, TechnicianService, DateTimeService, TMPayloadService, TMEditService) => {
     "use strict";
 
     return Controller.extend("mobileappsc.controller.View1", {
@@ -37,13 +36,18 @@ sap.ui.define([
             TMDialogService.init(this);
             
             this._initializeModel();
-            this._loadOrganizationLevels();
+            
+            // Load web container context first (needed for user org level resolution)
+            this._loadWebContainerContext().then(() => {
+                // Then load organization levels (will auto-resolve user's org level if context available)
+                this._loadOrganizationLevels();
+            });
+            
             this._loadOrganizationalHierarchy(); // Load full hierarchy for org level lookups
             this._loadTimeTasks(); // Load time tasks for lookup
             this._loadItems(); // Load items for lookup
             this._loadExpenseTypes(); // Load expense types for lookup
             // Persons will be loaded on-demand when needed
-            this._loadActivityFromURL();
         },
 
         _initializeModel() {
@@ -60,8 +64,8 @@ sap.ui.define([
                     companyName: null,
                     objectType: null,
                     cloudId: null,
-                    authStatus: "Not Connected",
-                    authState: "None"
+                    orgLevelId: null,
+                    orgLevelName: "Loading..."
                 },
 
                 serviceCall: {
@@ -82,7 +86,8 @@ sap.ui.define([
 
                 productGroups: [],
 
-                organizationSelected: false
+                organizationSelected: false,
+                userOrgLevelResolved: false
             });
 
             this.getView().setModel(viewModel, "view");
@@ -93,18 +98,52 @@ sap.ui.define([
             viewModel.setProperty("/organizationLevelsLoading", true);
 
             try {
-                const levels = await OrganizationService.fetchOrganizationalLevels();
-                const transformedLevels = OrganizationService.transformLevelsForDropdown(levels);
+                // First ensure hierarchy is loaded for matching
+                await OrganizationService.loadOrganizationalHierarchy();
 
-                viewModel.setProperty("/organizationLevels", transformedLevels);
+                // Check if we have web container context with userName
+                const webContext = viewModel.getProperty("/webContainerContext");
+                const userName = webContext?.userName;
 
-                setTimeout(() => {
-                    this._populateOrganizationLevelComboBox(transformedLevels);
-                }, 100);
+                if (userName && userName !== 'N/A') {
+                    console.log('View1: Attempting to auto-resolve org level for user:', userName);
+                    
+                    // Try to get user's resolved org level
+                    const resolvedOrgLevel = await OrganizationService.getUserResolvedOrgLevel(userName);
+                    
+                    if (resolvedOrgLevel && resolvedOrgLevel.found) {
+                        console.log('View1: Auto-resolved org level:', resolvedOrgLevel.name);
+                        
+                        // Store org level in webContainerContext
+                        viewModel.setProperty("/webContainerContext/orgLevelId", resolvedOrgLevel.id);
+                        viewModel.setProperty("/webContainerContext/orgLevelName", resolvedOrgLevel.name);
+                        
+                        // Set selected organization level for activity loading
+                        viewModel.setProperty("/selectedOrganizationLevel", {
+                            key: resolvedOrgLevel.id,
+                            text: resolvedOrgLevel.name
+                        });
+                        viewModel.setProperty("/organizationSelected", true);
+                        viewModel.setProperty("/userOrgLevelResolved", true);
+
+                        // Load activity from URL if available
+                        await this._loadActivityFromURL();
+
+                        return; // Exit early - we have auto-resolved
+                    } else {
+                        console.log('View1: Could not auto-resolve org level');
+                        viewModel.setProperty("/webContainerContext/orgLevelName", "Not Assigned");
+                    }
+                } else {
+                    viewModel.setProperty("/webContainerContext/orgLevelName", "N/A");
+                }
+
+                // Also try to load activity from URL even without auto-resolution
+                await this._loadActivityFromURL();
 
             } catch (error) {
                 console.error("Failed to load organization levels:", error);
-                MessageToast.show("Failed to load organization levels");
+                viewModel.setProperty("/webContainerContext/orgLevelName", "Error");
             } finally {
                 viewModel.setProperty("/organizationLevelsLoading", false);
             }
@@ -170,53 +209,6 @@ sap.ui.define([
          * Load Persons for lookup (runs in background)
          * Used to resolve Person IDs/externalIds to human-readable names
          */
-        _populateOrganizationLevelComboBox(levels) {
-            const comboBox = this.byId("organizationLevelComboBox");
-            if (!comboBox) return;
-
-            comboBox.removeAllItems();
-
-            levels.forEach(level => {
-                const item = new Item({
-                    key: level.key,
-                    text: level.text
-                });
-                comboBox.addItem(item);
-            });
-        },
-
-        async onOrganizationLevelChange(oEvent) {
-            const selectedItem = oEvent.getParameter("selectedItem");
-            if (!selectedItem) return;
-
-            const selectedKey = selectedItem.getKey();
-            const model = this.getView().getModel("view");
-            const organizationLevels = model.getProperty("/organizationLevels");
-            const selectedLevel = organizationLevels.find(level => level.key === selectedKey);
-
-            if (selectedLevel) {
-                model.setProperty("/selectedOrganizationLevel", selectedLevel);
-                model.setProperty("/organizationSelected", true);
-
-                MessageToast.show(`Loading activities for: ${selectedLevel.text}`);
-
-                await this._initializeActivityPanels();
-
-                this._restoreOrganizationLevelSelection(organizationLevels, selectedLevel.key);
-            } else {
-                console.warn("Selected level not found for key:", selectedKey);
-            }
-        },
-
-        _restoreOrganizationLevelSelection(organizationLevels, selectedKey) {
-            setTimeout(() => {
-                this._populateOrganizationLevelComboBox(organizationLevels);
-                const comboBox = this.byId("organizationLevelComboBox");
-                if (comboBox) {
-                    comboBox.setSelectedKey(selectedKey);
-                }
-            }, 100);
-        },
 
         async _initializeActivityPanels() {
             const model = this.getView().getModel("view");
@@ -278,12 +270,42 @@ sap.ui.define([
                 const serviceOrderData = ServiceOrderService.extractServiceOrderData(compositeData);
                 const allActivities = ServiceOrderService.extractActivitiesFromCompositeTree(compositeData);
 
+                // Get user's org level ID for filtering
+                const viewModel = this.getView().getModel("view");
+                const userOrgLevelId = viewModel.getProperty("/webContainerContext/orgLevelId");
+
                 // Filter EXECUTION and CLOSED activities
-                const filteredActivities = allActivities.filter(activity =>
+                let filteredActivities = allActivities.filter(activity =>
                     activity.executionStage === "EXECUTION" || activity.executionStage === "CLOSED"
                 );
 
                 console.log('Filtered activities (EXECUTION + CLOSED):', filteredActivities.length);
+
+                // Filter by user's org level if available
+                if (userOrgLevelId) {
+                    console.log('Filtering activities by user org level:', userOrgLevelId);
+                    
+                    filteredActivities = filteredActivities.filter(activity => {
+                        // orgLevelIds is directly on activity (not in fullActivity)
+                        const activityOrgLevelIds = activity.orgLevelIds || [];
+                        
+                        // Log for debugging
+                        console.log('Activity', activity.code, 'orgLevelIds:', activityOrgLevelIds);
+                        
+                        // Check if any of the activity's org level IDs match the user's org level
+                        return activityOrgLevelIds.some(activityOrgLevelId => {
+                            // Format activity org level ID to UUID for comparison
+                            const formattedActivityOrgLevelId = OrganizationService.formatOrgLevelId(activityOrgLevelId);
+                            const match = formattedActivityOrgLevelId === userOrgLevelId;
+                            if (match) {
+                                console.log('  -> MATCH:', formattedActivityOrgLevelId, '===', userOrgLevelId);
+                            }
+                            return match;
+                        });
+                    });
+
+                    console.log('Filtered activities (by org level):', filteredActivities.length);
+                }
 
                 const productGroups = ProductGroupService.groupActivitiesByProduct(
                     filteredActivities,
@@ -297,8 +319,6 @@ sap.ui.define([
                     activityCount: group.activities.length,
                     activities: group.activities.map(activity => this._prepareActivityDataOptimized(activity))
                 }));
-
-                const viewModel = this.getView().getModel("view");
 
                 if (serviceOrderData) {
                     // Preload and enrich with responsible person name
@@ -419,7 +439,7 @@ sap.ui.define([
             const isClosed = activity.executionStage === 'CLOSED';
             const fullActivity = activity.fullActivity || {};
 
-            // Ã¢Å“â€¦ Extract UDF values for Quantity and UoM
+            // Extract UDF values for Quantity and UoM
             const quantity = this._getUdfValue(fullActivity, 'Z_Quantity') || 'N/A';
             const quantityUoM = this._getUdfValue(fullActivity, 'Z_QuantityUoM') || 'N/A';
             const formattedQuantity = quantity !== 'N/A' && quantityUoM !== 'N/A'
@@ -620,36 +640,52 @@ sap.ui.define([
             return parts.length > 0 ? parts.join(' ') : 'N/A';
         },
 
-        _clearAllDropdowns() {
-            const orgComboBox = this.byId("organizationLevelComboBox");
-            if (orgComboBox) {
-                orgComboBox.setSelectedKey("");
-                orgComboBox.removeAllItems();
+        /**
+         * Load web container context from FSM Mobile
+         * This must be called before _loadOrganizationLevels to enable user org level resolution
+         */
+        async _loadWebContainerContext() {
+            const viewModel = this.getView().getModel("view");
+            
+            try {
+                // Fetch web container context from backend
+                const response = await fetch("/web-container-context");
+                
+                if (response.ok) {
+                    const webContext = await response.json();
+                    console.log('Web container context loaded:', webContext);
+                    
+                    viewModel.setProperty("/webContainerContext", {
+                        available: true,
+                        userName: webContext.userName || 'N/A',
+                        language: (webContext.language || 'N/A').toUpperCase(),
+                        cloudAccount: webContext.cloudAccount || 'N/A',
+                        companyName: webContext.companyName || 'N/A',
+                        objectType: webContext.objectType || 'N/A',
+                        cloudId: webContext.cloudId || 'N/A',
+                        orgLevelId: null,
+                        orgLevelName: "Loading..."
+                    });
+                    
+                    // Store context for URL helper
+                    URLHelper.setWebContainerContext(webContext);
+                    
+                    return webContext;
+                } else {
+                    console.log('No web container context available (not opened from FSM Mobile)');
+                    return null;
+                }
+            } catch (error) {
+                console.log('Could not load web container context:', error.message);
+                return null;
             }
         },
 
         async _loadActivityFromURL() {
             const viewModel = this.getView().getModel("view");
             
-            // Check URL params first, then web container context
+            // Get activity ID from URL params or web container context
             const activityId = await URLHelper.getActivityIdAsync();
-            
-            // Populate web container context in model if available
-            const webContext = URLHelper.getWebContainerContext();
-            if (webContext) {
-                console.log('Populating web container context in model');
-                viewModel.setProperty("/webContainerContext", {
-                    available: true,
-                    userName: webContext.userName || 'N/A',
-                    language: (webContext.language || 'N/A').toUpperCase(),
-                    cloudAccount: webContext.cloudAccount || 'N/A',
-                    companyName: webContext.companyName || 'N/A',
-                    objectType: webContext.objectType || 'N/A',
-                    cloudId: webContext.cloudId || 'N/A',
-                    authStatus: "FSM Mobile",
-                    authState: "Success"
-                });
-            }
             
             if (activityId) {
                 console.log('Loading activity from:', URLHelper.hasActivityId() ? 'URL params' : 'web container');
@@ -667,11 +703,13 @@ sap.ui.define([
             const model = this.getView().getModel("view");
 
             model.setProperty("/organizationSelected", false);
+            model.setProperty("/userOrgLevelResolved", false);
             this._resetActivityData();
 
-            this._clearAllDropdowns();
-
-            this._loadOrganizationLevels();
+            // Reload web container context and organization levels
+            this._loadWebContainerContext().then(() => {
+                this._loadOrganizationLevels();
+            });
 
             MessageToast.show("View refreshed");
         },
@@ -1361,7 +1399,7 @@ sap.ui.define([
         },
 
         /**
-         * Save individual T&M entry (Simplified: Save â†’ Show JSON â†’ Done!)
+         * Save individual T&M entry (Simplified: Save Ã¢â€ â€™ Show JSON Ã¢â€ â€™ Done!)
          */
         onSaveEntry(oEvent) {
             const oButton = oEvent.getSource();

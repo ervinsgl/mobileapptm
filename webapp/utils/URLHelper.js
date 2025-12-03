@@ -123,6 +123,16 @@ sap.ui.define([], () => {
         },
 
         /**
+         * Set web container context (used when context is fetched elsewhere)
+         * @param {Object} context - Web container context object
+         */
+        setWebContainerContext(context) {
+            _webContainerContext = context;
+            _webContainerChecked = true;
+            console.log('URLHelper: Web container context set manually');
+        },
+
+        /**
          * Clear cached web container context
          */
         clearWebContainerContext() {

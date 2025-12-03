@@ -13,22 +13,23 @@
     >
         <headerToolbar>
             <OverflowToolbar design="Info">
-                <core:Icon src="sap-icon://user-settings" class="sapUiSmallMarginEnd"/>
+                <core:Icon src="sap-icon://org-chart" class="sapUiSmallMarginEnd"/>
                 <Title 
-                    text="Session Context" 
+                    text="{view>/webContainerContext/orgLevelName}" 
                     level="H4" 
                     titleStyle="H4"
                 />
                 <ToolbarSpacer />
                 <ObjectStatus 
-                    text="{view>/webContainerContext/authStatus}" 
-                    state="{view>/webContainerContext/authState}"
+                    text="{view>/webContainerContext/userName}" 
+                    state="Success"
+                    icon="sap-icon://person-placeholder"
                 />
             </OverflowToolbar>
         </headerToolbar>
         
         <content>
-            <!-- Session Context Details - Compact 2-Column Layout -->
+            <!-- Session Context Details - Compact 3-Column Layout -->
             <HBox class="serviceOrderContent">
                 <!-- Column 1: User, Language -->
                 <VBox class="serviceOrderColumn">
@@ -54,14 +55,14 @@
                     </HBox>
                 </VBox>
                 
-                <!-- Column 3: Object Info -->
+                <!-- Column 3: Org Level, Object Info -->
                 <VBox class="serviceOrderColumn">
                     <HBox class="serviceOrderFieldRow">
-                        <Label text="Object Type:" design="Bold" class="serviceOrderFieldLabel"/>
-                        <Text text="{view>/webContainerContext/objectType}" class="serviceOrderFieldValue"/>
+                        <Label text="Organization:" design="Bold" class="serviceOrderFieldLabel"/>
+                        <Text text="{view>/webContainerContext/orgLevelName}" class="serviceOrderFieldValue"/>
                     </HBox>
                     <HBox class="serviceOrderFieldRow">
-                        <Label text="Object ID:" design="Bold" class="serviceOrderFieldLabel"/>
+                        <Label text="Activity ID:" design="Bold" class="serviceOrderFieldLabel"/>
                         <Text text="{view>/webContainerContext/cloudId}" class="serviceOrderFieldValue"/>
                     </HBox>
                 </VBox>

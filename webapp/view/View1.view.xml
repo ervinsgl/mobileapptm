@@ -29,12 +29,6 @@
                     type="XML"
                 />
 
-                <!-- Organization Level Fragment -->
-                <core:Fragment
-                    fragmentName="mobileappsc.view.fragments.OrganizationLevel"
-                    type="XML"
-                />
-
                 <!-- Product Groups Fragment -->
                 <VBox 
                     id="productGroupsOuterContainer"

@@ -28,28 +28,6 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Fetch organizational levels from backend (full hierarchy)
-         */
-        async fetchOrganizationalLevels() {
-            try {
-                const response = await fetch("/api/get-organizational-levels", {
-                    method: "GET",
-                    headers: { "Content-Type": "application/json" }
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Failed to fetch organizational levels: ${response.status}`);
-                }
-
-                const data = await response.json();
-                return data.levels || [];
-            } catch (error) {
-                console.error("OrganizationService: Error fetching levels:", error);
-                throw error;
-            }
-        },
-
-        /**
          * Load full organizational hierarchy and populate cache
          */
         async loadOrganizationalHierarchy() {
@@ -124,7 +102,7 @@ sap.ui.define([], () => {
             // Check cache
             const orgLevel = this._orgLevelCache.get(formattedId);
             if (orgLevel) {
-                return orgLevel.shortDescription || orgLevel.name;
+                return orgLevel.name || orgLevel.shortDescription;
             }
 
             // If not in cache, try to load hierarchy (async)
@@ -137,87 +115,151 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Get organization level full name by ID
-         * Format: "Service Unit 2130_MPA_Team1  MPA Service Team 1"
-         */
-        getOrgLevelFullNameById(orgLevelId) {
-            if (!orgLevelId || orgLevelId === 'N/A') return 'N/A';
-
-            const formattedId = this.formatOrgLevelId(orgLevelId);
-
-            const orgLevel = this._orgLevelCache.get(formattedId);
-            if (orgLevel) {
-                return orgLevel.longDescription || orgLevel.name;
-            }
-
-            return orgLevelId;
-        },
-
-        /**
-         * Transform levels for dropdown display
-         */
-        transformLevelsForDropdown(levels) {
-            if (!Array.isArray(levels)) {
-                console.warn("OrganizationService: levels is not an array:", levels);
-                return [];
-            }
-
-            const transformed = levels.map(level => ({
-                key: level.id,
-                text: level.name,
-                shortDescription: level.shortDescription || level.name,
-                longDescription: level.longDescription || level.name
-            }));
-
-            // Verify no duplicate keys
-            const keys = transformed.map(t => t.key);
-            const uniqueKeys = [...new Set(keys)];
-            if (keys.length !== uniqueKeys.length) {
-                console.error("OrganizationService: DUPLICATE KEYS DETECTED!", keys);
-            }
-
-            return transformed;
-        },
-
-        /**
-         * Search organization levels by name
-         */
-        searchOrgLevels(searchTerm) {
-            if (!searchTerm || searchTerm.length < 2) {
-                return [];
-            }
-
-            const term = searchTerm.toLowerCase();
-            const results = [];
-
-            this._orgLevelCache.forEach((orgLevel) => {
-                const nameMatch = orgLevel.name.toLowerCase().includes(term);
-                const shortDescMatch = orgLevel.shortDescription.toLowerCase().includes(term);
-                const longDescMatch = orgLevel.longDescription.toLowerCase().includes(term);
-
-                if (nameMatch || shortDescMatch || longDescMatch) {
-                    results.push({
-                        id: orgLevel.id,
-                        name: orgLevel.name,
-                        shortDescription: orgLevel.shortDescription,
-                        displayText: orgLevel.shortDescription || orgLevel.name
-                    });
-                }
-            });
-
-            // Sort by name
-            results.sort((a, b) => a.name.localeCompare(b.name));
-
-            return results;
-        },
-
-        /**
          * Clear cache
          */
         clearCache() {
             this._orgLevelCache.clear();
             this._hierarchyLoaded = false;
             console.log('OrganizationService: Cache cleared');
+        },
+
+        /**
+         * Fetch user's organization level from backend
+         * @param {string} username - Username from FSM Mobile context
+         * @returns {Promise<Object|null>} User org level data or null
+         */
+        async fetchUserOrgLevel(username) {
+            try {
+                if (!username) {
+                    console.log('OrganizationService: No username provided');
+                    return null;
+                }
+
+                console.log('OrganizationService: Fetching org level for user:', username);
+
+                const response = await fetch("/api/get-user-org-level", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username: username })
+                });
+
+                if (!response.ok) {
+                    console.error('OrganizationService: Failed to fetch user org level:', response.status);
+                    return null;
+                }
+
+                const data = await response.json();
+                console.log('OrganizationService: User org level response:', data);
+
+                return data.success ? data.data : null;
+
+            } catch (error) {
+                console.error("OrganizationService: Error fetching user org level:", error);
+                return null;
+            }
+        },
+
+        /**
+         * Find matching organization level in hierarchy
+         * Matches orgLevel (formatted to UUID) or orgLevelIds against cached hierarchy
+         * @param {string} orgLevel - Raw orgLevel ID (e.g., "2B6F748557D44F249F6BEFC6D0FB07B0")
+         * @param {Array} orgLevelIds - Array of orgLevel IDs (fallback if orgLevel doesn't match)
+         * @returns {Object|null} Matched org level from cache or null
+         */
+        findMatchingOrgLevel(orgLevel, orgLevelIds) {
+            console.log('OrganizationService: Finding matching org level...');
+            console.log('  orgLevel:', orgLevel);
+            console.log('  orgLevelIds:', orgLevelIds);
+
+            // First try to match orgLevel (primary)
+            if (orgLevel) {
+                const formattedId = this.formatOrgLevelId(orgLevel);
+                console.log('  Formatted orgLevel:', formattedId);
+
+                const matched = this._orgLevelCache.get(formattedId);
+                if (matched) {
+                    console.log('OrganizationService: Matched orgLevel:', matched.name);
+                    return {
+                        ...matched,
+                        matchedBy: 'orgLevel',
+                        originalId: orgLevel,
+                        formattedId: formattedId
+                    };
+                }
+            }
+
+            // Fallback to orgLevelIds array
+            if (orgLevelIds && Array.isArray(orgLevelIds) && orgLevelIds.length > 0) {
+                for (const id of orgLevelIds) {
+                    const formattedId = this.formatOrgLevelId(id);
+                    console.log('  Trying orgLevelIds item:', id, '-> formatted:', formattedId);
+
+                    const matched = this._orgLevelCache.get(formattedId);
+                    if (matched) {
+                        console.log('OrganizationService: Matched from orgLevelIds:', matched.name);
+                        return {
+                            ...matched,
+                            matchedBy: 'orgLevelIds',
+                            originalId: id,
+                            formattedId: formattedId
+                        };
+                    }
+                }
+            }
+
+            console.log('OrganizationService: No matching org level found');
+            return null;
+        },
+
+        /**
+         * Get user's resolved organization level
+         * Combines fetching user org level and matching against hierarchy
+         * @param {string} username - Username from FSM Mobile context
+         * @returns {Promise<Object|null>} Resolved org level with display info or null
+         */
+        async getUserResolvedOrgLevel(username) {
+            try {
+                // Ensure hierarchy is loaded
+                if (!this._hierarchyLoaded) {
+                    await this.loadOrganizationalHierarchy();
+                }
+
+                // Fetch user's org level from backend
+                const userOrgData = await this.fetchUserOrgLevel(username);
+                if (!userOrgData) {
+                    console.log('OrganizationService: Could not fetch user org level data');
+                    return null;
+                }
+
+                // Find matching org level in hierarchy
+                const matched = this.findMatchingOrgLevel(userOrgData.orgLevel, userOrgData.orgLevelIds);
+                if (!matched) {
+                    console.log('OrganizationService: Org level not found in hierarchy');
+                    return {
+                        found: false,
+                        userOrgData: userOrgData,
+                        message: 'Organization level not found in hierarchy'
+                    };
+                }
+
+                console.log('OrganizationService: Successfully resolved user org level:', matched.name);
+
+                return {
+                    found: true,
+                    id: matched.id,
+                    name: matched.name,
+                    shortDescription: matched.shortDescription,
+                    longDescription: matched.longDescription,
+                    matchedBy: matched.matchedBy,
+                    originalId: matched.originalId,
+                    formattedId: matched.formattedId,
+                    userOrgData: userOrgData
+                };
+
+            } catch (error) {
+                console.error("OrganizationService: Error resolving user org level:", error);
+                return null;
+            }
         }
     };
 });

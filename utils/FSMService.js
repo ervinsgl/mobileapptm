@@ -98,38 +98,6 @@ class FSMService {
     }
 
     /**
-     * Get organizational levels
-     */
-    async getOrganizationalLevels() {
-        try {
-            const destination = await DestinationService.getDestination('FSM_S4E');
-            const token = await TokenCache.getToken(destination);
-
-            const baseUrl = destination.destinationConfiguration.URL;
-            const fullUrl = `${baseUrl}/cloud-org-level-service/api/v1/levels`;
-
-            console.log('Fetching organizational levels from:', fullUrl);
-
-            const headers = {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`,
-                'X-Account-ID': destination.destinationConfiguration['URL.headers.X-Account-ID'],
-                'X-Company-ID': destination.destinationConfiguration['URL.headers.X-Company-ID']
-            };
-
-            const response = await axios.get(fullUrl, { headers });
-
-            console.log('Organizational levels response:', response.data);
-
-            return response.data;
-
-        } catch (error) {
-            console.error('FSM API Error (organizational-levels):', error.response?.data || error.message);
-            throw error;
-        }
-    }
-
-    /**
      * Update activity
      */
     async updateActivity(activityId, updateData) {
@@ -470,7 +438,7 @@ class FSMService {
 
                 // Format route
                 const routeText = mileage.source && mileage.destination ?
-                    `${mileage.source} â†’ ${mileage.destination}` : 'N/A';
+                    `${mileage.source} -> ${mileage.destination}` : 'N/A';
 
                 console.log(`\n=== PROCESSED MILEAGE ===`);
                 console.log('ID:', mileage.id);
@@ -912,6 +880,141 @@ class FSMService {
 
         } catch (error) {
             console.error('FSM API Error (organizational-levels):', error.response?.data || error.message);
+            throw error;
+        }
+    }
+
+    /**
+     * Get User by username from User API
+     * Endpoint: /api/user/v1/users?name={username}&account={account}
+     * @param {string} username - Username (e.g., "EGLEIZDS")
+     * @returns {Promise<Object|null>} User object with id, or null if not found
+     */
+    async getUserByUsername(username) {
+        try {
+            if (!username) return null;
+
+            const destination = await DestinationService.getDestination('FSM_S4E');
+            const token = await TokenCache.getToken(destination);
+
+            const baseUrl = destination.destinationConfiguration.URL;
+            const account = destination.destinationConfiguration.account || this.config.account;
+            const fullUrl = `${baseUrl}/api/user/v1/users`;
+
+            console.log('FSMService: Fetching user by username:', username);
+
+            const headers = {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+                'X-Account-ID': destination.destinationConfiguration['URL.headers.X-Account-ID'],
+                'X-Company-ID': destination.destinationConfiguration['URL.headers.X-Company-ID'],
+                'X-Client-ID': destination.destinationConfiguration['URL.headers.X-Client-ID'],
+                'X-Client-Version': destination.destinationConfiguration['URL.headers.X-Client-Version']
+            };
+
+            const response = await axios.get(fullUrl, {
+                params: {
+                    name: username,
+                    account: account
+                },
+                headers: headers
+            });
+
+            console.log('FSMService: User API response:', JSON.stringify(response.data, null, 2));
+
+            // Extract user from content array
+            if (response.data && response.data.content && response.data.content.length > 0) {
+                const user = response.data.content[0];
+                console.log('FSMService: Found user ID:', user.id);
+                return {
+                    id: user.id,
+                    email: user.email,
+                    firstName: user.firstName,
+                    lastName: user.lastName,
+                    name: user.name,
+                    companies: user.companies || []
+                };
+            }
+
+            console.log('FSMService: User not found for username:', username);
+            return null;
+
+        } catch (error) {
+            console.error('FSM API Error (get user by username):', error.response?.data || error.message);
+            throw error;
+        }
+    }
+
+    /**
+     * Get Person's orgLevel by userName (user ID from User API)
+     * Query: SELECT w.orgLevel, w.orgLevelIds FROM Person w WHERE w.userName = '{userId}'
+     * @param {string} userId - User ID from User API (e.g., "532149")
+     * @returns {Promise<Object|null>} Object with orgLevel and orgLevelIds, or null if not found
+     */
+    async getPersonOrgLevelByUserId(userId) {
+        try {
+            if (!userId) return null;
+
+            console.log('FSMService: Fetching Person orgLevel for userId:', userId);
+
+            const query = `SELECT w.orgLevel, w.orgLevelIds FROM Person w WHERE w.userName = '${userId}'`;
+            const data = await this.makeQueryRequest(query, 'Person.25');
+
+            if (!data.data || data.data.length === 0) {
+                console.log('FSMService: Person not found for userId:', userId);
+                return null;
+            }
+
+            const personData = data.data[0].w;
+            console.log('FSMService: Found Person orgLevel data:', personData);
+
+            return {
+                orgLevel: personData.orgLevel || null,
+                orgLevelIds: personData.orgLevelIds || null
+            };
+
+        } catch (error) {
+            console.error('FSM API Error (get person orgLevel):', error.response?.data || error.message);
+            throw error;
+        }
+    }
+
+    /**
+     * Get User's Organization Level (combined flow)
+     * 1. Get user by username -> get user ID
+     * 2. Query Person table with user ID -> get orgLevel/orgLevelIds
+     * @param {string} username - Username from FSM Mobile context (e.g., "EGLEIZDS")
+     * @returns {Promise<Object|null>} Object with orgLevel info, or null if not found
+     */
+    async getUserOrgLevel(username) {
+        try {
+            console.log('FSMService: Getting org level for user:', username);
+
+            // Step 1: Get user by username to get user ID
+            const user = await this.getUserByUsername(username);
+            if (!user || !user.id) {
+                console.log('FSMService: Could not find user for username:', username);
+                return null;
+            }
+
+            // Step 2: Get Person's orgLevel using user ID
+            const orgLevelData = await this.getPersonOrgLevelByUserId(user.id);
+            if (!orgLevelData) {
+                console.log('FSMService: Could not find Person orgLevel for userId:', user.id);
+                return null;
+            }
+
+            return {
+                userId: user.id,
+                userName: username,
+                userFirstName: user.firstName,
+                userLastName: user.lastName,
+                orgLevel: orgLevelData.orgLevel,
+                orgLevelIds: orgLevelData.orgLevelIds
+            };
+
+        } catch (error) {
+            console.error('FSM API Error (get user org level):', error.message);
             throw error;
         }
     }
