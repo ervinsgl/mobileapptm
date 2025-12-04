@@ -1,27 +1,59 @@
+/**
+ * ItemService.js
+ * 
+ * Frontend service for item/material data management.
+ * Handles fetching, caching, and lookup of items for T&M entries.
+ * 
+ * Key Features:
+ * - Fetch and cache all items from FSM (excluding tools and Z11% items)
+ * - Dual lookup maps: by ID and by externalId
+ * - Search and suggestion support for item selection
+ * - Dropdown data transformation
+ * 
+ * Display Format: "Z10000001 - Material Name"
+ * 
+ * API Endpoint Used:
+ * - GET /api/get-items
+ * 
+ * @file ItemService.js
+ * @module mobileappsc/utils/ItemService
+ */
 sap.ui.define([], () => {
     "use strict";
 
-    // Private cache for items
+    /**
+     * Cache for items array.
+     * @type {Array|null}
+     * @private
+     */
     let _itemsCache = null;
+    
+    /**
+     * Map for quick ID-to-object lookup.
+     * @type {Map<string, Object>|null}
+     * @private
+     */
     let _itemsMapById = null;
+    
+    /**
+     * Map for quick externalId-to-object lookup.
+     * @type {Map<string, Object>|null}
+     * @private
+     */
     let _itemsMapByExternalId = null;
 
     return {
         /**
-         * Fetch all items from backend (excluding tools and Z11% items)
-         * Results are cached for the session
+         * Fetch all items from backend (excluding tools and Z11% items).
+         * Results are cached for the session.
          * @returns {Promise<Array>} Array of item objects
          */
         async fetchItems() {
-            // Return cached data if available
             if (_itemsCache) {
-                console.log('ItemService: Returning cached items');
                 return _itemsCache;
             }
 
             try {
-                console.log('ItemService: Fetching items from API...');
-
                 const response = await fetch("/api/get-items", {
                     method: "GET",
                     headers: { "Content-Type": "application/json" }
@@ -34,10 +66,8 @@ sap.ui.define([], () => {
                 const data = await response.json();
                 _itemsCache = data.items || [];
 
-                // Build lookup maps for quick resolution
                 this._buildLookupMaps();
 
-                console.log('ItemService: Loaded', _itemsCache.length, 'items');
                 return _itemsCache;
 
             } catch (error) {
@@ -47,7 +77,7 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Build internal lookup maps for ID and externalId resolution
+         * Build internal lookup maps for ID and externalId resolution.
          * @private
          */
         _buildLookupMaps() {
@@ -64,14 +94,12 @@ sap.ui.define([], () => {
                     }
                 });
             }
-            
-            console.log('ItemService: Built lookup maps -', _itemsMapById.size, 'by ID,', _itemsMapByExternalId.size, 'by externalId');
         },
 
         /**
-         * Get item name by ID
+         * Get item name by ID.
          * @param {string} itemId - Item ID
-         * @returns {string} Item name or the original ID if not found
+         * @returns {string} Item name or ID as fallback
          */
         getItemNameById(itemId) {
             if (!itemId || itemId === 'N/A') {
@@ -79,7 +107,6 @@ sap.ui.define([], () => {
             }
 
             if (!_itemsMapById) {
-                console.warn('ItemService: Lookup maps not initialized. Call fetchItems() first.');
                 return itemId;
             }
 
@@ -88,9 +115,9 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Get item name by external ID
+         * Get item name by external ID.
          * @param {string} externalId - Item external ID
-         * @returns {string} Item name or the original externalId if not found
+         * @returns {string} Item name or externalId as fallback
          */
         getItemNameByExternalId(externalId) {
             if (!externalId || externalId === 'N/A') {
@@ -98,7 +125,6 @@ sap.ui.define([], () => {
             }
 
             if (!_itemsMapByExternalId) {
-                console.warn('ItemService: Lookup maps not initialized. Call fetchItems() first.');
                 return externalId;
             }
 
@@ -107,9 +133,9 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Get item display text (externalId - name) by ID
+         * Get item display text by ID.
          * @param {string} itemId - Item ID
-         * @returns {string} Formatted display text "externalId - name" or original ID
+         * @returns {string} Formatted display text "externalId - name" or ID as fallback
          */
         getItemDisplayTextById(itemId) {
             if (!itemId || itemId === 'N/A') {
@@ -117,7 +143,6 @@ sap.ui.define([], () => {
             }
 
             if (!_itemsMapById) {
-                console.warn('ItemService: Lookup maps not initialized. Call fetchItems() first.');
                 return itemId;
             }
 
@@ -129,9 +154,9 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Get item display text (externalId - name) by external ID
+         * Get item display text by external ID.
          * @param {string} externalId - Item external ID
-         * @returns {string} Formatted display text "externalId - name" or original externalId
+         * @returns {string} Formatted display text "externalId - name" or externalId as fallback
          */
         getItemDisplayTextByExternalId(externalId) {
             if (!externalId || externalId === 'N/A') {
@@ -139,7 +164,6 @@ sap.ui.define([], () => {
             }
 
             if (!_itemsMapByExternalId) {
-                console.warn('ItemService: Lookup maps not initialized. Call fetchItems() first.');
                 return externalId;
             }
 
@@ -151,9 +175,9 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Get full item object by ID
+         * Get full item object by ID.
          * @param {string} itemId - Item ID
-         * @returns {object|null} Item object or null
+         * @returns {Object|null} Item object or null
          */
         getItemById(itemId) {
             if (!itemId || !_itemsMapById) {
@@ -163,9 +187,9 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Get full item object by external ID
+         * Get full item object by external ID.
          * @param {string} externalId - Item external ID
-         * @returns {object|null} Item object or null
+         * @returns {Object|null} Item object or null
          */
         getItemByExternalId(externalId) {
             if (!externalId || !_itemsMapByExternalId) {
@@ -175,7 +199,7 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Get all cached items
+         * Get all cached items.
          * @returns {Array} Array of item objects
          */
         getAllItems() {
@@ -183,8 +207,8 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Transform items for dropdown/select control
-         * @returns {Array} Array of {key, text} objects for dropdown binding
+         * Transform items for dropdown/select control.
+         * @returns {Array<{key: string, text: string, externalId: string, name: string}>}
          */
         getItemsForDropdown() {
             if (!_itemsCache) {
@@ -200,7 +224,7 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Search items by name or externalId (client-side filtering)
+         * Search items by name or externalId (client-side filtering).
          * @param {string} searchTerm - Search term
          * @returns {Array} Filtered array of items
          */
@@ -217,8 +241,8 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Get all items formatted for Input suggestions
-         * @returns {Array} Array of {id, externalId, name, displayText} objects
+         * Get all items formatted for Input suggestions.
+         * @returns {Array<{id: string, externalId: string, name: string, displayText: string}>}
          */
         getAllForSuggestions() {
             if (!_itemsCache) {
@@ -234,9 +258,9 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Filter items by search term for suggestions (optimized for liveChange)
-         * @param {string} searchTerm - Search term (min 2 chars)
-         * @returns {Array} Filtered array of suggestion items
+         * Filter items by search term for suggestions (optimized for liveChange).
+         * @param {string} searchTerm - Search term (minimum 2 characters)
+         * @returns {Array} Filtered array of suggestion items (max 50)
          */
         filterBySearch(searchTerm) {
             if (!searchTerm || searchTerm.length < 2) {
@@ -262,17 +286,15 @@ sap.ui.define([], () => {
                 });
             }
 
-            // Sort by externalId
             results.sort((a, b) => a.externalId.localeCompare(b.externalId));
 
-            // Limit results for performance
             return results.slice(0, 50);
         },
 
         /**
-         * Get item by externalId for default value lookup
+         * Get item suggestion object by externalId.
          * @param {string} externalId - Item external ID
-         * @returns {object|null} Item suggestion object or null
+         * @returns {Object|null} Item suggestion object or null
          */
         getItemSuggestionByExternalId(externalId) {
             if (!externalId || !_itemsMapByExternalId) {
@@ -292,7 +314,7 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Check if items are loaded
+         * Check if items are loaded.
          * @returns {boolean} True if cache is populated
          */
         isLoaded() {
@@ -300,13 +322,12 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Clear the cache (useful for refresh scenarios)
+         * Clear the cache.
          */
         clearCache() {
             _itemsCache = null;
             _itemsMapById = null;
             _itemsMapByExternalId = null;
-            console.log('ItemService: Cache cleared');
         }
     };
 });

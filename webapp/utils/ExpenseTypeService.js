@@ -1,26 +1,51 @@
+/**
+ * ExpenseTypeService.js
+ * 
+ * Frontend service for expense type data management.
+ * Handles fetching, caching, and lookup of expense types for T&M entries.
+ * 
+ * Key Features:
+ * - Fetch and cache all expense types from FSM
+ * - ID-to-name lookup for display
+ * - Dropdown data transformation (sorted by code)
+ * 
+ * Display Format: "Z40000001 - Travel Expenses"
+ * 
+ * API Endpoint Used:
+ * - GET /api/get-expense-types
+ * 
+ * @file ExpenseTypeService.js
+ * @module mobileappsc/utils/ExpenseTypeService
+ */
 sap.ui.define([], () => {
     "use strict";
 
-    // Private cache for expense types
+    /**
+     * Cache for expense types array.
+     * @type {Array|null}
+     * @private
+     */
     let _expenseTypesCache = null;
+    
+    /**
+     * Map for quick ID-to-object lookup.
+     * @type {Map<string, Object>|null}
+     * @private
+     */
     let _expenseTypesMap = null;
 
     return {
         /**
-         * Fetch all expense types from backend
-         * Results are cached for the session
+         * Fetch all expense types from backend.
+         * Results are cached for the session.
          * @returns {Promise<Array>} Array of expense type objects
          */
         async fetchExpenseTypes() {
-            // Return cached data if available
             if (_expenseTypesCache) {
-                console.log('ExpenseTypeService: Returning cached expense types');
                 return _expenseTypesCache;
             }
 
             try {
-                console.log('ExpenseTypeService: Fetching expense types from API...');
-
                 const response = await fetch("/api/get-expense-types", {
                     method: "GET",
                     headers: { "Content-Type": "application/json" }
@@ -33,10 +58,8 @@ sap.ui.define([], () => {
                 const data = await response.json();
                 _expenseTypesCache = data.expenseTypes || [];
 
-                // Build lookup map for quick ID-to-name resolution
                 this._buildLookupMap();
 
-                console.log('ExpenseTypeService: Loaded', _expenseTypesCache.length, 'expense types');
                 return _expenseTypesCache;
 
             } catch (error) {
@@ -46,7 +69,7 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Build internal lookup map for ID-to-name resolution
+         * Build internal lookup map for ID-to-name resolution.
          * @private
          */
         _buildLookupMap() {
@@ -57,14 +80,12 @@ sap.ui.define([], () => {
                     _expenseTypesMap.set(expenseType.id, expenseType);
                 });
             }
-            
-            console.log('ExpenseTypeService: Built lookup map with', _expenseTypesMap.size, 'entries');
         },
 
         /**
-         * Get expense type name by ID
+         * Get expense type name by ID.
          * @param {string} expenseTypeId - Expense type ID
-         * @returns {string} Expense type name or 'N/A' if not found
+         * @returns {string} Expense type name or ID as fallback
          */
         getExpenseTypeNameById(expenseTypeId) {
             if (!expenseTypeId || expenseTypeId === 'N/A') {
@@ -72,18 +93,17 @@ sap.ui.define([], () => {
             }
 
             if (!_expenseTypesMap) {
-                console.warn('ExpenseTypeService: Lookup map not initialized. Call fetchExpenseTypes() first.');
-                return expenseTypeId; // Return ID as fallback
+                return expenseTypeId;
             }
 
             const expenseType = _expenseTypesMap.get(expenseTypeId);
-            return expenseType ? expenseType.name : expenseTypeId; // Return ID as fallback if not found
+            return expenseType ? expenseType.name : expenseTypeId;
         },
 
         /**
-         * Get expense type display text (code - name) by ID
+         * Get expense type display text by ID.
          * @param {string} expenseTypeId - Expense type ID
-         * @returns {string} Formatted display text "code - name" or 'N/A'
+         * @returns {string} Formatted display text "code - name" or ID as fallback
          */
         getExpenseTypeDisplayTextById(expenseTypeId) {
             if (!expenseTypeId || expenseTypeId === 'N/A') {
@@ -91,7 +111,6 @@ sap.ui.define([], () => {
             }
 
             if (!_expenseTypesMap) {
-                console.warn('ExpenseTypeService: Lookup map not initialized. Call fetchExpenseTypes() first.');
                 return expenseTypeId;
             }
 
@@ -99,13 +118,13 @@ sap.ui.define([], () => {
             if (expenseType) {
                 return `${expenseType.code} - ${expenseType.name}`;
             }
-            return expenseTypeId; // Return ID as fallback
+            return expenseTypeId;
         },
 
         /**
-         * Get full expense type object by ID
+         * Get full expense type object by ID.
          * @param {string} expenseTypeId - Expense type ID
-         * @returns {object|null} Expense type object or null
+         * @returns {Object|null} Expense type object or null
          */
         getExpenseTypeById(expenseTypeId) {
             if (!expenseTypeId || !_expenseTypesMap) {
@@ -115,7 +134,7 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Get all cached expense types
+         * Get all cached expense types.
          * @returns {Array} Array of expense type objects
          */
         getAllExpenseTypes() {
@@ -123,9 +142,9 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Transform expense types for dropdown/select control
-         * Sorted by code to ensure consistent order
-         * @returns {Array} Array of {key, text} objects for dropdown binding
+         * Transform expense types for dropdown/select control.
+         * Sorted by code to ensure consistent order.
+         * @returns {Array<{key: string, text: string, code: string, name: string}>}
          */
         getExpenseTypesForDropdown() {
             if (!_expenseTypesCache) {
@@ -139,16 +158,13 @@ sap.ui.define([], () => {
                 name: expenseType.name
             }));
 
-            // Sort by code to ensure consistent order (Z40000001 before Z40000039)
             items.sort((a, b) => a.code.localeCompare(b.code));
-            
-            console.log('ExpenseTypeService: Sorted dropdown items:', items.map(i => i.code));
             
             return items;
         },
 
         /**
-         * Check if expense types are loaded
+         * Check if expense types are loaded.
          * @returns {boolean} True if cache is populated
          */
         isLoaded() {
@@ -156,12 +172,11 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Clear the cache (useful for refresh scenarios)
+         * Clear the cache.
          */
         clearCache() {
             _expenseTypesCache = null;
             _expenseTypesMap = null;
-            console.log('ExpenseTypeService: Cache cleared');
         }
     };
 });

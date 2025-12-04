@@ -1,8 +1,34 @@
+/**
+ * DestinationService.js
+ * 
+ * Backend service for SAP BTP Destination Service integration.
+ * Retrieves destination configurations from BTP for FSM API connectivity.
+ * 
+ * Key Features:
+ * - Read Destination Service credentials from VCAP_SERVICES
+ * - Authenticate with Destination Service using OAuth
+ * - Fetch destination configuration by name
+ * 
+ * Environment Requirements:
+ * - VCAP_SERVICES must contain bound destination service
+ * - Destination must be configured in BTP cockpit
+ * 
+ * Destination Configuration Contains:
+ * - URL: FSM API base URL
+ * - tokenServiceURL: OAuth token endpoint
+ * - clientId/clientSecret: OAuth credentials
+ * 
+ * @file DestinationService.js
+ * @module utils/DestinationService
+ * @requires axios
+ */
 const axios = require('axios');
 
 class DestinationService {
     /**
-     * Get Destination Service credentials from VCAP_SERVICES
+     * Get Destination Service credentials from VCAP_SERVICES.
+     * @returns {Object} Destination service credentials
+     * @throws {Error} If destination service is not bound
      */
     getCredentials() {
         const vcapServices = JSON.parse(process.env.VCAP_SERVICES || '{}');
@@ -16,13 +42,15 @@ class DestinationService {
     }
 
     /**
-     * Get destination configuration from BTP
+     * Get destination configuration from BTP.
+     * @param {string} destinationName - Name of the destination in BTP
+     * @returns {Promise<Object>} Destination configuration
+     * @throws {Error} If destination cannot be loaded
      */
     async getDestination(destinationName) {
         try {
             const credentials = this.getCredentials();
 
-            // Get OAuth token for Destination Service
             const tokenResponse = await axios.post(
                 credentials.url + '/oauth/token',
                 new URLSearchParams({
@@ -39,7 +67,6 @@ class DestinationService {
 
             const accessToken = tokenResponse.data.access_token;
 
-            // Get destination configuration
             const destinationResponse = await axios.get(
                 `${credentials.uri}/destination-configuration/v1/destinations/${destinationName}`,
                 {
@@ -52,7 +79,7 @@ class DestinationService {
             return destinationResponse.data;
 
         } catch (error) {
-            console.error('Error loading destination:', error.response?.data || error.message);
+            console.error('DestinationService: Error loading destination:', error.response?.data || error.message);
             throw new Error('Failed to load destination');
         }
     }

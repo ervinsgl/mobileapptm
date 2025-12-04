@@ -1,25 +1,45 @@
+/**
+ * ApprovalService.js
+ * 
+ * Frontend service for T&M entry approval status management.
+ * Handles fetching, caching, and displaying approval decision statuses.
+ * 
+ * Key Features:
+ * - Batch fetch approval statuses for multiple T&M entries
+ * - Cache statuses to avoid redundant API calls
+ * - Convert status codes to display text and UI5 ValueStates
+ * 
+ * Decision Status Values:
+ * - PENDING: Awaiting decision
+ * - REVIEW: Under review
+ * - APPROVED: Approved
+ * - DECLINED: Declined
+ * - APPROVED_CLOSED: Approved and closed
+ * - DECLINED_CLOSED: Declined and closed
+ * - CANCELLED: Cancelled
+ * 
+ * API Endpoint Used:
+ * - POST /api/get-approval-status
+ * 
+ * @file ApprovalService.js
+ * @module mobileappsc/utils/ApprovalService
+ */
 sap.ui.define([], () => {
     "use strict";
 
-    /**
-     * ApprovalService - Fetches and caches approval decision statuses for T&M entries
-     * 
-     * Decision Status Values:
-     * - PENDING: Awaiting decision
-     * - REVIEW: Under review
-     * - APPROVED: Approved
-     * - DECLINED: Declined
-     * - APPROVED_CLOSED: Approved and closed
-     * - DECLINED_CLOSED: Declined and closed
-     * - CANCELLED: Cancelled
-     */
     return {
+        /**
+         * Cache for approval statuses.
+         * @type {Map<string, string|null>}
+         * @private
+         */
         _statusCache: new Map(),
 
         /**
-         * Fetch approval statuses for multiple T&M entry IDs
+         * Fetch approval statuses for multiple T&M entry IDs.
+         * Uses cache to avoid redundant API calls.
          * @param {string[]} objectIds - Array of T&M entry IDs
-         * @returns {Promise<Object>} Map of objectId -> decisionStatus
+         * @returns {Promise<Object>} Map of objectId → decisionStatus
          */
         async fetchApprovalStatuses(objectIds) {
             if (!objectIds || objectIds.length === 0) {
@@ -31,8 +51,6 @@ sap.ui.define([], () => {
 
             if (uncachedIds.length > 0) {
                 try {
-                    console.log('ApprovalService: Fetching statuses for', uncachedIds.length, 'objects');
-
                     const response = await fetch("/api/get-approval-status", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
@@ -58,8 +76,6 @@ sap.ui.define([], () => {
                         }
                     });
 
-                    console.log('ApprovalService: Cached', Object.keys(statuses).length, 'statuses');
-
                 } catch (error) {
                     console.error("ApprovalService: Error fetching statuses:", error);
                     // Cache null for failed lookups to avoid repeated requests
@@ -80,16 +96,16 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Get approval status for a single T&M entry ID
+         * Get approval status for a single T&M entry ID from cache.
          * @param {string} objectId - T&M entry ID
-         * @returns {string|null} Decision status
+         * @returns {string|null} Decision status or null if not found
          */
         getStatusById(objectId) {
             return this._statusCache.get(objectId) || null;
         },
 
         /**
-         * Get display text for decision status
+         * Get human-readable display text for decision status.
          * @param {string} status - Decision status code
          * @returns {string} Human-readable status text
          */
@@ -112,7 +128,7 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Get UI5 ValueState for decision status (for styling)
+         * Get UI5 ValueState for decision status (for styling).
          * @param {string} status - Decision status code
          * @returns {string} UI5 ValueState (None, Success, Warning, Error, Information)
          */
@@ -135,7 +151,7 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Preload approval statuses for an array of T&M reports
+         * Preload approval statuses for an array of T&M reports.
          * @param {Array} reports - Array of T&M report objects with 'id' property
          * @returns {Promise<void>}
          */
@@ -149,11 +165,10 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Clear the status cache
+         * Clear the status cache.
          */
         clearCache() {
             this._statusCache.clear();
-            console.log('ApprovalService: Cache cleared');
         }
     };
 });

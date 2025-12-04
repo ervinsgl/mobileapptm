@@ -1,3 +1,27 @@
+/**
+ * View1.controller.js
+ * 
+ * Main controller for the Service Confirmation application.
+ * Handles FSM Mobile web container integration, user organization level
+ * resolution, activity loading, and T&M (Time & Materials) reporting.
+ * 
+ * @file View1.controller.js
+ * @author SAP FSM Extension Development
+ * 
+ * Initialization Flow:
+ * 1. Load web container context (FSM Mobile sends userName, cloudId, etc.)
+ * 2. Resolve user's organization level from FSM APIs
+ * 3. Load organizational hierarchy for name lookups
+ * 4. Load lookup data (tasks, items, expense types) in background
+ * 5. Load activity from URL/context and filter by user's org level
+ * 
+ * Key Dependencies:
+ * - OrganizationService: User org level resolution and caching
+ * - ActivityService: Activity data extraction
+ * - ServiceOrderService: Service call composite tree
+ * - ProductGroupService: Group activities by product
+ * - TMDialogService: T&M dialog management
+ */
 sap.ui.define([
     "sap/ui/core/mvc/Controller",
     "sap/ui/model/json/JSONModel",
@@ -32,6 +56,17 @@ sap.ui.define([
 
         formatter: formatter,
 
+        /* =========================================================================
+         * LIFECYCLE METHODS
+         * ========================================================================= */
+
+        /**
+         * Controller initialization.
+         * Sets up the view model and initiates async loading of:
+         * - Web container context (sequential - needed for org level)
+         * - Organization hierarchy (parallel - for name lookups)
+         * - Lookup data: tasks, items, expense types (parallel - background)
+         */
         onInit() {
             TMDialogService.init(this);
             
@@ -43,13 +78,18 @@ sap.ui.define([
                 this._loadOrganizationLevels();
             });
             
-            this._loadOrganizationalHierarchy(); // Load full hierarchy for org level lookups
-            this._loadTimeTasks(); // Load time tasks for lookup
-            this._loadItems(); // Load items for lookup
-            this._loadExpenseTypes(); // Load expense types for lookup
-            // Persons will be loaded on-demand when needed
+            // Background loading (parallel) - non-blocking
+            this._loadOrganizationalHierarchy();
+            this._loadTimeTasks();
+            this._loadItems();
+            this._loadExpenseTypes();
         },
 
+        /**
+         * Initialize the view model with default state.
+         * Creates a JSONModel bound to "view" with all UI state properties.
+         * @private
+         */
         _initializeModel() {
             const viewModel = new JSONModel({
                 busy: false,

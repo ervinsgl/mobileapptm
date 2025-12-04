@@ -1,6 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!--
+        index.html - SAP UI5 Fiori Application Entry Point
+        
+        Application: mobileappsc (FSM Service Confirmation)
+        Theme: sap_horizon
+        
+        Features:
+        - Loading screen with spinner (auto-hides after UI5 init or 3s timeout)
+        - Mobile-optimized viewport
+        - Compact density mode
+    -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -13,7 +24,7 @@
             padding: 0;
         }
         
-        /* Loading indicator */
+        /* Loading Screen */
         #loading-screen {
             position: fixed;
             top: 0;
@@ -51,24 +62,17 @@
     </style>
     
     <script>
-        console.log('=== App Starting ===');
-        
-        // Hide loading screen function
+        // Hide loading screen
         function hideLoadingScreen() {
-            console.log('Hiding loading screen...');
             var loadingScreen = document.getElementById('loading-screen');
             if (loadingScreen) {
                 loadingScreen.classList.add('hidden');
                 loadingScreen.style.display = 'none';
-                console.log('Loading screen hidden!');
             }
         }
         
-        // Force hide after 3 seconds no matter what
-        setTimeout(function() {
-            console.log('FORCE hiding loading screen after 3s');
-            hideLoadingScreen();
-        }, 3000);
+        // Force hide after 3 seconds (fallback)
+        setTimeout(hideLoadingScreen, 3000);
     </script>
     
     <!-- UI5 Bootstrap -->
@@ -77,9 +81,7 @@
         src="https://openui5.hana.ondemand.com/resources/sap-ui-core.js"
         data-sap-ui-theme="sap_horizon"
         data-sap-ui-libs="sap.m"
-        data-sap-ui-resource-roots='{
-            "mobileappsc": "./"
-        }'
+        data-sap-ui-resource-roots='{"mobileappsc": "./"}'
         data-sap-ui-on-init="module:sap/ui/core/ComponentSupport"
         data-sap-ui-compat-version="edge"
         data-sap-ui-async="true"
@@ -88,38 +90,28 @@
         data-sap-ui-preload=""
     ></script>
     
-    <!-- UI5 Load Handler -->
+    <!-- UI5 Init Handler -->
     <script>
-        // Wait for UI5 to initialize
         (function waitForUI5() {
             if (window.sap && window.sap.ui && window.sap.ui.getCore) {
-                console.log('UI5 Core found');
-                
-                sap.ui.getCore().attachInit(function() {
-                    console.log('UI5 initialized - hiding loading screen');
-                    hideLoadingScreen();
-                });
+                sap.ui.getCore().attachInit(hideLoadingScreen);
             } else {
                 setTimeout(waitForUI5, 50);
             }
         })();
         
-        // Also hide when DOM is ready
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM ready');
             setTimeout(hideLoadingScreen, 1000);
         });
         
-        // And when window loads
         window.addEventListener('load', function() {
-            console.log('Window loaded');
             setTimeout(hideLoadingScreen, 1500);
         });
     </script>
 </head>
 <body class="sapUiBody sapUiSizeCompact" id="content">
     
-    <!-- Loading Screen - WILL AUTO-HIDE -->
+    <!-- Loading Screen -->
     <div id="loading-screen">
         <div class="spinner"></div>
         <div style="font-size: 16px; margin-top: 10px;">Loading...</div>

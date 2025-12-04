@@ -2,6 +2,13 @@
     xmlns="sap.m"
     xmlns:core="sap.ui.core"
 >
+    <!-- 
+        ServiceCall Fragment: Displays service order header information.
+        
+        Shows: ID, Subject, Business Partner, Responsible, Dates
+        
+        Model: view>/serviceCall
+    -->
     <Panel
         id="serviceCallPanel"
         headerText="Service Order"
@@ -13,20 +20,17 @@
         <headerToolbar>
             <OverflowToolbar design="Info">
                 <core:Icon src="sap-icon://sales-order" class="sapUiSmallMarginEnd"/>
-                <Title 
-                    text="Service Order" 
-                    level="H4" 
-                    titleStyle="H4"
-                />
-                <ToolbarSpacer />
+                <Title text="Service Order" level="H4" titleStyle="H4"/>
+                <ToolbarSpacer/>
                 <Title text="ID: {view>/serviceCall/externalId}" level="H5"/>
             </OverflowToolbar>
         </headerToolbar>
         
         <content>
-            <!-- Service Order Details - Compact 3-Column Layout -->
+            <!-- Service Order Details: 3-Column Layout -->
             <HBox class="serviceOrderContent">
-                <!-- Column 1: ID, Subject -->
+            
+                <!-- Col 1: ID, Subject -->
                 <VBox class="serviceOrderColumn">
                     <HBox class="serviceOrderFieldRow">
                         <Label text="ID:" design="Bold" class="serviceOrderFieldLabel"/>
@@ -38,7 +42,7 @@
                     </HBox>
                 </VBox>
                 
-                <!-- Column 2: Business Partner, Responsible -->
+                <!-- Col 2: Business Partner, Responsible -->
                 <VBox class="serviceOrderColumn">
                     <HBox class="serviceOrderFieldRow">
                         <Label text="Business Partner:" design="Bold" class="serviceOrderFieldLabel"/>
@@ -50,7 +54,7 @@
                     </HBox>
                 </VBox>
                 
-                <!-- Column 3: Earliest Start, Due Date -->
+                <!-- Col 3: Dates -->
                 <VBox class="serviceOrderColumn">
                     <HBox class="serviceOrderFieldRow">
                         <Label text="Earliest Start:" design="Bold" class="serviceOrderFieldLabel"/>

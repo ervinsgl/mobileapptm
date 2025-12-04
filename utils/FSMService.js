@@ -1,9 +1,41 @@
+/**
+ * FSMService.js
+ * 
+ * Backend service for SAP FSM (Field Service Management) API integration.
+ * Provides methods for all FSM data operations including activities, T&M entries,
+ * lookup data, and user/organization management.
+ * 
+ * Key Features:
+ * - Authenticated requests to FSM Data API (/api/data/v4)
+ * - Query API requests (/api/query/v1)
+ * - Composite-tree API for service calls (/api/service-management/v2)
+ * - User and Organization API integration
+ * - T&M entry retrieval (TimeEffort, Material, Expense, Mileage)
+ * - Lookup data (TimeTasks, Items, ExpenseTypes, Persons)
+ * 
+ * API Endpoints Used:
+ * - /api/data/v4/* - CRUD operations
+ * - /api/query/v1 - Query operations
+ * - /api/service-management/v2/composite-tree - Service call with activities
+ * - /api/user/v1/users - User lookup
+ * - /cloud-org-level-service/api/v1/levels - Organization hierarchy
+ * 
+ * @file FSMService.js
+ * @module utils/FSMService
+ * @requires axios
+ * @requires ./DestinationService
+ * @requires ./TokenCache
+ */
 const axios = require('axios');
 const DestinationService = require('./DestinationService');
 const TokenCache = require('./TokenCache');
 
 class FSMService {
     constructor() {
+        /**
+         * Default FSM account/company configuration.
+         * @type {{account: string, company: string}}
+         */
         this.config = {
             account: 'tuev-nord_t1',
             company: 'TUEV-NORD_S4E'
@@ -11,7 +43,11 @@ class FSMService {
     }
 
     /**
-     * Make authenticated request to FSM API (for /api/data/v4 endpoints)
+     * Make authenticated request to FSM Data API (/api/data/v4 endpoints).
+     * @param {string} path - API path (e.g., '/Activity/123')
+     * @param {Object} [params={}] - Query parameters
+     * @returns {Promise<Object>} API response data
+     * @throws {Error} If request fails
      */
     async makeRequest(path, params = {}) {
         try {
@@ -44,27 +80,33 @@ class FSMService {
             return response.data;
 
         } catch (error) {
-            console.error('FSM API Error:', error.response?.data || error.message);
+            console.error('FSMService: API Error:', error.response?.data || error.message);
             throw error;
         }
     }
 
     /**
-     * Get activity by ID
+     * Get activity by ID.
+     * @param {string} activityId - Activity ID
+     * @returns {Promise<Object>} Activity data
      */
     async getActivityById(activityId) {
         return this.makeRequest(`/Activity/${activityId}`, { dtos: 'Activity.40' });
     }
 
     /**
-     * Get activity by code
+     * Get activity by code (external ID).
+     * @param {string} activityCode - Activity external code
+     * @returns {Promise<Object>} Activity data
      */
     async getActivityByCode(activityCode) {
         return this.makeRequest(`/Activity/externalId/${activityCode}`, { dtos: 'Activity.40' });
     }
 
     /**
-     * Get activities for service call (uses different API endpoint)
+     * Get activities for service call using composite-tree API.
+     * @param {string} serviceCallId - Service call ID
+     * @returns {Promise<Object>} Service call with nested activities
      */
     async getActivitiesForServiceCall(serviceCallId) {
         try {
@@ -73,8 +115,6 @@ class FSMService {
 
             const baseUrl = destination.destinationConfiguration.URL;
             const fullUrl = `${baseUrl}/api/service-management/v2/composite-tree/service-calls/${serviceCallId}`;
-
-            console.log('Fetching activities from:', fullUrl);
 
             const headers = {
                 'Content-Type': 'application/json',
@@ -86,19 +126,19 @@ class FSMService {
             };
 
             const response = await axios.get(fullUrl, { headers });
-
-            console.log('Activities response:', response.data);
-
             return response.data;
 
         } catch (error) {
-            console.error('FSM API Error (composite-tree):', error.response?.data || error.message);
+            console.error('FSMService: Composite-tree API Error:', error.response?.data || error.message);
             throw error;
         }
     }
 
     /**
-     * Update activity
+     * Update activity.
+     * @param {string} activityId - Activity ID
+     * @param {Object} updateData - Data to update
+     * @returns {Promise<Object>} Updated activity data
      */
     async updateActivity(activityId, updateData) {
         const destination = await DestinationService.getDestination('FSM_S4E');
@@ -131,7 +171,10 @@ class FSMService {
     }
 
     /**
-     * Make Query API request (for /api/query/v1 endpoints)
+     * Make Query API request (/api/query/v1 endpoints).
+     * @param {string} query - FSQL query string
+     * @param {string} dtos - DTO version string
+     * @returns {Promise<Object>} Query response data
      */
     async makeQueryRequest(query, dtos) {
         try {
@@ -165,13 +208,19 @@ class FSMService {
             return response.data;
 
         } catch (error) {
-            console.error('FSM Query API Error:', error.response?.data || error.message);
+            console.error('FSMService: Query API Error:', error.response?.data || error.message);
             throw error;
         }
     }
 
+    // ========================================
+    // T&M ENTRY RETRIEVAL
+    // ========================================
+
     /**
-     * Get Time Efforts for activity
+     * Get Time Efforts for activity.
+     * @param {string} activityId - Activity ID
+     * @returns {Promise<Array>} Array of Time Effort objects
      */
     async getTimeEffortsForActivity(activityId) {
         try {
@@ -182,20 +231,12 @@ class FSMService {
                 return [];
             }
 
-            console.log('\n=== TIME EFFORT FULL DATA ===');
-            data.data.forEach((item, index) => {
-                console.log(`Time Effort ${index + 1}:`, JSON.stringify(item.timeEffort, null, 2));
-            });
-            console.log('============================\n');
-
             return data.data.map(item => {
                 const timeEffort = item.timeEffort;
 
-                // Extract ALL UDF values (there can be multiple)
                 const udfValues = timeEffort.udfValues || [];
                 const udfValuesText = udfValues.map(udf => `${udf.meta}: ${udf.value}`).join(', ') || 'N/A';
 
-                // Calculate duration in minutes
                 let durationMinutes = 'N/A';
                 if (timeEffort.startDateTime && timeEffort.endDateTime) {
                     const startTime = new Date(timeEffort.startDateTime);
@@ -203,58 +244,38 @@ class FSMService {
                     durationMinutes = Math.round((endTime - startTime) / (1000 * 60));
                 }
 
-                // Handle remarks - prioritize internalRemarks, then remarks
                 const remarks = timeEffort.internalRemarks || timeEffort.remarks || 'N/A';
-
-                console.log(`\n=== PROCESSED TIME EFFORT ===`);
-                console.log('ID:', timeEffort.id);
-                console.log('Duration Minutes:', durationMinutes);
-                console.log('Start:', timeEffort.startDateTime);
-                console.log('End:', timeEffort.endDateTime);
-                console.log('Charge Option:', timeEffort.chargeOption);
-                console.log('Create Person:', timeEffort.createPerson);
-                console.log('Org Level:', timeEffort.orgLevel);
-                console.log('Internal Remarks:', timeEffort.internalRemarks);
-                console.log('Remarks:', timeEffort.remarks);
-                console.log('UDF Values:', udfValuesText);
-                console.log('===============================\n');
 
                 return {
                     id: timeEffort.id,
                     createDateTime: timeEffort.createDateTime,
-
-                    // ADD REQUESTED FIELDS
                     createPerson: timeEffort.createPerson || 'N/A',
                     orgLevel: timeEffort.orgLevel || 'N/A',
                     chargeOption: timeEffort.chargeOption || 'N/A',
                     internalRemarksText: timeEffort.internalRemarks || 'N/A',
-                    remarksText: timeEffort.remarks || 'N/A',
-
-                    // Existing fields
+                    remarksText: remarks,
                     task: timeEffort.task || 'N/A',
                     startDateTime: timeEffort.startDateTime || null,
                     endDateTime: timeEffort.endDateTime || null,
-                    udfValues: udfValues, // Keep array for complex processing
-                    udfValuesText: udfValuesText, // Simple string for display
+                    udfValues: udfValues,
+                    udfValuesText: udfValuesText,
                     durationMinutes: durationMinutes,
                     syncStatus: timeEffort.syncStatus || 'N/A',
                     type: 'Time Effort',
-
-                    // PRE-FORMATTED DISPLAY TEXT
-                    remarksText: remarks, // Already processed above
                     durationText: typeof durationMinutes === 'number' ? `${durationMinutes} min` : 'N/A',
-
-                    fullData: timeEffort // Keep full object for debugging
+                    fullData: timeEffort
                 };
             });
         } catch (error) {
-            console.error("Error fetching time efforts:", error.message);
+            console.error("FSMService: Error fetching time efforts:", error.message);
             return [];
         }
     }
 
     /**
-     * Get Materials for activity
+     * Get Materials for activity.
+     * @param {string} activityId - Activity ID
+     * @returns {Promise<Array>} Array of Material objects
      */
     async getMaterialsForActivity(activityId) {
         try {
@@ -265,64 +286,37 @@ class FSMService {
                 return [];
             }
 
-            console.log('\n=== MATERIAL FULL DATA ===');
-            data.data.forEach((item, index) => {
-                console.log(`Material ${index + 1}:`, JSON.stringify(item.w, null, 2));
-            });
-            console.log('===========================\n');
-
             return data.data.map(item => {
                 const material = item.w;
-
-                console.log(`\n=== PROCESSED MATERIAL ===`);
-                console.log('ID:', material.id);
-                console.log('Item ID:', material.item);
-                console.log('Quantity:', material.quantity);
-                console.log('Date:', material.date);
-                console.log('Charge Option:', material.chargeOption);
-                console.log('Create Person:', material.createPerson);
-                console.log('Remarks:', material.remarks);
-                console.log('Sync Status:', material.syncStatus);
-                console.log('=============================\n');
 
                 return {
                     id: material.id,
                     createDateTime: material.createDateTime,
-
-                    // Basic fields
                     createPerson: material.createPerson || 'N/A',
                     orgLevel: material.orgLevel || 'N/A',
                     chargeOption: material.chargeOption || 'N/A',
                     syncStatus: material.syncStatus || 'N/A',
-
-                    // Material-specific fields
                     date: material.date || null,
                     quantity: material.quantity || 0,
                     remarks: material.remarks || null,
-
-                    // Just use the item ID directly
                     itemDisplayText: material.item || 'N/A',
-
-                    // Display type
                     type: 'Material',
-
-                    // Pre-formatted display text
                     quantityText: material.quantity ? `${material.quantity}` : 'N/A',
                     dateText: material.date || 'N/A',
                     remarksText: material.remarks || 'N/A',
-
-                    // Keep full data for reference
                     fullData: material
                 };
             });
         } catch (error) {
-            console.error("Error fetching materials:", error.message);
+            console.error("FSMService: Error fetching materials:", error.message);
             return [];
         }
     }
 
     /**
-     * Get Expenses for activity
+     * Get Expenses for activity.
+     * @param {string} activityId - Activity ID
+     * @returns {Promise<Array>} Array of Expense objects
      */
     async getExpensesForActivity(activityId) {
         try {
@@ -333,82 +327,49 @@ class FSMService {
                 return [];
             }
 
-            console.log('\n=== EXPENSE FULL DATA ===');
-            data.data.forEach((item, index) => {
-                console.log(`Expense ${index + 1}:`, JSON.stringify(item.w, null, 2));
-            });
-            console.log('==========================\n');
-
             return data.data.map(item => {
                 const expense = item.w;
 
-                // Extract UDF values (same pattern as TimeEffort)
                 const udfValues = expense.udfValues || [];
                 const udfValuesText = udfValues.map(udf => `${udf.meta}: ${udf.value}`).join(', ') || 'N/A';
 
-                // Extract amount information
                 const externalAmount = expense.externalAmount ?
                     `${expense.externalAmount.amount} ${expense.externalAmount.currency}` : 'N/A';
                 const internalAmount = expense.internalAmount ?
                     `${expense.internalAmount.amount} ${expense.internalAmount.currency}` : 'N/A';
 
-                console.log(`\n=== PROCESSED EXPENSE ===`);
-                console.log('ID:', expense.id);
-                console.log('Date:', expense.date);
-                console.log('Type:', expense.type);
-                console.log('External Amount:', externalAmount);
-                console.log('Internal Amount:', internalAmount);
-                console.log('Charge Option:', expense.chargeOption);
-                console.log('Create Person:', expense.createPerson);
-                console.log('Org Level:', expense.orgLevel);
-                console.log('Remarks:', expense.remarks);
-                console.log('Sync Status:', expense.syncStatus);
-                console.log('UDF Values:', udfValuesText);
-                console.log('=============================\n');
-
                 return {
                     id: expense.id,
                     createDateTime: expense.createDateTime,
-
-                    // BASIC FIELDS (matching TimeEffort/Material pattern)
                     createPerson: expense.createPerson || 'N/A',
                     orgLevel: expense.orgLevel || 'N/A',
                     chargeOption: expense.chargeOption || 'N/A',
                     syncStatus: expense.syncStatus || 'N/A',
-
-                    // EXPENSE-SPECIFIC FIELDS
                     date: expense.date || null,
-                    type: expense.type || 'N/A',
                     externalAmount: expense.externalAmount,
                     internalAmount: expense.internalAmount,
                     remarks: expense.remarks || null,
-
-                    // UDF INFORMATION
                     udfValues: udfValues,
                     udfValuesText: udfValuesText,
-
-                    // DISPLAY TYPE
                     type: 'Expense',
-
-                    // PRE-FORMATTED DISPLAY TEXT (no complex expressions needed in UI)
                     dateText: expense.date || 'N/A',
                     expenseTypeText: expense.type || 'N/A',
                     externalAmountText: externalAmount,
                     internalAmountText: internalAmount,
                     remarksText: expense.remarks || 'N/A',
-
-                    // KEEP FULL DATA FOR REFERENCE
                     fullData: expense
                 };
             });
         } catch (error) {
-            console.error("Error fetching expenses:", error.message);
+            console.error("FSMService: Error fetching expenses:", error.message);
             return [];
         }
     }
 
     /**
-     * Get Mileages for activity
+     * Get Mileages for activity.
+     * @param {string} activityId - Activity ID
+     * @returns {Promise<Array>} Array of Mileage objects
      */
     async getMileagesForActivity(activityId) {
         try {
@@ -419,57 +380,33 @@ class FSMService {
                 return [];
             }
 
-            console.log('\n=== MILEAGE FULL DATA ===');
-            data.data.forEach((item, index) => {
-                console.log(`Mileage ${index + 1}:`, JSON.stringify(item.w, null, 2));
-            });
-            console.log('==========================\n');
-
             return data.data.map(item => {
                 const mileage = item.w;
 
-                // Extract UDF values (same pattern as other types)
                 const udfValues = mileage.udfValues || [];
                 const udfValuesText = udfValues.map(udf => `${udf.meta}: ${udf.value}`).join(', ') || 'N/A';
 
-                // Format distance with unit
                 const distanceText = mileage.distance && mileage.distanceUnit ?
                     `${mileage.distance} ${mileage.distanceUnit}` : 'N/A';
 
-                // Format route
                 const routeText = mileage.source && mileage.destination ?
-                    `${mileage.source} -> ${mileage.destination}` : 'N/A';
+                    `${mileage.source} → ${mileage.destination}` : 'N/A';
 
-                console.log(`\n=== PROCESSED MILEAGE ===`);
-                console.log('ID:', mileage.id);
-                console.log('Date:', mileage.date);
-                console.log('Source:', mileage.source);
-                console.log('Destination:', mileage.destination);
-                console.log('Distance:', distanceText);
-                console.log('Route:', routeText);
-                console.log('Driver:', mileage.driver);
-                console.log('Private Car:', mileage.privateCar);
-                console.log('Travel Start:', mileage.travelStartDateTime);
-                console.log('Travel End:', mileage.travelEndDateTime);
-                console.log('Charge Option:', mileage.chargeOption);
-                console.log('Create Person:', mileage.createPerson);
-                console.log('Org Level:', mileage.orgLevel);
-                console.log('Remarks:', mileage.remarks);
-                console.log('Sync Status:', mileage.syncStatus);
-                console.log('UDF Values:', udfValuesText);
-                console.log('=============================\n');
+                // Calculate travel duration in minutes
+                let travelDurationMinutes = 'N/A';
+                if (mileage.travelStartDateTime && mileage.travelEndDateTime) {
+                    const startTime = new Date(mileage.travelStartDateTime);
+                    const endTime = new Date(mileage.travelEndDateTime);
+                    travelDurationMinutes = Math.round((endTime - startTime) / (1000 * 60));
+                }
 
                 return {
                     id: mileage.id,
                     createDateTime: mileage.createDateTime,
-
-                    // BASIC FIELDS (matching TimeEffort/Material/Expense pattern)
                     createPerson: mileage.createPerson || 'N/A',
                     orgLevel: mileage.orgLevel || 'N/A',
                     chargeOption: mileage.chargeOption || 'N/A',
                     syncStatus: mileage.syncStatus || 'N/A',
-
-                    // MILEAGE-SPECIFIC FIELDS
                     date: mileage.date || null,
                     source: mileage.source || 'N/A',
                     destination: mileage.destination || 'N/A',
@@ -479,54 +416,46 @@ class FSMService {
                     privateCar: mileage.privateCar || false,
                     travelStartDateTime: mileage.travelStartDateTime || null,
                     travelEndDateTime: mileage.travelEndDateTime || null,
+                    travelDurationMinutes: travelDurationMinutes,
                     remarks: mileage.remarks || null,
-
-                    // UDF INFORMATION
                     udfValues: udfValues,
                     udfValuesText: udfValuesText,
-
-                    // DISPLAY TYPE
                     type: 'Mileage',
-
-                    // PRE-FORMATTED DISPLAY TEXT (no complex expressions needed in UI)
                     dateText: mileage.date || 'N/A',
                     distanceText: distanceText,
                     routeText: routeText,
+                    travelDurationText: typeof travelDurationMinutes === 'number' ? `${travelDurationMinutes} min` : 'N/A',
                     driverText: mileage.driver ? 'Yes' : 'No',
                     privateCarText: mileage.privateCar ? 'Yes' : 'No',
                     remarksText: mileage.remarks || 'N/A',
-
-                    // KEEP FULL DATA FOR REFERENCE
                     fullData: mileage
                 };
             });
         } catch (error) {
-            console.error("Error fetching mileages:", error.message);
+            console.error("FSMService: Error fetching mileages:", error.message);
             return [];
         }
     }
 
+    // ========================================
+    // LOOKUP DATA
+    // ========================================
+
     /**
-     * Get all Time Tasks for lookup/dropdown
-     * Used to resolve TimeEffort.task ID to human-readable name
+     * Get all Time Tasks for lookup/dropdown.
+     * @returns {Promise<Array<{id: string, code: string, name: string}>>}
      */
     async getTimeTasks() {
         try {
-            console.log('FSMService: Fetching Time Tasks...');
-            
             const data = await this.makeRequest('/TimeTask', {
                 dtos: 'TimeTask.18',
                 fields: 'name,id,code'
             });
 
             if (!data.data || data.data.length === 0) {
-                console.log('FSMService: No time tasks found');
                 return [];
             }
 
-            console.log('FSMService: Found', data.data.length, 'time tasks');
-
-            // Transform to simple array of task objects
             return data.data.map(item => ({
                 id: item.timeTask.id,
                 code: item.timeTask.code,
@@ -534,21 +463,18 @@ class FSMService {
             }));
 
         } catch (error) {
-            console.error("Error fetching time tasks:", error.message);
+            console.error("FSMService: Error fetching time tasks:", error.message);
             return [];
         }
     }
 
     /**
-     * Get all Items for lookup/dropdown
-     * Used to resolve Material.item ID and Activity.serviceProduct to human-readable name
-     * Excludes tools and Z11% items
+     * Get all Items for lookup/dropdown.
+     * Excludes tools and Z11% items.
+     * @returns {Promise<Array<{id: string, externalId: string, name: string}>>}
      */
     async getItems() {
         try {
-            console.log('FSMService: Fetching Items...');
-            
-            // Query to get all items excluding tools and Z11% items
             const query = `SELECT DISTINCT w.name, w.externalId, w.id 
                            FROM Item w 
                            WHERE w.tool = false 
@@ -557,13 +483,9 @@ class FSMService {
             const data = await this.makeQueryRequest(query, 'Item.24');
 
             if (!data.data || data.data.length === 0) {
-                console.log('FSMService: No items found');
                 return [];
             }
 
-            console.log('FSMService: Found', data.data.length, 'items');
-
-            // Transform to simple array of item objects
             return data.data.map(item => ({
                 id: item.w.id,
                 externalId: item.w.externalId,
@@ -571,32 +493,26 @@ class FSMService {
             }));
 
         } catch (error) {
-            console.error("Error fetching items:", error.message);
+            console.error("FSMService: Error fetching items:", error.message);
             return [];
         }
     }
 
     /**
-     * Get all Expense Types for lookup/dropdown
-     * Used to resolve Expense.type ID to human-readable name
+     * Get all Expense Types for lookup/dropdown.
+     * @returns {Promise<Array<{id: string, code: string, name: string}>>}
      */
     async getExpenseTypes() {
         try {
-            console.log('FSMService: Fetching Expense Types...');
-            
             const data = await this.makeRequest('/ExpenseType', {
                 dtos: 'ExpenseType.17',
                 fields: 'name,id,code'
             });
 
             if (!data.data || data.data.length === 0) {
-                console.log('FSMService: No expense types found');
                 return [];
             }
 
-            console.log('FSMService: Found', data.data.length, 'expense types');
-
-            // Transform to simple array of expense type objects
             return data.data.map(item => ({
                 id: item.expenseType.id,
                 code: item.expenseType.code,
@@ -604,72 +520,63 @@ class FSMService {
             }));
 
         } catch (error) {
-            console.error("Error fetching expense types:", error.message);
+            console.error("FSMService: Error fetching expense types:", error.message);
             return [];
         }
     }
 
     /**
-     * Get UDF Meta externalId by ID
-     * Used to resolve UDF Meta IDs to human-readable externalId names
+     * Get UDF Meta externalId by ID.
      * @param {string} udfMetaId - UDF Meta ID
-     * @returns {string|null} externalId or null if not found
+     * @returns {Promise<string|null>} externalId or null if not found
      */
     async getUdfMetaById(udfMetaId) {
         try {
-            console.log('FSMService: Fetching UDF Meta for ID:', udfMetaId);
-            
             const query = `SELECT w.externalId FROM UdfMeta w WHERE w.id = '${udfMetaId}'`;
             const data = await this.makeQueryRequest(query, 'UdfMeta.20');
 
             if (!data.data || data.data.length === 0) {
-                console.log('FSMService: No UDF Meta found for ID:', udfMetaId);
                 return null;
             }
 
-            const externalId = data.data[0]?.w?.externalId || null;
-            console.log('FSMService: Resolved UDF Meta', udfMetaId, 'to externalId:', externalId);
-
-            return externalId;
+            return data.data[0]?.w?.externalId || null;
 
         } catch (error) {
-            console.error("Error fetching UDF Meta:", error.message);
+            console.error("FSMService: Error fetching UDF Meta:", error.message);
             return null;
         }
     }
 
+    // ========================================
+    // APPROVAL STATUS
+    // ========================================
+
     /**
-     * Get Approval Decision Status for a T&M entry
-     * @param {string} objectId - The T&M entry ID (TimeEffort, Material, Expense, or Mileage)
-     * @returns {string|null} Decision status (PENDING, REVIEW, APPROVED, DECLINED, etc.)
+     * Get Approval Decision Status for a T&M entry.
+     * @param {string} objectId - The T&M entry ID
+     * @returns {Promise<string|null>} Decision status or null
      */
     async getApprovalStatus(objectId) {
         try {
-            console.log('FSMService: Fetching Approval status for object:', objectId);
-            
             const query = `SELECT w.decisionStatus FROM Approval w WHERE w.object.objectId = '${objectId}'`;
             const data = await this.makeQueryRequest(query, 'Approval.15');
 
             if (!data.data || data.data.length === 0) {
-                console.log('FSMService: No Approval found for object:', objectId);
                 return null;
             }
 
-            const decisionStatus = data.data[0]?.w?.decisionStatus || null;
-            console.log('FSMService: Approval status for', objectId, ':', decisionStatus);
-
-            return decisionStatus;
+            return data.data[0]?.w?.decisionStatus || null;
 
         } catch (error) {
-            console.error("Error fetching Approval status:", error.message);
+            console.error("FSMService: Error fetching Approval status:", error.message);
             return null;
         }
     }
 
     /**
-     * Get Approval Decision Status for multiple T&M entries (individual queries)
+     * Get Approval Decision Status for multiple T&M entries.
      * @param {string[]} objectIds - Array of T&M entry IDs
-     * @returns {Object} Map of objectId -> decisionStatus
+     * @returns {Promise<Object>} Map of objectId to decisionStatus
      */
     async getApprovalStatusBatch(objectIds) {
         try {
@@ -677,11 +584,8 @@ class FSMService {
                 return {};
             }
 
-            console.log('FSMService: Fetching Approval status for', objectIds.length, 'objects');
-            
             const statusMap = {};
             
-            // Process in parallel with Promise.all for better performance
             const promises = objectIds.map(async (objectId) => {
                 try {
                     const query = `SELECT w.decisionStatus FROM Approval w WHERE w.object.objectId = '${objectId}'`;
@@ -691,7 +595,6 @@ class FSMService {
                         const decisionStatus = data.data[0]?.w?.decisionStatus;
                         if (decisionStatus) {
                             statusMap[objectId] = decisionStatus;
-                            console.log('FSMService: Approval for', objectId, ':', decisionStatus);
                         }
                     }
                 } catch (err) {
@@ -700,37 +603,31 @@ class FSMService {
             });
             
             await Promise.all(promises);
-
-            console.log('FSMService: Retrieved approval statuses:', Object.keys(statusMap).length);
-
             return statusMap;
 
         } catch (error) {
-            console.error("Error fetching Approval statuses batch:", error.message);
+            console.error("FSMService: Error fetching Approval statuses batch:", error.message);
             return {};
         }
     }
 
+    // ========================================
+    // PERSON/TECHNICIAN DATA
+    // ========================================
+
     /**
-     * Get all Persons (Technicians)
-     * Used for loading all persons for search/dropdown
-     * @returns {Promise<Array>} Array of person objects
+     * Get all Persons (Technicians).
+     * @returns {Promise<Array<{id: string, externalId: string, firstName: string, lastName: string}>>}
      */
     async getPersons() {
         try {
-            console.log('FSMService: Fetching all Persons...');
-            
             const query = `SELECT w.id, w.externalId, w.firstName, w.lastName FROM Person w WHERE w.externalId IS NOT NULL`;
             const data = await this.makeQueryRequest(query, 'Person.25');
 
             if (!data.data || data.data.length === 0) {
-                console.log('FSMService: No persons found');
                 return [];
             }
 
-            console.log('FSMService: Found', data.data.length, 'persons');
-
-            // Transform to simple array of person objects
             return data.data.map(item => ({
                 id: item.w.id,
                 externalId: item.w.externalId,
@@ -739,121 +636,103 @@ class FSMService {
             }));
 
         } catch (error) {
-            console.error("Error fetching persons:", error.message);
+            console.error("FSMService: Error fetching persons:", error.message);
             return [];
         }
     }
 
     /**
-     * Get Person by ID
+     * Get Person by ID.
      * @param {string} personId - Person ID
-     * @returns {Promise<Object|null>} Person object or null if not found
+     * @returns {Promise<Object|null>} Person object or null
      */
     async getPersonById(personId) {
         try {
             if (!personId) return null;
 
-            console.log('FSMService: Fetching Person by ID:', personId);
-            
             const query = `SELECT w.id, w.externalId, w.firstName, w.lastName FROM Person w WHERE w.id = '${personId}'`;
             const data = await this.makeQueryRequest(query, 'Person.25');
 
             if (!data.data || data.data.length === 0) {
-                console.log('FSMService: Person not found for ID:', personId);
                 return null;
             }
 
-            const person = {
+            return {
                 id: data.data[0].w.id,
                 externalId: data.data[0].w.externalId,
                 firstName: data.data[0].w.firstName || '',
                 lastName: data.data[0].w.lastName || ''
             };
 
-            console.log('FSMService: Found person:', person);
-
-            return person;
-
         } catch (error) {
-            console.error("Error fetching person by ID:", error.message);
+            console.error("FSMService: Error fetching person by ID:", error.message);
             return null;
         }
     }
 
     /**
-     * Get Person by External ID
+     * Get Person by External ID.
      * @param {string} externalId - Person External ID
-     * @returns {Promise<Object|null>} Person object or null if not found
+     * @returns {Promise<Object|null>} Person object or null
      */
     async getPersonByExternalId(externalId) {
         try {
             if (!externalId) return null;
 
-            console.log('FSMService: Fetching Person by externalId:', externalId);
-            
             const query = `SELECT w.id, w.externalId, w.firstName, w.lastName FROM Person w WHERE w.externalId = '${externalId}'`;
             const data = await this.makeQueryRequest(query, 'Person.25');
 
             if (!data.data || data.data.length === 0) {
-                console.log('FSMService: Person not found for externalId:', externalId);
                 return null;
             }
 
-            const person = {
+            return {
                 id: data.data[0].w.id,
                 externalId: data.data[0].w.externalId,
                 firstName: data.data[0].w.firstName || '',
                 lastName: data.data[0].w.lastName || ''
             };
 
-            console.log('FSMService: Found person:', person);
-
-            return person;
-
         } catch (error) {
-            console.error("Error fetching person by externalId:", error.message);
+            console.error("FSMService: Error fetching person by externalId:", error.message);
             return null;
         }
     }
 
     /**
-     * Get Business Partner by External ID
+     * Get Business Partner by External ID.
      * @param {string} externalId - Business Partner External ID
-     * @returns {Promise<Object|null>} Business Partner object or null if not found
+     * @returns {Promise<Object|null>} Business Partner object or null
      */
     async getBusinessPartnerByExternalId(externalId) {
         try {
             if (!externalId) return null;
 
-            console.log('FSMService: Fetching Business Partner by externalId:', externalId);
-            
             const query = `SELECT w.name FROM BusinessPartner w WHERE w.externalId = '${externalId}'`;
             const data = await this.makeQueryRequest(query, 'BusinessPartner.25');
 
             if (!data.data || data.data.length === 0) {
-                console.log('FSMService: Business Partner not found for externalId:', externalId);
                 return null;
             }
 
-            const businessPartner = {
+            return {
                 externalId: externalId,
                 name: data.data[0].w.name || ''
             };
 
-            console.log('FSMService: Found business partner:', businessPartner);
-
-            return businessPartner;
-
         } catch (error) {
-            console.error("Error fetching business partner by externalId:", error.message);
+            console.error("FSMService: Error fetching business partner:", error.message);
             return null;
         }
     }
 
+    // ========================================
+    // ORGANIZATION LEVEL
+    // ========================================
+
     /**
-     * Get Organization Level by ID
-     * Returns the full organizational hierarchy with all sublevels
-     * @returns {Promise<Object|null>} Organization level hierarchy or null if not found
+     * Get Organization Levels hierarchy.
+     * @returns {Promise<Object>} Organization level hierarchy
      */
     async getOrganizationLevels() {
         try {
@@ -863,8 +742,6 @@ class FSMService {
             const baseUrl = destination.destinationConfiguration.URL;
             const fullUrl = `${baseUrl}/cloud-org-level-service/api/v1/levels`;
 
-            console.log('FSMService: Fetching organizational levels from:', fullUrl);
-
             const headers = {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`,
@@ -873,22 +750,22 @@ class FSMService {
             };
 
             const response = await axios.get(fullUrl, { headers });
-
-            console.log('FSMService: Organizational levels response:', response.data);
-
             return response.data;
 
         } catch (error) {
-            console.error('FSM API Error (organizational-levels):', error.response?.data || error.message);
+            console.error('FSMService: Organizational-levels API Error:', error.response?.data || error.message);
             throw error;
         }
     }
 
+    // ========================================
+    // USER API
+    // ========================================
+
     /**
-     * Get User by username from User API
-     * Endpoint: /api/user/v1/users?name={username}&account={account}
+     * Get User by username from User API.
      * @param {string} username - Username (e.g., "EGLEIZDS")
-     * @returns {Promise<Object|null>} User object with id, or null if not found
+     * @returns {Promise<Object|null>} User object or null
      */
     async getUserByUsername(username) {
         try {
@@ -900,8 +777,6 @@ class FSMService {
             const baseUrl = destination.destinationConfiguration.URL;
             const account = destination.destinationConfiguration.account || this.config.account;
             const fullUrl = `${baseUrl}/api/user/v1/users`;
-
-            console.log('FSMService: Fetching user by username:', username);
 
             const headers = {
                 'Content-Type': 'application/json',
@@ -920,12 +795,8 @@ class FSMService {
                 headers: headers
             });
 
-            console.log('FSMService: User API response:', JSON.stringify(response.data, null, 2));
-
-            // Extract user from content array
             if (response.data && response.data.content && response.data.content.length > 0) {
                 const user = response.data.content[0];
-                console.log('FSMService: Found user ID:', user.id);
                 return {
                     id: user.id,
                     email: user.email,
@@ -936,71 +807,58 @@ class FSMService {
                 };
             }
 
-            console.log('FSMService: User not found for username:', username);
             return null;
 
         } catch (error) {
-            console.error('FSM API Error (get user by username):', error.response?.data || error.message);
+            console.error('FSMService: User API Error:', error.response?.data || error.message);
             throw error;
         }
     }
 
     /**
-     * Get Person's orgLevel by userName (user ID from User API)
-     * Query: SELECT w.orgLevel, w.orgLevelIds FROM Person w WHERE w.userName = '{userId}'
-     * @param {string} userId - User ID from User API (e.g., "532149")
-     * @returns {Promise<Object|null>} Object with orgLevel and orgLevelIds, or null if not found
+     * Get Person's orgLevel by user ID.
+     * @param {string} userId - User ID from User API
+     * @returns {Promise<Object|null>} Object with orgLevel and orgLevelIds
      */
     async getPersonOrgLevelByUserId(userId) {
         try {
             if (!userId) return null;
 
-            console.log('FSMService: Fetching Person orgLevel for userId:', userId);
-
             const query = `SELECT w.orgLevel, w.orgLevelIds FROM Person w WHERE w.userName = '${userId}'`;
             const data = await this.makeQueryRequest(query, 'Person.25');
 
             if (!data.data || data.data.length === 0) {
-                console.log('FSMService: Person not found for userId:', userId);
                 return null;
             }
 
             const personData = data.data[0].w;
-            console.log('FSMService: Found Person orgLevel data:', personData);
-
             return {
                 orgLevel: personData.orgLevel || null,
                 orgLevelIds: personData.orgLevelIds || null
             };
 
         } catch (error) {
-            console.error('FSM API Error (get person orgLevel):', error.response?.data || error.message);
+            console.error('FSMService: Person orgLevel query Error:', error.response?.data || error.message);
             throw error;
         }
     }
 
     /**
-     * Get User's Organization Level (combined flow)
+     * Get User's Organization Level (combined flow).
      * 1. Get user by username -> get user ID
      * 2. Query Person table with user ID -> get orgLevel/orgLevelIds
-     * @param {string} username - Username from FSM Mobile context (e.g., "EGLEIZDS")
-     * @returns {Promise<Object|null>} Object with orgLevel info, or null if not found
+     * @param {string} username - Username from FSM Mobile context
+     * @returns {Promise<Object|null>} Object with orgLevel info
      */
     async getUserOrgLevel(username) {
         try {
-            console.log('FSMService: Getting org level for user:', username);
-
-            // Step 1: Get user by username to get user ID
             const user = await this.getUserByUsername(username);
             if (!user || !user.id) {
-                console.log('FSMService: Could not find user for username:', username);
                 return null;
             }
 
-            // Step 2: Get Person's orgLevel using user ID
             const orgLevelData = await this.getPersonOrgLevelByUserId(user.id);
             if (!orgLevelData) {
-                console.log('FSMService: Could not find Person orgLevel for userId:', user.id);
                 return null;
             }
 
@@ -1014,7 +872,7 @@ class FSMService {
             };
 
         } catch (error) {
-            console.error('FSM API Error (get user org level):', error.message);
+            console.error('FSMService: getUserOrgLevel Error:', error.message);
             throw error;
         }
     }

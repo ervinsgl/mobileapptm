@@ -1,6 +1,26 @@
 /* ========================================
-   Mobile App SC - Fragment-Based Styles
-   Only includes classes used by actual fragments
+   Mobile App SC - Service Confirmation App
+   ========================================
+   
+   SAP UI5 Fiori Application for FSM Mobile
+   
+   Architecture:
+   - Frontend: SAP UI5 (OpenUI5) with XML Views
+   - Backend: Node.js/Express REST API
+   - External: SAP FSM APIs
+   
+   Key Features:
+   - Web Container integration (FSM Mobile context)
+   - User Organization Level auto-resolution
+   - Activity filtering by user's org level
+   - T&M (Time & Materials) reporting
+   
+   CSS Structure:
+   - Session Context Panel (header with org level + user)
+   - Service Order Panel (service call details)
+   - Product Groups (activities grouped by product)
+   - T&M Entry styling (dialogs, forms, inputs)
+   
    ======================================== */
 
 /* ========================================
@@ -66,21 +86,6 @@
 .serviceOrderFieldValue {
     font-size: 0.875rem;
     color: #333;
-}
-
-/* ========================================
-   ORGANIZATION LEVEL PANEL (OrganizationLevel fragment)
-   ======================================== */
-
-.organizationLevelPanel {
-    border: 1px solid #d9d9d9;
-    border-radius: 6px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.organizationLevelPanel .sapMPanelHdr {
-    border-radius: 4px 4px 0 0;
-    overflow: hidden;
 }
 
 /* ========================================
@@ -618,8 +623,7 @@
 
 @media (max-width: 768px) {
     .productGroupPanel,
-    .serviceOrderPanel,
-    .organizationLevelPanel {
+    .serviceOrderPanel {
         margin: 0.5rem 0.25rem !important;
     }
 
@@ -687,7 +691,6 @@
 
 @media (min-width: 1025px) {
     .productGroupPanel:hover,
-    .organizationLevelPanel:hover,
     .serviceOrderPanel:hover {
         transform: translateY(-2px);
         transition: transform 0.2s ease, box-shadow 0.3s ease;
@@ -705,7 +708,6 @@
 
 @media (prefers-reduced-motion: reduce) {
     .productGroupPanel,
-    .organizationLevelPanel,
     .serviceOrderPanel {
         transition: none;
     }

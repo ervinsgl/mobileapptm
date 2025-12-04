@@ -1,17 +1,34 @@
+/**
+ * ServiceOrderService.js
+ * 
+ * Frontend service for service order/call data management.
+ * Handles fetching and extracting data from FSM composite-tree API responses.
+ * 
+ * Key Features:
+ * - Fetch service call by ID using composite-tree API
+ * - Extract service order header data (ID, subject, business partner, responsible)
+ * - Extract activities array from composite response
+ * 
+ * API Endpoint Used:
+ * - POST /api/get-activities-by-service-call (uses composite-tree API)
+ * 
+ * Response Structure:
+ * The composite-tree API returns service call at ROOT level with nested activities.
+ * 
+ * @file ServiceOrderService.js
+ * @module mobileappsc/utils/ServiceOrderService
+ */
 sap.ui.define([], () => {
     "use strict";
 
     return {
         /**
-         * Fetch service call details by ID
+         * Fetch service call details by ID.
+         * @param {string} serviceCallId - Service call ID
+         * @returns {Promise<Object>} Composite tree response with service call and activities
+         * @throws {Error} If request fails
          */
         async fetchServiceCallById(serviceCallId) {
-            console.log('\n========================================');
-            console.log('SERVICE ORDER: Fetch By ID - REQUEST');
-            console.log('========================================');
-            console.log('Service Call ID:', serviceCallId);
-            console.log('API Endpoint: /api/get-activities-by-service-call');
-            
             const response = await fetch("/api/get-activities-by-service-call", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -22,42 +39,25 @@ sap.ui.define([], () => {
                 throw new Error(`Failed to fetch service call: ${response.status}`);
             }
 
-            const data = await response.json();
-            
-            console.log('\n========================================');
-            console.log('SERVICE ORDER: Fetch By ID - RESPONSE');
-            console.log('========================================');
-            console.log('Full Composite Tree Response:', data);
-            
-            return data;
+            return await response.json();
         },
 
         /**
-         * Extract service order data from composite-tree response
-         * In composite-tree API, service call data is at ROOT level
+         * Extract service order data from composite-tree response.
+         * In composite-tree API, service call data is at ROOT level.
+         * @param {Object} compositeData - Composite tree API response
+         * @returns {Object|null} Extracted service order data or null
          */
         extractServiceOrderData(compositeData) {
-            console.log('\n========================================');
-            console.log('SERVICE ORDER: Extract Data');
-            console.log('========================================');
-            
             if (!compositeData) {
-                console.warn('No composite data provided');
                 return null;
             }
-            
-            console.log('Composite data keys:', Object.keys(compositeData));
-            console.log('Service Call ID:', compositeData.id);
-            console.log('External ID:', compositeData.externalId);
-            console.log('Code:', compositeData.code);
-            console.log('Subject:', compositeData.subject);
             
             // Extract business partner external ID
             let businessPartnerExternalId = null;
             if (compositeData.businessPartner && compositeData.businessPartner.externalId) {
                 businessPartnerExternalId = compositeData.businessPartner.externalId;
             }
-            console.log('Business Partner External ID:', businessPartnerExternalId);
             
             // Extract responsible external ID (first responsible if multiple)
             let responsibleExternalId = null;
@@ -66,9 +66,8 @@ sap.ui.define([], () => {
                                        compositeData.responsibles[0].code ||
                                        compositeData.responsibles[0].id;
             }
-            console.log('Responsible External ID:', responsibleExternalId);
             
-            const serviceOrderData = {
+            return {
                 id: compositeData.id,
                 externalId: compositeData.externalId || compositeData.code || compositeData.id,
                 subject: compositeData.subject || '',
@@ -77,69 +76,19 @@ sap.ui.define([], () => {
                 earliestStartDateTime: compositeData.earliestStartDateTime || null,
                 dueDateTime: compositeData.dueDateTime || null
             };
-            
-            console.log('\n--- EXTRACTED SERVICE ORDER DATA ---');
-            console.log(serviceOrderData);
-            
-            return serviceOrderData;
         },
 
         /**
-         * Extract activities array from composite-tree response
+         * Extract activities array from composite-tree response.
+         * @param {Object} compositeData - Composite tree API response
+         * @returns {Array} Array of activity objects
          */
         extractActivitiesFromCompositeTree(compositeData) {
-            console.log('\n========================================');
-            console.log('SERVICE ORDER: Extract Activities Array');
-            console.log('========================================');
-            
             if (!compositeData || !compositeData.activities) {
-                console.warn('No activities in composite tree response');
                 return [];
             }
             
-            const activities = compositeData.activities || [];
-            console.log('Total activities in response:', activities.length);
-            
-            // Group by executionStage
-            const stages = {};
-            activities.forEach(activity => {
-                const stage = activity.executionStage || 'NO_STAGE';
-                if (!stages[stage]) stages[stage] = [];
-                stages[stage].push(activity);
-            });
-            
-            console.log('\nActivities grouped by executionStage:');
-            Object.keys(stages).forEach(stage => {
-                console.log(`  ${stage}: ${stages[stage].length} activities`);
-            });
-            
-            // Group by type
-            const types = {};
-            activities.forEach(activity => {
-                const type = activity.type || 'NO_TYPE';
-                if (!types[type]) types[type] = [];
-                types[type].push(activity);
-            });
-            
-            console.log('\nActivities grouped by type:');
-            Object.keys(types).forEach(type => {
-                console.log(`  ${type}: ${types[type].length} activities`);
-            });
-            
-            // Log sample activity
-            if (activities.length > 0) {
-                console.log('\n--- SAMPLE ACTIVITY (first one) ---');
-                console.log('Activity Object:', activities[0]);
-                console.log('Activity Keys:', Object.keys(activities[0]));
-            }
-            
-            // Log all activity summaries
-            console.log('\n--- ALL ACTIVITIES SUMMARY ---');
-            activities.forEach((activity, index) => {
-                console.log(`${index + 1}. ID: ${activity.id}, Code: ${activity.code}, Subject: ${activity.subject}, Stage: ${activity.executionStage}, Type: ${activity.type}`);
-            });
-            
-            return activities;
+            return compositeData.activities || [];
         }
     };
 });

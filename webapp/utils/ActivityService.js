@@ -1,11 +1,31 @@
+/**
+ * ActivityService.js
+ * 
+ * Frontend service for activity data management.
+ * Handles fetching activities from backend and extracting structured data.
+ * 
+ * Key Features:
+ * - Format activity IDs (UUID → FSM format)
+ * - Fetch single activity by ID
+ * - Fetch activities for a service call
+ * - Extract activity and service call data from responses
+ * 
+ * API Endpoints Used:
+ * - POST /api/get-activity-by-id
+ * - POST /api/get-activities-by-service-call
+ * 
+ * @file ActivityService.js
+ * @module mobileappsc/utils/ActivityService
+ */
 sap.ui.define([], () => {
     "use strict";
 
     return {
         /**
-         * Format activity ID for FSM API
-         * Converts: 77f485d3-c917-49db-8da3-c4045d95c2b9
-         * To:       77F485D3C91749DB8DA3C4045D95C2B9
+         * Format activity ID for FSM API.
+         * Converts UUID format to FSM's uppercase format.
+         * @param {string} activityId - UUID format (e.g., "77f485d3-c917-49db-8da3-c4045d95c2b9")
+         * @returns {string} FSM format (e.g., "77F485D3C91749DB8DA3C4045D95C2B9")
          */
         formatActivityId(activityId) {
             if (!activityId) return "";
@@ -13,17 +33,13 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Fetch activity by ID from backend
+         * Fetch activity by ID from backend.
+         * @param {string} activityId - Activity ID (UUID or FSM format)
+         * @returns {Promise<Object>} Activity data from FSM API
+         * @throws {Error} If request fails
          */
         async fetchActivityById(activityId) {
-            console.log('\n========================================');
-            console.log('FRONTEND: Fetch Activity By ID - REQUEST');
-            console.log('========================================');
-            console.log('Original Activity ID:', activityId);
-            
             const formattedId = this.formatActivityId(activityId);
-            console.log('Formatted Activity ID:', formattedId);
-            console.log('API Endpoint: /api/get-activity-by-id');
             
             const response = await fetch("/api/get-activity-by-id", {
                 method: "POST",
@@ -33,38 +49,18 @@ sap.ui.define([], () => {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                console.error('ERROR:', errorData);
                 throw new Error(errorData.message || `HTTP ${response.status}`);
             }
 
-            const data = await response.json();
-            
-            console.log('\n========================================');
-            console.log('FRONTEND: Fetch Activity By Id - RESPONSE');
-            console.log('========================================');
-            console.log('Full Response:', data);
-            
-            if (data.data && Array.isArray(data.data)) {
-                console.log('\n--- Activity Data ---');
-                console.log('Number of activities:', data.data.length);
-                data.data.forEach((item, index) => {
-                    console.log(`\nActivity ${index + 1}:`, item.activity);
-                });
-            }
-
-            return data;
+            return await response.json();
         },
 
         /**
-         * Fetch activities for a service call (EXECUTION stage only)
+         * Fetch activities for a service call (EXECUTION stage only).
+         * @param {string} serviceCallId - Service call ID
+         * @returns {Promise<Array>} Array of activities in EXECUTION stage
          */
         async fetchActivitiesForServiceCall(serviceCallId) {
-            console.log('\n========================================');
-            console.log('ACTIVITY SERVICE: Fetch Activities - REQUEST');
-            console.log('========================================');
-            console.log('Service Call ID:', serviceCallId);
-            console.log('API Endpoint: /api/get-activities-by-service-call');
-            
             const response = await fetch("/api/get-activities-by-service-call", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -76,27 +72,18 @@ sap.ui.define([], () => {
             }
 
             const data = await response.json();
-            
-            console.log('\n========================================');
-            console.log('ACTIVITY SERVICE: Fetch Activities - RESPONSE');
-            console.log('========================================');
-            
-            // Extract activities array
             const activities = data.activities || [];
-            console.log('Total activities:', activities.length);
             
             // Filter only EXECUTION stage activities
-            const executionActivities = activities.filter(activity => 
+            return activities.filter(activity => 
                 activity.executionStage === "EXECUTION"
             );
-            
-            console.log('EXECUTION stage activities:', executionActivities.length);
-            
-            return executionActivities;
         },
 
         /**
-         * Extract activity data from FSM response
+         * Extract activity data from FSM response.
+         * @param {Object} response - FSM API response
+         * @returns {Object} Structured activity data
          */
         extractActivityData(response) {
             const activity = response.data?.[0]?.activity || response;
@@ -116,7 +103,9 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Extract service call data from activity
+         * Extract service call data from activity.
+         * @param {Object} activity - Activity object with object reference
+         * @returns {Object|null} Service call data or null if not available
          */
         extractServiceCallData(activity) {
             if (!activity.object) return null;

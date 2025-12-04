@@ -1,26 +1,56 @@
+/**
+ * TimeTaskService.js
+ * 
+ * Frontend service for time task data management.
+ * Handles fetching, caching, and lookup of time tasks for T&M entries.
+ * 
+ * Key Features:
+ * - Fetch and cache all time tasks from FSM
+ * - ID-to-name lookup for display
+ * - Dropdown data transformation
+ * 
+ * Display Format: "AZ001 - Working Time"
+ * 
+ * Task Code Prefixes:
+ * - AZ: Arbeitszeit (Working Time)
+ * - FZ: Fahrzeit (Travel Time)
+ * - WZ: Wartezeit (Waiting Time)
+ * 
+ * API Endpoint Used:
+ * - GET /api/get-time-tasks
+ * 
+ * @file TimeTaskService.js
+ * @module mobileappsc/utils/TimeTaskService
+ */
 sap.ui.define([], () => {
     "use strict";
 
-    // Private cache for time tasks
+    /**
+     * Cache for time tasks array.
+     * @type {Array|null}
+     * @private
+     */
     let _timeTasksCache = null;
+    
+    /**
+     * Map for quick ID-to-object lookup.
+     * @type {Map<string, Object>|null}
+     * @private
+     */
     let _timeTasksMap = null;
 
     return {
         /**
-         * Fetch all time tasks from backend
-         * Results are cached for the session
+         * Fetch all time tasks from backend.
+         * Results are cached for the session.
          * @returns {Promise<Array>} Array of time task objects
          */
         async fetchTimeTasks() {
-            // Return cached data if available
             if (_timeTasksCache) {
-                console.log('TimeTaskService: Returning cached time tasks');
                 return _timeTasksCache;
             }
 
             try {
-                console.log('TimeTaskService: Fetching time tasks from API...');
-
                 const response = await fetch("/api/get-time-tasks", {
                     method: "GET",
                     headers: { "Content-Type": "application/json" }
@@ -33,10 +63,8 @@ sap.ui.define([], () => {
                 const data = await response.json();
                 _timeTasksCache = data.timeTasks || [];
 
-                // Build lookup map for quick ID-to-name resolution
                 this._buildLookupMap();
 
-                console.log('TimeTaskService: Loaded', _timeTasksCache.length, 'time tasks');
                 return _timeTasksCache;
 
             } catch (error) {
@@ -46,7 +74,7 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Build internal lookup map for ID-to-name resolution
+         * Build internal lookup map for ID-to-name resolution.
          * @private
          */
         _buildLookupMap() {
@@ -57,14 +85,12 @@ sap.ui.define([], () => {
                     _timeTasksMap.set(task.id, task);
                 });
             }
-            
-            console.log('TimeTaskService: Built lookup map with', _timeTasksMap.size, 'entries');
         },
 
         /**
-         * Get time task name by ID
+         * Get time task name by ID.
          * @param {string} taskId - Time task ID
-         * @returns {string} Time task name or 'N/A' if not found
+         * @returns {string} Time task name or ID as fallback
          */
         getTaskNameById(taskId) {
             if (!taskId || taskId === 'N/A') {
@@ -72,18 +98,17 @@ sap.ui.define([], () => {
             }
 
             if (!_timeTasksMap) {
-                console.warn('TimeTaskService: Lookup map not initialized. Call fetchTimeTasks() first.');
-                return taskId; // Return ID as fallback
+                return taskId;
             }
 
             const task = _timeTasksMap.get(taskId);
-            return task ? task.name : taskId; // Return ID as fallback if not found
+            return task ? task.name : taskId;
         },
 
         /**
-         * Get time task display text (code + name) by ID
+         * Get time task display text by ID.
          * @param {string} taskId - Time task ID
-         * @returns {string} Formatted display text "code - name" or 'N/A'
+         * @returns {string} Formatted display text "code - name" or ID as fallback
          */
         getTaskDisplayTextById(taskId) {
             if (!taskId || taskId === 'N/A') {
@@ -91,7 +116,6 @@ sap.ui.define([], () => {
             }
 
             if (!_timeTasksMap) {
-                console.warn('TimeTaskService: Lookup map not initialized. Call fetchTimeTasks() first.');
                 return taskId;
             }
 
@@ -99,13 +123,13 @@ sap.ui.define([], () => {
             if (task) {
                 return `${task.code} - ${task.name}`;
             }
-            return taskId; // Return ID as fallback
+            return taskId;
         },
 
         /**
-         * Get full time task object by ID
+         * Get full time task object by ID.
          * @param {string} taskId - Time task ID
-         * @returns {object|null} Time task object or null
+         * @returns {Object|null} Time task object or null
          */
         getTaskById(taskId) {
             if (!taskId || !_timeTasksMap) {
@@ -115,7 +139,7 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Get all cached time tasks
+         * Get all cached time tasks.
          * @returns {Array} Array of time task objects
          */
         getAllTasks() {
@@ -123,8 +147,8 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Transform time tasks for dropdown/select control
-         * @returns {Array} Array of {key, text} objects for dropdown binding
+         * Transform time tasks for dropdown/select control.
+         * @returns {Array<{key: string, text: string, code: string, name: string}>}
          */
         getTasksForDropdown() {
             if (!_timeTasksCache) {
@@ -140,7 +164,7 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Check if time tasks are loaded
+         * Check if time tasks are loaded.
          * @returns {boolean} True if cache is populated
          */
         isLoaded() {
@@ -148,12 +172,11 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Clear the cache (useful for refresh scenarios)
+         * Clear the cache.
          */
         clearCache() {
             _timeTasksCache = null;
             _timeTasksMap = null;
-            console.log('TimeTaskService: Cache cleared');
         }
     };
 });

@@ -1,25 +1,38 @@
+/**
+ * TMEditService.js
+ * 
+ * Frontend service for T&M entry edit mode logic.
+ * Handles initialization, extraction, and update of editable fields.
+ * 
+ * Key Features:
+ * - Initialize edit field values from existing report data
+ * - Extract edited values from model for API submission
+ * - Build update payloads for PATCH API calls
+ * - Generate display value updates after save
+ * - Handle duration/datetime calculations during edit
+ * 
+ * Supported Entry Types:
+ * - Time Effort: Duration, remarks, start/end datetime
+ * - Material: Date, quantity, remarks
+ * - Expense: Date, external/internal amounts, remarks
+ * - Mileage: Date, distance, source, destination, travel duration, remarks
+ * 
+ * @file TMEditService.js
+ * @module mobileappsc/utils/TMEditService
+ * @requires mobileappsc/utils/DateTimeService
+ */
 sap.ui.define([
     "mobileappsc/utils/DateTimeService"
 ], (DateTimeService) => {
     "use strict";
 
-    /**
-     * TMEditService - Handles T&M entry edit mode logic
-     * 
-     * Centralizes:
-     * - Initializing edit field values from report data
-     * - Extracting edited values from model
-     * - Building update payloads for API
-     * - Generating display value updates
-     * - Duration/DateTime calculations for Time Effort and Mileage
-     */
     return {
         /**
-         * Initialize edit mode fields for a report
-         * Copies current values to edit fields
+         * Initialize edit mode fields for a report.
+         * Copies current values to edit fields.
          * @param {string} type - Report type (Time Effort, Material, Expense, Mileage)
-         * @param {object} report - Report data object
-         * @returns {object} Edit field values to set on model
+         * @param {Object} report - Report data object
+         * @returns {Object} Edit field values to set on model
          */
         initEditMode(type, report) {
             const cleanRemarks = (val) => (val === "N/A" || !val) ? "" : val;
@@ -61,17 +74,16 @@ sap.ui.define([
                     };
 
                 default:
-                    console.warn("TMEditService: Unknown type for initEditMode:", type);
                     return {};
             }
         },
 
         /**
-         * Get edited values from model
+         * Get edited values from model.
          * @param {string} type - Report type
          * @param {sap.ui.model.json.JSONModel} model - Dialog model
          * @param {string} path - Path to report in model
-         * @returns {object} Edited values
+         * @returns {Object} Edited values
          */
         getEditedValues(type, model, path) {
             const get = (prop) => model.getProperty(path + "/" + prop);
@@ -81,7 +93,7 @@ sap.ui.define([
                     return {
                         durationMinutes: get("editDurationMinutes"),
                         remarks: get("editRemarks"),
-                        startDateTime: get("startDateTime"), // Original, not edited
+                        startDateTime: get("startDateTime"),
                         endDateTime: get("editEndDateTime")
                     };
 
@@ -107,23 +119,22 @@ sap.ui.define([
                         source: get("editSource"),
                         destination: get("editDestination"),
                         travelDuration: get("editTravelDuration"),
-                        travelStartDateTime: get("travelStartDateTime"), // Original, not edited
+                        travelStartDateTime: get("travelStartDateTime"),
                         travelEndDateTime: get("editTravelEnd"),
                         remarks: get("editRemarks")
                     };
 
                 default:
-                    console.warn("TMEditService: Unknown type for getEditedValues:", type);
                     return {};
             }
         },
 
         /**
-         * Build update payload for API
+         * Build update payload for API.
          * @param {string} type - Report type
          * @param {string} id - Report ID
-         * @param {object} values - Edited values
-         * @returns {object} API payload
+         * @param {Object} values - Edited values
+         * @returns {Object} API payload
          */
         buildUpdatePayload(type, id, values) {
             const payload = { id };
@@ -158,19 +169,16 @@ sap.ui.define([
                     payload.travelEndDateTime = values.travelEndDateTime;
                     payload.remarks = values.remarks;
                     break;
-
-                default:
-                    console.warn("TMEditService: Unknown type for buildUpdatePayload:", type);
             }
 
             return payload;
         },
 
         /**
-         * Get display value updates after save
+         * Get display value updates after save.
          * @param {string} type - Report type
-         * @param {object} values - Edited values
-         * @returns {object} Display updates as {path: value} pairs
+         * @param {Object} values - Edited values
+         * @returns {Object} Display updates as {path: value} pairs
          */
         getDisplayUpdates(type, values) {
             const orNA = (val) => val || "N/A";
@@ -223,16 +231,15 @@ sap.ui.define([
                     };
 
                 default:
-                    console.warn("TMEditService: Unknown type for getDisplayUpdates:", type);
                     return {};
             }
         },
 
         /**
-         * Apply edit values to model
+         * Apply edit values to model.
          * @param {sap.ui.model.json.JSONModel} model - Dialog model
          * @param {string} path - Path to report in model
-         * @param {object} editValues - Values from initEditMode
+         * @param {Object} editValues - Values from initEditMode
          */
         applyEditValues(model, path, editValues) {
             Object.keys(editValues).forEach(key => {
@@ -241,10 +248,10 @@ sap.ui.define([
         },
 
         /**
-         * Apply display updates to model
+         * Apply display updates to model.
          * @param {sap.ui.model.json.JSONModel} model - Dialog model
          * @param {string} path - Path to report in model
-         * @param {object} displayUpdates - Values from getDisplayUpdates
+         * @param {Object} displayUpdates - Values from getDisplayUpdates
          */
         applyDisplayUpdates(model, path, displayUpdates) {
             Object.keys(displayUpdates).forEach(key => {
@@ -253,8 +260,7 @@ sap.ui.define([
         },
 
         /**
-         * Calculate end datetime based on start and duration
-         * Delegates to DateTimeService
+         * Calculate end datetime based on start and duration.
          * @param {string} startDateTime - ISO datetime string
          * @param {number} durationMinutes - Duration in minutes
          * @returns {string} Calculated end datetime
@@ -264,7 +270,7 @@ sap.ui.define([
         },
 
         /**
-         * Handle duration change - recalculate end datetime
+         * Handle duration change - recalculate end datetime.
          * @param {sap.ui.model.json.JSONModel} model - Dialog model
          * @param {string} path - Path to report in model
          * @param {string} type - Report type (Time Effort or Mileage)
@@ -280,7 +286,7 @@ sap.ui.define([
                 startDateTime = model.getProperty(path + "/travelStartDateTime");
                 endProperty = "/editTravelEnd";
             } else {
-                return; // Duration not applicable
+                return;
             }
 
             if (startDateTime && newDuration >= 0) {
@@ -290,8 +296,8 @@ sap.ui.define([
         },
 
         /**
-         * Format payload as JSON string for display
-         * @param {object} payload - Payload object
+         * Format payload as JSON string for display.
+         * @param {Object} payload - Payload object
          * @returns {string} Formatted JSON
          */
         formatPayloadJSON(payload) {

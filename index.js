@@ -1,3 +1,31 @@
+/**
+ * index.js - Backend Server
+ * 
+ * Express.js server for the Service Confirmation application.
+ * Handles FSM Mobile web container integration and proxies requests to SAP FSM APIs.
+ * 
+ * Key Responsibilities:
+ * 1. Web Container Entry Point - Receives POST from FSM Mobile with context
+ * 2. Static File Serving - Serves the UI5 frontend from /webapp
+ * 3. REST API Proxy - Authenticated requests to FSM APIs
+ * 
+ * API Routes:
+ * - POST /web-container-access-point - FSM Mobile entry point
+ * - GET  /web-container-context      - Frontend retrieves stored context
+ * - POST /api/get-activity-by-id     - Get single activity
+ * - POST /api/get-activities-by-service-call - Get service call composite tree
+ * - GET  /api/get-organization-levels-full   - Full org hierarchy
+ * - POST /api/get-user-org-level     - Resolve user's org level
+ * - POST /api/get-reported-items     - T&M reports for activity
+ * - GET  /api/get-time-tasks         - Task lookup data
+ * - GET  /api/get-items              - Item lookup data
+ * - GET  /api/get-expense-types      - Expense type lookup data
+ * 
+ * @file index.js
+ * @requires express
+ * @requires ./utils/FSMService
+ */
+
 const express = require('express');
 const path = require('path');
 const FSMService = require('./utils/FSMService');

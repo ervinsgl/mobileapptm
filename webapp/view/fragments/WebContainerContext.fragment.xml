@@ -2,6 +2,12 @@
     xmlns="sap.m"
     xmlns:core="sap.ui.core"
 >
+    <!-- 
+        WebContainerContext Fragment: Displays FSM Mobile session context.
+        Shows user info, organization level, and current object context.
+        Only visible when app is launched from FSM Mobile web container.
+        Model: view>/webContainerContext
+    -->
     <Panel
         id="webContainerContextPanel"
         headerText="Session Context"
@@ -14,24 +20,17 @@
         <headerToolbar>
             <OverflowToolbar design="Info">
                 <core:Icon src="sap-icon://org-chart" class="sapUiSmallMarginEnd"/>
-                <Title 
-                    text="{view>/webContainerContext/orgLevelName}" 
-                    level="H4" 
-                    titleStyle="H4"
-                />
-                <ToolbarSpacer />
-                <ObjectStatus 
-                    text="{view>/webContainerContext/userName}" 
-                    state="Success"
-                    icon="sap-icon://person-placeholder"
-                />
+                <Title text="{view>/webContainerContext/orgLevelName}" level="H4" titleStyle="H4"/>
+                <ToolbarSpacer/>
+                <ObjectStatus text="{view>/webContainerContext/userName}" state="Success" icon="sap-icon://person-placeholder"/>
             </OverflowToolbar>
         </headerToolbar>
         
         <content>
-            <!-- Session Context Details - Compact 3-Column Layout -->
+            <!-- Session Details: 3-Column Layout -->
             <HBox class="serviceOrderContent">
-                <!-- Column 1: User, Language -->
+            
+                <!-- Col 1: User, Language -->
                 <VBox class="serviceOrderColumn">
                     <HBox class="serviceOrderFieldRow">
                         <Label text="User:" design="Bold" class="serviceOrderFieldLabel"/>
@@ -43,7 +42,7 @@
                     </HBox>
                 </VBox>
                 
-                <!-- Column 2: Account, Company -->
+                <!-- Col 2: Account, Company -->
                 <VBox class="serviceOrderColumn">
                     <HBox class="serviceOrderFieldRow">
                         <Label text="Account:" design="Bold" class="serviceOrderFieldLabel"/>
@@ -55,15 +54,15 @@
                     </HBox>
                 </VBox>
                 
-                <!-- Column 3: Org Level, Object Info -->
+                <!-- Col 3: Organization, Object -->
                 <VBox class="serviceOrderColumn">
                     <HBox class="serviceOrderFieldRow">
                         <Label text="Organization:" design="Bold" class="serviceOrderFieldLabel"/>
                         <Text text="{view>/webContainerContext/orgLevelName}" class="serviceOrderFieldValue"/>
                     </HBox>
                     <HBox class="serviceOrderFieldRow">
-                        <Label text="Activity ID:" design="Bold" class="serviceOrderFieldLabel"/>
-                        <Text text="{view>/webContainerContext/cloudId}" class="serviceOrderFieldValue"/>
+                        <Label text="Object:" design="Bold" class="serviceOrderFieldLabel"/>
+                        <Text text="{view>/webContainerContext/objectType} - {view>/webContainerContext/cloudId}" class="serviceOrderFieldValue"/>
                     </HBox>
                 </VBox>
             </HBox>

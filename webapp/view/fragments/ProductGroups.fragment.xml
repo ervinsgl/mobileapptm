@@ -3,8 +3,18 @@
     xmlns:core="sap.ui.core"
     xmlns:l="sap.ui.layout"
 >
+    <!-- 
+        ProductGroups Fragment: Displays activities grouped by product/SO item.
+        
+        Structure:
+        - Product Group Panels (expandable, grouped by soItemId)
+          - Activity Panels (expandable, with T&M summary)
+        
+        Model: view>/productGroups
+    -->
     <VBox class="sapUiResponsiveMargin">
-        <!-- Empty State - No Activities for Org Level -->
+    
+        <!-- Empty State -->
         <IllustratedMessage
             illustrationType="sapIllus-NoEntries"
             title="No Activities Found"
@@ -12,38 +22,21 @@
             visible="{= ${view>/productGroups}.length === 0 }"
         >
             <additionalContent>
-                <Button
-                    text="Refresh"
-                    type="Emphasized"
-                    icon="sap-icon://refresh"
-                    press=".onRefresh"
-                />
+                <Button text="Refresh" type="Emphasized" icon="sap-icon://refresh" press=".onRefresh"/>
             </additionalContent>
         </IllustratedMessage>
         
-        <!-- Activities List -->
-        <List
-            items="{view>/productGroups}"
-            mode="None"
-            showSeparators="None"
-            visible="{= ${view>/productGroups}.length > 0 }"
-        >
+        <!-- Product Groups List -->
+        <List items="{view>/productGroups}" mode="None" showSeparators="None" visible="{= ${view>/productGroups}.length > 0 }">
             <CustomListItem type="Inactive">
-                <Panel
-                    headerText="Product: {view>productDescription}"
-                    expandable="true"
-                    expanded="{view>expanded}"
-                    expand="onProductPanelExpand"
-                    class="productGroupPanel"
-                >
+            
+                <!-- Product Group Panel -->
+                <Panel headerText="Product: {view>productDescription}" expandable="true" expanded="{view>expanded}" expand="onProductPanelExpand" class="productGroupPanel">
                     <headerToolbar>
                         <OverflowToolbar design="Info">
                             <core:Icon src="sap-icon://product" class="sapUiSmallMarginEnd"/>
-                            <Title 
-                                text="Product: {view>productDescription}"
-                                wrapping="true"
-                            />
-                            <ToolbarSpacer />
+                            <Title text="Product: {view>productDescription}" wrapping="true"/>
+                            <ToolbarSpacer/>
                             <Title text="ID: {view>soItemId}" level="H5"/>
                         </OverflowToolbar>
                     </headerToolbar>
@@ -53,28 +46,17 @@
                             <Label text="{view>activityCount} Activities" design="Bold"/>
                         </Toolbar>
                         
-                        <!-- ACTIVITIES LIST -->
-                        <List
-                            items="{path: 'view>activities', templateShareable: false}"
-                            mode="None"
-                            showSeparators="None"
-                            growing="true"
-                            growingThreshold="20"
-                        >
+                        <!-- Activities List -->
+                        <List items="{path: 'view>activities', templateShareable: false}" mode="None" showSeparators="None" growing="true" growingThreshold="20">
                             <CustomListItem type="Inactive" class="activityListItem">
-                                <Panel
-                                    expandable="true"
-                                    expanded="{view>detailsExpanded}"
-                                    class="activityEntryPanel"
-                                >
+                            
+                                <!-- Activity Panel -->
+                                <Panel expandable="true" expanded="{view>detailsExpanded}" class="activityEntryPanel">
                                     <headerToolbar>
                                         <OverflowToolbar design="Info">
                                             <core:Icon src="sap-icon://activity-individual" class="sapUiSmallMarginEnd"/>
-                                            <Title 
-                                                text="{view>code}  {view>subject}" 
-                                                level="H5"
-                                            />
-                                            <ToolbarSpacer />
+                                            <Title text="{view>code}  {view>subject}" level="H5"/>
+                                            <ToolbarSpacer/>
                                             <ObjectStatus text="{view>status}" state="{view>statusState}" class="sapUiTinyMarginEnd"/>
                                             <ObjectStatus text="{view>executionStage}" state="{view>stageState}" class="sapUiTinyMarginEnd"/>
                                             <Label text="ID: {view>externalId}"/>
@@ -82,9 +64,10 @@
                                     </headerToolbar>
                                     
                                     <content>
-                                        <!-- Activity Details - Compact 3-Column Layout -->
+                                        <!-- Activity Details: 3-Column Layout -->
                                         <HBox class="activityEntryContent">
-                                            <!-- Column 1: Service Product, Responsible -->
+                                        
+                                            <!-- Col 1: Service Product, Responsible -->
                                             <VBox class="activityColumn">
                                                 <HBox class="activityFieldRow">
                                                     <Label text="Service Product:" design="Bold" class="activityFieldLabel"/>
@@ -96,7 +79,7 @@
                                                 </HBox>
                                             </VBox>
                                             
-                                            <!-- Column 2: Address, Organization Level -->
+                                            <!-- Col 2: Address, Org Level -->
                                             <VBox class="activityColumn">
                                                 <HBox class="activityFieldRow">
                                                     <Label text="Address:" design="Bold" class="activityFieldLabel"/>
@@ -108,7 +91,7 @@
                                                 </HBox>
                                             </VBox>
                                             
-                                            <!-- Column 3: Planned Start/End, Duration -->
+                                            <!-- Col 3: Dates, Duration -->
                                             <VBox class="activityColumn">
                                                 <HBox class="activityFieldRow">
                                                     <Label text="Planned Start:" design="Bold" class="activityFieldLabel"/>
@@ -125,13 +108,15 @@
                                             </VBox>
                                         </HBox>
                                         
-                                        <!-- T&M Summary Section -->
+                                        <!-- T&M Summary -->
                                         <VBox class="tmSummarySection">
                                             <HBox alignItems="Center" class="sapUiTinyMarginBottom">
                                                 <core:Icon src="sap-icon://timesheet" class="sapUiTinyMarginEnd"/>
                                                 <Label text="T&amp;M Reports:" design="Bold"/>
                                                 <ObjectNumber number="{view>tmReportsCount}" unit="items" state="{= ${view>tmReportsCount} > 0 ? 'Success' : 'None'}" class="sapUiTinyMarginBegin"/>
                                             </HBox>
+                                            
+                                            <!-- T&M Counts -->
                                             <HBox visible="{view>tmReportsLoaded}" class="sapUiTinyMarginBottom">
                                                 <VBox class="sapUiSmallMarginEnd">
                                                     <Label text="Time Effort"/>
@@ -151,15 +136,9 @@
                                                 </VBox>
                                             </HBox>
                                             
-                                            <!-- Action Buttons -->
+                                            <!-- Actions -->
                                             <HBox class="activityActions">
-                                                <Button
-                                                    text="View T&amp;M"
-                                                    icon="sap-icon://detail-view"
-                                                    type="Emphasized"
-                                                    press=".onViewTMReports"
-                                                    class="tmActionButton"
-                                                />
+                                                <Button text="View T&amp;M" icon="sap-icon://detail-view" type="Emphasized" press=".onViewTMReports" class="tmActionButton"/>
                                             </HBox>
                                         </VBox>
                                     </content>

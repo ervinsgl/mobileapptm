@@ -1,3 +1,27 @@
+/**
+ * TMCreationService.js
+ * 
+ * Frontend service for creating T&M (Time & Materials) entry templates.
+ * Provides factory methods for each entry type with default values.
+ * 
+ * Key Features:
+ * - Create entry templates for all T&M types
+ * - Manage default technician, item, and expense type
+ * - DateTime utilities delegated to DateTimeService
+ * - Entry validation before save
+ * 
+ * Entry Types:
+ * - Time Effort: Duration-based time entries
+ * - Material: Parts/items with quantity
+ * - Expense: Cost entries with amounts
+ * - Mileage: Travel distance entries
+ * - Time & Material: Combined entry (material + up to 3 time entries)
+ * 
+ * @file TMCreationService.js
+ * @module mobileappsc/utils/TMCreationService
+ * @requires sap/m/MessageToast
+ * @requires mobileappsc/utils/DateTimeService
+ */
 sap.ui.define([
     "sap/m/MessageToast",
     "mobileappsc/utils/DateTimeService"
@@ -6,36 +30,44 @@ sap.ui.define([
 
     return {
         /**
-         * Default technician data (set from activity responsible)
+         * Default technician data (set from activity responsible).
+         * @type {Object|null}
+         * @private
          */
         _defaultTechnician: null,
 
         /**
-         * Default item data (set from activity service product)
+         * Default item data (set from activity service product).
+         * @type {Object|null}
+         * @private
          */
         _defaultItem: null,
 
         /**
-         * Get today's date in yyyy-MM-dd format for API
-         * Delegated to DateTimeService
-         * @returns {string} Date string like "2025-10-29"
+         * Default expense type data.
+         * @type {Object|null}
+         * @private
+         */
+        _defaultExpenseType: null,
+
+        /**
+         * Get today's date in yyyy-MM-dd format.
+         * @returns {string} Date string (e.g., "2025-10-29")
          */
         getTodayDateString() {
             return DateTimeService.getTodayDateString();
         },
 
         /**
-         * Get current datetime in ISO format for API
-         * Delegated to DateTimeService
-         * @returns {string} ISO datetime string like "2025-11-28T12:30:00Z"
+         * Get current datetime in ISO format.
+         * @returns {string} ISO datetime string (e.g., "2025-11-28T12:30:00Z")
          */
         getNowDateTimeString() {
             return DateTimeService.getNowDateTimeString();
         },
 
         /**
-         * Get datetime + offset minutes in ISO format
-         * Delegated to DateTimeService
+         * Get datetime with offset in ISO format.
          * @param {number} offsetMinutes - Minutes to add (can be negative)
          * @returns {string} ISO datetime string
          */
@@ -44,101 +76,97 @@ sap.ui.define([
         },
 
         /**
-         * Calculate end datetime from start datetime and duration
-         * Delegated to DateTimeService
+         * Calculate end datetime from start and duration.
+         * @param {string} startDateTime - ISO datetime string
+         * @param {number} durationMinutes - Duration in minutes
+         * @returns {string} ISO datetime string
          */
         calculateEndDateTime(startDateTime, durationMinutes) {
             return DateTimeService.calculateEndDateTime(startDateTime, durationMinutes);
         },
 
         /**
-         * Calculate duration in minutes between two datetimes
-         * Delegated to DateTimeService
+         * Calculate duration in minutes between two datetimes.
+         * @param {string} startDateTime - ISO datetime string
+         * @param {string} endDateTime - ISO datetime string
+         * @returns {number} Duration in minutes
          */
         calculateDurationMinutes(startDateTime, endDateTime) {
             return DateTimeService.calculateDurationMinutes(startDateTime, endDateTime);
         },
 
         /**
-         * Set default technician from activity responsible
-         * @param {object} technician - Technician object {id, externalId, displayText}
+         * Set default technician from activity responsible.
+         * @param {Object} technician - Technician object {id, externalId, displayText}
          */
         setDefaultTechnician(technician) {
             this._defaultTechnician = technician;
-            console.log('TMCreationService: Default technician set:', technician);
         },
 
         /**
-         * Get default technician
-         * @returns {object|null}
+         * Get default technician.
+         * @returns {Object|null} Technician object or null
          */
         getDefaultTechnician() {
             return this._defaultTechnician;
         },
 
         /**
-         * Clear default technician
+         * Clear default technician.
          */
         clearDefaultTechnician() {
             this._defaultTechnician = null;
         },
 
         /**
-         * Set default item from activity service product
-         * @param {object} item - Item object {id, displayText}
+         * Set default item from activity service product.
+         * @param {Object} item - Item object {id, displayText}
          */
         setDefaultItem(item) {
             this._defaultItem = item;
-            console.log('TMCreationService: Default item set:', item);
         },
 
         /**
-         * Get default item
-         * @returns {object|null}
+         * Get default item.
+         * @returns {Object|null} Item object or null
          */
         getDefaultItem() {
             return this._defaultItem;
         },
 
         /**
-         * Clear default item
+         * Clear default item.
          */
         clearDefaultItem() {
             this._defaultItem = null;
         },
 
         /**
-         * Default expense type data
-         */
-        _defaultExpenseType: null,
-
-        /**
-         * Set default expense type
-         * @param {object} expenseType - Expense type object {id, code, displayText}
+         * Set default expense type.
+         * @param {Object} expenseType - Expense type object {id, code, displayText}
          */
         setDefaultExpenseType(expenseType) {
             this._defaultExpenseType = expenseType;
-            console.log('TMCreationService: Default expense type set:', expenseType);
         },
 
         /**
-         * Get default expense type
-         * @returns {object|null}
+         * Get default expense type.
+         * @returns {Object|null} Expense type object or null
          */
         getDefaultExpenseType() {
             return this._defaultExpenseType;
         },
 
         /**
-         * Clear default expense type
+         * Clear default expense type.
          */
         clearDefaultExpenseType() {
             this._defaultExpenseType = null;
         },
 
         /**
-         * Create Time Effort entry template
-         * @returns {object} Empty Time Effort entry
+         * Create Time Effort entry template.
+         * @returns {Object} Time Effort entry with default values
          */
         createTimeEffortEntry() {
             const defaultTech = this._defaultTechnician;
@@ -146,20 +174,16 @@ sap.ui.define([
                 type: "Time Effort",
                 icon: "sap-icon://time-entry-request",
                 expanded: true,
-                // Button state properties
                 saveButtonText: "Save",
                 saveButtonIcon: "sap-icon://save",
                 saveButtonType: "Emphasized",
                 saveButtonState: "unsaved",
-                // Technician fields
                 technicianId: defaultTech ? defaultTech.id : "",
                 technicianExternalId: defaultTech ? defaultTech.externalId : "",
                 technicianDisplay: defaultTech ? defaultTech.displayText : "",
-                // Task fields (stores code for API, display shows name)
                 taskCode: "",
                 taskDisplay: "",
-                // Duration and DateTime fields
-                duration: 30, // Default 30 minutes
+                duration: 30,
                 startDateTime: this.getNowDateTimeString(),
                 endDateTime: this.getDateTimeWithOffset(30),
                 chargeOption: "",
@@ -168,8 +192,8 @@ sap.ui.define([
         },
 
         /**
-         * Create Material entry template
-         * @returns {object} Empty Material entry
+         * Create Material entry template.
+         * @returns {Object} Material entry with default values
          */
         createMaterialEntry() {
             const defaultTech = this._defaultTechnician;
@@ -178,21 +202,16 @@ sap.ui.define([
                 type: "Material",
                 icon: "sap-icon://product",
                 expanded: true,
-                // Button state properties
                 saveButtonText: "Save",
                 saveButtonIcon: "sap-icon://save",
                 saveButtonType: "Emphasized",
                 saveButtonState: "unsaved",
-                // Technician fields
                 technicianId: defaultTech ? defaultTech.id : "",
                 technicianExternalId: defaultTech ? defaultTech.externalId : "",
                 technicianDisplay: defaultTech ? defaultTech.displayText : "",
-                // Item fields (stores id for API, display shows externalId - name)
                 itemId: defaultItem ? defaultItem.id : "",
                 itemDisplay: defaultItem ? defaultItem.displayText : "",
-                // Date field - defaults to today
                 date: this.getTodayDateString(),
-                // Other fields
                 quantity: "",
                 chargeOption: "",
                 remarks: ""
@@ -200,8 +219,8 @@ sap.ui.define([
         },
 
         /**
-         * Create Expense entry template
-         * @returns {object} Empty Expense entry
+         * Create Expense entry template.
+         * @returns {Object} Expense entry with default values
          */
         createExpenseEntry() {
             const defaultTech = this._defaultTechnician;
@@ -210,21 +229,16 @@ sap.ui.define([
                 type: "Expense",
                 icon: "sap-icon://money-bills",
                 expanded: true,
-                // Button state properties
                 saveButtonText: "Save",
                 saveButtonIcon: "sap-icon://save",
                 saveButtonType: "Emphasized",
                 saveButtonState: "unsaved",
-                // Technician fields
                 technicianId: defaultTech ? defaultTech.id : "",
                 technicianExternalId: defaultTech ? defaultTech.externalId : "",
                 technicianDisplay: defaultTech ? defaultTech.displayText : "",
-                // Expense Type fields
                 expenseTypeId: defaultExpType ? defaultExpType.id : "",
                 expenseTypeDisplay: defaultExpType ? defaultExpType.displayText : "",
-                // Date field - defaults to today
                 date: this.getTodayDateString(),
-                // Amount fields (integer values, currency is always EUR)
                 externalAmountValue: 0,
                 internalAmountValue: 0,
                 chargeOption: "",
@@ -233,8 +247,8 @@ sap.ui.define([
         },
 
         /**
-         * Create Mileage entry template
-         * @returns {object} Empty Mileage entry
+         * Create Mileage entry template.
+         * @returns {Object} Mileage entry with default values
          */
         createMileageEntry() {
             const defaultTech = this._defaultTechnician;
@@ -242,24 +256,19 @@ sap.ui.define([
                 type: "Mileage",
                 icon: "sap-icon://car-rental",
                 expanded: true,
-                // Button state properties
                 saveButtonText: "Save",
                 saveButtonIcon: "sap-icon://save",
                 saveButtonType: "Emphasized",
                 saveButtonState: "unsaved",
-                // Technician fields
                 technicianId: defaultTech ? defaultTech.id : "",
                 technicianExternalId: defaultTech ? defaultTech.externalId : "",
                 technicianDisplay: defaultTech ? defaultTech.displayText : "",
-                // Source and Destination fields
                 source: "",
                 destination: "",
-                distance: 0, // Integer value, unit is always KM
-                // Duration and DateTime fields for travel
-                travelDuration: 30, // Default 30 minutes
+                distance: 0,
+                travelDuration: 30,
                 travelStartDateTime: this.getNowDateTimeString(),
                 travelEndDateTime: this.getDateTimeWithOffset(30),
-                // Boolean fields
                 driver: false,
                 privateCar: false,
                 chargeOption: "",
@@ -268,8 +277,9 @@ sap.ui.define([
         },
 
         /**
-         * Create Time & Material entry template (combined entry)
-         * @returns {object} Empty Time & Material entry
+         * Create Time & Material entry template (combined entry).
+         * Includes material + up to 3 time entries (Arbeitszeit, Fahrzeit, Wartezeit).
+         * @returns {Object} Time & Material entry with default values
          */
         createTimeAndMaterialEntry() {
             const defaultTech = this._defaultTechnician;
@@ -278,12 +288,10 @@ sap.ui.define([
                 type: "Time & Material",
                 icon: "sap-icon://checklist-item-2",
                 expanded: true,
-                // Button state properties
                 saveButtonText: "Save",
                 saveButtonIcon: "sap-icon://save",
                 saveButtonType: "Emphasized",
                 saveButtonState: "unsaved",
-                // Technician fields
                 technicianId: defaultTech ? defaultTech.id : "",
                 technicianExternalId: defaultTech ? defaultTech.externalId : "",
                 technicianDisplay: defaultTech ? defaultTech.displayText : "",
@@ -292,19 +300,19 @@ sap.ui.define([
                 itemId: defaultItem ? defaultItem.id : "",
                 itemDisplay: defaultItem ? defaultItem.displayText : "",
                 quantity: "",
-                // Time Effort 1 fields - Arbeitszeit (Column 2)
+                // Time Effort 1 - Arbeitszeit (Column 2)
                 task1Code: "",
                 task1Display: "",
                 duration1: 30,
                 startDateTime1: this.getNowDateTimeString(),
                 endDateTime1: this.getDateTimeWithOffset(30),
-                // Time Effort 2 fields - Fahrzeit (Column 3)
+                // Time Effort 2 - Fahrzeit (Column 3)
                 task2Code: "",
                 task2Display: "",
                 duration2: 30,
                 startDateTime2: this.getNowDateTimeString(),
                 endDateTime2: this.getDateTimeWithOffset(30),
-                // Time Effort 3 fields - Wartezeit (Column 4)
+                // Time Effort 3 - Wartezeit (Column 4)
                 task3Code: "",
                 task3Display: "",
                 duration3: 30,
@@ -318,9 +326,9 @@ sap.ui.define([
         },
 
         /**
-         * Add entry to model
+         * Add entry to model and show toast.
          * @param {sap.ui.model.json.JSONModel} oModel - Dialog model
-         * @param {object} entry - Entry object to add
+         * @param {Object} entry - Entry object to add
          * @param {string} entryType - Type name for toast message
          */
         addEntryToModel(oModel, entry, entryType) {
@@ -331,9 +339,9 @@ sap.ui.define([
         },
 
         /**
-         * Validate all entries before save
-         * @param {array} entries - Array of entries to validate
-         * @returns {object} Validation result {valid: boolean, errors: array}
+         * Validate all entries before save.
+         * @param {Array} entries - Array of entries to validate
+         * @returns {{valid: boolean, errors: Array<string>}} Validation result
          */
         validateEntries(entries) {
             const errors = [];
@@ -360,10 +368,8 @@ sap.ui.define([
                         if (!entry.distance) errors.push(`Entry ${index + 1}: Distance is required`);
                         break;
                     case "Time & Material":
-                        // Material validation
                         if (!entry.item) errors.push(`Entry ${index + 1}: Item is required`);
                         if (!entry.quantity) errors.push(`Entry ${index + 1}: Quantity is required`);
-                        // At least one time entry required
                         if (!entry.task1 && !entry.task2 && !entry.task3) {
                             errors.push(`Entry ${index + 1}: At least one Time Task is required`);
                         }
@@ -378,27 +384,18 @@ sap.ui.define([
         },
 
         /**
-         * Save all entries (placeholder for actual FSM API call)
-         * @param {array} entries - Array of entries to save
+         * Save all entries (placeholder for actual FSM API call).
+         * @param {Array} entries - Array of entries to save
          * @param {string} activityId - Activity ID to save entries for
-         * @returns {Promise} Save operation promise
+         * @returns {Promise<{success: boolean, savedCount: number}>} Save result
          */
         async saveAllEntries(entries, activityId) {
-            console.log('Saving T&M entries for activity:', activityId);
-            console.log('Entries:', entries);
-
-            // Validate entries
             const validation = this.validateEntries(entries);
             if (!validation.valid) {
                 throw new Error(validation.errors.join("\n"));
             }
 
             // TODO: Implement actual FSM API calls
-            // For each entry:
-            //   - Call appropriate endpoint (TimeEffort, Material, Expense, Mileage)
-            //   - Handle success/error responses
-
-            // Placeholder for now
             return new Promise((resolve) => {
                 setTimeout(() => {
                     resolve({

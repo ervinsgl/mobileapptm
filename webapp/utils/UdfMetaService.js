@@ -1,13 +1,38 @@
+/**
+ * UdfMetaService.js
+ * 
+ * Frontend service for UDF (User-Defined Field) metadata resolution.
+ * Handles fetching and caching of UDF meta externalIds for display formatting.
+ * 
+ * Key Features:
+ * - Fetch UDF meta externalId by ID
+ * - Batch fetch with chunking for performance
+ * - Cache results to avoid redundant API calls
+ * - Format UDF values for display
+ * - Pre-load UDF meta for report arrays
+ * 
+ * Display Format: "Z_Activity_ProductId: Z10000001"
+ * 
+ * API Endpoint Used:
+ * - POST /api/get-udf-meta
+ * 
+ * @file UdfMetaService.js
+ * @module mobileappsc/utils/UdfMetaService
+ */
 sap.ui.define([], () => {
     "use strict";
 
-    // Private cache for UDF meta - maps ID to externalId
+    /**
+     * Cache for UDF meta - maps ID to externalId.
+     * @type {Map<string, string|null>}
+     * @private
+     */
     let _udfMetaCache = new Map();
 
     return {
         /**
-         * Fetch UDF Meta externalId by ID from backend
-         * Results are cached for the session
+         * Fetch UDF Meta externalId by ID from backend.
+         * Results are cached for the session.
          * @param {string} udfMetaId - UDF Meta ID
          * @returns {Promise<string|null>} externalId or null if not found
          */
@@ -16,16 +41,11 @@ sap.ui.define([], () => {
                 return null;
             }
 
-            // Return cached data if available
             if (_udfMetaCache.has(udfMetaId)) {
-                const cached = _udfMetaCache.get(udfMetaId);
-                console.log('UdfMetaService: Returning cached externalId for', udfMetaId, ':', cached);
-                return cached;
+                return _udfMetaCache.get(udfMetaId);
             }
 
             try {
-                console.log('UdfMetaService: Fetching UDF Meta for ID:', udfMetaId);
-
                 const response = await fetch("/api/get-udf-meta", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -33,7 +53,6 @@ sap.ui.define([], () => {
                 });
 
                 if (!response.ok) {
-                    console.warn('UdfMetaService: Failed to fetch UDF Meta:', response.status);
                     _udfMetaCache.set(udfMetaId, null);
                     return null;
                 }
@@ -41,10 +60,7 @@ sap.ui.define([], () => {
                 const data = await response.json();
                 const externalId = data.externalId || null;
 
-                // Cache the result
                 _udfMetaCache.set(udfMetaId, externalId);
-
-                console.log('UdfMetaService: Resolved', udfMetaId, 'to', externalId);
                 return externalId;
 
             } catch (error) {
@@ -55,22 +71,19 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Batch fetch multiple UDF Meta externalIds
+         * Batch fetch multiple UDF Meta externalIds.
+         * Processes in chunks to avoid overwhelming the API.
          * @param {Array<string>} udfMetaIds - Array of UDF Meta IDs
-         * @returns {Promise<Map<string, string>>} Map of ID to externalId
+         * @returns {Promise<Map<string, string|null>>} Map of ID to externalId
          */
         async fetchMultipleUdfMeta(udfMetaIds) {
             if (!udfMetaIds || udfMetaIds.length === 0) {
                 return new Map();
             }
 
-            // Filter out already cached IDs
             const uncachedIds = udfMetaIds.filter(id => !_udfMetaCache.has(id));
 
             if (uncachedIds.length > 0) {
-                console.log('UdfMetaService: Batch fetching', uncachedIds.length, 'UDF Meta records');
-
-                // Fetch uncached ones in parallel (with limit to avoid overwhelming API)
                 const chunkSize = 10;
                 for (let i = 0; i < uncachedIds.length; i += chunkSize) {
                     const chunk = uncachedIds.slice(i, i + chunkSize);
@@ -78,7 +91,6 @@ sap.ui.define([], () => {
                 }
             }
 
-            // Build result map from cache
             const result = new Map();
             udfMetaIds.forEach(id => {
                 if (_udfMetaCache.has(id)) {
@@ -90,7 +102,7 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Get cached externalId for a UDF Meta ID (synchronous)
+         * Get cached externalId for a UDF Meta ID (synchronous).
          * @param {string} udfMetaId - UDF Meta ID
          * @returns {string|null} externalId or null if not cached/found
          */
@@ -102,10 +114,10 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Format UDF values array for display
-         * Filters out UDFs without externalId and formats as "externalId: value"
-         * @param {Array} udfValues - Array of UDF value objects with {meta, value}
-         * @returns {string} Formatted string or 'N/A'
+         * Format UDF values array for display.
+         * Filters out UDFs without externalId.
+         * @param {Array<{meta: string, value: *}>} udfValues - Array of UDF value objects
+         * @returns {string} Formatted string (e.g., "Field1: Value1, Field2: Value2") or 'N/A'
          */
         formatUdfValuesForDisplay(udfValues) {
             if (!udfValues || !Array.isArray(udfValues) || udfValues.length === 0) {
@@ -121,7 +133,6 @@ sap.ui.define([], () => {
                 if (metaId && value !== undefined && value !== null) {
                     const externalId = this.getExternalIdById(metaId);
                     
-                    // Only include if externalId exists
                     if (externalId) {
                         formattedParts.push(`${externalId}: ${value}`);
                     }
@@ -132,8 +143,8 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Pre-load UDF Meta for an array of reports
-         * Call this before formatting to ensure cache is populated
+         * Pre-load UDF Meta for an array of reports.
+         * Call this before formatting to ensure cache is populated.
          * @param {Array} reports - Array of T&M report objects
          * @returns {Promise<void>}
          */
@@ -142,7 +153,6 @@ sap.ui.define([], () => {
                 return;
             }
 
-            // Collect all unique UDF meta IDs from all reports
             const allMetaIds = new Set();
 
             reports.forEach(report => {
@@ -155,13 +165,12 @@ sap.ui.define([], () => {
             });
 
             if (allMetaIds.size > 0) {
-                console.log('UdfMetaService: Pre-loading', allMetaIds.size, 'unique UDF meta IDs');
                 await this.fetchMultipleUdfMeta(Array.from(allMetaIds));
             }
         },
 
         /**
-         * Check if a UDF Meta ID is cached
+         * Check if a UDF Meta ID is cached.
          * @param {string} udfMetaId - UDF Meta ID
          * @returns {boolean} True if cached
          */
@@ -170,7 +179,7 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Get cache size
+         * Get cache size.
          * @returns {number} Number of cached entries
          */
         getCacheSize() {
@@ -178,11 +187,10 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Clear the cache (useful for refresh scenarios)
+         * Clear the cache.
          */
         clearCache() {
             _udfMetaCache.clear();
-            console.log('UdfMetaService: Cache cleared');
         }
     };
 });

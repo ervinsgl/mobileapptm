@@ -1,17 +1,41 @@
+/**
+ * TMPayloadService.js
+ * 
+ * Frontend service for building T&M API payloads.
+ * Centralizes all payload formatting logic for FSM API submissions.
+ * 
+ * Key Features:
+ * - Build payloads for all T&M entry types
+ * - Handle UDF values for custom fields
+ * - Extract external IDs from display text
+ * - Format combined Time & Material payloads
+ * 
+ * Payload Types:
+ * - Time Effort: Task-based time entries
+ * - Material: Item-based material entries
+ * - Expense: Amount-based expense entries
+ * - Mileage: Distance-based travel entries
+ * - Time & Material: Combined (1 Material + up to 3 Time Efforts)
+ * 
+ * Common Fields:
+ * - orgLevel: Organization level ID
+ * - createPerson: Technician external ID
+ * - syncStatus: "REQUIRES_APPROVAL"
+ * - object: Activity reference
+ * 
+ * @file TMPayloadService.js
+ * @module mobileappsc/utils/TMPayloadService
+ */
 sap.ui.define([], () => {
     "use strict";
 
-    /**
-     * TMPayloadService - Builds JSON payloads for T&M API submissions
-     * Centralizes all payload formatting logic for Time Effort, Material, Expense, Mileage entries
-     */
     return {
         /**
-         * Build payload based on entry type
-         * @param {object} oEntry - Entry data object
+         * Build payload based on entry type.
+         * @param {Object} oEntry - Entry data object
          * @param {string} activityId - Activity ID
          * @param {string} orgLevelId - Organization Level ID
-         * @returns {object} Formatted payload for API
+         * @returns {Object} Formatted payload for API
          */
         buildPayload(oEntry, activityId, orgLevelId) {
             switch (oEntry.type) {
@@ -31,11 +55,11 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Build Time Effort API payload
-         * @param {object} oEntry - Time Effort entry data
+         * Build Time Effort API payload.
+         * @param {Object} oEntry - Time Effort entry data
          * @param {string} activityId - Activity ID
          * @param {string} orgLevelId - Organization Level ID
-         * @returns {object} Time Effort payload
+         * @returns {Object} Time Effort payload
          */
         buildTimeEffortPayload(oEntry, activityId, orgLevelId) {
             return {
@@ -71,14 +95,13 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Build Material API payload
-         * @param {object} oEntry - Material entry data
+         * Build Material API payload.
+         * @param {Object} oEntry - Material entry data
          * @param {string} activityId - Activity ID
          * @param {string} orgLevelId - Organization Level ID
-         * @returns {object} Material payload
+         * @returns {Object} Material payload
          */
         buildMaterialPayload(oEntry, activityId, orgLevelId) {
-            // Extract item externalId from itemDisplay
             let itemExternalId = "";
             if (oEntry.itemDisplay) {
                 itemExternalId = oEntry.itemDisplay.split(' - ')[0];
@@ -104,14 +127,13 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Build Expense API payload
-         * @param {object} oEntry - Expense entry data
+         * Build Expense API payload.
+         * @param {Object} oEntry - Expense entry data
          * @param {string} activityId - Activity ID
          * @param {string} orgLevelId - Organization Level ID
-         * @returns {object} Expense payload
+         * @returns {Object} Expense payload
          */
         buildExpensePayload(oEntry, activityId, orgLevelId) {
-            // Extract expense type code from expenseTypeDisplay
             let expenseTypeCode = "";
             if (oEntry.expenseTypeDisplay) {
                 expenseTypeCode = oEntry.expenseTypeDisplay.split(' - ')[0];
@@ -144,14 +166,13 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Build Mileage API payload
-         * @param {object} oEntry - Mileage entry data
+         * Build Mileage API payload.
+         * @param {Object} oEntry - Mileage entry data
          * @param {string} activityId - Activity ID
          * @param {string} orgLevelId - Organization Level ID
-         * @returns {object} Mileage payload
+         * @returns {Object} Mileage payload
          */
         buildMileagePayload(oEntry, activityId, orgLevelId) {
-            // Derive date from travelEndDateTime (format: YYYY-MM-DD)
             let dateValue = "";
             if (oEntry.travelEndDateTime) {
                 dateValue = oEntry.travelEndDateTime.split('T')[0];
@@ -192,31 +213,27 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Build Time & Material API payload
-         * Returns combined structure for multiple API calls (1 Material + 3 Time Efforts)
-         * @param {object} oEntry - Time & Material entry data
+         * Build Time & Material API payload.
+         * Returns combined structure for multiple API calls (1 Material + up to 3 Time Efforts).
+         * @param {Object} oEntry - Time & Material entry data
          * @param {string} activityId - Activity ID
          * @param {string} orgLevelId - Organization Level ID
-         * @returns {object} Combined T&M payload structure
+         * @returns {Object} Combined T&M payload structure
          */
         buildTimeAndMaterialPayload(oEntry, activityId, orgLevelId) {
-            // Extract item externalId from itemDisplay
             let itemExternalId = "";
             if (oEntry.itemDisplay) {
                 itemExternalId = oEntry.itemDisplay.split(' - ')[0];
             }
 
-            // Common values used across all payloads
             const technicianExternalId = oEntry.technicianExternalId || "";
             const chargeOption = oEntry.chargeOption || "";
 
-            // Object reference (same for all)
             const objectRef = {
                 objectId: activityId || "",
                 objectType: "ACTIVITY"
             };
 
-            // Time Effort constants
             const timeEffortConstants = {
                 inactive: false,
                 startDateTimeTimeZoneId: "Europe/Berlin",
@@ -237,7 +254,6 @@ sap.ui.define([], () => {
 
             return {
                 note: "Time & Material creates multiple API calls",
-                // Material payload
                 material: {
                     chargeOption: chargeOption,
                     inactive: false,
@@ -252,7 +268,6 @@ sap.ui.define([], () => {
                     syncStatus: "REQUIRES_APPROVAL",
                     object: objectRef
                 },
-                // Time Effort 1 - Arbeitszeit
                 timeEffort1: oEntry.task1Code ? {
                     chargeOption: chargeOption,
                     ...timeEffortConstants,
@@ -266,7 +281,6 @@ sap.ui.define([], () => {
                     },
                     object: objectRef
                 } : null,
-                // Time Effort 2 - Fahrzeit
                 timeEffort2: oEntry.task2Code ? {
                     chargeOption: chargeOption,
                     ...timeEffortConstants,
@@ -280,7 +294,6 @@ sap.ui.define([], () => {
                     },
                     object: objectRef
                 } : null,
-                // Time Effort 3 - Wartezeit
                 timeEffort3: oEntry.task3Code ? {
                     chargeOption: chargeOption,
                     ...timeEffortConstants,
@@ -298,8 +311,8 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Format payload as JSON string for display
-         * @param {object} payload - Payload object
+         * Format payload as JSON string for display.
+         * @param {Object} payload - Payload object
          * @returns {string} Formatted JSON string
          */
         formatPayloadJSON(payload) {

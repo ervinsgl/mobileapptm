@@ -1,24 +1,50 @@
+/**
+ * BusinessPartnerService.js
+ * 
+ * Frontend service for business partner data management.
+ * Handles on-demand loading, caching, and lookup of business partners.
+ * 
+ * Key Features:
+ * - On-demand loading of business partners by externalId
+ * - Caching to avoid redundant API calls
+ * - Prevention of duplicate concurrent requests
+ * - Search and dropdown support for cached data
+ * 
+ * Display Format: "Company Name (55003748)"
+ * 
+ * API Endpoint Used:
+ * - POST /api/get-business-partner-by-external-id
+ * 
+ * @file BusinessPartnerService.js
+ * @module mobileappsc/utils/BusinessPartnerService
+ */
 sap.ui.define([], () => {
     "use strict";
 
     return {
         /**
-         * Cache for business partner data
-         * Key: externalId
-         * Value: { externalId, name }
+         * Cache for business partner data.
+         * @type {Map<string, {externalId: string, name: string}>}
+         * @private
          */
         _businessPartnerCache: new Map(),
-        _loadingPromises: new Map(), // Track ongoing loads to prevent duplicate requests
+        
+        /**
+         * Track ongoing loads to prevent duplicate requests.
+         * @type {Map<string, Promise>}
+         * @private
+         */
+        _loadingPromises: new Map(),
 
         /**
-         * Get business partner display text by externalId
-         * Loads from API on-demand if not in cache
-         * Format: "Company Name (55003748)"
+         * Get business partner display text by externalId.
+         * Loads from API on-demand if not in cache.
+         * @param {string} externalId - Business partner external ID
+         * @returns {string} Display text "Name (externalId)" or just externalId if not cached
          */
         getBusinessPartnerDisplayTextByExternalId(externalId) {
             if (!externalId || externalId === 'N/A') return 'N/A';
 
-            // Check cache first
             const cached = this._businessPartnerCache.get(externalId);
             if (cached) {
                 return `${cached.name} (${cached.externalId})`;
@@ -27,12 +53,14 @@ sap.ui.define([], () => {
             // Not in cache - load asynchronously
             this._loadBusinessPartnerByExternalId(externalId);
 
-            // Return externalId for now (will be updated when loaded)
             return externalId;
         },
 
         /**
-         * Load business partner by externalId (async, caches result)
+         * Load business partner by externalId (async, caches result).
+         * @param {string} externalId - Business partner external ID
+         * @returns {Promise<void>}
+         * @private
          */
         async _loadBusinessPartnerByExternalId(externalId) {
             if (!externalId) return;
@@ -42,11 +70,8 @@ sap.ui.define([], () => {
                 return this._loadingPromises.get(externalId);
             }
 
-            // Create loading promise
             const promise = (async () => {
                 try {
-                    console.log('BusinessPartnerService: Loading business partner by externalId:', externalId);
-
                     const response = await fetch("/api/get-business-partner-by-external-id", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
@@ -65,15 +90,11 @@ sap.ui.define([], () => {
                             externalId: businessPartner.externalId,
                             name: businessPartner.name || 'Unknown'
                         };
-
-                        // Cache by externalId
                         this._businessPartnerCache.set(businessPartner.externalId, bpData);
-
-                        console.log('BusinessPartnerService: Loaded business partner:', bpData);
                     }
 
                 } catch (error) {
-                    console.error("BusinessPartnerService: Error loading business partner by externalId:", error);
+                    console.error("BusinessPartnerService: Error loading business partner:", error);
                 } finally {
                     this._loadingPromises.delete(externalId);
                 }
@@ -84,13 +105,12 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Preload specific business partners by externalId (for batch operations)
-         * Returns promise that resolves when all loaded
+         * Preload specific business partners by externalId (for batch operations).
+         * @param {string[]} externalIds - Array of external IDs to preload
+         * @returns {Promise<void>}
          */
         async preloadBusinessPartnersByExternalId(externalIds) {
             if (!externalIds || externalIds.length === 0) return;
-
-            console.log('BusinessPartnerService: Preloading', externalIds.length, 'business partners by externalId');
 
             const promises = externalIds
                 .filter(id => id && id !== 'N/A' && !this._businessPartnerCache.has(id))
@@ -100,7 +120,9 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Get business partner name only (from cache)
+         * Get business partner name only from cache.
+         * @param {string} externalId - Business partner external ID
+         * @returns {string} Name or externalId if not cached
          */
         getBusinessPartnerNameByExternalId(externalId) {
             if (!externalId || externalId === 'N/A') return 'N/A';
@@ -110,11 +132,13 @@ sap.ui.define([], () => {
                 return businessPartner.name;
             }
 
-            return externalId; // Return externalId if not in cache
+            return externalId;
         },
 
         /**
-         * Search business partners by name or externalId (cached data only)
+         * Search business partners by name or externalId (cached data only).
+         * @param {string} searchTerm - Search term (minimum 2 characters)
+         * @returns {Array<{externalId: string, name: string, displayText: string}>}
          */
         searchBusinessPartners(searchTerm) {
             if (!searchTerm || searchTerm.length < 2) {
@@ -137,14 +161,13 @@ sap.ui.define([], () => {
                 }
             });
 
-            // Sort by name
             results.sort((a, b) => a.name.localeCompare(b.name));
-
             return results;
         },
 
         /**
-         * Get all business partners for dropdown (cached data only)
+         * Get all business partners for dropdown (cached data only).
+         * @returns {Array<{key: string, text: string, externalId: string, name: string}>}
          */
         getAllBusinessPartnersForDropdown() {
             const businessPartners = [];
@@ -158,19 +181,16 @@ sap.ui.define([], () => {
                 });
             });
 
-            // Sort by text
             businessPartners.sort((a, b) => a.text.localeCompare(b.text));
-
             return businessPartners;
         },
 
         /**
-         * Clear cache
+         * Clear cache.
          */
         clearCache() {
             this._businessPartnerCache.clear();
             this._loadingPromises.clear();
-            console.log('BusinessPartnerService: Cache cleared');
         }
     };
 });

@@ -1,9 +1,36 @@
+/**
+ * ProductGroupService.js
+ * 
+ * Frontend service for grouping activities by product.
+ * Groups activities based on UDF values (Z_ProductDescription, Z_ActParentItemID).
+ * 
+ * Key Features:
+ * - Extract UDF values from activity objects
+ * - Group activities by product description and parent item ID
+ * - Sort groups by SO Item ID, then by product description
+ * - Sort activities within groups by external ID
+ * 
+ * Group Structure:
+ * {
+ *   key: "Product Name|||8200001975/100",
+ *   productDescription: "Product Name",
+ *   soItemId: "8200001975/100",
+ *   parentItemId: "100",
+ *   activities: [...]
+ * }
+ * 
+ * @file ProductGroupService.js
+ * @module mobileappsc/utils/ProductGroupService
+ */
 sap.ui.define([], () => {
     "use strict";
 
     return {
         /**
-         * Extract UDF value by externalId from activity's udfValues array
+         * Extract UDF value by externalId from activity's udfValues array.
+         * @param {Object} activity - Activity object with udfValues array
+         * @param {string} udfExternalId - UDF external ID (e.g., "Z_ProductDescription")
+         * @returns {string|null} UDF value or null if not found
          */
         getUdfValue(activity, udfExternalId) {
             if (!activity.udfValues || !Array.isArray(activity.udfValues)) {
@@ -18,26 +45,20 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Group activities by Product Description and Parent Item ID
-         * Returns array of product groups with their activities
+         * Group activities by Product Description and Parent Item ID.
+         * @param {Array} activities - Array of activity objects
+         * @param {string} serviceOrderCode - Service order code for SO Item ID construction
+         * @returns {Array} Array of product groups with their activities
          */
         groupActivitiesByProduct(activities, serviceOrderCode) {
-            console.log('\n========================================');
-            console.log('PRODUCT GROUP: Grouping Activities');
-            console.log('========================================');
-            console.log('Total activities:', activities.length);
-            console.log('Service Order Code:', serviceOrderCode);
-
             const groups = {};
 
             activities.forEach(activity => {
-                // Extract UDF values
                 const productDescription = this.getUdfValue(activity, 'Z_ProductDescription');
                 const parentItemId = this.getUdfValue(activity, 'Z_ActParentItemID');
 
                 // Skip if no product description
                 if (!productDescription) {
-                    console.log('  -> Skipping (no product description)');
                     return;
                 }
 
@@ -70,7 +91,7 @@ sap.ui.define([], () => {
                     type: activity.type,
                     plannedStartDate: activity.plannedStartDate,
                     plannedEndDate: activity.plannedEndDate,
-                    fullActivity: activity  // Include full activity object for detailed fields
+                    fullActivity: activity
                 });
             });
 
@@ -85,7 +106,7 @@ sap.ui.define([], () => {
                 return a.productDescription.localeCompare(b.productDescription);
             });
 
-            // SORT ACTIVITIES BY EXTERNAL ID within each group
+            // Sort activities within each group by external ID
             groupArray.forEach(group => {
                 group.activities.sort((a, b) => {
                     const externalIdA = a.fullActivity?.externalId || a.code || '';
@@ -94,23 +115,14 @@ sap.ui.define([], () => {
                 });
             });
 
-            console.log('\n--- GROUPED RESULTS ---');
-            console.log('Total groups:', groupArray.length);
-            groupArray.forEach((group, index) => {
-                console.log(`\nGroup ${index + 1}:`);
-                console.log(`  Product: ${group.productDescription}`);
-                console.log(`  ID: ${group.soItemId}`);
-                console.log(`  Activities: ${group.activities.length}`);
-                group.activities.forEach((act, actIndex) => {
-                    console.log(`    ${actIndex + 1}. ${act.code} - ${act.subject}`);
-                });
-            });
-
             return groupArray;
         },
 
         /**
-         * Format product group for display
+         * Format product group title for display.
+         * @param {string} productDescription - Product description
+         * @param {string} soItemId - SO Item ID
+         * @returns {string} Formatted title
          */
         formatProductGroupTitle(productDescription, soItemId) {
             return `Product: ${productDescription} | ID: ${soItemId}`;

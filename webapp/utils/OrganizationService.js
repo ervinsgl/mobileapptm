@@ -1,11 +1,41 @@
+/**
+ * OrganizationService.js
+ * 
+ * Frontend service for organization level management.
+ * Handles caching of org hierarchy and user org level resolution.
+ * 
+ * Key Features:
+ * - Caches full organizational hierarchy from FSM
+ * - Formats org level IDs (raw → UUID format)
+ * - Resolves user's org level from username
+ * - Provides lookup methods for org level names
+ * 
+ * Flow for User Org Level Resolution:
+ * 1. getUserResolvedOrgLevel(username)
+ * 2. → fetchUserOrgLevel() calls /api/get-user-org-level
+ * 3. → Backend: User API (get user ID) → Query API (get orgLevel)
+ * 4. → findMatchingOrgLevel() matches against cached hierarchy
+ * 5. → Returns resolved org level with id, name, etc.
+ * 
+ * @file OrganizationService.js
+ * @module mobileappsc/utils/OrganizationService
+ */
 sap.ui.define([], () => {
     "use strict";
 
     return {
         /**
          * Cache for organizational level data (full hierarchy)
+         * @type {Map<string, Object>}
+         * @private
          */
-        _orgLevelCache: new Map(), // Key: formatted ID, Value: { id, name, shortDescription, longDescription }
+        _orgLevelCache: new Map(),
+        
+        /**
+         * Flag indicating if hierarchy has been loaded
+         * @type {boolean}
+         * @private
+         */
         _hierarchyLoaded: false,
 
         /**

@@ -1,4 +1,20 @@
 <core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core" xmlns:l="sap.ui.layout">
+    <!-- 
+        TMReportsDialog Fragment: Dialog for viewing and editing existing T&M reports.
+        
+        Features:
+        - View all T&M entries for an activity
+        - Edit mode for PENDING status entries
+        - Send for approval after editing
+        
+        Entry Types Displayed:
+        - Time Effort: Task, duration, start/end times
+        - Material: Item, quantity, date
+        - Expense: Type, external/internal amounts
+        - Mileage: Route, distance, travel duration
+        
+        Model: dialog
+    -->
     <Dialog 
         title="T&amp;M Reports - {dialog>/activityCode}"
         contentWidth="90%"
@@ -9,124 +25,72 @@
         <content>
             <VBox class="sapUiMediumMargin">
                 
-                <!-- Header Info -->
+                <!-- ========== HEADER SECTION ========== -->
                 <VBox class="sapUiSmallMarginBottom">
                     <Title text="Activity: {dialog>/activityCode}" level="H4" class="sapUiTinyMarginBottom"/>
                     <Title text="{dialog>/activitySubject}" level="H5" class="sapUiSmallMarginBottom"/>
                 </VBox>
                 
-                <!-- Activity Details Grid (3-column structure) -->
+                <!-- Activity Details Grid -->
                 <VBox class="activityQuickInfo sapUiSmallMarginBottom">
                     <l:Grid defaultSpan="XL4 L4 M12 S12" hSpacing="2" vSpacing="1" containerQuery="true">
-                        
-                        <!-- Column 1: Service Product, Duration -->
                         <VBox class="detailField">
-                            <layoutData>
-                                <l:GridData span="XL4 L4 M12 S12"/>
-                            </layoutData>
+                            <layoutData><l:GridData span="XL4 L4 M12 S12"/></layoutData>
                             <Label text="Service Product:" design="Bold" class="infoLabel"/>
                             <Text text="{dialog>/serviceProduct}" class="infoValue detailFieldValue"/>
                         </VBox>
-                        
                         <VBox class="detailField">
-                            <layoutData>
-                                <l:GridData span="XL4 L4 M12 S12"/>
-                            </layoutData>
+                            <layoutData><l:GridData span="XL4 L4 M12 S12"/></layoutData>
                             <Label text="Planned Start:" design="Bold" class="infoLabel"/>
                             <Text text="{dialog>/formattedStartDate}" class="infoValue detailFieldValue"/>
                         </VBox>
-                        
                         <VBox class="detailField">
-                            <layoutData>
-                                <l:GridData span="XL4 L4 M12 S12"/>
-                            </layoutData>
+                            <layoutData><l:GridData span="XL4 L4 M12 S12"/></layoutData>
                             <Label text="Quantity:" design="Bold" class="infoLabel"/>
                             <Text text="{dialog>/quantity}" class="infoValue detailFieldValue"/>
                         </VBox>
-                        
-                        <!-- Column 2: Planned Start, Planned End -->
                         <VBox class="detailField">
-                            <layoutData>
-                                <l:GridData span="XL4 L4 M12 S12"/>
-                            </layoutData>
+                            <layoutData><l:GridData span="XL4 L4 M12 S12"/></layoutData>
                             <Label text="Duration:" design="Bold" class="infoLabel"/>
                             <Text text="{dialog>/formattedDuration}" class="infoValue detailFieldValue"/>
                         </VBox>
-                        
                         <VBox class="detailField">
-                            <layoutData>
-                                <l:GridData span="XL4 L4 M12 S12"/>
-                            </layoutData>
+                            <layoutData><l:GridData span="XL4 L4 M12 S12"/></layoutData>
                             <Label text="Planned End:" design="Bold" class="infoLabel"/>
                             <Text text="{dialog>/formattedEndDate}" class="infoValue detailFieldValue"/>
                         </VBox>
-                        
-                        <!-- Column 3: Quantity, Unit of Measure -->
                         <VBox class="detailField">
-                            <layoutData>
-                                <l:GridData span="XL4 L4 M12 S12"/>
-                            </layoutData>
+                            <layoutData><l:GridData span="XL4 L4 M12 S12"/></layoutData>
                             <Label text="Unit of Measure:" design="Bold" class="infoLabel"/>
                             <Text text="{dialog>/quantityUoM}" class="infoValue detailFieldValue"/>
                         </VBox>
-                        
                     </l:Grid>
                 </VBox>
                 
-                <!-- Total Reports -->
                 <Text text="Total Reports: {dialog>/reportCount}" class="sapUiSmallMarginBottom"/>
                 
-                <!-- T&M Entry Cards -->
-                <List
-                    items="{
-                        path: 'dialog>/reports',
-                        templateShareable: false
-                    }"
-                    mode="None"
-                    showSeparators="None"
-                >
+                <!-- ========== REPORTS LIST ========== -->
+                <List items="{path: 'dialog>/reports', templateShareable: false}" mode="None" showSeparators="None">
                     <CustomListItem type="Inactive">
-                        <Panel
-                            headerText="{dialog>entryHeaderText}"
-                            expandable="true"
-                            expanded="true"
-                            class="tmEntryPanel"
-                        >
+                        <Panel headerText="{dialog>entryHeaderText}" expandable="true" expanded="true" class="tmEntryPanel">
+                            
+                            <!-- Panel Header Toolbar -->
                             <headerToolbar>
                                 <OverflowToolbar design="Info">
-                                    <core:Icon 
-                                        src="{= ${dialog>type} === 'Time Effort' ? 'sap-icon://time-entry-request' : 
-                                              ${dialog>type} === 'Material' ? 'sap-icon://product' :
-                                              ${dialog>type} === 'Expense' ? 'sap-icon://money-bills' : 'sap-icon://car-rental'}"
-                                        class="sapUiSmallMarginEnd"
-                                    />
-                                    <Title 
-                                        text="{dialog>entryHeaderText}" 
-                                        level="H5"
-                                    />
-                                    <ToolbarSpacer />
-                                    <!-- Edit button only visible for PENDING status -->
-                                    <Button
-                                        text="{= ${dialog>editMode} ? 'Send for Approval' : 'Edit T&amp;M Entry'}"
-                                        type="Emphasized"
-                                        icon="{= ${dialog>editMode} ? 'sap-icon://paper-plane' : 'sap-icon://edit'}"
-                                        press=".onToggleEditMode"
-                                        visible="{= ${dialog>decisionStatus} === 'PENDING'}"
-                                        class="sapUiTinyMarginEnd"
-                                    />
-                                    <ObjectStatus
-                                        text="{dialog>decisionStatusText}"
-                                        state="{dialog>decisionStatusState}"
-                                        class="decisionStatusValue sapUiSmallMarginEnd"
-                                    />
+                                    <core:Icon src="{= ${dialog>type} === 'Time Effort' ? 'sap-icon://time-entry-request' : ${dialog>type} === 'Material' ? 'sap-icon://product' : ${dialog>type} === 'Expense' ? 'sap-icon://money-bills' : 'sap-icon://car-rental'}" class="sapUiSmallMarginEnd"/>
+                                    <Title text="{dialog>entryHeaderText}" level="H5"/>
+                                    <ToolbarSpacer/>
+                                    <Button text="{= ${dialog>editMode} ? 'Send for Approval' : 'Edit T&amp;M Entry'}" type="Emphasized" icon="{= ${dialog>editMode} ? 'sap-icon://paper-plane' : 'sap-icon://edit'}" press=".onToggleEditMode" visible="{= ${dialog>decisionStatus} === 'PENDING'}" class="sapUiTinyMarginEnd"/>
+                                    <ObjectStatus text="{dialog>decisionStatusText}" state="{dialog>decisionStatusState}" class="decisionStatusValue sapUiSmallMarginEnd"/>
                                     <Label text="ID: {dialog>id}"/>
                                 </OverflowToolbar>
                             </headerToolbar>
                             
                             <content>
-                                <!-- TIME EFFORT - Compact 3-Column Layout -->
+                                <!-- ===== TIME EFFORT LAYOUT ===== -->
                                 <HBox visible="{= ${dialog>type} === 'Time Effort'}" class="tmEntryContent">
-                                    <!-- Column 1: Task, Technician -->
+                                    
+                                    <!-- Col 1: Task, Technician -->
                                     <VBox class="tmColumn">
                                         <HBox class="tmFieldRow">
                                             <Label text="Task:" design="Bold" class="tmFieldLabel"/>
@@ -138,71 +102,57 @@
                                         </HBox>
                                     </VBox>
                                     
-                                    <!-- Column 2: Duration, Start, End -->
+                                    <!-- Col 2: Duration, Start, End -->
                                     <VBox class="tmColumn">
-                                        <!-- Duration: View mode (text) -->
+                                        <!-- Duration: View -->
                                         <HBox class="tmFieldRow" visible="{= !${dialog>editMode}}">
                                             <Label text="Duration:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{dialog>durationText}" class="tmFieldValue"/>
                                         </HBox>
-                                        <!-- Duration: Edit mode (StepInput) -->
+                                        <!-- Duration: Edit -->
                                         <HBox class="tmFieldRow" visible="{= ${dialog>editMode}}">
                                             <Label text="Duration:" design="Bold" class="tmFieldLabel"/>
-                                            <StepInput
-                                                value="{dialog>editDurationMinutes}"
-                                                min="0"
-                                                step="5"
-                                                width="120px"
-                                                description="minutes"
-                                                change=".onEditDurationChange"
-                                                class="tmFieldInput"
-                                            />
+                                            <StepInput value="{dialog>editDurationMinutes}" min="0" step="5" width="120px" description="minutes" change=".onEditDurationChange" class="tmFieldInput"/>
                                         </HBox>
-                                        <!-- Start: Always text -->
                                         <HBox class="tmFieldRow">
                                             <Label text="Start:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{path: 'dialog>startDateTime', formatter: '.formatter.formatDateTime'}" class="tmFieldValue"/>
                                         </HBox>
-                                        <!-- End: View mode (original value) -->
+                                        <!-- End: View -->
                                         <HBox class="tmFieldRow" visible="{= !${dialog>editMode}}">
                                             <Label text="End:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{path: 'dialog>endDateTime', formatter: '.formatter.formatDateTime'}" class="tmFieldValue"/>
                                         </HBox>
-                                        <!-- End: Edit mode (calculated value) -->
+                                        <!-- End: Edit (calculated) -->
                                         <HBox class="tmFieldRow" visible="{= ${dialog>editMode}}">
                                             <Label text="End:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{path: 'dialog>editEndDateTime', formatter: '.formatter.formatDateTime'}" class="tmFieldValue"/>
                                         </HBox>
                                     </VBox>
                                     
-                                    <!-- Column 3: Charge Option, Remarks -->
+                                    <!-- Col 3: Charge, Remarks -->
                                     <VBox class="tmColumn">
                                         <HBox class="tmFieldRow">
                                             <Label text="Charge Option:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{dialog>chargeOption}" class="tmFieldValue"/>
                                         </HBox>
-                                        <!-- Remarks: View mode (text) -->
+                                        <!-- Remarks: View -->
                                         <HBox class="tmFieldRow" visible="{= !${dialog>editMode}}">
                                             <Label text="Remarks:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{dialog>remarksText}" class="tmFieldValue" wrapping="true"/>
                                         </HBox>
-                                        <!-- Remarks: Edit mode (TextArea) -->
+                                        <!-- Remarks: Edit -->
                                         <HBox class="tmFieldRow" visible="{= ${dialog>editMode}}">
                                             <Label text="Remarks:" design="Bold" class="tmFieldLabel"/>
-                                            <TextArea
-                                                value="{dialog>editRemarks}"
-                                                rows="2"
-                                                width="200px"
-                                                placeholder="Remarks..."
-                                                class="tmFieldInput"
-                                            />
+                                            <TextArea value="{dialog>editRemarks}" rows="2" width="200px" placeholder="Remarks..." class="tmFieldInput"/>
                                         </HBox>
                                     </VBox>
                                 </HBox>
                                 
-                                <!-- MATERIAL - Compact 3-Column Layout -->
+                                <!-- ===== MATERIAL LAYOUT ===== -->
                                 <HBox visible="{= ${dialog>type} === 'Material'}" class="tmEntryContent">
-                                    <!-- Column 1: Item, Technician -->
+                                    
+                                    <!-- Col 1: Item, Technician -->
                                     <VBox class="tmColumn">
                                         <HBox class="tmFieldRow">
                                             <Label text="Item:" design="Bold" class="tmFieldLabel"/>
@@ -213,69 +163,54 @@
                                             <Text text="{dialog>createPersonDisplayText}" class="tmFieldValue"/>
                                         </HBox>
                                     </VBox>
-                                    <!-- Column 2: Date, Quantity -->
+                                    
+                                    <!-- Col 2: Date, Quantity -->
                                     <VBox class="tmColumn">
-                                        <!-- Date: View mode (text) -->
+                                        <!-- Date: View -->
                                         <HBox class="tmFieldRow" visible="{= !${dialog>editMode}}">
                                             <Label text="Date:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{dialog>dateText}" class="tmFieldValue"/>
                                         </HBox>
-                                        <!-- Date: Edit mode (DatePicker) -->
+                                        <!-- Date: Edit -->
                                         <HBox class="tmFieldRow" visible="{= ${dialog>editMode}}">
                                             <Label text="Date:" design="Bold" class="tmFieldLabel"/>
-                                            <DatePicker
-                                                value="{dialog>editDate}"
-                                                valueFormat="yyyy-MM-dd"
-                                                displayFormat="dd.MM.yyyy"
-                                                width="130px"
-                                                class="tmFieldInput"
-                                            />
+                                            <DatePicker value="{dialog>editDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="130px" class="tmFieldInput"/>
                                         </HBox>
-                                        <!-- Quantity: View mode (text) -->
+                                        <!-- Quantity: View -->
                                         <HBox class="tmFieldRow" visible="{= !${dialog>editMode}}">
                                             <Label text="Quantity:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{dialog>quantityText}" class="tmFieldValue"/>
                                         </HBox>
-                                        <!-- Quantity: Edit mode (StepInput) -->
+                                        <!-- Quantity: Edit -->
                                         <HBox class="tmFieldRow" visible="{= ${dialog>editMode}}">
                                             <Label text="Quantity:" design="Bold" class="tmFieldLabel"/>
-                                            <StepInput
-                                                value="{dialog>editQuantity}"
-                                                min="0"
-                                                step="1"
-                                                width="100px"
-                                                class="tmFieldInput"
-                                            />
+                                            <StepInput value="{dialog>editQuantity}" min="0" step="1" width="100px" class="tmFieldInput"/>
                                         </HBox>
                                     </VBox>
-                                    <!-- Column 3: Charge Option, Remarks -->
+                                    
+                                    <!-- Col 3: Charge, Remarks -->
                                     <VBox class="tmColumn">
                                         <HBox class="tmFieldRow">
                                             <Label text="Charge Option:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{dialog>chargeOption}" class="tmFieldValue"/>
                                         </HBox>
-                                        <!-- Remarks: View mode (text) -->
+                                        <!-- Remarks: View -->
                                         <HBox class="tmFieldRow" visible="{= !${dialog>editMode}}">
                                             <Label text="Remarks:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{dialog>remarksText}" class="tmFieldValue" wrapping="true"/>
                                         </HBox>
-                                        <!-- Remarks: Edit mode (TextArea) -->
+                                        <!-- Remarks: Edit -->
                                         <HBox class="tmFieldRow" visible="{= ${dialog>editMode}}">
                                             <Label text="Remarks:" design="Bold" class="tmFieldLabel"/>
-                                            <TextArea
-                                                value="{dialog>editRemarks}"
-                                                rows="2"
-                                                width="200px"
-                                                placeholder="Remarks..."
-                                                class="tmFieldInput"
-                                            />
+                                            <TextArea value="{dialog>editRemarks}" rows="2" width="200px" placeholder="Remarks..." class="tmFieldInput"/>
                                         </HBox>
                                     </VBox>
                                 </HBox>
                                 
-                                <!-- EXPENSE - Compact 3-Column Layout -->
+                                <!-- ===== EXPENSE LAYOUT ===== -->
                                 <HBox visible="{= ${dialog>type} === 'Expense'}" class="tmEntryContent">
-                                    <!-- Column 1: Expense Type, Technician, Date -->
+                                    
+                                    <!-- Col 1: Type, Technician, Date -->
                                     <VBox class="tmColumn">
                                         <HBox class="tmFieldRow">
                                             <Label text="Expense Type:" design="Bold" class="tmFieldLabel"/>
@@ -285,88 +220,65 @@
                                             <Label text="Technician:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{dialog>createPersonDisplayText}" class="tmFieldValue"/>
                                         </HBox>
-                                        <!-- Date: View mode (text) -->
+                                        <!-- Date: View -->
                                         <HBox class="tmFieldRow" visible="{= !${dialog>editMode}}">
                                             <Label text="Date:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{dialog>dateText}" class="tmFieldValue"/>
                                         </HBox>
-                                        <!-- Date: Edit mode (DatePicker) -->
+                                        <!-- Date: Edit -->
                                         <HBox class="tmFieldRow" visible="{= ${dialog>editMode}}">
                                             <Label text="Date:" design="Bold" class="tmFieldLabel"/>
-                                            <DatePicker
-                                                value="{dialog>editDate}"
-                                                valueFormat="yyyy-MM-dd"
-                                                displayFormat="dd.MM.yyyy"
-                                                width="130px"
-                                                class="tmFieldInput"
-                                            />
+                                            <DatePicker value="{dialog>editDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="130px" class="tmFieldInput"/>
                                         </HBox>
                                     </VBox>
-                                    <!-- Column 2: External Amount, Internal Amount -->
+                                    
+                                    <!-- Col 2: External Amount, Internal Amount -->
                                     <VBox class="tmColumn">
-                                        <!-- External Amount: View mode (text) -->
+                                        <!-- External: View -->
                                         <HBox class="tmFieldRow" visible="{= !${dialog>editMode}}">
                                             <Label text="External Amount:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{dialog>externalAmountText}" class="tmFieldValue"/>
                                         </HBox>
-                                        <!-- External Amount: Edit mode (StepInput) -->
+                                        <!-- External: Edit -->
                                         <HBox class="tmFieldRow" visible="{= ${dialog>editMode}}">
                                             <Label text="External Amt:" design="Bold" class="tmFieldLabel"/>
-                                            <StepInput
-                                                value="{dialog>editExternalAmount}"
-                                                min="0"
-                                                step="1"
-                                                description="EUR"
-                                                width="120px"
-                                                class="tmFieldInput"
-                                            />
+                                            <StepInput value="{dialog>editExternalAmount}" min="0" step="1" description="EUR" width="120px" class="tmFieldInput"/>
                                         </HBox>
-                                        <!-- Internal Amount: View mode (text) -->
+                                        <!-- Internal: View -->
                                         <HBox class="tmFieldRow" visible="{= !${dialog>editMode}}">
                                             <Label text="Internal Amount:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{dialog>internalAmountText}" class="tmFieldValue"/>
                                         </HBox>
-                                        <!-- Internal Amount: Edit mode (StepInput) -->
+                                        <!-- Internal: Edit -->
                                         <HBox class="tmFieldRow" visible="{= ${dialog>editMode}}">
                                             <Label text="Internal Amt:" design="Bold" class="tmFieldLabel"/>
-                                            <StepInput
-                                                value="{dialog>editInternalAmount}"
-                                                min="0"
-                                                step="1"
-                                                description="EUR"
-                                                width="120px"
-                                                class="tmFieldInput"
-                                            />
+                                            <StepInput value="{dialog>editInternalAmount}" min="0" step="1" description="EUR" width="120px" class="tmFieldInput"/>
                                         </HBox>
                                     </VBox>
-                                    <!-- Column 3: Charge Option, Remarks -->
+                                    
+                                    <!-- Col 3: Charge, Remarks -->
                                     <VBox class="tmColumn">
                                         <HBox class="tmFieldRow">
                                             <Label text="Charge Option:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{dialog>chargeOption}" class="tmFieldValue"/>
                                         </HBox>
-                                        <!-- Remarks: View mode (text) -->
+                                        <!-- Remarks: View -->
                                         <HBox class="tmFieldRow" visible="{= !${dialog>editMode}}">
                                             <Label text="Remarks:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{dialog>remarksText}" class="tmFieldValue" wrapping="true"/>
                                         </HBox>
-                                        <!-- Remarks: Edit mode (TextArea) -->
+                                        <!-- Remarks: Edit -->
                                         <HBox class="tmFieldRow" visible="{= ${dialog>editMode}}">
                                             <Label text="Remarks:" design="Bold" class="tmFieldLabel"/>
-                                            <TextArea
-                                                value="{dialog>editRemarks}"
-                                                rows="2"
-                                                width="200px"
-                                                placeholder="Remarks..."
-                                                class="tmFieldInput"
-                                            />
+                                            <TextArea value="{dialog>editRemarks}" rows="2" width="200px" placeholder="Remarks..." class="tmFieldInput"/>
                                         </HBox>
                                     </VBox>
                                 </HBox>
                                 
-                                <!-- MILEAGE - Compact 3-Column Layout -->
+                                <!-- ===== MILEAGE LAYOUT ===== -->
                                 <HBox visible="{= ${dialog>type} === 'Mileage'}" class="tmEntryContent">
-                                    <!-- Column 1: Mileage Type, Technician, Route/Source/Destination, Distance -->
+                                    
+                                    <!-- Col 1: Type, Technician, Route/Distance -->
                                     <VBox class="tmColumn">
                                         <HBox class="tmFieldRow">
                                             <Label text="Mileage Type:" design="Bold" class="tmFieldLabel"/>
@@ -376,92 +288,72 @@
                                             <Label text="Technician:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{dialog>createPersonDisplayText}" class="tmFieldValue"/>
                                         </HBox>
-                                        <!-- Route: View mode (combined text) -->
+                                        <!-- Route: View -->
                                         <HBox class="tmFieldRow" visible="{= !${dialog>editMode}}">
                                             <Label text="Route:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{dialog>routeText}" class="tmFieldValue"/>
                                         </HBox>
-                                        <!-- Source: Edit mode -->
+                                        <!-- Source: Edit -->
                                         <HBox class="tmFieldRow" visible="{= ${dialog>editMode}}">
                                             <Label text="Source:" design="Bold" class="tmFieldLabel"/>
                                             <Input value="{dialog>editSource}" placeholder="Start location..." width="150px" class="tmFieldInput"/>
                                         </HBox>
-                                        <!-- Destination: Edit mode -->
+                                        <!-- Destination: Edit -->
                                         <HBox class="tmFieldRow" visible="{= ${dialog>editMode}}">
                                             <Label text="Destination:" design="Bold" class="tmFieldLabel"/>
                                             <Input value="{dialog>editDestination}" placeholder="End location..." width="150px" class="tmFieldInput"/>
                                         </HBox>
-                                        <!-- Distance: View mode (text) -->
+                                        <!-- Distance: View -->
                                         <HBox class="tmFieldRow" visible="{= !${dialog>editMode}}">
                                             <Label text="Distance:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{dialog>distanceText}" class="tmFieldValue"/>
                                         </HBox>
-                                        <!-- Distance: Edit mode (StepInput) -->
+                                        <!-- Distance: Edit -->
                                         <HBox class="tmFieldRow" visible="{= ${dialog>editMode}}">
                                             <Label text="Distance:" design="Bold" class="tmFieldLabel"/>
-                                            <StepInput
-                                                value="{dialog>editDistance}"
-                                                min="0"
-                                                step="1"
-                                                description="KM"
-                                                width="100px"
-                                                class="tmFieldInput"
-                                            />
+                                            <StepInput value="{dialog>editDistance}" min="0" step="1" description="KM" width="100px" class="tmFieldInput"/>
                                         </HBox>
                                     </VBox>
-                                    <!-- Column 2: Date, Duration, Travel Start, Travel End -->
+                                    
+                                    <!-- Col 2: Date, Duration, Travel Times -->
                                     <VBox class="tmColumn">
-                                        <!-- Date: View mode (text) -->
+                                        <!-- Date: View -->
                                         <HBox class="tmFieldRow" visible="{= !${dialog>editMode}}">
                                             <Label text="Date:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{dialog>dateText}" class="tmFieldValue"/>
                                         </HBox>
-                                        <!-- Date: Edit mode (DatePicker) -->
+                                        <!-- Date: Edit -->
                                         <HBox class="tmFieldRow" visible="{= ${dialog>editMode}}">
                                             <Label text="Date:" design="Bold" class="tmFieldLabel"/>
-                                            <DatePicker
-                                                value="{dialog>editDate}"
-                                                valueFormat="yyyy-MM-dd"
-                                                displayFormat="dd.MM.yyyy"
-                                                width="130px"
-                                                class="tmFieldInput"
-                                            />
+                                            <DatePicker value="{dialog>editDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="130px" class="tmFieldInput"/>
                                         </HBox>
-                                        <!-- Duration: View mode (text) -->
+                                        <!-- Duration: View -->
                                         <HBox class="tmFieldRow" visible="{= !${dialog>editMode}}">
                                             <Label text="Duration:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{dialog>travelDurationText}" class="tmFieldValue"/>
                                         </HBox>
-                                        <!-- Duration: Edit mode (StepInput) -->
+                                        <!-- Duration: Edit -->
                                         <HBox class="tmFieldRow" visible="{= ${dialog>editMode}}">
                                             <Label text="Duration:" design="Bold" class="tmFieldLabel"/>
-                                            <StepInput
-                                                value="{dialog>editTravelDuration}"
-                                                min="0"
-                                                step="5"
-                                                description="min"
-                                                width="120px"
-                                                change=".onEditMileageDurationChange"
-                                                class="tmFieldInput"
-                                            />
+                                            <StepInput value="{dialog>editTravelDuration}" min="0" step="5" description="min" width="120px" change=".onEditMileageDurationChange" class="tmFieldInput"/>
                                         </HBox>
-                                        <!-- Travel Start: Always view mode (text) -->
                                         <HBox class="tmFieldRow">
                                             <Label text="Travel Start:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{path: 'dialog>travelStartDateTime', formatter: '.formatter.formatDateTime'}" class="tmFieldValue"/>
                                         </HBox>
-                                        <!-- Travel End: View mode (original value) -->
+                                        <!-- Travel End: View -->
                                         <HBox class="tmFieldRow" visible="{= !${dialog>editMode}}">
                                             <Label text="Travel End:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{path: 'dialog>travelEndDateTime', formatter: '.formatter.formatDateTime'}" class="tmFieldValue"/>
                                         </HBox>
-                                        <!-- Travel End: Edit mode (recalculated value) -->
+                                        <!-- Travel End: Edit (calculated) -->
                                         <HBox class="tmFieldRow" visible="{= ${dialog>editMode}}">
                                             <Label text="Travel End:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{path: 'dialog>editTravelEnd', formatter: '.formatter.formatDateTime'}" class="tmFieldValue"/>
                                         </HBox>
                                     </VBox>
-                                    <!-- Column 3: Driver, Private Car, Charge Option, Remarks -->
+                                    
+                                    <!-- Col 3: Driver, Private Car, Charge, Remarks -->
                                     <VBox class="tmColumn">
                                         <HBox class="tmFieldRow">
                                             <Label text="Driver:" design="Bold" class="tmFieldLabel"/>
@@ -475,21 +367,15 @@
                                             <Label text="Charge Option:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{dialog>chargeOption}" class="tmFieldValue"/>
                                         </HBox>
-                                        <!-- Remarks: View mode (text) -->
+                                        <!-- Remarks: View -->
                                         <HBox class="tmFieldRow" visible="{= !${dialog>editMode}}">
                                             <Label text="Remarks:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{dialog>remarksText}" class="tmFieldValue" wrapping="true"/>
                                         </HBox>
-                                        <!-- Remarks: Edit mode (TextArea) -->
+                                        <!-- Remarks: Edit -->
                                         <HBox class="tmFieldRow" visible="{= ${dialog>editMode}}">
                                             <Label text="Remarks:" design="Bold" class="tmFieldLabel"/>
-                                            <TextArea
-                                                value="{dialog>editRemarks}"
-                                                rows="2"
-                                                width="200px"
-                                                placeholder="Remarks..."
-                                                class="tmFieldInput"
-                                            />
+                                            <TextArea value="{dialog>editRemarks}" rows="2" width="200px" placeholder="Remarks..." class="tmFieldInput"/>
                                         </HBox>
                                     </VBox>
                                 </HBox>
@@ -501,6 +387,7 @@
             </VBox>
         </content>
         
+        <!-- ========== DIALOG BUTTONS ========== -->
         <buttons>
             <Button text="Close" press=".onCloseTMReportsDialog"/>
             <Button text="Add New T&amp;M" type="Emphasized" press=".onAddTMReport"/>

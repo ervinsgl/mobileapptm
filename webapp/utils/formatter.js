@@ -1,11 +1,29 @@
+/**
+ * formatter.js
+ * 
+ * UI formatting utilities for data binding in XML views.
+ * Provides consistent formatting for dates, numbers, and IDs.
+ * 
+ * Key Features:
+ * - DateTime and Date formatting for display
+ * - Numeric value formatting (quantity, amount, distance)
+ * - Activity ID formatting for FSM API
+ * - JSON formatting for debugging
+ * 
+ * Usage in XML Views:
+ *   text="{path: 'view>startDateTime', formatter: '.formatter.formatDateTime'}"
+ * 
+ * @file formatter.js
+ * @module mobileappsc/utils/formatter
+ */
 sap.ui.define([], () => {
     "use strict";
 
     return {
         /**
-         * Format JSON object for display
-         * @param {object} data - Data to format
-         * @returns {string} Formatted JSON string
+         * Format JSON object for display (debugging).
+         * @param {Object} data - Data to format
+         * @returns {string} Formatted JSON string with indentation
          */
         formatJSON(data) {
             if (!data) return "";
@@ -13,9 +31,10 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Format datetime for display
-         * @param {string} dateTime - ISO datetime string
-         * @returns {string} Formatted datetime
+         * Format ISO datetime string for display.
+         * Uses browser's locale for formatting.
+         * @param {string} dateTime - ISO datetime string (e.g., "2025-11-28T12:30:00Z")
+         * @returns {string} Localized datetime string
          */
         formatDateTime(dateTime) {
             if (!dateTime) return "";
@@ -27,9 +46,10 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Format date for display
-         * @param {string} date - ISO date string
-         * @returns {string} Formatted date
+         * Format ISO date string for display.
+         * Uses browser's locale for formatting.
+         * @param {string} date - ISO date string (e.g., "2025-11-28")
+         * @returns {string} Localized date string
          */
         formatDate(date) {
             if (!date) return "";
@@ -41,9 +61,9 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Format quantity (remove trailing zeros)
+         * Format quantity value (removes trailing zeros).
          * @param {string|number} quantity - Quantity value
-         * @returns {number} Formatted quantity
+         * @returns {number} Parsed float value or 0
          */
         formatQuantity(quantity) {
             if (!quantity) return 0;
@@ -51,9 +71,9 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Format amount (remove trailing zeros)
+         * Format amount value (removes trailing zeros).
          * @param {string|number} amount - Amount value
-         * @returns {number} Formatted amount
+         * @returns {number} Parsed float value or 0
          */
         formatAmount(amount) {
             if (!amount) return 0;
@@ -61,9 +81,9 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Format distance (remove trailing zeros)
+         * Format distance value (removes trailing zeros).
          * @param {string|number} distance - Distance value
-         * @returns {number} Formatted distance
+         * @returns {number} Parsed float value or 0
          */
         formatDistance(distance) {
             if (!distance) return 0;
@@ -71,15 +91,13 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Format activity ID for FSM API
-         * Converts: 77f485d3-c917-49db-8da3-c4045d95c2b9
-         * To:       77F485D3C91749DB8DA3C4045D95C2B9
-         * @param {string} activityId - Activity ID from URL
-         * @returns {string} Formatted activity ID for FSM
+         * Format activity ID for FSM API.
+         * Converts UUID format to FSM's uppercase format.
+         * @param {string} activityId - UUID format (e.g., "77f485d3-c917-49db-8da3-c4045d95c2b9")
+         * @returns {string} FSM format (e.g., "77F485D3C91749DB8DA3C4045D95C2B9")
          */
         formatActivityIdForFSM(activityId) {
             if (!activityId) return "";
-            // Remove hyphens and convert to uppercase
             return activityId.replace(/-/g, '').toUpperCase();
         }
     };
