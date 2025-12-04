@@ -19,7 +19,7 @@
  * Contains: cloudId, objectType, and other FSM context data
  * 
  * @file URLHelper.js
- * @module mobileappsc/utils/URLHelper
+ * @module mobileappsc/utils/helpers/URLHelper
  */
 sap.ui.define([], () => {
     "use strict";

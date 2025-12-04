@@ -18,7 +18,7 @@
  * 5. → Returns resolved org level with id, name, etc.
  * 
  * @file OrganizationService.js
- * @module mobileappsc/utils/OrganizationService
+ * @module mobileappsc/utils/services/OrganizationService
  */
 sap.ui.define([], () => {
     "use strict";

@@ -24,7 +24,7 @@
  * - object: Activity reference
  * 
  * @file TMPayloadService.js
- * @module mobileappsc/utils/TMPayloadService
+ * @module mobileappsc/utils/tm/TMPayloadService
  */
 sap.ui.define([], () => {
     "use strict";

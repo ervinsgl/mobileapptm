@@ -16,7 +16,7 @@
  * - POST /api/get-business-partner-by-external-id
  * 
  * @file BusinessPartnerService.js
- * @module mobileappsc/utils/BusinessPartnerService
+ * @module mobileappsc/utils/services/BusinessPartnerService
  */
 sap.ui.define([], () => {
     "use strict";

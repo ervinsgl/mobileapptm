@@ -1,7 +1,7 @@
 /*global QUnit*/
 
 sap.ui.define([
-	"mobileappsc/controller/View1.controller"
+	"mobileappsc/webapp/controller/View1.controller"
 ], function (Controller) {
 	"use strict";
 

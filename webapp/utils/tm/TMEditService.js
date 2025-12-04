@@ -18,11 +18,11 @@
  * - Mileage: Date, distance, source, destination, travel duration, remarks
  * 
  * @file TMEditService.js
- * @module mobileappsc/utils/TMEditService
- * @requires mobileappsc/utils/DateTimeService
+ * @module mobileappsc/utils/tm/TMEditService
+ * @requires mobileappsc/utils/helpers/DateTimeService
  */
 sap.ui.define([
-    "mobileappsc/utils/DateTimeService"
+    "mobileappsc/utils/helpers/DateTimeService"
 ], (DateTimeService) => {
     "use strict";
 

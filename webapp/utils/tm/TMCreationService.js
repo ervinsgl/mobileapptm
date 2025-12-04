@@ -18,13 +18,13 @@
  * - Time & Material: Combined entry (material + up to 3 time entries)
  * 
  * @file TMCreationService.js
- * @module mobileappsc/utils/TMCreationService
+ * @module mobileappsc/utils/tm/TMCreationService
  * @requires sap/m/MessageToast
- * @requires mobileappsc/utils/DateTimeService
+ * @requires mobileappsc/utils/helpers/DateTimeService
  */
 sap.ui.define([
     "sap/m/MessageToast",
-    "mobileappsc/utils/DateTimeService"
+    "mobileappsc/utils/helpers/DateTimeService"
 ], (MessageToast, DateTimeService) => {
     "use strict";
 

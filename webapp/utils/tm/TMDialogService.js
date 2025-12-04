@@ -16,25 +16,25 @@
  * - TMCreateDialog: Create new T&M entries
  * 
  * @file TMDialogService.js
- * @module mobileappsc/utils/TMDialogService
+ * @module mobileappsc/utils/tm/TMDialogService
  * @requires sap/ui/core/Fragment
  * @requires sap/ui/model/json/JSONModel
  * @requires sap/m/MessageToast
- * @requires mobileappsc/utils/TechnicianService
- * @requires mobileappsc/utils/TMCreationService
- * @requires mobileappsc/utils/TimeTaskService
- * @requires mobileappsc/utils/ItemService
- * @requires mobileappsc/utils/ExpenseTypeService
+ * @requires mobileappsc/utils/services/TechnicianService
+ * @requires mobileappsc/utils/tm/TMCreationService
+ * @requires mobileappsc/utils/services/TimeTaskService
+ * @requires mobileappsc/utils/services/ItemService
+ * @requires mobileappsc/utils/services/ExpenseTypeService
  */
 sap.ui.define([
     "sap/ui/core/Fragment",
     "sap/ui/model/json/JSONModel",
     "sap/m/MessageToast",
-    "mobileappsc/utils/TechnicianService",
-    "mobileappsc/utils/TMCreationService",
-    "mobileappsc/utils/TimeTaskService",
-    "mobileappsc/utils/ItemService",
-    "mobileappsc/utils/ExpenseTypeService"
+    "mobileappsc/utils/services/TechnicianService",
+    "mobileappsc/utils/tm/TMCreationService",
+    "mobileappsc/utils/services/TimeTaskService",
+    "mobileappsc/utils/services/ItemService",
+    "mobileappsc/utils/services/ExpenseTypeService"
 ], (Fragment, JSONModel, MessageToast, TechnicianService, TMCreationService, TimeTaskService, ItemService, ExpenseTypeService) => {
     "use strict";
 

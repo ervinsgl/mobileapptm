@@ -17,11 +17,11 @@
  * - Mileage
  * 
  * @file TMDataService.js
- * @module mobileappsc/utils/TMDataService
- * @requires mobileappsc/utils/ReportedItemsData
+ * @module mobileappsc/utils/tm/TMDataService
+ * @requires mobileappsc/utils/helpers/ReportedItemsData
  */
 sap.ui.define([
-    "mobileappsc/utils/ReportedItemsData"
+    "mobileappsc/utils/helpers/ReportedItemsData"
 ], (ReportedItemsData) => {
     "use strict";
 

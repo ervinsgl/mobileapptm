@@ -22,7 +22,7 @@
  * - POST /api/get-approval-status
  * 
  * @file ApprovalService.js
- * @module mobileappsc/utils/ApprovalService
+ * @module mobileappsc/utils/services/ApprovalService
  */
 sap.ui.define([], () => {
     "use strict";

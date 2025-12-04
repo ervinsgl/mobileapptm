@@ -14,7 +14,7 @@
  *   text="{path: 'view>startDateTime', formatter: '.formatter.formatDateTime'}"
  * 
  * @file formatter.js
- * @module mobileappsc/utils/formatter
+ * @module mobileappsc/model/formatter
  */
 sap.ui.define([], () => {
     "use strict";

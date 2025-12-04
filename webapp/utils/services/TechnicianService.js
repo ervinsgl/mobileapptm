@@ -18,11 +18,11 @@
  * - Early termination when max results reached
  * 
  * @file TechnicianService.js
- * @module mobileappsc/utils/TechnicianService
- * @requires mobileappsc/utils/PersonService
+ * @module mobileappsc/utils/services/TechnicianService
+ * @requires mobileappsc/utils/services/PersonService
  */
 sap.ui.define([
-    "mobileappsc/utils/PersonService"
+    "mobileappsc/utils/services/PersonService"
 ], (PersonService) => {
     "use strict";
 

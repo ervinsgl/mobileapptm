@@ -20,7 +20,7 @@
  * }
  * 
  * @file ProductGroupService.js
- * @module mobileappsc/utils/ProductGroupService
+ * @module mobileappsc/utils/helpers/ProductGroupService
  */
 sap.ui.define([], () => {
     "use strict";
