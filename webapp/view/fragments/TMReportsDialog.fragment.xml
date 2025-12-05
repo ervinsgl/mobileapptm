@@ -16,21 +16,25 @@
         Model: dialog
     -->
     <Dialog 
-        title="T&amp;M Reports - {dialog>/activityCode}"
+        title="T&amp;M Reports - {dialog>/activityCode} {dialog>/activitySubject}"
         contentWidth="90%"
         contentHeight="80%"
         draggable="true"
         resizable="true"
     >
+        <customHeader>
+            <OverflowToolbar>
+                <Title text="T&amp;M Reports - {dialog>/activityCode} {dialog>/activitySubject}" level="H4"/>
+                <ToolbarSpacer/>
+                <ObjectStatus text="{dialog>/activityStatus}" state="{dialog>/activityStatusState}" class="sapUiSmallMarginEnd"/>
+                <ObjectStatus text="{dialog>/activityExecutionStage}" state="{dialog>/activityStageState}" class="sapUiSmallMarginEnd"/>
+                <Label text="ID: {dialog>/activityExternalId}"/>
+            </OverflowToolbar>
+        </customHeader>
         <content>
             <VBox class="sapUiMediumMargin">
                 
-                <!-- ========== HEADER SECTION ========== -->
-                <VBox class="sapUiSmallMarginBottom">
-                    <Title text="Activity: {dialog>/activityCode}" level="H4" class="sapUiTinyMarginBottom"/>
-                    <Title text="{dialog>/activitySubject}" level="H5" class="sapUiSmallMarginBottom"/>
-                </VBox>
-                
+                <!-- ========== ACTIVITY DETAILS SECTION ========== -->
                 <!-- Activity Details Grid -->
                 <VBox class="activityQuickInfo sapUiSmallMarginBottom">
                     <l:Grid defaultSpan="XL4 L4 M12 S12" hSpacing="2" vSpacing="1" containerQuery="true">
@@ -390,7 +394,11 @@
         <!-- ========== DIALOG BUTTONS ========== -->
         <buttons>
             <Button text="Close" press=".onCloseTMReportsDialog"/>
-            <Button text="Add New T&amp;M" type="Emphasized" press=".onAddTMReport"/>
+            <Button 
+                text="Add New T&amp;M" 
+                type="Emphasized" 
+                press=".onAddTMReport"
+                visible="{= ${dialog>/activityStatus} !== 'CLOSED' &amp;&amp; ${dialog>/activityExecutionStage} !== 'CLOSED' &amp;&amp; ${dialog>/activityExecutionStage} !== 'CANCELLED' }"/>
         </buttons>
     </Dialog>
 </core:FragmentDefinition>
