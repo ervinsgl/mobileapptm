@@ -86,6 +86,7 @@ sap.ui.define([
                 viewModel.setProperty("/webContainerContext/orgLevelName", "Error");
             } finally {
                 viewModel.setProperty("/organizationLevelsLoading", false);
+                viewModel.setProperty("/pageLoading", false);
             }
         },
 
@@ -250,13 +251,15 @@ sap.ui.define([
          */
         async _loadServiceCallActivities(serviceCallId) {
             console.log('Loading service call activities:', serviceCallId);
+            
+            const viewModel = this.getView().getModel("view");
+            viewModel.setProperty("/activitiesLoading", true);
 
             try {
                 const compositeData = await ServiceOrderService.fetchServiceCallById(serviceCallId);
                 const serviceOrderData = ServiceOrderService.extractServiceOrderData(compositeData);
                 const allActivities = ServiceOrderService.extractActivitiesFromCompositeTree(compositeData);
 
-                const viewModel = this.getView().getModel("view");
                 const userOrgLevelId = viewModel.getProperty("/webContainerContext/orgLevelId");
 
                 // Filter EXECUTION and CLOSED activities
@@ -326,6 +329,8 @@ sap.ui.define([
 
             } catch (error) {
                 console.error("Load activities error:", error);
+            } finally {
+                viewModel.setProperty("/activitiesLoading", false);
             }
         },
 

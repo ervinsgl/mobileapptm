@@ -77,6 +77,8 @@ sap.ui.define([
         _initializeModel() {
             const viewModel = new JSONModel({
                 busy: false,
+                pageLoading: true,
+                activitiesLoading: false,
                 organizationLevelsLoading: false,
 
                 webContainerContext: {

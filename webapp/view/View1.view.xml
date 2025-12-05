@@ -20,6 +20,8 @@
         title="Service Confirmation"
         showNavButton="false"
         class="sapUiContentPadding"
+        busy="{view>/pageLoading}"
+        busyIndicatorDelay="0"
     >
         <content>
             <layout:VerticalLayout id="mobileAppMainLayout" width="100%" class="sapUiContentPadding">
@@ -32,7 +34,16 @@
 
                 <!-- Activities by Product Group -->
                 <VBox id="productGroupsOuterContainer" visible="{view>/organizationSelected}" width="100%">
-                    <core:Fragment fragmentName="mobileappsc.view.fragments.ProductGroups" type="XML"/>
+                    <!-- Loading State -->
+                    <VBox visible="{view>/activitiesLoading}" alignItems="Center" justifyContent="Center" class="sapUiLargeMargin">
+                        <BusyIndicator size="2rem" class="sapUiSmallMarginBottom"/>
+                        <Text text="Loading activities..." class="sapUiTinyMarginTop"/>
+                    </VBox>
+                    
+                    <!-- Content -->
+                    <VBox visible="{= !${view>/activitiesLoading} }">
+                        <core:Fragment fragmentName="mobileappsc.view.fragments.ProductGroups" type="XML"/>
+                    </VBox>
                 </VBox>
                 
             </layout:VerticalLayout>
