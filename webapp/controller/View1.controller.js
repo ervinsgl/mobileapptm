@@ -234,32 +234,49 @@ sap.ui.define([
 
         /**
          * Build entry header text for T&M report
+         * Simplified format: "Type - Name" (e.g., "Time Effort - Arbeitszeit")
          * @private
          */
         _buildEntryHeaderText(report) {
-            const baseText = `T&M Entry - ${report.type}`;
-            let typeSpecificText = '';
+            const type = report.type;
+            let name = '';
 
-            switch (report.type) {
+            switch (type) {
                 case 'Time Effort':
-                    typeSpecificText = report.taskDisplayText && report.taskDisplayText !== 'N/A' 
-                        ? report.taskDisplayText : '';
+                    name = this._extractNameFromDisplayText(report.taskDisplayText);
                     break;
                 case 'Material':
-                    typeSpecificText = report.itemDisplayText && report.itemDisplayText !== 'N/A' 
-                        ? report.itemDisplayText : '';
+                    name = this._extractNameFromDisplayText(report.itemDisplayText);
                     break;
                 case 'Expense':
-                    typeSpecificText = report.expenseTypeDisplayText && report.expenseTypeDisplayText !== 'N/A' 
-                        ? report.expenseTypeDisplayText : '';
+                    name = this._extractNameFromDisplayText(report.expenseTypeDisplayText);
                     break;
                 case 'Mileage':
-                    typeSpecificText = report.mileageTypeDisplayText && report.mileageTypeDisplayText !== 'N/A' 
-                        ? report.mileageTypeDisplayText : '';
+                    name = this._extractNameFromDisplayText(report.mileageTypeDisplayText);
                     break;
             }
 
-            return typeSpecificText ? `${baseText} - ${typeSpecificText}` : baseText;
+            return name ? `${type} - ${name}` : type;
+        },
+
+        /**
+         * Extract name from display text by removing code prefix
+         * e.g., "AZ - Arbeitszeit" -> "Arbeitszeit"
+         * e.g., "Z12000007 - Prüfung" -> "Prüfung"
+         * @private
+         */
+        _extractNameFromDisplayText(displayText) {
+            if (!displayText || displayText === 'N/A') {
+                return '';
+            }
+            
+            // If text contains " - ", take everything after it
+            const separatorIndex = displayText.indexOf(' - ');
+            if (separatorIndex !== -1) {
+                return displayText.substring(separatorIndex + 3);
+            }
+            
+            return displayText;
         },
 
         /**

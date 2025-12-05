@@ -113,6 +113,24 @@
     background-color: #ffffff;
 }
 
+/* Product Panel Header - smaller text */
+.productGroupPanel .sapMOTB .sapMTitle {
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+/* Product Panel ID - subtle styling */
+.productPanelId {
+    font-size: 0.6875rem;
+    color: #666;
+}
+
+/* Activity Panel Header - code styling */
+.activityEntryPanel .sapMOTB .sapMTitle {
+    font-size: 0.9375rem;
+    font-weight: 600;
+}
+
 /* ========================================
    ACTIVITIES TOOLBAR (ProductGroups fragment)
    ======================================== */
@@ -145,6 +163,44 @@
 
 .activityEntryPanel:last-child {
     margin-bottom: 0;
+}
+
+/* Activity/Dialog Info Bar - shows subject and ID */
+.activityEntryPanel .sapMTB.sapMTBInfo,
+.sapMDialog .sapMTB.sapMTBInfo {
+    background-color: #f5f5f5;
+    border-bottom: 1px solid #e8e8e8;
+    min-height: 2rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.activityEntryPanel .sapMTB.sapMTBInfo .sapMTitle,
+.sapMDialog .sapMTB.sapMTBInfo .sapMTitle {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: #333;
+}
+
+.activityEntryPanel .sapMTB.sapMTBInfo .sapMLabel,
+.sapMDialog .sapMTB.sapMTBInfo .sapMLabel {
+    font-size: 0.6875rem;
+    color: #666;
+}
+
+/* Dialog subheader specific styling */
+.sapMDialog .sapMDialogSubHeader .sapMIBar {
+    background-color: #f5f5f5;
+    border-bottom: 1px solid #e8e8e8;
+}
+
+.sapMDialog .sapMDialogSubHeader .sapMTitle {
+    font-size: 0.8125rem;
+    font-weight: 500;
+}
+
+.sapMDialog .sapMDialogSubHeader .sapMLabel {
+    font-size: 0.6875rem;
+    color: #666;
 }
 
 /* Activity Entry Content - 3 column layout */
@@ -426,6 +482,7 @@
     flex-wrap: nowrap;
     width: 100%;
     padding: 0.75rem 1rem;
+    overflow-x: auto; /* Allow scroll only when needed on desktop */
 }
 
 /* Constrained field widths in 3-column layout - FIXED WIDTH */
@@ -442,20 +499,23 @@
    TIME & MATERIAL 5-COLUMN LAYOUT
    ======================================== */
 
-/* Container - fills entire width with even column distribution */
+/* Container - default is wrapping 2-column for safety */
 .tmEntryContent5Col {
-    gap: 0.75rem;
-    flex-wrap: nowrap;
+    gap: 1rem;
+    flex-wrap: wrap;
     width: 100%;
-    padding: 0.5rem 0.75rem;
+    padding: 0.75rem 1rem;
 }
 
-/* Columns - equal width distribution */
+/* Columns - default to 2-column layout */
 .tmColumnNarrow {
-    flex: 1 1 0;
-    min-width: 0;
-    padding-right: 0.75rem;
-    border-right: 1px solid #e8e8e8;
+    flex: 1 1 calc(50% - 1rem);
+    min-width: 280px;
+    max-width: calc(50% - 0.5rem);
+    padding-right: 1rem;
+    padding-bottom: 1rem;
+    border-right: none;
+    border-bottom: 1px solid #e8e8e8;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -463,6 +523,7 @@
 
 .tmColumnNarrow:last-child {
     border-right: none;
+    border-bottom: none;
     padding-right: 0;
 }
 
@@ -472,61 +533,47 @@
     font-weight: 600;
     color: #0854a0;
     border-bottom: 2px solid #0854a0;
-    padding-bottom: 0.25rem;
+    padding-bottom: 0.375rem;
+    margin-bottom: 0.75rem;
 }
 
-/* Smaller labels for 5-column layout */
+/* Labels for 5-column - standard size */
 .tmEntryContent5Col .tmFieldLabel {
-    min-width: 4rem;
-    max-width: 4rem;
-    font-size: 0.6875rem;
+    min-width: 5rem;
+    max-width: 5.5rem;
+    font-size: 0.75rem;
 }
 
 .tmEntryContent5Col .tmFieldValue {
-    font-size: 0.8125rem;
+    font-size: 0.875rem;
 }
 
-/* Inputs and Selects in 5-column layout - FIXED WIDTH (smaller) */
+/* Field rows in 5-column */
+.tmEntryContent5Col .tmFieldRow {
+    margin-bottom: 0.5rem;
+    gap: 0.5rem;
+    display: flex;
+    align-items: center;
+}
+
+/* =====================================================
+   5-COLUMN INPUTS - SIMPLE FIXED WIDTH (like 3-column)
+   ===================================================== */
+/* ALL inputs same fixed width for perfect alignment */
 .tmEntryContent5Col .tmFieldInput,
 .tmEntryContent5Col .tmFieldInputNarrow,
 .tmEntryContent5Col .tmFieldSelectNarrow,
+.tmEntryContent5Col .sapMInput,
+.tmEntryContent5Col .sapMSlt,
+.tmEntryContent5Col .sapMSelect,
 .tmEntryContent5Col .sapMDP,
-.tmEntryContent5Col .sapMDatePicker,
 .tmEntryContent5Col .sapMDTI,
 .tmEntryContent5Col .sapMStepInput,
 .tmEntryContent5Col .sapMTextArea {
-    width: 130px !important;
-    min-width: 130px !important;
-    max-width: 130px !important;
-    flex: 0 0 130px !important;
-}
-
-/* Responsive: Stack columns on smaller screens */
-@media (max-width: 1024px) {
-    .tmEntryContent5Col {
-        flex-wrap: wrap;
-    }
-    
-    .tmColumnNarrow {
-        flex: 1 1 calc(50% - 1rem);
-        min-width: calc(50% - 1rem);
-        margin-bottom: 0.75rem;
-        border-right: none;
-        border-bottom: 1px solid #f0f0f0;
-        padding-bottom: 0.75rem;
-    }
-    
-    .tmColumnNarrow:last-child {
-        border-bottom: none;
-        padding-bottom: 0;
-        margin-bottom: 0;
-    }
-}
-
-@media (max-width: 600px) {
-    .tmColumnNarrow {
-        min-width: 100%;
-    }
+    width: 180px !important;
+    min-width: 180px !important;
+    max-width: 180px !important;
+    flex: 0 0 180px !important;
 }
 
 /* ========================================
@@ -621,79 +668,494 @@
    RESPONSIVE DESIGN
    ======================================== */
 
-@media (max-width: 768px) {
-    .productGroupPanel,
-    .serviceOrderPanel {
-        margin: 0.5rem 0.25rem !important;
-    }
-
-    .activityCard {
-        margin: 0.5rem 0.25rem;
-        padding: 0.875rem;
-    }
-
-    .activityCode {
-        font-size: 1.1rem;
-    }
-
-    .activitySubject {
-        font-size: 0.9375rem;
-    }
-
-    .tmActionButton {
-        min-height: 44px;
-        font-size: 0.875rem;
-    }
-
-    .productGroupHeaderTitle {
-        font-size: 0.85rem !important;
-        line-height: 1.2;
-    }
-
-    .productGroupHeaderLabel {
-        font-size: 0.75rem !important;
-    }
-
-    .detailField {
-        padding-right: 0;
-        margin-bottom: 0.5rem;
+/* ========== MOBILE FIRST (< 600px) ========== */
+@media (max-width: 600px) {
+    
+    /* ----- PREVENT HORIZONTAL SCROLL ----- */
+    .sapMDialog,
+    .sapMDialogSection,
+    .sapMDialogScroll,
+    .sapMPanelContent,
+    .tmEntryPanel,
+    .activityEntryPanel {
+        overflow-x: hidden !important;
     }
     
-    .activityQuickInfo .sapUiLayoutGrid,
-    .activityExtendedDetails .sapUiLayoutGrid {
+    /* ----- DIALOG ADJUSTMENTS ----- */
+    .sapMDialog {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+    }
+    
+    .sapMDialogScroll {
         padding: 0.5rem !important;
     }
-
-    .tmFieldGroup {
-        padding: 0.75rem;
+    
+    /* ----- PANEL HEADERS ----- */
+    .productGroupPanel .sapMPanelHdr,
+    .activityEntryPanel .sapMPanelHdr,
+    .tmEntryPanel .sapMPanelHdr {
+        padding: 0.5rem !important;
     }
     
-    .tmField {
+    /* Allow title text to wrap on mobile */
+    .productGroupPanel .sapMTitle,
+    .activityEntryPanel .sapMTitle,
+    .tmEntryPanel .sapMTitle,
+    .sapMOTB .sapMTitle {
+        white-space: normal !important;
+        line-height: 1.3 !important;
+        font-size: 0.875rem !important;
+    }
+    
+    /* Hide ID labels on mobile in headers */
+    .productGroupPanel .sapMOTB > .sapMLabel,
+    .activityEntryPanel .sapMOTB > .sapMLabel,
+    .tmEntryPanel .sapMOTB > .sapMLabel {
+        display: none !important;
+    }
+    
+    /* ----- INFO BAR ON MOBILE ----- */
+    /* Info bar toolbar - wrap content */
+    .activityEntryPanel .sapMTB.sapMTBInfo,
+    .sapMDialog .sapMTB.sapMTBInfo {
+        flex-wrap: wrap;
+        min-height: auto;
+        padding: 0.5rem;
+    }
+    
+    /* Info bar title - allow wrapping */
+    .activityEntryPanel .sapMTB.sapMTBInfo .sapMTitle,
+    .sapMDialog .sapMTB.sapMTBInfo .sapMTitle {
+        white-space: normal !important;
+        line-height: 1.3;
+    }
+    
+    /* ----- COLUMN LAYOUTS ----- */
+    /* Force single column on mobile - HIGH SPECIFICITY */
+    .tmEntryContent,
+    .tmEntryContent.tmEntryContent3Col,
+    .tmEntryContent.tmEntryContent5Col,
+    .tmEntryContent3Col,
+    .tmEntryContent5Col,
+    .activityEntryContent,
+    .serviceOrderContent {
+        flex-direction: column !important;
+        flex-wrap: wrap !important;
+        gap: 0.5rem !important;
+        padding: 0.5rem !important;
+        overflow-x: hidden !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    .tmColumn,
+    .tmColumnNarrow,
+    .tmColumn.tmColumnNarrow,
+    .activityColumn,
+    .serviceOrderColumn {
+        flex: 1 1 100% !important;
+        min-width: 100% !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        border-right: none !important;
+        border-bottom: 1px solid #f0f0f0;
+        padding-bottom: 0.5rem;
+        padding-right: 0 !important;
         margin-bottom: 0.5rem;
     }
-
-    .tmEntryHeaderId {
-        font-size: 0.75rem;
-        padding: 0.2rem 0.4rem;
+    
+    .tmColumn:last-child,
+    .tmColumnNarrow:last-child,
+    .activityColumn:last-child,
+    .serviceOrderColumn:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+        margin-bottom: 0;
     }
-
-    .sapMText {
-        word-break: break-word;
-        overflow-wrap: break-word;
+    
+    /* ----- FIELD ROWS - KEEP LABEL AND VALUE INLINE ----- */
+    .tmFieldRow,
+    .activityFieldRow,
+    .serviceOrderFieldRow {
+        flex-wrap: nowrap !important;
+        width: 100% !important;
+        align-items: center !important;
+    }
+    
+    /* Labels - fixed width, stay inline */
+    .tmFieldLabel,
+    .activityFieldLabel,
+    .serviceOrderFieldLabel {
+        min-width: 5.5rem !important;
+        max-width: 5.5rem !important;
+        flex-shrink: 0 !important;
+        margin-right: 0.5rem !important;
+        font-size: 0.75rem !important;
+    }
+    
+    /* Override 5-column specific label sizing on mobile */
+    .tmEntryContent5Col .tmFieldLabel {
+        min-width: 5.5rem !important;
+        max-width: 5.5rem !important;
+        font-size: 0.75rem !important;
+    }
+    
+    /* Column headers - larger on mobile */
+    .tmColumnHeader {
+        font-size: 0.875rem !important;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Values - take remaining space */
+    .tmFieldValue,
+    .activityFieldValue,
+    .serviceOrderFieldValue {
+        flex: 1 !important;
+        min-width: 0 !important;
+        word-break: break-word !important;
+    }
+    
+    /* ----- INPUT FIELDS - SIMPLE FIXED WIDTH FOR ALIGNMENT ----- */
+    /* ALL inputs same fixed width (like 3-column pattern) */
+    .tmEntryContent5Col .tmFieldInput,
+    .tmEntryContent5Col .tmFieldInputNarrow,
+    .tmEntryContent5Col .tmFieldSelectNarrow,
+    .tmEntryContent5Col .sapMInput,
+    .tmEntryContent5Col .sapMSlt,
+    .tmEntryContent5Col .sapMSelect,
+    .tmEntryContent5Col .sapMDP,
+    .tmEntryContent5Col .sapMDTI,
+    .tmEntryContent5Col .sapMStepInput,
+    .tmEntryContent5Col .sapMTextArea {
+        width: 180px !important;
+        min-width: 180px !important;
+        max-width: 180px !important;
+        flex: 0 0 180px !important;
+    }
+    
+    /* ----- TOOLBAR BUTTONS ----- */
+    .sapMOTB .sapMBtn {
+        min-width: auto !important;
+        padding: 0 0.5rem !important;
+    }
+    
+    /* Show only icons on very small screens */
+    .tmEntryPanel .sapMOTB .sapMBtnContent .sapMBtnText {
+        display: none !important;
+    }
+    
+    /* ----- MARGINS & PADDING ----- */
+    .sapUiMediumMargin {
+        margin: 0.5rem !important;
+    }
+    
+    .sapUiSmallMargin {
+        margin: 0.25rem !important;
+    }
+    
+    /* ----- PANEL CONTENT ----- */
+    .productGroupPanel,
+    .serviceOrderPanel {
+        margin: 0.25rem 0 !important;
+    }
+    
+    .activityListItem {
+        padding: 0.125rem 0 !important;
+    }
+    
+    /* ----- OBJECT STATUS ----- */
+    .sapMObjectStatus {
+        font-size: 0.75rem !important;
+    }
+    
+    /* ----- T&M SUMMARY SECTION ----- */
+    .tmSummarySection {
+        padding: 0.5rem !important;
+    }
+    
+    .tmSummarySection .sapMHBox {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    /* ----- DIALOG HEADER ----- */
+    .sapMDialogTitle {
+        font-size: 1rem !important;
     }
 }
 
-@media (max-width: 1024px) {
-    .detailField {
-        padding-right: 0.5rem;
+/* ========== EXTRA SMALL (< 400px) ========== */
+@media (max-width: 400px) {
+    /* Hide ID labels on very small screens */
+    .activityEntryPanel .sapMTB.sapMTBInfo .sapMLabel,
+    .sapMDialog .sapMTB.sapMTBInfo .sapMLabel,
+    .sapMDialog .sapMDialogSubHeader .sapMLabel,
+    .productPanelId {
+        display: none !important;
     }
 }
 
+/* ========== TABLET (600px - 1024px) ========== */
+@media (min-width: 601px) and (max-width: 1024px) {
+    
+    /* ----- PREVENT HORIZONTAL SCROLL ----- */
+    .sapMDialog,
+    .sapMDialogSection,
+    .sapMDialogScroll,
+    .sapMPanelContent {
+        overflow-x: hidden !important;
+    }
+    
+    /* ----- DIALOG ADJUSTMENTS ----- */
+    .sapMDialog {
+        width: 95% !important;
+        max-width: 95% !important;
+    }
+    
+    /* ----- PANEL HEADERS ----- */
+    .productGroupPanel .sapMTitle,
+    .activityEntryPanel .sapMTitle,
+    .tmEntryPanel .sapMTitle {
+        font-size: 0.9rem !important;
+        white-space: normal !important;
+    }
+    
+    /* ----- COLUMN LAYOUTS ----- */
+    /* 2 columns on tablet */
+    .tmEntryContent,
+    .tmEntryContent3Col,
+    .activityEntryContent,
+    .serviceOrderContent {
+        flex-wrap: wrap !important;
+        gap: 1rem !important;
+        overflow-x: hidden !important;
+    }
+    
+    .tmColumn,
+    .activityColumn,
+    .serviceOrderColumn {
+        flex: 1 1 calc(50% - 0.5rem) !important;
+        min-width: calc(50% - 0.5rem) !important;
+        max-width: calc(50% - 0.5rem) !important;
+    }
+    
+    /* 5-column becomes 2-column on tablet */
+    .tmEntryContent5Col {
+        flex-wrap: wrap !important;
+        overflow-x: hidden !important;
+        gap: 1rem;
+    }
+    
+    .tmColumnNarrow {
+        flex: 1 1 calc(50% - 0.5rem) !important;
+        min-width: 240px !important;
+        max-width: calc(50% - 0.5rem) !important;
+        border-right: none !important;
+        border-bottom: 1px solid #e8e8e8;
+        padding-bottom: 1rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .tmColumnNarrow:last-child {
+        border-bottom: none;
+    }
+    
+    /* ----- FIELD ROWS - KEEP LABEL AND VALUE INLINE ----- */
+    .tmFieldRow,
+    .activityFieldRow,
+    .serviceOrderFieldRow {
+        flex-wrap: nowrap !important;
+    }
+    
+    /* ----- INPUT FIELDS - SIMPLE FIXED WIDTH FOR ALIGNMENT ----- */
+    /* ALL inputs same fixed width (like 3-column pattern) */
+    .tmEntryContent5Col .tmFieldInput,
+    .tmEntryContent5Col .tmFieldInputNarrow,
+    .tmEntryContent5Col .tmFieldSelectNarrow,
+    .tmEntryContent5Col .sapMInput,
+    .tmEntryContent5Col .sapMSlt,
+    .tmEntryContent5Col .sapMSelect,
+    .tmEntryContent5Col .sapMDP,
+    .tmEntryContent5Col .sapMDTI,
+    .tmEntryContent5Col .sapMStepInput,
+    .tmEntryContent5Col .sapMTextArea {
+        width: 180px !important;
+        min-width: 180px !important;
+        max-width: 180px !important;
+        flex: 0 0 180px !important;
+    }
+    
+    /* Standard labels for 5-column on tablet */
+    .tmEntryContent5Col .tmFieldLabel {
+        min-width: 5rem !important;
+        max-width: 5.5rem !important;
+        font-size: 0.75rem !important;
+    }
+}
+
+/* ========== DESKTOP (> 1024px) ========== */
 @media (min-width: 1025px) {
     .productGroupPanel:hover,
     .serviceOrderPanel:hover {
         transform: translateY(-2px);
         transition: transform 0.2s ease, box-shadow 0.3s ease;
+    }
+    
+    /* 3-column layout */
+    .tmEntryContent,
+    .tmEntryContent3Col,
+    .activityEntryContent,
+    .serviceOrderContent {
+        flex-wrap: nowrap;
+    }
+    
+    .tmColumn,
+    .activityColumn,
+    .serviceOrderColumn {
+        flex: 1;
+        min-width: 200px;
+    }
+}
+
+/* ========== MEDIUM DESKTOP (1025px - 1400px) ========== */
+/* 5-column stays as 2-column on medium desktops */
+@media (min-width: 1025px) and (max-width: 1400px) {
+    
+    .tmEntryContent5Col {
+        flex-wrap: wrap !important;
+        gap: 1rem;
+    }
+    
+    .tmColumnNarrow {
+        flex: 1 1 calc(50% - 0.5rem) !important;
+        min-width: 280px !important;
+        max-width: calc(50% - 0.5rem) !important;
+        border-right: none !important;
+        border-bottom: 1px solid #e8e8e8;
+        padding-bottom: 1rem;
+        padding-right: 1rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .tmColumnNarrow:last-child {
+        border-bottom: none;
+    }
+    
+    /* ALL inputs same fixed width (like 3-column pattern) */
+    .tmEntryContent5Col .tmFieldInput,
+    .tmEntryContent5Col .tmFieldInputNarrow,
+    .tmEntryContent5Col .tmFieldSelectNarrow,
+    .tmEntryContent5Col .sapMInput,
+    .tmEntryContent5Col .sapMSlt,
+    .tmEntryContent5Col .sapMSelect,
+    .tmEntryContent5Col .sapMDP,
+    .tmEntryContent5Col .sapMDTI,
+    .tmEntryContent5Col .sapMStepInput,
+    .tmEntryContent5Col .sapMTextArea {
+        width: 180px !important;
+        min-width: 180px !important;
+        max-width: 180px !important;
+        flex: 0 0 180px !important;
+    }
+    
+    /* Standard labels */
+    .tmEntryContent5Col .tmFieldLabel {
+        min-width: 5rem !important;
+        max-width: 5.5rem !important;
+        font-size: 0.75rem !important;
+    }
+    
+    /* Column headers */
+    .tmEntryContent5Col .tmColumnHeader {
+        font-size: 0.8125rem;
+    }
+}
+
+/* ========== LARGE DESKTOP (> 1400px) ========== */
+/* Show true 5-column layout on large screens */
+@media (min-width: 1401px) {
+    
+    /* 5-column layout: All columns in one row */
+    .tmEntryContent5Col {
+        flex-wrap: nowrap;
+        gap: 0.25rem;
+        padding: 0.5rem 0.5rem;
+    }
+    
+    .tmColumnNarrow {
+        flex: 1 1 0;
+        min-width: 180px;
+        max-width: none;
+        padding-right: 0.5rem;
+        padding-bottom: 0;
+        margin-bottom: 0;
+        border-right: 1px solid #e8e8e8;
+        border-bottom: none;
+    }
+    
+    .tmColumnNarrow:last-child {
+        border-right: none;
+        padding-right: 0;
+    }
+    
+    /* ALL inputs same SMALLER fixed width for 5-column */
+    .tmEntryContent5Col .tmFieldInput,
+    .tmEntryContent5Col .tmFieldInputNarrow,
+    .tmEntryContent5Col .tmFieldSelectNarrow,
+    .tmEntryContent5Col .sapMInput,
+    .tmEntryContent5Col .sapMSlt,
+    .tmEntryContent5Col .sapMSelect,
+    .tmEntryContent5Col .sapMDP,
+    .tmEntryContent5Col .sapMDTI,
+    .tmEntryContent5Col .sapMStepInput,
+    .tmEntryContent5Col .sapMTextArea {
+        width: 100px !important;
+        min-width: 100px !important;
+        max-width: 100px !important;
+        flex: 0 0 100px !important;
+    }
+    
+    /* Compact labels for 5-column */
+    .tmEntryContent5Col .tmFieldLabel {
+        min-width: 3rem !important;
+        max-width: 3.5rem !important;
+        font-size: 0.65rem !important;
+    }
+    
+    /* Column headers */
+    .tmEntryContent5Col .tmColumnHeader {
+        font-size: 0.7rem !important;
+    }
+    
+    /* Compact field rows */
+    .tmEntryContent5Col .tmFieldRow {
+        margin-bottom: 0.25rem;
+        gap: 0.25rem;
+    }
+}
+
+/* ========== ACCESSIBILITY ========== */
+@media (prefers-reduced-motion: reduce) {
+    .productGroupPanel,
+    .serviceOrderPanel {
+        transition: none !important;
+    }
+}
+
+/* Touch-friendly tap targets */
+@media (pointer: coarse) {
+    .sapMBtn,
+    .sapMLink,
+    .sapMInputBase,
+    .sapMSlt {
+        min-height: 44px !important;
+    }
+    
+    .sapMListItem {
+        min-height: 48px !important;
     }
 }
 

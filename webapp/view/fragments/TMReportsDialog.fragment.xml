@@ -16,7 +16,7 @@
         Model: dialog
     -->
     <Dialog 
-        title="T&amp;M Reports - {dialog>/activityCode} {dialog>/activitySubject}"
+        title="T&amp;M Reports - {dialog>/activityCode}"
         contentWidth="90%"
         contentHeight="80%"
         draggable="true"
@@ -24,13 +24,19 @@
     >
         <customHeader>
             <OverflowToolbar>
-                <Title text="T&amp;M Reports - {dialog>/activityCode} {dialog>/activitySubject}" level="H4"/>
+                <Title text="T&amp;M Reports - {dialog>/activityCode}" level="H4"/>
                 <ToolbarSpacer/>
                 <ObjectStatus text="{dialog>/activityStatus}" state="{dialog>/activityStatusState}" class="sapUiSmallMarginEnd"/>
-                <ObjectStatus text="{dialog>/activityExecutionStage}" state="{dialog>/activityStageState}" class="sapUiSmallMarginEnd"/>
-                <Label text="ID: {dialog>/activityExternalId}"/>
+                <ObjectStatus text="{dialog>/activityExecutionStage}" state="{dialog>/activityStageState}"/>
             </OverflowToolbar>
         </customHeader>
+        <subHeader>
+            <Toolbar design="Info">
+                <Title text="{dialog>/activitySubject}" level="H6" wrapping="true"/>
+                <ToolbarSpacer/>
+                <Label text="ID: {dialog>/activityExternalId}"/>
+            </Toolbar>
+        </subHeader>
         <content>
             <VBox class="sapUiMediumMargin">
                 

@@ -37,7 +37,7 @@
                             <core:Icon src="sap-icon://product" class="sapUiSmallMarginEnd"/>
                             <Title text="Product: {view>productDescription}" wrapping="true"/>
                             <ToolbarSpacer/>
-                            <Title text="ID: {view>soItemId}" level="H5"/>
+                            <Label text="ID: {view>soItemId}" class="productPanelId"/>
                         </OverflowToolbar>
                     </headerToolbar>
                     
@@ -55,15 +55,21 @@
                                     <headerToolbar>
                                         <OverflowToolbar design="Info">
                                             <core:Icon src="sap-icon://activity-individual" class="sapUiSmallMarginEnd"/>
-                                            <Title text="{view>code}  {view>subject}" level="H5"/>
+                                            <Title text="{view>code}" level="H5"/>
                                             <ToolbarSpacer/>
                                             <ObjectStatus text="{view>status}" state="{view>statusState}" class="sapUiTinyMarginEnd"/>
-                                            <ObjectStatus text="{view>executionStage}" state="{view>stageState}" class="sapUiTinyMarginEnd"/>
-                                            <Label text="ID: {view>externalId}"/>
+                                            <ObjectStatus text="{view>executionStage}" state="{view>stageState}"/>
                                         </OverflowToolbar>
                                     </headerToolbar>
                                     
                                     <content>
+                                        <!-- Activity Info Bar: Subject, ID -->
+                                        <Toolbar design="Info" class="sapUiTinyMarginBottom">
+                                            <Title text="{view>subject}" level="H6" wrapping="true"/>
+                                            <ToolbarSpacer/>
+                                            <Label text="ID: {view>externalId}" class="sapUiTinyMarginEnd"/>
+                                        </Toolbar>
+                                        
                                         <!-- Activity Details: 3-Column Layout -->
                                         <HBox class="activityEntryContent">
                                         

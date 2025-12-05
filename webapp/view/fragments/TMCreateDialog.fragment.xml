@@ -18,15 +18,23 @@
         draggable="true"
         resizable="true"
     >
+        <customHeader>
+            <OverflowToolbar>
+                <Title text="Create T&amp;M Report - {createTM>/activityCode}" level="H4"/>
+                <ToolbarSpacer/>
+            </OverflowToolbar>
+        </customHeader>
+        <subHeader>
+            <Toolbar design="Info">
+                <Title text="{createTM>/activitySubject}" level="H6" wrapping="true"/>
+                <ToolbarSpacer/>
+                <Label text="ID: {createTM>/activityExternalId}"/>
+            </Toolbar>
+        </subHeader>
         <content>
             <VBox class="sapUiMediumMargin">
                 
-                <!-- ========== HEADER SECTION ========== -->
-                <VBox class="sapUiSmallMarginBottom">
-                    <Title text="Activity: {createTM>/activityCode}" level="H4" class="sapUiTinyMarginBottom"/>
-                    <Title text="{createTM>/activitySubject}" level="H5" class="sapUiSmallMarginBottom"/>
-                </VBox>
-                
+                <!-- ========== ACTIVITY DETAILS SECTION ========== -->
                 <!-- Activity Details Grid -->
                 <VBox class="activityQuickInfo sapUiSmallMarginBottom">
                     <l:Grid defaultSpan="XL4 L4 M12 S12" hSpacing="2" vSpacing="1" containerQuery="true">
@@ -75,13 +83,13 @@
                 <!-- ========== ENTRY PANELS LIST ========== -->
                 <List items="{path: 'createTM>/entries', templateShareable: false}" mode="None" showSeparators="None">
                     <CustomListItem type="Inactive">
-                        <Panel headerText="T&amp;M Entry - {createTM>type}" expandable="true" expanded="{createTM>expanded}" class="tmEntryPanel">
+                        <Panel headerText="{createTM>type}" expandable="true" expanded="{createTM>expanded}" class="tmEntryPanel">
                             
                             <!-- Panel Header Toolbar -->
                             <headerToolbar>
                                 <OverflowToolbar design="Info">
                                     <core:Icon src="{createTM>icon}" class="sapUiSmallMarginEnd"/>
-                                    <Title text="T&amp;M Entry - {createTM>type}" level="H5"/>
+                                    <Title text="{createTM>type}" level="H5"/>
                                     <ToolbarSpacer/>
                                     <Button text="Close Entry" icon="sap-icon://decline" type="Reject" press=".onCloseEntry" class="sapUiTinyMarginEnd"/>
                                     <Button text="{createTM>saveButtonText}" icon="{createTM>saveButtonIcon}" type="{createTM>saveButtonType}" press=".onSaveEntry" enabled="{createTM>saveButtonEnabled}"/>
@@ -371,7 +379,7 @@
                                         </HBox>
                                         <HBox class="tmFieldRow" width="100%">
                                             <Label text="Duration:" design="Bold" class="tmFieldLabel"/>
-                                            <StepInput value="{createTM>duration1}" min="0" step="5" description="minutes" change=".onDuration1Change" class="tmFieldInputNarrow"/>
+                                            <StepInput value="{createTM>duration1}" min="0" step="5" description="min" change=".onDuration1Change" class="tmFieldInputNarrow"/>
                                         </HBox>
                                         <HBox class="tmFieldRow" width="100%">
                                             <Label text="Start:" design="Bold" class="tmFieldLabel"/>
@@ -394,7 +402,7 @@
                                         </HBox>
                                         <HBox class="tmFieldRow" width="100%">
                                             <Label text="Duration:" design="Bold" class="tmFieldLabel"/>
-                                            <StepInput value="{createTM>duration2}" min="0" step="5" description="minutes" change=".onDuration2Change" class="tmFieldInputNarrow"/>
+                                            <StepInput value="{createTM>duration2}" min="0" step="5" description="min" change=".onDuration2Change" class="tmFieldInputNarrow"/>
                                         </HBox>
                                         <HBox class="tmFieldRow" width="100%">
                                             <Label text="Start:" design="Bold" class="tmFieldLabel"/>
@@ -417,7 +425,7 @@
                                         </HBox>
                                         <HBox class="tmFieldRow" width="100%">
                                             <Label text="Duration:" design="Bold" class="tmFieldLabel"/>
-                                            <StepInput value="{createTM>duration3}" min="0" step="5" description="minutes" change=".onDuration3Change" class="tmFieldInputNarrow"/>
+                                            <StepInput value="{createTM>duration3}" min="0" step="5" description="min" change=".onDuration3Change" class="tmFieldInputNarrow"/>
                                         </HBox>
                                         <HBox class="tmFieldRow" width="100%">
                                             <Label text="Start:" design="Bold" class="tmFieldLabel"/>
