@@ -97,11 +97,11 @@
                             </headerToolbar>
                             
                             <content>
-                                <!-- ===== TIME EFFORT LAYOUT (3-Column) ===== -->
-                                <HBox class="tmEntryContent tmEntryContent3Col" visible="{= ${createTM>type} === 'Time Effort'}" width="100%">
+                                <!-- ===== TIME EFFORT LAYOUT (2-Column) ===== -->
+                                <HBox class="tmEntryContent" visible="{= ${createTM>type} === 'Time Effort'}" width="100%">
                                     
-                                    <!-- Col 1: Task, Technician -->
-                                    <VBox class="tmColumn tmColumnNarrow">
+                                    <!-- Col 1: Task, Duration -->
+                                    <VBox class="tmColumn">
                                         <HBox class="tmFieldRow" width="100%">
                                             <Label text="Task:" design="Bold" class="tmFieldLabel tmFieldLabelRequired"/>
                                             <Select selectedKey="{createTM>taskCode}" items="{path: 'createTM>/taskSuggestions', templateShareable: false}" change=".onTaskSelect" forceSelection="false" class="tmFieldSelectNarrow">
@@ -109,48 +109,25 @@
                                             </Select>
                                         </HBox>
                                         <HBox class="tmFieldRow" width="100%">
+                                            <Label text="Duration:" design="Bold" class="tmFieldLabel tmFieldLabelRequired"/>
+                                            <StepInput value="{createTM>duration}" min="0" step="5" description="minutes" class="tmFieldInputNarrow"/>
+                                        </HBox>
+                                    </VBox>
+                                    
+                                    <!-- Col 2: Technician, Remarks -->
+                                    <VBox class="tmColumn">
+                                        <HBox class="tmFieldRow" width="100%">
                                             <Label text="Technician:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>technicianDisplay}" showSuggestion="true" suggestionItems="{path: 'createTM>/technicianSuggestions', templateShareable: false}" liveChange=".onTechnicianLiveChange" suggestionItemSelected=".onTechnicianSuggestionSelect" placeholder="Search..." class="tmFieldInput tmFieldInputNarrow">
+                                            <Input value="{createTM>technicianDisplay}" showSuggestion="true" suggestionItems="{path: 'createTM>/technicianSuggestions', templateShareable: false}" liveChange=".onTechnicianLiveChange" suggestionItemSelected=".onTechnicianSuggestionSelect" placeholder="Search..." class="tmFieldInputNarrow">
                                                 <suggestionItems>
                                                     <core:ListItem key="{createTM>id}" text="{createTM>displayText}" additionalText="{createTM>externalId}"/>
                                                 </suggestionItems>
                                             </Input>
                                         </HBox>
-                                        <HBox class="tmFieldRow tmFieldRowSpacer" width="100%" height="2rem"/>
-                                    </VBox>
-                                    
-                                    <!-- Col 2: Duration, Start, End -->
-                                    <VBox class="tmColumn tmColumnNarrow">
-                                        <HBox class="tmFieldRow" width="100%">
-                                            <Label text="Duration:" design="Bold" class="tmFieldLabel tmFieldLabelRequired"/>
-                                            <StepInput value="{createTM>duration}" min="0" step="5" description="minutes" change=".onDurationChange" class="tmFieldInputNarrow"/>
-                                        </HBox>
-                                        <HBox class="tmFieldRow" width="100%">
-                                            <Label text="Start:" design="Bold" class="tmFieldLabel"/>
-                                            <DateTimePicker value="{createTM>startDateTime}" valueFormat="yyyy-MM-dd'T'HH:mm:ss'Z'" displayFormat="dd.MM.yyyy HH:mm" change=".onStartDateTimeChange" class="tmFieldInputNarrow"/>
-                                        </HBox>
-                                        <HBox class="tmFieldRow" width="100%">
-                                            <Label text="End:" design="Bold" class="tmFieldLabel"/>
-                                            <DateTimePicker value="{createTM>endDateTime}" valueFormat="yyyy-MM-dd'T'HH:mm:ss'Z'" displayFormat="dd.MM.yyyy HH:mm" class="tmFieldInputNarrow"/>
-                                        </HBox>
-                                    </VBox>
-                                    
-                                    <!-- Col 3: Charge, Remarks -->
-                                    <VBox class="tmColumn tmColumnNarrow">
-                                        <HBox class="tmFieldRow" width="100%">
-                                            <Label text="Charge:" design="Bold" class="tmFieldLabel"/>
-                                            <Select selectedKey="{createTM>chargeOption}" forceSelection="false" class="tmFieldSelectNarrow">
-                                                <core:Item key="" text=""/>
-                                                <core:Item key="CHARGEABLE" text="Chargeable"/>
-                                                <core:Item key="NONCHARGEABLE" text="Non-Chargeable"/>
-                                                <core:Item key="UNKNOWN" text="Unknown"/>
-                                            </Select>
-                                        </HBox>
                                         <HBox class="tmFieldRow" width="100%">
                                             <Label text="Remarks:" design="Bold" class="tmFieldLabel"/>
                                             <TextArea value="{createTM>remarks}" rows="2" placeholder="Remarks..." class="tmFieldInputNarrow"/>
                                         </HBox>
-                                        <HBox class="tmFieldRow tmFieldRowSpacer" width="100%" height="2rem"/>
                                     </VBox>
                                 </HBox>
                                 
@@ -336,125 +313,105 @@
                                     </VBox>
                                 </HBox>
                                 
-                                <!-- ===== TIME & MATERIAL LAYOUT (3-Column) ===== -->
-                                <HBox class="tmEntryContent tmEntryContent3Col" visible="{= ${createTM>type} === 'Time &amp; Material'}" width="100%">
+                                <!-- ===== TIME & MATERIAL LAYOUT (2-Column, 2-Row) ===== -->
+                                <VBox visible="{= ${createTM>type} === 'Time &amp; Material'}" width="100%">
                                     
-                                    <!-- Col 1: Material + Options -->
-                                    <VBox class="tmColumn">
-                                        <Title text="Material" level="H6" class="tmColumnHeader sapUiTinyMarginBottom"/>
-                                        <HBox class="tmFieldRow" width="100%">
-                                            <Label text="Technician:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>technicianDisplay}" showSuggestion="true" suggestionItems="{path: 'createTM>/technicianSuggestions', templateShareable: false}" liveChange=".onTechnicianLiveChange" suggestionItemSelected=".onTechnicianSuggestionSelect" placeholder="Search..." class="tmFieldInput">
-                                                <suggestionItems>
-                                                    <core:ListItem key="{createTM>id}" text="{createTM>displayText}" additionalText="{createTM>externalId}"/>
-                                                </suggestionItems>
-                                            </Input>
-                                        </HBox>
-                                        <HBox class="tmFieldRow" width="100%">
-                                            <Label text="Date:" design="Bold" class="tmFieldLabel"/>
-                                            <DatePicker value="{createTM>date}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" class="tmFieldInput"/>
-                                        </HBox>
-                                        <HBox class="tmFieldRow" width="100%">
-                                            <Label text="Item:" design="Bold" class="tmFieldLabel tmFieldLabelRequired"/>
-                                            <Input value="{createTM>itemDisplay}" showSuggestion="true" suggestionItems="{path: 'createTM>/itemSuggestions', templateShareable: false}" liveChange=".onItemLiveChange" suggestionItemSelected=".onItemSuggestionSelect" placeholder="Search..." class="tmFieldInput">
-                                                <suggestionItems>
-                                                    <core:ListItem key="{createTM>id}" text="{createTM>displayText}" additionalText="{createTM>externalId}"/>
-                                                </suggestionItems>
-                                            </Input>
-                                        </HBox>
-                                        <HBox class="tmFieldRow" width="100%">
-                                            <Label text="Quantity:" design="Bold" class="tmFieldLabel tmFieldLabelRequired"/>
-                                            <StepInput value="{createTM>quantity}" min="0" step="1" displayValuePrecision="2" valueState="{= ${createTM>quantity} > ${createTM>/maxQuantity} ? 'Warning' : 'None'}" valueStateText="{= ${createTM>quantity} > ${createTM>/maxQuantity} ? 'Exceeds activity quantity (' + ${createTM>/maxQuantity} + ')' : ''}" class="tmFieldInput"/>
-                                        </HBox>
+                                    <!-- Row 1: Material + Time - Arbeitszeit -->
+                                    <HBox class="tmEntryContent" width="100%">
+                                        <!-- Col 1: Material -->
+                                        <VBox class="tmColumn">
+                                            <Title text="Material" level="H6" class="tmColumnHeader sapUiTinyMarginBottom"/>
+                                            <HBox class="tmFieldRow" width="100%">
+                                                <Label text="Technician:" design="Bold" class="tmFieldLabel"/>
+                                                <Input value="{createTM>technicianDisplay}" showSuggestion="true" suggestionItems="{path: 'createTM>/technicianSuggestions', templateShareable: false}" liveChange=".onTechnicianLiveChange" suggestionItemSelected=".onTechnicianSuggestionSelect" placeholder="Search..." class="tmFieldInputNarrow">
+                                                    <suggestionItems>
+                                                        <core:ListItem key="{createTM>id}" text="{createTM>displayText}" additionalText="{createTM>externalId}"/>
+                                                    </suggestionItems>
+                                                </Input>
+                                            </HBox>
+                                            <HBox class="tmFieldRow" width="100%">
+                                                <Label text="Date:" design="Bold" class="tmFieldLabel"/>
+                                                <DatePicker value="{createTM>date}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" class="tmFieldInputNarrow"/>
+                                            </HBox>
+                                            <HBox class="tmFieldRow" width="100%">
+                                                <Label text="Item:" design="Bold" class="tmFieldLabel tmFieldLabelRequired"/>
+                                                <Input value="{createTM>itemDisplay}" showSuggestion="true" suggestionItems="{path: 'createTM>/itemSuggestions', templateShareable: false}" liveChange=".onItemLiveChange" suggestionItemSelected=".onItemSuggestionSelect" placeholder="Search..." class="tmFieldInputNarrow">
+                                                    <suggestionItems>
+                                                        <core:ListItem key="{createTM>id}" text="{createTM>displayText}" additionalText="{createTM>externalId}"/>
+                                                    </suggestionItems>
+                                                </Input>
+                                            </HBox>
+                                            <HBox class="tmFieldRow" width="100%">
+                                                <Label text="Quantity:" design="Bold" class="tmFieldLabel tmFieldLabelRequired"/>
+                                                <StepInput value="{createTM>quantity}" min="0" step="1" displayValuePrecision="2" valueState="{= ${createTM>quantity} > ${createTM>/maxQuantity} ? 'Warning' : 'None'}" valueStateText="{= ${createTM>quantity} > ${createTM>/maxQuantity} ? 'Exceeds activity quantity (' + ${createTM>/maxQuantity} + ')' : ''}" class="tmFieldInputNarrow"/>
+                                            </HBox>
+                                            <HBox class="tmFieldRow" width="100%">
+                                                <Label text="Remarks:" design="Bold" class="tmFieldLabel"/>
+                                                <TextArea value="{createTM>remarksMaterial}" rows="2" placeholder="Remarks..." class="tmFieldInputNarrow"/>
+                                            </HBox>
+                                        </VBox>
                                         
-                                        <!-- Options Section -->
-                                        <Title text="Options" level="H6" class="tmColumnHeader sapUiTinyMarginBottom sapUiSmallMarginTop"/>
-                                        <HBox class="tmFieldRow" width="100%">
-                                            <Label text="Charge:" design="Bold" class="tmFieldLabel"/>
-                                            <Select selectedKey="{createTM>chargeOption}" forceSelection="false" class="tmFieldSelectNarrow">
-                                                <core:Item key="" text=""/>
-                                                <core:Item key="CHARGEABLE" text="Chargeable"/>
-                                                <core:Item key="NONCHARGEABLE" text="Non-Chargeable"/>
-                                                <core:Item key="UNKNOWN" text="Unknown"/>
-                                            </Select>
-                                        </HBox>
-                                        <HBox class="tmFieldRow" width="100%">
-                                            <Label text="Rem. Time:" design="Bold" class="tmFieldLabel"/>
-                                            <TextArea value="{createTM>remarksTime}" rows="2" placeholder="Remarks..." class="tmFieldInput"/>
-                                        </HBox>
-                                        <HBox class="tmFieldRow" width="100%">
-                                            <Label text="Rem. Mat:" design="Bold" class="tmFieldLabel"/>
-                                            <TextArea value="{createTM>remarksMaterial}" rows="2" placeholder="Remarks..." class="tmFieldInput"/>
-                                        </HBox>
-                                    </VBox>
+                                        <!-- Col 2: Time - Arbeitszeit -->
+                                        <VBox class="tmColumn">
+                                            <Title text="Time - Arbeitszeit" level="H6" class="tmColumnHeader sapUiTinyMarginBottom"/>
+                                            <HBox class="tmFieldRow" width="100%">
+                                                <Label text="Task:" design="Bold" class="tmFieldLabel"/>
+                                                <Select selectedKey="{createTM>task1Code}" items="{path: 'createTM>/taskSuggestionsAZ', templateShareable: false}" change=".onTaskSelect" forceSelection="false" class="tmFieldSelectNarrow">
+                                                    <core:Item key="{createTM>code}" text="{createTM>name}"/>
+                                                </Select>
+                                            </HBox>
+                                            <HBox class="tmFieldRow" width="100%">
+                                                <Label text="Duration:" design="Bold" class="tmFieldLabel"/>
+                                                <StepInput value="{createTM>duration1}" min="0" step="5" description="min" class="tmFieldInputNarrow"/>
+                                            </HBox>
+                                            <HBox class="tmFieldRow" width="100%">
+                                                <Label text="Remarks:" design="Bold" class="tmFieldLabel"/>
+                                                <TextArea value="{createTM>remarks1}" rows="2" placeholder="Remarks..." class="tmFieldInputNarrow"/>
+                                            </HBox>
+                                        </VBox>
+                                    </HBox>
                                     
-                                    <!-- Col 2: Time - Arbeitszeit + Time - Wartezeit -->
-                                    <VBox class="tmColumn">
-                                        <Title text="Time - Arbeitszeit" level="H6" class="tmColumnHeader sapUiTinyMarginBottom"/>
-                                        <HBox class="tmFieldRow" width="100%">
-                                            <Label text="Task:" design="Bold" class="tmFieldLabel"/>
-                                            <Select selectedKey="{createTM>task1Code}" items="{path: 'createTM>/taskSuggestionsAZ', templateShareable: false}" change=".onTaskSelect" forceSelection="false" class="tmFieldSelectNarrow">
-                                                <core:Item key="{createTM>code}" text="{createTM>name}"/>
-                                            </Select>
-                                        </HBox>
-                                        <HBox class="tmFieldRow" width="100%">
-                                            <Label text="Duration:" design="Bold" class="tmFieldLabel"/>
-                                            <StepInput value="{createTM>duration1}" min="0" step="5" description="min" change=".onDuration1Change" class="tmFieldInput"/>
-                                        </HBox>
-                                        <HBox class="tmFieldRow" width="100%">
-                                            <Label text="Start:" design="Bold" class="tmFieldLabel"/>
-                                            <DateTimePicker value="{createTM>startDateTime1}" valueFormat="yyyy-MM-dd'T'HH:mm:ss'Z'" displayFormat="dd.MM.yyyy HH:mm" change=".onStartDateTime1Change" class="tmFieldInput"/>
-                                        </HBox>
-                                        <HBox class="tmFieldRow" width="100%">
-                                            <Label text="End:" design="Bold" class="tmFieldLabel"/>
-                                            <DateTimePicker value="{createTM>endDateTime1}" valueFormat="yyyy-MM-dd'T'HH:mm:ss'Z'" displayFormat="dd.MM.yyyy HH:mm" class="tmFieldInput"/>
-                                        </HBox>
+                                    <!-- Row 2: Time - Fahrzeit + Time - Wartezeit -->
+                                    <HBox class="tmEntryContent" width="100%">
+                                        <!-- Col 1: Time - Fahrzeit -->
+                                        <VBox class="tmColumn">
+                                            <Title text="Time - Fahrzeit" level="H6" class="tmColumnHeader sapUiTinyMarginBottom"/>
+                                            <HBox class="tmFieldRow" width="100%">
+                                                <Label text="Task:" design="Bold" class="tmFieldLabel"/>
+                                                <Select selectedKey="{createTM>task2Code}" items="{path: 'createTM>/taskSuggestionsFZ', templateShareable: false}" change=".onTaskSelect" forceSelection="false" class="tmFieldSelectNarrow">
+                                                    <core:Item key="{createTM>code}" text="{createTM>name}"/>
+                                                </Select>
+                                            </HBox>
+                                            <HBox class="tmFieldRow" width="100%">
+                                                <Label text="Duration:" design="Bold" class="tmFieldLabel"/>
+                                                <StepInput value="{createTM>duration2}" min="0" step="5" description="min" class="tmFieldInputNarrow"/>
+                                            </HBox>
+                                            <HBox class="tmFieldRow" width="100%">
+                                                <Label text="Remarks:" design="Bold" class="tmFieldLabel"/>
+                                                <TextArea value="{createTM>remarks2}" rows="2" placeholder="Remarks..." class="tmFieldInputNarrow"/>
+                                            </HBox>
+                                        </VBox>
                                         
-                                        <!-- Time - Wartezeit Section -->
-                                        <Title text="Time - Wartezeit" level="H6" class="tmColumnHeader sapUiTinyMarginBottom sapUiSmallMarginTop"/>
-                                        <HBox class="tmFieldRow" width="100%">
-                                            <Label text="Task:" design="Bold" class="tmFieldLabel"/>
-                                            <Select selectedKey="{createTM>task3Code}" items="{path: 'createTM>/taskSuggestionsWZ', templateShareable: false}" change=".onTaskSelect" forceSelection="false" class="tmFieldSelectNarrow">
-                                                <core:Item key="{createTM>code}" text="{createTM>name}"/>
-                                            </Select>
-                                        </HBox>
-                                        <HBox class="tmFieldRow" width="100%">
-                                            <Label text="Duration:" design="Bold" class="tmFieldLabel"/>
-                                            <StepInput value="{createTM>duration3}" min="0" step="5" description="min" change=".onDuration3Change" class="tmFieldInput"/>
-                                        </HBox>
-                                        <HBox class="tmFieldRow" width="100%">
-                                            <Label text="Start:" design="Bold" class="tmFieldLabel"/>
-                                            <DateTimePicker value="{createTM>startDateTime3}" valueFormat="yyyy-MM-dd'T'HH:mm:ss'Z'" displayFormat="dd.MM.yyyy HH:mm" change=".onStartDateTime3Change" class="tmFieldInput"/>
-                                        </HBox>
-                                        <HBox class="tmFieldRow" width="100%">
-                                            <Label text="End:" design="Bold" class="tmFieldLabel"/>
-                                            <DateTimePicker value="{createTM>endDateTime3}" valueFormat="yyyy-MM-dd'T'HH:mm:ss'Z'" displayFormat="dd.MM.yyyy HH:mm" class="tmFieldInput"/>
-                                        </HBox>
-                                    </VBox>
-                                    
-                                    <!-- Col 3: Time - Fahrzeit -->
-                                    <VBox class="tmColumn">
-                                        <Title text="Time - Fahrzeit" level="H6" class="tmColumnHeader sapUiTinyMarginBottom"/>
-                                        <HBox class="tmFieldRow" width="100%">
-                                            <Label text="Task:" design="Bold" class="tmFieldLabel"/>
-                                            <Select selectedKey="{createTM>task2Code}" items="{path: 'createTM>/taskSuggestionsFZ', templateShareable: false}" change=".onTaskSelect" forceSelection="false" class="tmFieldSelectNarrow">
-                                                <core:Item key="{createTM>code}" text="{createTM>name}"/>
-                                            </Select>
-                                        </HBox>
-                                        <HBox class="tmFieldRow" width="100%">
-                                            <Label text="Duration:" design="Bold" class="tmFieldLabel"/>
-                                            <StepInput value="{createTM>duration2}" min="0" step="5" description="min" change=".onDuration2Change" class="tmFieldInput"/>
-                                        </HBox>
-                                        <HBox class="tmFieldRow" width="100%">
-                                            <Label text="Start:" design="Bold" class="tmFieldLabel"/>
-                                            <DateTimePicker value="{createTM>startDateTime2}" valueFormat="yyyy-MM-dd'T'HH:mm:ss'Z'" displayFormat="dd.MM.yyyy HH:mm" change=".onStartDateTime2Change" class="tmFieldInput"/>
-                                        </HBox>
-                                        <HBox class="tmFieldRow" width="100%">
-                                            <Label text="End:" design="Bold" class="tmFieldLabel"/>
-                                            <DateTimePicker value="{createTM>endDateTime2}" valueFormat="yyyy-MM-dd'T'HH:mm:ss'Z'" displayFormat="dd.MM.yyyy HH:mm" class="tmFieldInput"/>
-                                        </HBox>
-                                    </VBox>
-                                </HBox>
+                                        <!-- Col 2: Time - Wartezeit -->
+                                        <VBox class="tmColumn">
+                                            <Title text="Time - Wartezeit" level="H6" class="tmColumnHeader sapUiTinyMarginBottom"/>
+                                            <HBox class="tmFieldRow" width="100%">
+                                                <Label text="Task:" design="Bold" class="tmFieldLabel"/>
+                                                <Select selectedKey="{createTM>task3Code}" items="{path: 'createTM>/taskSuggestionsWZ', templateShareable: false}" change=".onTaskSelect" forceSelection="false" class="tmFieldSelectNarrow">
+                                                    <core:Item key="{createTM>code}" text="{createTM>name}"/>
+                                                </Select>
+                                            </HBox>
+                                            <HBox class="tmFieldRow" width="100%">
+                                                <Label text="Duration:" design="Bold" class="tmFieldLabel"/>
+                                                <StepInput value="{createTM>duration3}" min="0" step="5" description="min" class="tmFieldInputNarrow"/>
+                                            </HBox>
+                                            <HBox class="tmFieldRow" width="100%">
+                                                <Label text="Remarks:" design="Bold" class="tmFieldLabel"/>
+                                                <TextArea value="{createTM>remarks3}" rows="2" placeholder="Remarks..." class="tmFieldInputNarrow"/>
+                                            </HBox>
+                                        </VBox>
+                                    </HBox>
+                                </VBox>
                             </content>
                         </Panel>
                     </CustomListItem>

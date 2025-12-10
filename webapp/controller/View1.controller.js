@@ -81,6 +81,13 @@ sap.ui.define([
                 activitiesLoading: false,
                 organizationLevelsLoading: false,
 
+                // Entry context - tracks how app was opened
+                entryContext: {
+                    objectType: null,      // 'ACTIVITY' or 'SERVICECALL'
+                    objectId: null,        // The ID of the entry object
+                    source: null           // 'URL' or 'WebContainer'
+                },
+
                 webContainerContext: {
                     available: false,
                     userName: null,
@@ -122,12 +129,25 @@ sap.ui.define([
          * ========================================================================= */
 
         /**
-         * Pre-calculate all display values for activity
+         * Prepare activity data for display.
+         * @param {Object} activity - Activity data
+         * @param {string} [entryActivityId] - ID of entry activity (for highlighting)
+         * @returns {Object} Prepared activity data
          * @private
          */
-        _prepareActivityDataOptimized(activity) {
+        _prepareActivityDataOptimized(activity, entryActivityId) {
             const isClosed = activity.executionStage === 'CLOSED';
             const fullActivity = activity.fullActivity || {};
+            
+            // Check if this is the entry activity (case-insensitive comparison)
+            const entryIdLower = entryActivityId ? entryActivityId.toLowerCase() : null;
+            const isEntryActivity = entryIdLower && (
+                (activity.id && activity.id.toLowerCase() === entryIdLower) || 
+                (fullActivity.id && fullActivity.id.toLowerCase() === entryIdLower)
+            );
+            
+            // Use string for customData (booleans don't work with writeToDom)
+            const entryActivityFlag = isEntryActivity ? "true" : "false";
 
             const quantity = this._getUdfValue(fullActivity, 'Z_Quantity') || 'N/A';
             const quantityUoM = this._getUdfValue(fullActivity, 'Z_QuantityUoM') || 'N/A';
@@ -147,6 +167,8 @@ sap.ui.define([
 
                 isClosed: isClosed,
                 isReadOnly: isClosed,
+                isEntryActivity: isEntryActivity,
+                entryActivityFlag: entryActivityFlag,
 
                 tmReportsLoaded: false,
                 tmReportsLoading: false,
@@ -156,7 +178,8 @@ sap.ui.define([
                 tmExpenseCount: 0,
                 tmMileageCount: 0,
 
-                detailsExpanded: false,
+                // Auto-expand entry activity, collapse others
+                detailsExpanded: isEntryActivity,
                 textClass: isClosed ? 'closedActivityText' : '',
                 statusState: this._getStatusState(activity),
                 stageState: isClosed ? 'None' : 'Information',

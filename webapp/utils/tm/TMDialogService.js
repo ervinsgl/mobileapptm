@@ -79,6 +79,7 @@ sap.ui.define([
                 serviceProductExternalId: oActivity.serviceProductId || null,
                 reports: reports,
                 reportCount: reports.length,
+                plannedStartDate: oActivity.plannedStartDate || null,
                 formattedStartDate: oActivity.formattedStartDate || 'N/A',
                 formattedEndDate: oActivity.formattedEndDate || 'N/A',
                 formattedDuration: oActivity.formattedDuration || 'N/A',
@@ -196,6 +197,10 @@ sap.ui.define([
                 }
             }
 
+            // Set activity planned start date for Time Effort entries
+            console.log('TMDialogService: Activity planned start date from activityData:', activityData.plannedStartDate);
+            TMCreationService.setActivityPlannedStartDate(activityData.plannedStartDate);
+
             const oCreateTMDialogModel = new JSONModel({
                 activityId: activityData.activityId,
                 activityCode: activityData.activityCode,
@@ -204,6 +209,7 @@ sap.ui.define([
                 orgLevelId: activityData.orgLevelId,
                 serviceProduct: activityData.serviceProduct,
                 serviceProductExternalId: activityData.serviceProductExternalId,
+                plannedStartDate: activityData.plannedStartDate,
                 formattedStartDate: activityData.formattedStartDate,
                 formattedEndDate: activityData.formattedEndDate,
                 formattedDuration: activityData.formattedDuration,
@@ -292,6 +298,7 @@ sap.ui.define([
                     orgLevelId: oActivity.orgLevelId || null,
                     serviceProduct: oActivity.serviceProductDisplayText || 'N/A',
                     serviceProductExternalId: oActivity.serviceProductId || null,
+                    plannedStartDate: oActivity.plannedStartDate || null,
                     formattedStartDate: oActivity.formattedStartDate || 'N/A',
                     formattedEndDate: oActivity.formattedEndDate || 'N/A',
                     formattedDuration: oActivity.formattedDuration || 'N/A',
@@ -310,6 +317,7 @@ sap.ui.define([
                         orgLevelId: oDialogModel.getProperty("/orgLevelId") || null,
                         serviceProduct: oDialogModel.getProperty("/serviceProduct") || 'N/A',
                         serviceProductExternalId: oDialogModel.getProperty("/serviceProductExternalId") || null,
+                        plannedStartDate: oDialogModel.getProperty("/plannedStartDate") || null,
                         formattedStartDate: oDialogModel.getProperty("/formattedStartDate") || 'N/A',
                         formattedEndDate: oDialogModel.getProperty("/formattedEndDate") || 'N/A',
                         formattedDuration: oDialogModel.getProperty("/formattedDuration") || 'N/A',

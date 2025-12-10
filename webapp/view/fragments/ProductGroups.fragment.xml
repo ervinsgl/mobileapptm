@@ -51,7 +51,10 @@
                             <CustomListItem type="Inactive" class="activityListItem">
                             
                                 <!-- Activity Panel -->
-                                <Panel expandable="true" expanded="{view>detailsExpanded}" class="activityEntryPanel">
+                                <Panel 
+                                    expandable="true" 
+                                    expanded="{view>detailsExpanded}" 
+                                    class="activityEntryPanel">
                                     <headerToolbar>
                                         <OverflowToolbar design="Info">
                                             <core:Icon src="sap-icon://activity-individual" class="sapUiSmallMarginEnd"/>

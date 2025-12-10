@@ -51,6 +51,37 @@ sap.ui.define([
         _defaultExpenseType: null,
 
         /**
+         * Activity planned start date (ISO string).
+         * @type {string|null}
+         * @private
+         */
+        _activityPlannedStartDate: null,
+
+        /**
+         * Set activity planned start date.
+         * @param {string} plannedStartDate - ISO datetime string from activity
+         */
+        setActivityPlannedStartDate(plannedStartDate) {
+            console.log('TMCreationService: Setting activity planned start date:', plannedStartDate);
+            this._activityPlannedStartDate = plannedStartDate;
+        },
+
+        /**
+         * Get activity planned start date.
+         * @returns {string|null} ISO datetime string or null
+         */
+        getActivityPlannedStartDate() {
+            return this._activityPlannedStartDate;
+        },
+
+        /**
+         * Clear activity planned start date.
+         */
+        clearActivityPlannedStartDate() {
+            this._activityPlannedStartDate = null;
+        },
+
+        /**
          * Get today's date in yyyy-MM-dd format.
          * @returns {string} Date string (e.g., "2025-10-29")
          */
@@ -166,10 +197,21 @@ sap.ui.define([
 
         /**
          * Create Time Effort entry template.
+         * Uses activity planned start date for startDateTime.
+         * chargeOption is always set to "CHARGEABLE".
+         * endDateTime is calculated from startDateTime + duration.
          * @returns {Object} Time Effort entry with default values
          */
         createTimeEffortEntry() {
             const defaultTech = this._defaultTechnician;
+            const defaultDuration = 30;
+            
+            // Use activity planned start date, fallback to current time
+            const startDateTime = this._activityPlannedStartDate || this.getNowDateTimeString();
+            const endDateTime = this.calculateEndDateTime(startDateTime, defaultDuration);
+            
+            console.log('TMCreationService: Creating Time Effort entry with startDateTime:', startDateTime, '(from planned:', this._activityPlannedStartDate, ')');
+            
             return {
                 type: "Time Effort",
                 icon: "sap-icon://time-entry-request",
@@ -183,10 +225,10 @@ sap.ui.define([
                 technicianDisplay: defaultTech ? defaultTech.displayText : "",
                 taskCode: "",
                 taskDisplay: "",
-                duration: 30,
-                startDateTime: this.getNowDateTimeString(),
-                endDateTime: this.getDateTimeWithOffset(30),
-                chargeOption: "",
+                duration: defaultDuration,
+                startDateTime: startDateTime,
+                endDateTime: endDateTime,
+                chargeOption: "CHARGEABLE",
                 remarks: ""
             };
         },
@@ -279,6 +321,8 @@ sap.ui.define([
         /**
          * Create Time & Material entry template (combined entry).
          * Includes material + up to 3 time entries (Arbeitszeit, Fahrzeit, Wartezeit).
+         * chargeOption is always "CHARGEABLE".
+         * Start/End times are calculated sequentially at save time based on Activity Planned Start.
          * @returns {Object} Time & Material entry with default values
          */
         createTimeAndMaterialEntry() {
@@ -295,33 +339,29 @@ sap.ui.define([
                 technicianId: defaultTech ? defaultTech.id : "",
                 technicianExternalId: defaultTech ? defaultTech.externalId : "",
                 technicianDisplay: defaultTech ? defaultTech.displayText : "",
-                // Material fields (Column 1)
+                // Material fields
                 date: this.getTodayDateString(),
                 itemId: defaultItem ? defaultItem.id : "",
                 itemDisplay: defaultItem ? defaultItem.displayText : "",
                 quantity: "",
-                // Time Effort 1 - Arbeitszeit (Column 2)
+                remarksMaterial: "",
+                // Time Effort 1 - Arbeitszeit
                 task1Code: "",
                 task1Display: "",
                 duration1: 30,
-                startDateTime1: this.getNowDateTimeString(),
-                endDateTime1: this.getDateTimeWithOffset(30),
-                // Time Effort 2 - Fahrzeit (Column 3)
+                remarks1: "",
+                // Time Effort 2 - Fahrzeit
                 task2Code: "",
                 task2Display: "",
                 duration2: 30,
-                startDateTime2: this.getNowDateTimeString(),
-                endDateTime2: this.getDateTimeWithOffset(30),
-                // Time Effort 3 - Wartezeit (Column 4)
+                remarks2: "",
+                // Time Effort 3 - Wartezeit
                 task3Code: "",
                 task3Display: "",
                 duration3: 30,
-                startDateTime3: this.getNowDateTimeString(),
-                endDateTime3: this.getDateTimeWithOffset(30),
-                // Shared fields (Column 5)
-                chargeOption: "",
-                remarksTime: "",
-                remarksMaterial: ""
+                remarks3: "",
+                // chargeOption always CHARGEABLE (used in payload)
+                chargeOption: "CHARGEABLE"
             };
         },
 

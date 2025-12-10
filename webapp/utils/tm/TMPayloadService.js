@@ -25,8 +25,11 @@
  * 
  * @file TMPayloadService.js
  * @module mobileappsc/utils/tm/TMPayloadService
+ * @requires mobileappsc/utils/tm/TMCreationService
  */
-sap.ui.define([], () => {
+sap.ui.define([
+    "mobileappsc/utils/tm/TMCreationService"
+], (TMCreationService) => {
     "use strict";
 
     return {
@@ -56,14 +59,26 @@ sap.ui.define([], () => {
 
         /**
          * Build Time Effort API payload.
+         * chargeOption is always "CHARGEABLE".
+         * endDateTime is calculated from startDateTime + duration.
          * @param {Object} oEntry - Time Effort entry data
          * @param {string} activityId - Activity ID
          * @param {string} orgLevelId - Organization Level ID
          * @returns {Object} Time Effort payload
          */
         buildTimeEffortPayload(oEntry, activityId, orgLevelId) {
+            // Calculate endDateTime from startDateTime + duration
+            let endDateTime = oEntry.endDateTime || "";
+            if (oEntry.startDateTime && oEntry.duration) {
+                const startDate = new Date(oEntry.startDateTime);
+                if (!isNaN(startDate.getTime())) {
+                    const endDate = new Date(startDate.getTime() + (oEntry.duration * 60 * 1000));
+                    endDateTime = endDate.toISOString().replace(/\.\d{3}Z$/, 'Z');
+                }
+            }
+
             return {
-                chargeOption: oEntry.chargeOption || "",
+                chargeOption: "CHARGEABLE",
                 inactive: false,
                 startDateTimeTimeZoneId: "Europe/Berlin",
                 endDateTimeTimeZoneId: "Europe/Berlin",
@@ -71,7 +86,7 @@ sap.ui.define([], () => {
                 breakInMinutes: 0,
                 unitPrice: null,
                 timeZoneId: "UTC+02:00",
-                endDateTime: oEntry.endDateTime || "",
+                endDateTime: endDateTime,
                 internalRemarks: null,
                 breakStartDateTime: null,
                 startDateTime: oEntry.startDateTime || "",
@@ -215,6 +230,11 @@ sap.ui.define([], () => {
         /**
          * Build Time & Material API payload.
          * Returns combined structure for multiple API calls (1 Material + up to 3 Time Efforts).
+         * Times are calculated sequentially:
+         * - Arbeitszeit: starts at Activity Planned Start
+         * - Fahrzeit: starts at Arbeitszeit end
+         * - Wartezeit: starts at Fahrzeit end
+         * chargeOption is always "CHARGEABLE".
          * @param {Object} oEntry - Time & Material entry data
          * @param {string} activityId - Activity ID
          * @param {string} orgLevelId - Organization Level ID
@@ -227,7 +247,6 @@ sap.ui.define([], () => {
             }
 
             const technicianExternalId = oEntry.technicianExternalId || "";
-            const chargeOption = oEntry.chargeOption || "";
 
             const objectRef = {
                 objectId: activityId || "",
@@ -252,10 +271,30 @@ sap.ui.define([], () => {
                 syncStatus: "REQUIRES_APPROVAL"
             };
 
+            // Get activity planned start date for sequential time calculation
+            const activityPlannedStart = TMCreationService.getActivityPlannedStartDate();
+            const baseStartDateTime = activityPlannedStart || new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
+
+            // Calculate sequential times
+            // Arbeitszeit: starts at Activity Planned Start
+            const start1 = new Date(baseStartDateTime);
+            const end1 = new Date(start1.getTime() + (oEntry.duration1 || 0) * 60 * 1000);
+            
+            // Fahrzeit: starts at Arbeitszeit end
+            const start2 = new Date(end1.getTime());
+            const end2 = new Date(start2.getTime() + (oEntry.duration2 || 0) * 60 * 1000);
+            
+            // Wartezeit: starts at Fahrzeit end
+            const start3 = new Date(end2.getTime());
+            const end3 = new Date(start3.getTime() + (oEntry.duration3 || 0) * 60 * 1000);
+
+            // Format dates as ISO strings without milliseconds
+            const formatDateTime = (date) => date.toISOString().replace(/\.\d{3}Z$/, 'Z');
+
             return {
                 note: "Time & Material creates multiple API calls",
                 material: {
-                    chargeOption: chargeOption,
+                    chargeOption: "CHARGEABLE",
                     inactive: false,
                     orgLevel: orgLevelId || "",
                     item: itemExternalId ? { externalId: itemExternalId } : null,
@@ -269,39 +308,39 @@ sap.ui.define([], () => {
                     object: objectRef
                 },
                 timeEffort1: oEntry.task1Code ? {
-                    chargeOption: chargeOption,
+                    chargeOption: "CHARGEABLE",
                     ...timeEffortConstants,
                     orgLevel: orgLevelId || "",
                     task: { code: oEntry.task1Code },
-                    startDateTime: oEntry.startDateTime1 || "",
-                    endDateTime: oEntry.endDateTime1 || "",
-                    remarks: oEntry.remarksTime || "",
+                    startDateTime: formatDateTime(start1),
+                    endDateTime: formatDateTime(end1),
+                    remarks: oEntry.remarks1 || "",
                     createPerson: {
                         externalId: technicianExternalId
                     },
                     object: objectRef
                 } : null,
                 timeEffort2: oEntry.task2Code ? {
-                    chargeOption: chargeOption,
+                    chargeOption: "CHARGEABLE",
                     ...timeEffortConstants,
                     orgLevel: orgLevelId || "",
                     task: { code: oEntry.task2Code },
-                    startDateTime: oEntry.startDateTime2 || "",
-                    endDateTime: oEntry.endDateTime2 || "",
-                    remarks: oEntry.remarksTime || "",
+                    startDateTime: formatDateTime(start2),
+                    endDateTime: formatDateTime(end2),
+                    remarks: oEntry.remarks2 || "",
                     createPerson: {
                         externalId: technicianExternalId
                     },
                     object: objectRef
                 } : null,
                 timeEffort3: oEntry.task3Code ? {
-                    chargeOption: chargeOption,
+                    chargeOption: "CHARGEABLE",
                     ...timeEffortConstants,
                     orgLevel: orgLevelId || "",
                     task: { code: oEntry.task3Code },
-                    startDateTime: oEntry.startDateTime3 || "",
-                    endDateTime: oEntry.endDateTime3 || "",
-                    remarks: oEntry.remarksTime || "",
+                    startDateTime: formatDateTime(start3),
+                    endDateTime: formatDateTime(end3),
+                    remarks: oEntry.remarks3 || "",
                     createPerson: {
                         externalId: technicianExternalId
                     },

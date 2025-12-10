@@ -8,8 +8,12 @@
  * - Organization level loading and user resolution
  * - Lookup data loading (tasks, items, expense types)
  * - Web container context loading
- * - Activity and service call loading
+ * - Activity and service call loading (supports both entry points)
  * - T&M reports batch loading
+ * 
+ * Entry Points:
+ * - Activity: Fetches activity first to get service call ID, then loads service call
+ * - ServiceCall: Goes directly to service call API (skips activity fetch)
  * 
  * @file DataLoadingMixin.js
  * @module mobileappsc/controller/mixin/DataLoadingMixin
@@ -189,18 +193,45 @@ sap.ui.define([
         },
 
         /**
+         * Load data from URL parameters or web container context.
+         * Handles both Activity and ServiceCall object types.
+         * @private
+         */
+        async _loadFromContext() {
+            const contextInfo = await URLHelper.getContextInfo();
+            
+            if (!contextInfo) {
+                console.log('No context found - no Activity or ServiceCall ID in URL or web container');
+                return;
+            }
+
+            console.log(`Loading from ${contextInfo.source}: ${contextInfo.objectType} = ${contextInfo.objectId}`);
+
+            // Store entry context for highlighting and reference
+            const viewModel = this.getView().getModel("view");
+            viewModel.setProperty("/entryContext", {
+                objectType: contextInfo.objectType,
+                objectId: contextInfo.objectId,
+                source: contextInfo.source
+            });
+
+            if (contextInfo.objectType === URLHelper.OBJECT_TYPES.ACTIVITY) {
+                // Activity context: fetch activity first to get service call ID
+                await this._loadActivity(contextInfo.objectId);
+            } else if (contextInfo.objectType === URLHelper.OBJECT_TYPES.SERVICECALL) {
+                // ServiceCall context: go directly to service call loading
+                await this._loadServiceCallDirect(contextInfo.objectId);
+            }
+        },
+
+        /**
+         * @deprecated Use _loadFromContext instead
          * Load activity from URL parameters or web container context
          * @private
          */
         async _loadActivityFromURL() {
-            const activityId = await URLHelper.getActivityIdAsync();
-            
-            if (activityId) {
-                console.log('Loading activity from:', URLHelper.hasActivityId() ? 'URL params' : 'web container');
-                this._loadActivity(activityId);
-            } else {
-                console.log('No activity ID found in URL or web container context');
-            }
+            // Delegate to new method for backward compatibility
+            await this._loadFromContext();
         },
 
         /**
@@ -240,6 +271,32 @@ sap.ui.define([
             } catch (error) {
                 console.error("Load activity error:", error);
                 MessageBox.error("Failed to load activity: " + error.message);
+            } finally {
+                viewModel.setProperty("/busy", false);
+            }
+        },
+
+        /**
+         * Load service call directly (when opened from ServiceCall context).
+         * Skips the activity fetch step and goes directly to service call API.
+         * @param {string} serviceCallId - The service call ID
+         * @private
+         */
+        async _loadServiceCallDirect(serviceCallId) {
+            console.log('Loading service call directly:', serviceCallId);
+
+            const viewModel = this.getView().getModel("view");
+            viewModel.setProperty("/busy", true);
+
+            try {
+                // Go directly to service call activities loading
+                await this._loadServiceCallActivities(serviceCallId);
+                
+                MessageToast.show("Service Call loaded");
+
+            } catch (error) {
+                console.error("Load service call error:", error);
+                MessageBox.error("Failed to load service call: " + error.message);
             } finally {
                 viewModel.setProperty("/busy", false);
             }
@@ -295,12 +352,16 @@ sap.ui.define([
                     serviceOrderData.externalId
                 );
 
+                // Get entry activity ID for highlighting (only if opened from Activity)
+                const entryContext = viewModel.getProperty("/entryContext");
+                const entryActivityId = entryContext?.objectType === 'ACTIVITY' ? entryContext.objectId : null;
+
                 // Prepare data WITHOUT auto-loading T&M
                 const optimizedGroups = productGroups.map(group => ({
                     ...group,
                     expanded: true,
                     activityCount: group.activities.length,
-                    activities: group.activities.map(activity => this._prepareActivityDataOptimized(activity))
+                    activities: group.activities.map(activity => this._prepareActivityDataOptimized(activity, entryActivityId))
                 }));
 
                 // Enrich service order data
