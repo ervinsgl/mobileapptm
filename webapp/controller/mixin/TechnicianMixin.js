@@ -1,23 +1,20 @@
 /**
  * TechnicianMixin.js
  * 
- * Mixin containing technician, item, and expense type selection handlers.
+ * Mixin containing technician and task selection handlers.
  * Mixed into View1.controller.js to handle lookup field interactions
  * in the T&M Creation Dialog.
  * 
  * Sections:
  * - Technician Search (live change, suggestion select)
  * - Task Selection
- * - Item Search (live change, suggestion select)
- * - Expense Type Selection
  * 
  * @file TechnicianMixin.js
  * @module mobileappsc/controller/mixin/TechnicianMixin
  */
 sap.ui.define([
-    "mobileappsc/utils/services/TechnicianService",
-    "mobileappsc/utils/services/ItemService"
-], (TechnicianService, ItemService) => {
+    "mobileappsc/utils/services/TechnicianService"
+], (TechnicianService) => {
     "use strict";
 
     return {
@@ -182,80 +179,5 @@ sap.ui.define([
             }
         },
 
-        /* ========================================
-         * ITEM SEARCH HANDLERS
-         * ======================================== */
-
-        /**
-         * Handle item live change for filtering suggestions
-         */
-        onItemLiveChange(oEvent) {
-            const sValue = oEvent.getParameter("value");
-            const aFilteredItems = ItemService.filterBySearch(sValue);
-            
-            const oModel = this._tmCreateDialog.getModel("createTM");
-            oModel.setProperty("/itemSuggestions", aFilteredItems);
-            
-            console.log('ItemLiveChange: Found', aFilteredItems.length, 'items for:', sValue);
-        },
-
-        /**
-         * Handle item suggestion selection
-         */
-        onItemSuggestionSelect(oEvent) {
-            const oSelectedItem = oEvent.getParameter("selectedItem");
-            const oContext = oEvent.getSource().getBindingContext("createTM");
-            
-            if (!oContext) {
-                console.warn('ItemSuggestionSelect: No binding context found');
-                return;
-            }
-            
-            const sPath = oContext.getPath();
-            const oModel = this._tmCreateDialog.getModel("createTM");
-            
-            if (oSelectedItem) {
-                const oItemContext = oSelectedItem.getBindingContext("createTM");
-                if (oItemContext) {
-                    const oItem = oItemContext.getObject();
-                    
-                    oModel.setProperty(sPath + "/itemId", oItem.id);
-                    oModel.setProperty(sPath + "/itemDisplay", oItem.displayText);
-                    
-                    console.log('ItemSuggestionSelect: Selected', oItem.displayText, 'ID:', oItem.id);
-                }
-            }
-        },
-
-        /* ========================================
-         * EXPENSE TYPE HANDLERS
-         * ======================================== */
-
-        /**
-         * Handle expense type selection from Select dropdown
-         */
-        onExpenseTypeChange(oEvent) {
-            const oSelect = oEvent.getSource();
-            const oSelectedItem = oSelect.getSelectedItem();
-            const oContext = oSelect.getBindingContext("createTM");
-            
-            if (!oContext) {
-                console.warn('ExpenseTypeChange: No binding context found');
-                return;
-            }
-            
-            const sPath = oContext.getPath();
-            const oModel = this._tmCreateDialog.getModel("createTM");
-            
-            if (oSelectedItem) {
-                const sKey = oSelectedItem.getKey();
-                const sText = oSelectedItem.getText();
-                
-                oModel.setProperty(sPath + "/expenseTypeId", sKey);
-                oModel.setProperty(sPath + "/expenseTypeDisplay", sText);
-                
-                console.log('ExpenseTypeChange: Selected', sText, 'ID:', sKey);
-            }
-        }
     };
 });

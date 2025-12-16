@@ -105,16 +105,25 @@ sap.ui.define([
             // Initialize TechnicianService and set default technician
             let defaultTechDisplay = "";
             let defaultTechId = "";
+            let defaultTechExternalId = "";
             try {
                 await TechnicianService.initialize();
                 
                 const responsibleExtId = activityData.responsibleExternalId;
+                console.log('TMDialogService: Activity responsible externalId:', responsibleExtId);
+                
                 if (responsibleExtId && responsibleExtId !== 'N/A') {
                     const defaultTech = TechnicianService.getTechnicianByExternalId(responsibleExtId);
+                    console.log('TMDialogService: Found default technician:', defaultTech);
+                    
                     if (defaultTech) {
                         defaultTechId = defaultTech.id;
+                        defaultTechExternalId = defaultTech.externalId;
                         defaultTechDisplay = defaultTech.displayText;
                         TMCreationService.setDefaultTechnician(defaultTech);
+                        console.log('TMDialogService: Set default technician - ID:', defaultTechId, 'ExtID:', defaultTechExternalId, 'Display:', defaultTechDisplay);
+                    } else {
+                        console.warn('TMDialogService: No technician found for externalId:', responsibleExtId);
                     }
                 }
             } catch (error) {
@@ -188,14 +197,17 @@ sap.ui.define([
                 MessageToast.show("Warning: Expense types may not be available");
             }
 
-            // Parse quantity for max constraint
+            // Parse quantity for max constraint and set default quantity
             let maxQuantity = 9999;
+            let defaultQuantity = null;
             if (activityData.quantity && activityData.quantity !== 'N/A') {
                 const parsed = parseFloat(activityData.quantity);
                 if (!isNaN(parsed) && parsed > 0) {
                     maxQuantity = parsed;
+                    defaultQuantity = parsed;
                 }
             }
+            TMCreationService.setDefaultQuantity(defaultQuantity);
 
             // Set activity planned start date for Time Effort entries
             console.log('TMDialogService: Activity planned start date from activityData:', activityData.plannedStartDate);

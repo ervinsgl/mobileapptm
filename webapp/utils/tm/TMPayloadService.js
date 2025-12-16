@@ -111,6 +111,8 @@ sap.ui.define([
 
         /**
          * Build Material API payload.
+         * Date is derived from Activity Planned Start.
+         * chargeOption is always "CHARGEABLE".
          * @param {Object} oEntry - Material entry data
          * @param {string} activityId - Activity ID
          * @param {string} orgLevelId - Organization Level ID
@@ -122,11 +124,17 @@ sap.ui.define([
                 itemExternalId = oEntry.itemDisplay.split(' - ')[0];
             }
 
+            // Get activity planned start date and extract date portion
+            const activityPlannedStart = TMCreationService.getActivityPlannedStartDate();
+            const materialDate = activityPlannedStart 
+                ? activityPlannedStart.split('T')[0] 
+                : new Date().toISOString().split('T')[0];
+
             return {
-                chargeOption: oEntry.chargeOption || "",
+                chargeOption: "CHARGEABLE",
                 inactive: false,
                 orgLevel: orgLevelId || "",
-                date: oEntry.date || "",
+                date: materialDate,
                 quantity: oEntry.quantity || 0,
                 createPerson: {
                     externalId: oEntry.technicianExternalId || ""
@@ -143,22 +151,31 @@ sap.ui.define([
 
         /**
          * Build Expense API payload.
+         * Date is derived from Activity Planned Start.
+         * chargeOption is always "CHARGEABLE".
          * @param {Object} oEntry - Expense entry data
          * @param {string} activityId - Activity ID
          * @param {string} orgLevelId - Organization Level ID
          * @returns {Object} Expense payload
          */
         buildExpensePayload(oEntry, activityId, orgLevelId) {
-            let expenseTypeCode = "";
-            if (oEntry.expenseTypeDisplay) {
-                expenseTypeCode = oEntry.expenseTypeDisplay.split(' - ')[0];
+            // Get item externalId from Service Product
+            let itemExternalId = "";
+            if (oEntry.itemDisplay) {
+                itemExternalId = oEntry.itemDisplay.split(' - ')[0];
             }
 
+            // Get activity planned start date and extract date portion
+            const activityPlannedStart = TMCreationService.getActivityPlannedStartDate();
+            const expenseDate = activityPlannedStart 
+                ? activityPlannedStart.split('T')[0] 
+                : new Date().toISOString().split('T')[0];
+
             return {
-                chargeOption: oEntry.chargeOption || "",
+                chargeOption: "CHARGEABLE",
                 inactive: false,
                 orgLevel: orgLevelId || "",
-                date: oEntry.date || "",
+                date: expenseDate,
                 externalAmount: {
                     amount: oEntry.externalAmountValue || 0,
                     currency: "EUR"
@@ -170,7 +187,7 @@ sap.ui.define([
                 createPerson: {
                     externalId: oEntry.technicianExternalId || ""
                 },
-                type: expenseTypeCode ? { code: expenseTypeCode } : null,
+                type: itemExternalId ? { externalId: itemExternalId } : null,
                 remarks: oEntry.remarks || "",
                 syncStatus: "REQUIRES_APPROVAL",
                 object: {
@@ -182,15 +199,35 @@ sap.ui.define([
 
         /**
          * Build Mileage API payload.
+         * Type (Item) externalId goes to UDF value for Z_Mileage_MatID.
+         * Source/Destination are blank.
+         * travelStartDateTime from Activity Planned Start.
+         * travelEndDateTime = travelStartDateTime + Duration.
+         * Driver/Private Car default to false.
+         * chargeOption is always "CHARGEABLE".
          * @param {Object} oEntry - Mileage entry data
          * @param {string} activityId - Activity ID
          * @param {string} orgLevelId - Organization Level ID
          * @returns {Object} Mileage payload
          */
         buildMileagePayload(oEntry, activityId, orgLevelId) {
-            let dateValue = "";
-            if (oEntry.travelEndDateTime) {
-                dateValue = oEntry.travelEndDateTime.split('T')[0];
+            // Get activity planned start date for travel times
+            const activityPlannedStart = TMCreationService.getActivityPlannedStartDate();
+            const baseStartDateTime = activityPlannedStart || new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
+            
+            // Calculate travel end time: start + duration
+            const startDate = new Date(baseStartDateTime);
+            const endDate = new Date(startDate.getTime() + (oEntry.travelDuration || 0) * 60 * 1000);
+            
+            const formatDateTime = (date) => date.toISOString().replace(/\.\d{3}Z$/, 'Z');
+            
+            // Extract date portion for date field
+            const dateValue = baseStartDateTime.split('T')[0];
+            
+            // Get item externalId for UDF value
+            let itemExternalId = "";
+            if (oEntry.itemDisplay) {
+                itemExternalId = oEntry.itemDisplay.split(' - ')[0];
             }
 
             return {
@@ -198,25 +235,25 @@ sap.ui.define([
                 orgLevel: orgLevelId || "",
                 distanceUnit: "KM",
                 distance: oEntry.distance || 0,
-                destination: oEntry.destination || "",
-                source: oEntry.source || "",
+                destination: "",
+                source: "",
                 type: null,
-                travelEndDateTime: oEntry.travelEndDateTime || "",
-                chargeOption: oEntry.chargeOption || "",
+                travelEndDateTime: formatDateTime(endDate),
+                chargeOption: "CHARGEABLE",
                 travelEndDateTimeTimeZoneId: "Europe/Berlin",
                 inactive: false,
-                travelStartDateTime: oEntry.travelStartDateTime || "",
+                travelStartDateTime: formatDateTime(startDate),
                 travelStartDateTimeTimeZoneId: "Europe/Berlin",
                 createPerson: {
                     externalId: oEntry.technicianExternalId || ""
                 },
-                driver: oEntry.driver || false,
-                privateCar: oEntry.privateCar || false,
+                driver: false,
+                privateCar: false,
                 udfValues: [{
                     udfMeta: {
                         externalId: "Z_Mileage_MatID"
                     },
-                    value: "Z40000008"
+                    value: itemExternalId || ""
                 }],
                 remarks: oEntry.remarks || "",
                 syncStatus: "REQUIRES_APPROVAL",
@@ -275,6 +312,9 @@ sap.ui.define([
             const activityPlannedStart = TMCreationService.getActivityPlannedStartDate();
             const baseStartDateTime = activityPlannedStart || new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
 
+            // Extract date portion for Material (yyyy-MM-dd format)
+            const materialDate = baseStartDateTime.split('T')[0];
+
             // Calculate sequential times
             // Arbeitszeit: starts at Activity Planned Start
             const start1 = new Date(baseStartDateTime);
@@ -302,7 +342,7 @@ sap.ui.define([
                     createPerson: {
                         externalId: technicianExternalId
                     },
-                    date: oEntry.date || "",
+                    date: materialDate,
                     remarks: oEntry.remarksMaterial || "",
                     syncStatus: "REQUIRES_APPROVAL",
                     object: objectRef

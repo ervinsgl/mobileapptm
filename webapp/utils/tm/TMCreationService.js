@@ -44,18 +44,18 @@ sap.ui.define([
         _defaultItem: null,
 
         /**
-         * Default expense type data.
-         * @type {Object|null}
-         * @private
-         */
-        _defaultExpenseType: null,
-
-        /**
          * Activity planned start date (ISO string).
          * @type {string|null}
          * @private
          */
         _activityPlannedStartDate: null,
+
+        /**
+         * Default quantity from activity.
+         * @type {number|null}
+         * @private
+         */
+        _defaultQuantity: null,
 
         /**
          * Set activity planned start date.
@@ -79,6 +79,29 @@ sap.ui.define([
          */
         clearActivityPlannedStartDate() {
             this._activityPlannedStartDate = null;
+        },
+
+        /**
+         * Set default quantity from activity.
+         * @param {number} quantity - Quantity value from activity
+         */
+        setDefaultQuantity(quantity) {
+            this._defaultQuantity = quantity;
+        },
+
+        /**
+         * Get default quantity.
+         * @returns {number|null} Quantity or null
+         */
+        getDefaultQuantity() {
+            return this._defaultQuantity;
+        },
+
+        /**
+         * Clear default quantity.
+         */
+        clearDefaultQuantity() {
+            this._defaultQuantity = null;
         },
 
         /**
@@ -173,29 +196,6 @@ sap.ui.define([
         },
 
         /**
-         * Set default expense type.
-         * @param {Object} expenseType - Expense type object {id, code, displayText}
-         */
-        setDefaultExpenseType(expenseType) {
-            this._defaultExpenseType = expenseType;
-        },
-
-        /**
-         * Get default expense type.
-         * @returns {Object|null} Expense type object or null
-         */
-        getDefaultExpenseType() {
-            return this._defaultExpenseType;
-        },
-
-        /**
-         * Clear default expense type.
-         */
-        clearDefaultExpenseType() {
-            this._defaultExpenseType = null;
-        },
-
-        /**
          * Create Time Effort entry template.
          * Uses activity planned start date for startDateTime.
          * chargeOption is always set to "CHARGEABLE".
@@ -235,11 +235,17 @@ sap.ui.define([
 
         /**
          * Create Material entry template.
+         * Item is from Activity Service Product (read-only).
+         * Technician is from Activity Responsible.
+         * Quantity is from Activity quantity.
+         * Date is derived from Activity Planned Start at save time.
+         * chargeOption is always "CHARGEABLE".
          * @returns {Object} Material entry with default values
          */
         createMaterialEntry() {
             const defaultTech = this._defaultTechnician;
             const defaultItem = this._defaultItem;
+            const defaultQuantity = this._defaultQuantity;
             return {
                 type: "Material",
                 icon: "sap-icon://product",
@@ -253,20 +259,23 @@ sap.ui.define([
                 technicianDisplay: defaultTech ? defaultTech.displayText : "",
                 itemId: defaultItem ? defaultItem.id : "",
                 itemDisplay: defaultItem ? defaultItem.displayText : "",
-                date: this.getTodayDateString(),
-                quantity: "",
-                chargeOption: "",
+                quantity: defaultQuantity || "",
+                chargeOption: "CHARGEABLE",
                 remarks: ""
             };
         },
 
         /**
          * Create Expense entry template.
+         * Type (Item) is from Activity Service Product (read-only).
+         * Technician is from Activity Responsible.
+         * Date is derived from Activity Planned Start at save time.
+         * chargeOption is always "CHARGEABLE".
          * @returns {Object} Expense entry with default values
          */
         createExpenseEntry() {
             const defaultTech = this._defaultTechnician;
-            const defaultExpType = this._defaultExpenseType;
+            const defaultItem = this._defaultItem;
             return {
                 type: "Expense",
                 icon: "sap-icon://money-bills",
@@ -278,22 +287,30 @@ sap.ui.define([
                 technicianId: defaultTech ? defaultTech.id : "",
                 technicianExternalId: defaultTech ? defaultTech.externalId : "",
                 technicianDisplay: defaultTech ? defaultTech.displayText : "",
-                expenseTypeId: defaultExpType ? defaultExpType.id : "",
-                expenseTypeDisplay: defaultExpType ? defaultExpType.displayText : "",
-                date: this.getTodayDateString(),
+                itemId: defaultItem ? defaultItem.id : "",
+                itemDisplay: defaultItem ? defaultItem.displayText : "",
                 externalAmountValue: 0,
                 internalAmountValue: 0,
-                chargeOption: "",
+                chargeOption: "CHARGEABLE",
                 remarks: ""
             };
         },
 
         /**
          * Create Mileage entry template.
+         * Type (Item) is from Activity Service Product (read-only).
+         * Technician is from Activity Responsible.
+         * Distance is pre-populated from Activity Quantity.
+         * Start/End times are derived from Activity Planned Start + Duration at save time.
+         * Source/Destination default to blank.
+         * Driver/Private Car default to false.
+         * chargeOption is always "CHARGEABLE".
          * @returns {Object} Mileage entry with default values
          */
         createMileageEntry() {
             const defaultTech = this._defaultTechnician;
+            const defaultItem = this._defaultItem;
+            const defaultQuantity = this._defaultQuantity;
             return {
                 type: "Mileage",
                 icon: "sap-icon://car-rental",
@@ -305,15 +322,11 @@ sap.ui.define([
                 technicianId: defaultTech ? defaultTech.id : "",
                 technicianExternalId: defaultTech ? defaultTech.externalId : "",
                 technicianDisplay: defaultTech ? defaultTech.displayText : "",
-                source: "",
-                destination: "",
-                distance: 0,
+                itemId: defaultItem ? defaultItem.id : "",
+                itemDisplay: defaultItem ? defaultItem.displayText : "",
+                distance: defaultQuantity || 0,
                 travelDuration: 30,
-                travelStartDateTime: this.getNowDateTimeString(),
-                travelEndDateTime: this.getDateTimeWithOffset(30),
-                driver: false,
-                privateCar: false,
-                chargeOption: "",
+                chargeOption: "CHARGEABLE",
                 remarks: ""
             };
         },
@@ -323,11 +336,15 @@ sap.ui.define([
          * Includes material + up to 3 time entries (Arbeitszeit, Fahrzeit, Wartezeit).
          * chargeOption is always "CHARGEABLE".
          * Start/End times are calculated sequentially at save time based on Activity Planned Start.
+         * Material date is derived from Activity Planned Start date at save time.
+         * Item is pre-populated from Activity Service Product (read-only).
+         * Quantity is pre-populated from Activity quantity.
          * @returns {Object} Time & Material entry with default values
          */
         createTimeAndMaterialEntry() {
             const defaultTech = this._defaultTechnician;
             const defaultItem = this._defaultItem;
+            const defaultQuantity = this._defaultQuantity;
             return {
                 type: "Time & Material",
                 icon: "sap-icon://checklist-item-2",
@@ -339,11 +356,10 @@ sap.ui.define([
                 technicianId: defaultTech ? defaultTech.id : "",
                 technicianExternalId: defaultTech ? defaultTech.externalId : "",
                 technicianDisplay: defaultTech ? defaultTech.displayText : "",
-                // Material fields
-                date: this.getTodayDateString(),
+                // Material fields (Item from Service Product - read-only, Quantity from Activity)
                 itemId: defaultItem ? defaultItem.id : "",
                 itemDisplay: defaultItem ? defaultItem.displayText : "",
-                quantity: "",
+                quantity: defaultQuantity || "",
                 remarksMaterial: "",
                 // Time Effort 1 - Arbeitszeit
                 task1Code: "",
@@ -402,7 +418,7 @@ sap.ui.define([
                         if (!entry.quantity) errors.push(`Entry ${index + 1}: Quantity is required`);
                         break;
                     case "Expense":
-                        if (!entry.expenseType) errors.push(`Entry ${index + 1}: Expense Type is required`);
+                        if (!entry.itemDisplay) errors.push(`Entry ${index + 1}: Type is required`);
                         break;
                     case "Mileage":
                         if (!entry.distance) errors.push(`Entry ${index + 1}: Distance is required`);

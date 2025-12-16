@@ -425,29 +425,6 @@ sap.ui.define([
         },
 
         /**
-         * Handle travel duration change for Mileage
-         */
-        onTravelDurationChange(oEvent) {
-            const oContext = oEvent.getSource().getBindingContext("createTM");
-            if (!oContext) return;
-
-            const oModel = this._tmCreateDialog.getModel("createTM");
-            const iDuration = oEvent.getParameter("value");
-            DateTimeService.handleDurationChange(oModel, oContext.getPath(), iDuration, "travelStartDateTime", "travelEndDateTime");
-        },
-
-        /**
-         * Handle travel start datetime change for Mileage
-         */
-        onTravelStartDateTimeChange(oEvent) {
-            const oContext = oEvent.getSource().getBindingContext("createTM");
-            if (!oContext) return;
-
-            const oModel = this._tmCreateDialog.getModel("createTM");
-            DateTimeService.handleStartDateTimeChange(oModel, oContext.getPath(), "travelStartDateTime", "travelDuration", "travelEndDateTime", 30);
-        },
-
-        /**
          * Handle duration1 change for Time & Material
          */
         onDuration1Change(oEvent) {
