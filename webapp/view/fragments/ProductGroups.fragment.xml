@@ -67,7 +67,7 @@
                                     
                                     <content>
                                         <!-- Activity Info Bar: Subject, ID -->
-                                        <Toolbar design="Info" class="sapUiTinyMarginBottom">
+                                        <Toolbar design="Info" class="activitySubjectBar sapUiTinyMarginBottom">
                                             <Title text="{view>subject}" level="H6" wrapping="true"/>
                                             <ToolbarSpacer/>
                                             <Label text="ID: {view>externalId}" class="sapUiTinyMarginEnd"/>

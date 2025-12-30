@@ -347,6 +347,17 @@ sap.ui.define([
                     console.log('Filtered activities (by org level):', filteredActivities.length);
                 }
 
+                // Preload activity responsible persons for display
+                const responsibleExternalIds = filteredActivities
+                    .map(a => a.responsibles?.[0]?.externalId)
+                    .filter(id => id && id !== 'N/A');
+                
+                if (responsibleExternalIds.length > 0) {
+                    const uniqueResponsibleIds = [...new Set(responsibleExternalIds)];
+                    console.log('Preloading activity responsible persons:', uniqueResponsibleIds.length);
+                    await PersonService.preloadPersonsByExternalId(uniqueResponsibleIds);
+                }
+
                 const productGroups = ProductGroupService.groupActivitiesByProduct(
                     filteredActivities,
                     serviceOrderData.externalId

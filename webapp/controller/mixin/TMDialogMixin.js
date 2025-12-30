@@ -502,6 +502,115 @@ sap.ui.define([
                 "endDateTime" + iColumnIndex, 
                 30
             );
+        },
+
+        /* ========================================
+         * TIME & MATERIAL - DYNAMIC TIME ENTRIES
+         * ======================================== */
+
+        /**
+         * Add Time Effort - Fahrzeit
+         */
+        onAddTimeEffortFZ(oEvent) {
+            this._addTimeEffort(oEvent, "FZ", "timeEffortsFZ");
+        },
+
+        /**
+         * Add Time Effort - Wartezeit
+         */
+        onAddTimeEffortWZ(oEvent) {
+            this._addTimeEffort(oEvent, "WZ", "timeEffortsWZ");
+        },
+
+        /**
+         * Add Time Effort - Arbeitszeit
+         */
+        onAddTimeEffortAZ(oEvent) {
+            this._addTimeEffort(oEvent, "AZ", "timeEffortsAZ");
+        },
+
+        /**
+         * Remove Time Effort - Fahrzeit
+         */
+        onRemoveTimeEffortFZ(oEvent) {
+            this._removeTimeEffort(oEvent, "timeEffortsFZ");
+        },
+
+        /**
+         * Remove Time Effort - Wartezeit
+         */
+        onRemoveTimeEffortWZ(oEvent) {
+            this._removeTimeEffort(oEvent, "timeEffortsWZ");
+        },
+
+        /**
+         * Remove Time Effort - Arbeitszeit
+         */
+        onRemoveTimeEffortAZ(oEvent) {
+            this._removeTimeEffort(oEvent, "timeEffortsAZ");
+        },
+
+        /**
+         * Generic add time effort handler
+         * @private
+         */
+        _addTimeEffort(oEvent, sType, sArrayProperty) {
+            const oButton = oEvent.getSource();
+            // Navigate up to find the T&M entry context
+            let oContext = oButton.getBindingContext("createTM");
+            
+            // If no direct context, find parent entry
+            if (!oContext) {
+                const oPanel = oButton.getParent()?.getParent()?.getParent()?.getParent()?.getParent();
+                if (oPanel) {
+                    oContext = oPanel.getBindingContext("createTM");
+                }
+            }
+            
+            if (!oContext) {
+                MessageToast.show("Could not identify entry");
+                return;
+            }
+
+            const sPath = oContext.getPath();
+            const oModel = this._tmCreateDialog.getModel("createTM");
+            const aTimeEfforts = oModel.getProperty(sPath + "/" + sArrayProperty) || [];
+            
+            // Create new time effort entry
+            const newEntry = TMCreationService.createTimeEffortForTM(sType);
+            aTimeEfforts.push(newEntry);
+            
+            oModel.setProperty(sPath + "/" + sArrayProperty, aTimeEfforts);
+            console.log('Added time effort', sType, 'to', sPath, '- total:', aTimeEfforts.length);
+        },
+
+        /**
+         * Generic remove time effort handler
+         * @private
+         */
+        _removeTimeEffort(oEvent, sArrayProperty) {
+            const oButton = oEvent.getSource();
+            const oContext = oButton.getBindingContext("createTM");
+            
+            if (!oContext) {
+                MessageToast.show("Could not identify entry to remove");
+                return;
+            }
+
+            const sPath = oContext.getPath();
+            const oModel = this._tmCreateDialog.getModel("createTM");
+            
+            // Parse path to get parent entry path and index
+            // Path format: /entries/0/timeEffortsFZ/0
+            const pathParts = sPath.split("/");
+            const iIndex = parseInt(pathParts.pop());
+            const sArrayPath = pathParts.join("/");
+            
+            const aTimeEfforts = oModel.getProperty(sArrayPath) || [];
+            aTimeEfforts.splice(iIndex, 1);
+            oModel.setProperty(sArrayPath, aTimeEfforts);
+            
+            console.log('Removed time effort at index', iIndex, 'from', sArrayPath);
         }
     };
 });

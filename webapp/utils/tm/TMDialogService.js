@@ -34,8 +34,9 @@ sap.ui.define([
     "mobileappsc/utils/tm/TMCreationService",
     "mobileappsc/utils/services/TimeTaskService",
     "mobileappsc/utils/services/ItemService",
-    "mobileappsc/utils/services/ExpenseTypeService"
-], (Fragment, JSONModel, MessageToast, TechnicianService, TMCreationService, TimeTaskService, ItemService, ExpenseTypeService) => {
+    "mobileappsc/utils/services/ExpenseTypeService",
+    "mobileappsc/utils/services/ActivityService"
+], (Fragment, JSONModel, MessageToast, TechnicianService, TMCreationService, TimeTaskService, ItemService, ExpenseTypeService, ActivityService) => {
     "use strict";
 
     return {
@@ -102,33 +103,97 @@ sap.ui.define([
                 throw new Error("TMDialogService not initialized");
             }
 
-            // Initialize TechnicianService and set default technician
+            // Initialize TechnicianService (needed for resolving person IDs to names)
             let defaultTechDisplay = "";
             let defaultTechId = "";
             let defaultTechExternalId = "";
+            let activityTechnicians = []; // Dropdown list for activity-specific technicians
+            const addedTechnicianIds = new Set(); // Track added IDs to avoid duplicates
+            
             try {
                 await TechnicianService.initialize();
                 
+                // Step 1: Add responsible from composite-tree data (always available, no extra API call)
                 const responsibleExtId = activityData.responsibleExternalId;
-                console.log('TMDialogService: Activity responsible externalId:', responsibleExtId);
-                
                 if (responsibleExtId && responsibleExtId !== 'N/A') {
-                    const defaultTech = TechnicianService.getTechnicianByExternalId(responsibleExtId);
-                    console.log('TMDialogService: Found default technician:', defaultTech);
-                    
-                    if (defaultTech) {
-                        defaultTechId = defaultTech.id;
-                        defaultTechExternalId = defaultTech.externalId;
-                        defaultTechDisplay = defaultTech.displayText;
-                        TMCreationService.setDefaultTechnician(defaultTech);
-                        console.log('TMDialogService: Set default technician - ID:', defaultTechId, 'ExtID:', defaultTechExternalId, 'Display:', defaultTechDisplay);
-                    } else {
-                        console.warn('TMDialogService: No technician found for externalId:', responsibleExtId);
+                    const responsibleTech = TechnicianService.getTechnicianByExternalId(responsibleExtId);
+                    if (responsibleTech) {
+                        activityTechnicians.push({
+                            id: responsibleTech.id,
+                            externalId: responsibleTech.externalId,
+                            displayText: responsibleTech.displayText,
+                            isResponsible: true
+                        });
+                        addedTechnicianIds.add(responsibleTech.id);
+                        
+                        // Set as default
+                        defaultTechId = responsibleTech.id;
+                        defaultTechExternalId = responsibleTech.externalId;
+                        defaultTechDisplay = responsibleTech.displayText;
+                        TMCreationService.setDefaultTechnician(responsibleTech);
+                        
+                        console.log('TMDialogService: Added responsible technician:', responsibleTech.displayText);
                     }
                 }
+                
+                // Step 2: Fetch supportingPersons via API (may fail, but responsible is already added)
+                try {
+                    const technicianData = await ActivityService.fetchActivityTechnicians(activityData.activityId);
+                    
+                    // Add any responsibles from API that weren't already added (edge case)
+                    for (const id of technicianData.responsibleIds) {
+                        if (!addedTechnicianIds.has(id)) {
+                            const tech = TechnicianService.getTechnicianById(id);
+                            if (tech) {
+                                activityTechnicians.push({
+                                    id: tech.id,
+                                    externalId: tech.externalId,
+                                    displayText: tech.displayText,
+                                    isResponsible: true
+                                });
+                                addedTechnicianIds.add(tech.id);
+                                console.log('TMDialogService: Added additional responsible:', tech.displayText);
+                            }
+                        }
+                    }
+                    
+                    // Add supporting persons
+                    for (const id of technicianData.supportingPersonIds) {
+                        if (!addedTechnicianIds.has(id)) {
+                            const tech = TechnicianService.getTechnicianById(id);
+                            if (tech) {
+                                activityTechnicians.push({
+                                    id: tech.id,
+                                    externalId: tech.externalId,
+                                    displayText: tech.displayText,
+                                    isResponsible: false
+                                });
+                                addedTechnicianIds.add(tech.id);
+                                console.log('TMDialogService: Added supporting person:', tech.displayText);
+                            } else {
+                                console.warn('TMDialogService: Could not resolve supporting person ID:', id);
+                            }
+                        }
+                    }
+                } catch (apiError) {
+                    console.warn('TMDialogService: Failed to fetch supportingPersons, using responsible only:', apiError.message);
+                    // Continue with just the responsible - dropdown will still work
+                }
+                
+                // Set default if not already set (edge case: responsible lookup failed but API succeeded)
+                if (!defaultTechId && activityTechnicians.length > 0) {
+                    const firstTech = activityTechnicians[0];
+                    defaultTechId = firstTech.id;
+                    defaultTechExternalId = firstTech.externalId;
+                    defaultTechDisplay = firstTech.displayText;
+                    TMCreationService.setDefaultTechnician(firstTech);
+                }
+                
+                console.log('TMDialogService: Activity technicians dropdown:', activityTechnicians.length, 'technicians');
+                
             } catch (error) {
                 console.error('TMDialogService: Failed to initialize TechnicianService:', error);
-                MessageToast.show("Warning: Technician search may not be available");
+                MessageToast.show("Warning: Technician data may not be available");
             }
 
             // Load Time Tasks and filter by prefix
@@ -230,7 +295,8 @@ sap.ui.define([
                 maxQuantity: maxQuantity,
                 responsibleExternalId: activityData.responsibleExternalId,
                 entries: [],
-                technicianSuggestions: TechnicianService.getAllForDropdown(),
+                activityTechnicians: activityTechnicians,
+                defaultTechnicianId: defaultTechId,
                 itemSuggestions: itemSuggestions,
                 taskSuggestions: taskSuggestions,
                 taskSuggestionsAZ: taskSuggestionsAZ,

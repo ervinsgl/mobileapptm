@@ -108,15 +108,24 @@
     overflow: hidden;
 }
 
+/* Product Panel Header - allow multi-line wrapping */
+.productGroupPanel .sapMOTB {
+    height: auto !important;
+    min-height: 2.5rem;
+    padding: 0.5rem 0;
+}
+
 .productGroupPanel .sapMPanelContent {
     padding: 0;
     background-color: #ffffff;
 }
 
-/* Product Panel Header - smaller text */
+/* Product Panel Header - smaller text with wrapping */
 .productGroupPanel .sapMOTB .sapMTitle {
     font-size: 0.875rem;
     font-weight: 600;
+    white-space: normal !important;
+    line-height: 1.3;
 }
 
 /* Product Panel ID - subtle styling */
@@ -171,7 +180,23 @@
     background-color: #f5f5f5;
     border-bottom: 1px solid #e8e8e8;
     min-height: 2rem;
-    padding: 0.25rem 0.5rem;
+    height: auto !important;
+    padding: 0.5rem;
+}
+
+/* Activity Subject Bar - multi-line support */
+.activitySubjectBar {
+    height: auto !important;
+    min-height: 2.5rem;
+    padding: 0.5rem 1rem !important;
+    align-items: flex-start !important;
+}
+
+.activitySubjectBar .sapMTitle {
+    white-space: normal !important;
+    line-height: 1.4 !important;
+    flex: 1 1 auto;
+    max-width: calc(100% - 150px);
 }
 
 .activityEntryPanel .sapMTB.sapMTBInfo .sapMTitle,
@@ -179,6 +204,8 @@
     font-size: 0.8125rem;
     font-weight: 500;
     color: #333;
+    white-space: normal !important;
+    line-height: 1.4;
 }
 
 .activityEntryPanel .sapMTB.sapMTBInfo .sapMLabel,
@@ -494,6 +521,91 @@
     padding: 0.75rem 1rem;
 }
 
+/* Container for 3-column Time entries - responsive 3→2→1 */
+.tmTimeColumns {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    width: 100%;
+}
+
+/* Medium screens: 2 columns */
+@media (max-width: 900px) {
+    .tmTimeColumns {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Small screens: 1 column */
+@media (max-width: 600px) {
+    .tmTimeColumns {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Time Panel styling */
+.tmTimePanel {
+    min-height: 80px;
+}
+
+/* Prevent nested scrollbars in time panel lists */
+.tmTimePanel .sapMList {
+    overflow: visible;
+}
+
+.tmTimePanel .sapMListItems {
+    overflow: visible;
+}
+
+/* Time Entry List - empty state styling */
+.tmTimeEntryList .sapMListNoData {
+    border: 1px dashed #ccc;
+    border-radius: 4px;
+    padding: 1rem;
+    color: #999;
+    font-style: italic;
+    text-align: center;
+    background: #fafafa;
+}
+
+/* Remove borders on time panels in grid layout */
+.tmTimeColumns > .tmColumn {
+    border-right: none;
+    padding-right: 0;
+}
+
+/* Time Entry Item styling */
+.tmTimeEntryItem {
+    background: #f7f7f7;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+    border: 1px solid #e5e5e5;
+}
+
+.tmTimeEntryItem:last-child {
+    margin-bottom: 0;
+}
+
+.tmTimeEntryContent {
+    padding: 0.5rem;
+    align-items: flex-start;
+}
+
+/* Time Entry field sizing */
+.tmTimeEntrySelect,
+.tmTimeEntryInput {
+    flex: 1;
+    min-width: 100px;
+}
+
+/* Narrower label for time entries */
+.tmFieldLabelNarrow {
+    min-width: 4.5rem;
+    width: 4.5rem;
+    margin-right: 0.5rem;
+    flex-shrink: 0;
+}
+
 /* Constrained field widths in 3-column layout - FIXED WIDTH */
 .tmEntryContent3Col .tmFieldInput,
 .tmEntryContent3Col .tmFieldInputNarrow,
@@ -609,6 +721,13 @@
         overflow-x: hidden !important;
     }
     
+    /* Prevent nested scrollbars */
+    .tmTimePanel .sapMList,
+    .tmTimePanel .sapMListItems,
+    .tmTimePanel .sapMListUl {
+        overflow: visible !important;
+    }
+    
     /* ----- DIALOG ADJUSTMENTS ----- */
     .sapMDialog {
         width: 100% !important;
@@ -666,6 +785,7 @@
     .tmEntryContent,
     .tmEntryContent.tmEntryContent3Col,
     .tmEntryContent3Col,
+    .tmTimeColumns,
     .activityEntryContent,
     .serviceOrderContent {
         display: grid !important;
@@ -683,6 +803,13 @@
         border-bottom: 1px solid #e5e5e5;
         padding-bottom: 1rem;
         padding-right: 0 !important;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Time panel columns don't need border-bottom (entries have their own borders) */
+    .tmTimeColumns > .tmColumn {
+        border-bottom: none;
+        padding-bottom: 0;
         margin-bottom: 0.5rem;
     }
     

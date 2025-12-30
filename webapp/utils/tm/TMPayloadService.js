@@ -266,11 +266,8 @@ sap.ui.define([
 
         /**
          * Build Time & Material API payload.
-         * Returns combined structure for multiple API calls (1 Material + up to 3 Time Efforts).
-         * Times are calculated sequentially:
-         * - Arbeitszeit: starts at Activity Planned Start
-         * - Fahrzeit: starts at Arbeitszeit end
-         * - Wartezeit: starts at Fahrzeit end
+         * Returns combined structure for multiple API calls (1 Material + dynamic Time Efforts).
+         * Times are calculated sequentially from Activity Planned Start.
          * chargeOption is always "CHARGEABLE".
          * @param {Object} oEntry - Time & Material entry data
          * @param {string} activityId - Activity ID
@@ -315,21 +312,46 @@ sap.ui.define([
             // Extract date portion for Material (yyyy-MM-dd format)
             const materialDate = baseStartDateTime.split('T')[0];
 
-            // Calculate sequential times
-            // Arbeitszeit: starts at Activity Planned Start
-            const start1 = new Date(baseStartDateTime);
-            const end1 = new Date(start1.getTime() + (oEntry.duration1 || 0) * 60 * 1000);
-            
-            // Fahrzeit: starts at Arbeitszeit end
-            const start2 = new Date(end1.getTime());
-            const end2 = new Date(start2.getTime() + (oEntry.duration2 || 0) * 60 * 1000);
-            
-            // Wartezeit: starts at Fahrzeit end
-            const start3 = new Date(end2.getTime());
-            const end3 = new Date(start3.getTime() + (oEntry.duration3 || 0) * 60 * 1000);
-
             // Format dates as ISO strings without milliseconds
             const formatDateTime = (date) => date.toISOString().replace(/\.\d{3}Z$/, 'Z');
+
+            // Build time efforts arrays from dynamic entries
+            let currentTime = new Date(baseStartDateTime);
+            
+            const buildTimeEffortPayload = (entry) => {
+                if (!entry || !entry.taskCode) return null;
+                
+                const startTime = new Date(currentTime);
+                const endTime = new Date(startTime.getTime() + (entry.duration || 0) * 60 * 1000);
+                currentTime = endTime; // Next entry starts where this one ends
+                
+                return {
+                    chargeOption: "CHARGEABLE",
+                    ...timeEffortConstants,
+                    orgLevel: orgLevelId || "",
+                    task: { code: entry.taskCode },
+                    startDateTime: formatDateTime(startTime),
+                    endDateTime: formatDateTime(endTime),
+                    remarks: entry.remarks || "",
+                    createPerson: {
+                        externalId: technicianExternalId
+                    },
+                    object: objectRef
+                };
+            };
+
+            // Build arrays for each time type
+            const timeEffortsFZ = (oEntry.timeEffortsFZ || [])
+                .map(buildTimeEffortPayload)
+                .filter(e => e !== null);
+            
+            const timeEffortsWZ = (oEntry.timeEffortsWZ || [])
+                .map(buildTimeEffortPayload)
+                .filter(e => e !== null);
+            
+            const timeEffortsAZ = (oEntry.timeEffortsAZ || [])
+                .map(buildTimeEffortPayload)
+                .filter(e => e !== null);
 
             return {
                 note: "Time & Material creates multiple API calls",
@@ -347,45 +369,9 @@ sap.ui.define([
                     syncStatus: "REQUIRES_APPROVAL",
                     object: objectRef
                 },
-                timeEffort1: oEntry.task1Code ? {
-                    chargeOption: "CHARGEABLE",
-                    ...timeEffortConstants,
-                    orgLevel: orgLevelId || "",
-                    task: { code: oEntry.task1Code },
-                    startDateTime: formatDateTime(start1),
-                    endDateTime: formatDateTime(end1),
-                    remarks: oEntry.remarks1 || "",
-                    createPerson: {
-                        externalId: technicianExternalId
-                    },
-                    object: objectRef
-                } : null,
-                timeEffort2: oEntry.task2Code ? {
-                    chargeOption: "CHARGEABLE",
-                    ...timeEffortConstants,
-                    orgLevel: orgLevelId || "",
-                    task: { code: oEntry.task2Code },
-                    startDateTime: formatDateTime(start2),
-                    endDateTime: formatDateTime(end2),
-                    remarks: oEntry.remarks2 || "",
-                    createPerson: {
-                        externalId: technicianExternalId
-                    },
-                    object: objectRef
-                } : null,
-                timeEffort3: oEntry.task3Code ? {
-                    chargeOption: "CHARGEABLE",
-                    ...timeEffortConstants,
-                    orgLevel: orgLevelId || "",
-                    task: { code: oEntry.task3Code },
-                    startDateTime: formatDateTime(start3),
-                    endDateTime: formatDateTime(end3),
-                    remarks: oEntry.remarks3 || "",
-                    createPerson: {
-                        externalId: technicianExternalId
-                    },
-                    object: objectRef
-                } : null
+                timeEffortsFZ: timeEffortsFZ,
+                timeEffortsWZ: timeEffortsWZ,
+                timeEffortsAZ: timeEffortsAZ
             };
         },
 

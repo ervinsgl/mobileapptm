@@ -333,7 +333,7 @@ sap.ui.define([
 
         /**
          * Create Time & Material entry template (combined entry).
-         * Includes material + up to 3 time entries (Arbeitszeit, Fahrzeit, Wartezeit).
+         * Includes material + dynamic time entries (Fahrzeit, Wartezeit, Arbeitszeit).
          * chargeOption is always "CHARGEABLE".
          * Start/End times are calculated sequentially at save time based on Activity Planned Start.
          * Material date is derived from Activity Planned Start date at save time.
@@ -361,23 +361,28 @@ sap.ui.define([
                 itemDisplay: defaultItem ? defaultItem.displayText : "",
                 quantity: defaultQuantity || "",
                 remarksMaterial: "",
-                // Time Effort 1 - Arbeitszeit
-                task1Code: "",
-                task1Display: "",
-                duration1: 30,
-                remarks1: "",
-                // Time Effort 2 - Fahrzeit
-                task2Code: "",
-                task2Display: "",
-                duration2: 30,
-                remarks2: "",
-                // Time Effort 3 - Wartezeit
-                task3Code: "",
-                task3Display: "",
-                duration3: 30,
-                remarks3: "",
+                // Dynamic Time Effort arrays (FZ=Fahrzeit, WZ=Wartezeit, AZ=Arbeitszeit)
+                timeEffortsFZ: [],
+                timeEffortsWZ: [],
+                timeEffortsAZ: [],
                 // chargeOption always CHARGEABLE (used in payload)
                 chargeOption: "CHARGEABLE"
+            };
+        },
+
+        /**
+         * Create a single Time Effort entry for Time & Material.
+         * @param {string} type - Time type: 'FZ', 'WZ', or 'AZ'
+         * @returns {Object} Time Effort entry
+         */
+        createTimeEffortForTM(type) {
+            return {
+                id: Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+                type: type,
+                taskCode: "",
+                taskDisplay: "",
+                duration: 30,
+                remarks: ""
             };
         },
 
@@ -424,10 +429,13 @@ sap.ui.define([
                         if (!entry.distance) errors.push(`Entry ${index + 1}: Distance is required`);
                         break;
                     case "Time & Material":
-                        if (!entry.item) errors.push(`Entry ${index + 1}: Item is required`);
+                        if (!entry.itemDisplay) errors.push(`Entry ${index + 1}: Item is required`);
                         if (!entry.quantity) errors.push(`Entry ${index + 1}: Quantity is required`);
-                        if (!entry.task1 && !entry.task2 && !entry.task3) {
-                            errors.push(`Entry ${index + 1}: At least one Time Task is required`);
+                        const totalTimeEfforts = (entry.timeEffortsFZ?.length || 0) + 
+                                                 (entry.timeEffortsWZ?.length || 0) + 
+                                                 (entry.timeEffortsAZ?.length || 0);
+                        if (totalTimeEfforts === 0) {
+                            errors.push(`Entry ${index + 1}: At least one Time Effort is required`);
                         }
                         break;
                 }

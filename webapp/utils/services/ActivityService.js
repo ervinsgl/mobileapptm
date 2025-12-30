@@ -5,7 +5,7 @@
  * Handles fetching activities from backend and extracting structured data.
  * 
  * Key Features:
- * - Format activity IDs (UUID → FSM format)
+ * - Format activity IDs (UUID â†’ FSM format)
  * - Fetch single activity by ID
  * - Fetch activities for a service call
  * - Extract activity and service call data from responses
@@ -114,6 +114,50 @@ sap.ui.define([], () => {
                 id: activity.object.objectId,
                 subject: activity.subject
             };
+        },
+
+        /**
+         * Fetch activity technicians (responsible + supportingPersons).
+         * Used for T&M report creation to populate technician dropdown.
+         * @param {string} activityId - Activity ID
+         * @returns {Promise<Object>} Object with responsibleId and supportingPersonIds arrays
+         */
+        async fetchActivityTechnicians(activityId) {
+            const formattedId = this.formatActivityId(activityId);
+            
+            try {
+                const response = await fetch("/api/get-activity-by-id", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ activityId: formattedId })
+                });
+
+                if (!response.ok) {
+                    console.warn('ActivityService: Failed to fetch activity technicians');
+                    return { responsibleIds: [], supportingPersonIds: [] };
+                }
+
+                const data = await response.json();
+                const activity = data.data?.[0]?.activity || {};
+                
+                // Extract responsibles (array of person IDs)
+                const responsibleIds = activity.responsibles || [];
+                
+                // Extract supportingPersons (array of person IDs) - only from get-activity-by-id
+                const supportingPersonIds = activity.supportingPersons || [];
+                
+                console.log('ActivityService: Fetched technicians for activity', activityId);
+                console.log('  - Responsibles:', responsibleIds);
+                console.log('  - Supporting Persons:', supportingPersonIds);
+                
+                return {
+                    responsibleIds,
+                    supportingPersonIds
+                };
+            } catch (error) {
+                console.error('ActivityService: Error fetching activity technicians:', error);
+                return { responsibleIds: [], supportingPersonIds: [] };
+            }
         }
     };
 });
