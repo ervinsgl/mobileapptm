@@ -218,11 +218,16 @@
 .sapMDialog .sapMDialogSubHeader .sapMIBar {
     background-color: #f5f5f5;
     border-bottom: 1px solid #e8e8e8;
+    height: auto !important;
+    min-height: 2.5rem;
+    padding: 0.5rem 1rem;
 }
 
 .sapMDialog .sapMDialogSubHeader .sapMTitle {
     font-size: 0.8125rem;
     font-weight: 500;
+    white-space: normal !important;
+    line-height: 1.4;
 }
 
 .sapMDialog .sapMDialogSubHeader .sapMLabel {
@@ -291,6 +296,19 @@
 
 .tmEntryPanel:last-child {
     margin-bottom: 0;
+}
+
+/* Entry Panel Header - multi-line support */
+.tmEntryPanel .sapMOTB {
+    height: auto !important;
+    min-height: 2.5rem;
+    padding: 0.5rem 0;
+}
+
+.tmEntryPanel .sapMOTB .sapMTitle {
+    white-space: normal !important;
+    line-height: 1.4;
+    flex: 1 1 auto;
 }
 
 /* Compact 3-Column Layout - CSS Grid for smooth transitions */

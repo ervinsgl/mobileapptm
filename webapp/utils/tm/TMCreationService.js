@@ -277,7 +277,7 @@ sap.ui.define([
             const defaultTech = this._defaultTechnician;
             const defaultItem = this._defaultItem;
             return {
-                type: "Expense",
+                type: "Expense Report",
                 icon: "sap-icon://money-bills",
                 expanded: true,
                 saveButtonText: "Save",
@@ -312,7 +312,7 @@ sap.ui.define([
             const defaultItem = this._defaultItem;
             const defaultQuantity = this._defaultQuantity;
             return {
-                type: "Mileage",
+                type: "Mileage Report",
                 icon: "sap-icon://car-rental",
                 expanded: true,
                 saveButtonText: "Save",
@@ -422,10 +422,10 @@ sap.ui.define([
                         if (!entry.item) errors.push(`Entry ${index + 1}: Item is required`);
                         if (!entry.quantity) errors.push(`Entry ${index + 1}: Quantity is required`);
                         break;
-                    case "Expense":
+                    case "Expense Report":
                         if (!entry.itemDisplay) errors.push(`Entry ${index + 1}: Type is required`);
                         break;
-                    case "Mileage":
+                    case "Mileage Report":
                         if (!entry.distance) errors.push(`Entry ${index + 1}: Distance is required`);
                         break;
                     case "Time & Material":

@@ -61,8 +61,8 @@
                         <Text text="{view>/webContainerContext/orgLevelName}" class="serviceOrderFieldValue"/>
                     </HBox>
                     <HBox class="serviceOrderFieldRow">
-                        <Label text="Object:" design="Bold" class="serviceOrderFieldLabel"/>
-                        <Text text="{view>/webContainerContext/objectType} - {view>/webContainerContext/cloudId}" class="serviceOrderFieldValue"/>
+                        <Label text="{view>/webContainerContext/objectType}:" design="Bold" class="serviceOrderFieldLabel"/>
+                        <Text text="{view>/webContainerContext/cloudId}" class="serviceOrderFieldValue"/>
                     </HBox>
                 </VBox>
             </HBox>

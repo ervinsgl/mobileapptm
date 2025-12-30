@@ -72,12 +72,44 @@
                 </VBox>
                 
                 <!-- ========== ENTRY TYPE BUTTONS ========== -->
+                <!-- 
+                    Button visibility based on Activity Service Product:
+                    - Mileage Report: Z40000038, Z40000008
+                    - Expense Report: Z40000001, Z40000007, Z50000000
+                    - Time & Material Report: All other Service Products
+                -->
                 <HBox class="sapUiSmallMarginBottom" width="100%" wrap="Wrap">
+                    <!-- DEPRECATED: Time Effort and Material buttons - kept for reference
                     <Button text="Time Effort" icon="sap-icon://time-entry-request" press=".onAddTimeEffortEntry" class="sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
                     <Button text="Material" icon="sap-icon://product" press=".onAddMaterialEntry" class="sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
-                    <Button text="Expense" icon="sap-icon://money-bills" press=".onAddExpenseEntry" class="sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
-                    <Button text="Mileage" icon="sap-icon://car-rental" press=".onAddMileageEntry" class="sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
-                    <Button text="Time &amp; Material Report" icon="sap-icon://checklist-item-2" press=".onAddTimeAndMaterialEntry" class="sapUiTinyMarginBottom" type="Emphasized"/>
+                    -->
+                    
+                    <!-- Expense Report: Only for Service Products Z40000001, Z40000007, Z50000000 -->
+                    <Button 
+                        text="Expense Report" 
+                        icon="sap-icon://money-bills" 
+                        press=".onAddExpenseEntry" 
+                        class="sapUiTinyMarginEnd sapUiTinyMarginBottom"
+                        type="Emphasized"
+                        visible="{= ${createTM>/serviceProductExternalId} === 'Z40000001' || ${createTM>/serviceProductExternalId} === 'Z40000007' || ${createTM>/serviceProductExternalId} === 'Z50000000' }"/>
+                    
+                    <!-- Mileage Report: Only for Service Products Z40000038, Z40000008 -->
+                    <Button 
+                        text="Mileage Report" 
+                        icon="sap-icon://car-rental" 
+                        press=".onAddMileageEntry" 
+                        class="sapUiTinyMarginEnd sapUiTinyMarginBottom"
+                        type="Emphasized"
+                        visible="{= ${createTM>/serviceProductExternalId} === 'Z40000038' || ${createTM>/serviceProductExternalId} === 'Z40000008' }"/>
+                    
+                    <!-- Time & Material Report: All other Service Products -->
+                    <Button 
+                        text="Time &amp; Material Report" 
+                        icon="sap-icon://checklist-item-2" 
+                        press=".onAddTimeAndMaterialEntry" 
+                        class="sapUiTinyMarginBottom" 
+                        type="Emphasized"
+                        visible="{= ${createTM>/serviceProductExternalId} !== 'Z40000001' &amp;&amp; ${createTM>/serviceProductExternalId} !== 'Z40000007' &amp;&amp; ${createTM>/serviceProductExternalId} !== 'Z50000000' &amp;&amp; ${createTM>/serviceProductExternalId} !== 'Z40000038' &amp;&amp; ${createTM>/serviceProductExternalId} !== 'Z40000008' }"/>
                 </HBox>
                 
                 <!-- ========== ENTRY PANELS LIST ========== -->
@@ -160,7 +192,7 @@
                                 </HBox>
                                 
                                 <!-- ===== EXPENSE LAYOUT (2-Column) ===== -->
-                                <HBox class="tmEntryContent" visible="{= ${createTM>type} === 'Expense'}" width="100%">
+                                <HBox class="tmEntryContent" visible="{= ${createTM>type} === 'Expense Report'}" width="100%">
                                     
                                     <!-- Col 1: Type, Technician -->
                                     <VBox class="tmColumn">
@@ -194,7 +226,7 @@
                                 </HBox>
                                 
                                 <!-- ===== MILEAGE LAYOUT (2-Column) ===== -->
-                                <HBox class="tmEntryContent" visible="{= ${createTM>type} === 'Mileage'}" width="100%">
+                                <HBox class="tmEntryContent" visible="{= ${createTM>type} === 'Mileage Report'}" width="100%">
                                     
                                     <!-- Col 1: Type, Technician -->
                                     <VBox class="tmColumn">

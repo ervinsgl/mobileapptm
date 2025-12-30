@@ -17,7 +17,7 @@
     -->
     <Page
         id="mobileAppServiceConfirmationPage"
-        title="Service Confirmation"
+        title="T&amp;M Journal for Service Order: {view>/serviceCall/externalId}"
         showNavButton="false"
         class="sapUiContentPadding"
         busy="{view>/pageLoading}"
