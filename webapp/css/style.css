@@ -141,21 +141,6 @@
 }
 
 /* ========================================
-   ACTIVITIES TOOLBAR (ProductGroups fragment)
-   ======================================== */
-
-.activitiesTableToolbar {
-    background-color: #f0f0f0 !important;
-    border-bottom: 1px solid #e0e0e0;
-}
-
-.activitiesTableToolbar .sapMTitle {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #333;
-}
-
-/* ========================================
    ACTIVITY ENTRY PANELS (ProductGroups fragment)
    ======================================== */
 
@@ -172,6 +157,31 @@
 
 .activityEntryPanel:last-child {
     margin-bottom: 0;
+}
+
+/* Highlighted Activity - SAP Fiori light blue for context activity */
+/* Uses data-highlighted attribute from customData with writeToDom */
+.activityEntryPanel[data-highlighted="true"] {
+    border: 2px solid #0a6ed1 !important;
+    border-radius: 4px;
+}
+
+.activityEntryPanel[data-highlighted="true"] .sapMPanelHdr {
+    background: linear-gradient(135deg, #e6f2ff 0%, #cce5ff 100%) !important;
+}
+
+.activityEntryPanel[data-highlighted="true"] .sapMOTB {
+    background: linear-gradient(135deg, #e6f2ff 0%, #cce5ff 100%) !important;
+    border-bottom: 1px solid #0a6ed1;
+}
+
+.activityEntryPanel[data-highlighted="true"] .sapMOTB .sapMTitle {
+    color: #0a6ed1;
+    font-weight: 600;
+}
+
+.activityEntryPanel[data-highlighted="true"] .sapMOTB .sapUiIcon {
+    color: #0a6ed1;
 }
 
 /* Activity/Dialog Info Bar - shows subject and ID */
@@ -345,12 +355,6 @@
     margin-bottom: 0;
 }
 
-/* Spacer row for equal column heights */
-.tmFieldRowSpacer {
-    visibility: hidden;
-    min-height: 2rem;
-}
-
 /* T&M Field Label - Fixed width for alignment */
 .tmFieldLabel {
     font-size: 0.75rem;
@@ -365,12 +369,6 @@
 .tmFieldValue {
     font-size: 0.875rem;
     color: #333;
-}
-
-.tmFieldValueSmall {
-    font-size: 0.8125rem;
-    color: #555;
-    word-break: break-word;
 }
 
 /* ========================================
@@ -530,15 +528,6 @@
    3-COLUMN LAYOUT (Time Effort, Material, Expense, Mileage)
    ======================================== */
 
-/* Container for 3-column layouts */
-.tmEntryContent3Col {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 1rem;
-    width: 100%;
-    padding: 0.75rem 1rem;
-}
-
 /* Container for 3-column Time entries - responsive 3→2→1 */
 .tmTimeColumns {
     display: grid;
@@ -622,16 +611,6 @@
     width: 4.5rem;
     margin-right: 0.5rem;
     flex-shrink: 0;
-}
-
-/* Constrained field widths in 3-column layout - FIXED WIDTH */
-.tmEntryContent3Col .tmFieldInput,
-.tmEntryContent3Col .tmFieldInputNarrow,
-.tmEntryContent3Col .tmFieldSelectNarrow {
-    width: 200px !important;
-    min-width: 200px !important;
-    max-width: 200px !important;
-    flex: 0 0 200px !important;
 }
 
 /* ========================================
@@ -801,8 +780,6 @@
     /* ----- COLUMN LAYOUTS ----- */
     /* Force single column on mobile */
     .tmEntryContent,
-    .tmEntryContent.tmEntryContent3Col,
-    .tmEntryContent3Col,
     .tmTimeColumns,
     .activityEntryContent,
     .serviceOrderContent {

@@ -50,11 +50,14 @@
                         <List items="{path: 'view>activities', templateShareable: false}" mode="None" showSeparators="None" growing="true" growingThreshold="20">
                             <CustomListItem type="Inactive" class="activityListItem">
                             
-                                <!-- Activity Panel -->
+                                <!-- Activity Panel - highlighted via customData if this is the entry activity from context -->
                                 <Panel 
                                     expandable="true" 
                                     expanded="{view>detailsExpanded}" 
                                     class="activityEntryPanel">
+                                    <customData>
+                                        <core:CustomData key="highlighted" value="{view>entryActivityFlag}" writeToDom="true"/>
+                                    </customData>
                                     <headerToolbar>
                                         <OverflowToolbar design="Info">
                                             <core:Icon src="sap-icon://activity-individual" class="sapUiSmallMarginEnd"/>
