@@ -139,6 +139,19 @@ sap.ui.define([], () => {
         },
 
         /**
+         * Get time task ID by code.
+         * @param {string} taskCode - Time task code (e.g., "AZ", "FZ3", "WZ0")
+         * @returns {string|null} Time task UUID or null if not found
+         */
+        getTaskIdByCode(taskCode) {
+            if (!taskCode || !_timeTasksCache) {
+                return null;
+            }
+            const task = _timeTasksCache.find(t => t.code === taskCode);
+            return task ? task.id : null;
+        },
+
+        /**
          * Get all cached time tasks.
          * @returns {Array} Array of time task objects
          */

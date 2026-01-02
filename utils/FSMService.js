@@ -115,9 +115,6 @@ class FSMService {
                 'X-Client-Version': destination.destinationConfiguration['URL.headers.X-Client-Version']
             };
 
-            console.log('FSMService: POST to', fullUrl);
-            console.log('FSMService: POST body:', JSON.stringify(data, null, 2));
-
             const response = await axios.post(fullUrl, data, {
                 params: queryParams,
                 headers: headers
@@ -138,6 +135,33 @@ class FSMService {
      */
     async createExpense(expenseData) {
         return this.postRequest('/Expense', expenseData, { dtos: 'Expense.17' });
+    }
+
+    /**
+     * Create Mileage in FSM.
+     * @param {Object} mileageData - Mileage payload
+     * @returns {Promise<Object>} Created mileage data
+     */
+    async createMileage(mileageData) {
+        return this.postRequest('/Mileage', mileageData, { dtos: 'Mileage.19' });
+    }
+
+    /**
+     * Create Material in FSM.
+     * @param {Object} materialData - Material payload
+     * @returns {Promise<Object>} Created material data
+     */
+    async createMaterial(materialData) {
+        return this.postRequest('/Material', materialData, { dtos: 'Material.22' });
+    }
+
+    /**
+     * Create TimeEffort in FSM.
+     * @param {Object} timeEffortData - TimeEffort payload
+     * @returns {Promise<Object>} Created time effort data
+     */
+    async createTimeEffort(timeEffortData) {
+        return this.postRequest('/TimeEffort', timeEffortData, { dtos: 'TimeEffort.17' });
     }
 
     /**

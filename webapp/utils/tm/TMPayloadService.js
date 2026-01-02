@@ -26,10 +26,12 @@
  * @file TMPayloadService.js
  * @module mobileappsc/utils/tm/TMPayloadService
  * @requires mobileappsc/utils/tm/TMCreationService
+ * @requires mobileappsc/utils/services/TimeTaskService
  */
 sap.ui.define([
-    "mobileappsc/utils/tm/TMCreationService"
-], (TMCreationService) => {
+    "mobileappsc/utils/tm/TMCreationService",
+    "mobileappsc/utils/services/TimeTaskService"
+], (TMCreationService, TimeTaskService) => {
     "use strict";
 
     return {
@@ -249,8 +251,14 @@ sap.ui.define([
                 driver: false,
                 privateCar: false,
                 udfValues: [{
-                    udfMeta: {
+                    meta: {
                         externalId: "Z_Mileage_MatID"
+                    },
+                    value: itemExternalId || ""
+                },
+                {
+                    meta: {
+                        externalId: "Z_Mileage_Type"
                     },
                     value: itemExternalId || ""
                 }],
@@ -296,7 +304,7 @@ sap.ui.define([
                 internalRemarks: null,
                 breakStartDateTime: null,
                 udfValues: [{
-                    udfMeta: {
+                    meta: {
                         externalId: "Z_TimeEffort_MatID"
                     },
                     value: "Z13000000"
@@ -321,14 +329,18 @@ sap.ui.define([
                 if (!entry || !entry.taskCode) return null;
                 
                 const startTime = new Date(currentTime);
-                const endTime = new Date(startTime.getTime() + (entry.duration || 0) * 60 * 1000);
+                const durationMinutes = parseInt(entry.duration) || 0;
+                const endTime = new Date(startTime.getTime() + durationMinutes * 60 * 1000);
                 currentTime = endTime; // Next entry starts where this one ends
+                
+                // Get task UUID from code
+                const taskId = TimeTaskService.getTaskIdByCode(entry.taskCode);
                 
                 return {
                     chargeOption: "CHARGEABLE",
                     ...timeEffortConstants,
                     orgLevel: orgLevelId || "",
-                    task: { code: entry.taskCode },
+                    task: taskId,
                     startDateTime: formatDateTime(startTime),
                     endDateTime: formatDateTime(endTime),
                     remarks: entry.remarks || "",
@@ -340,15 +352,17 @@ sap.ui.define([
             };
 
             // Build arrays for each time type
+            // Order: AZ (Arbeitszeit) first, then FZ (Fahrzeit), then WZ (Wartezeit)
+            // Times are sequential - each starts where the previous ends
+            const timeEffortsAZ = (oEntry.timeEffortsAZ || [])
+                .map(buildTimeEffortPayload)
+                .filter(e => e !== null);
+
             const timeEffortsFZ = (oEntry.timeEffortsFZ || [])
                 .map(buildTimeEffortPayload)
                 .filter(e => e !== null);
             
             const timeEffortsWZ = (oEntry.timeEffortsWZ || [])
-                .map(buildTimeEffortPayload)
-                .filter(e => e !== null);
-            
-            const timeEffortsAZ = (oEntry.timeEffortsAZ || [])
                 .map(buildTimeEffortPayload)
                 .filter(e => e !== null);
 
@@ -359,7 +373,7 @@ sap.ui.define([
                     inactive: false,
                     orgLevel: orgLevelId || "",
                     item: itemExternalId ? { externalId: itemExternalId } : null,
-                    quantity: oEntry.quantity || 0,
+                    quantity: parseFloat(oEntry.quantity) || 0,
                     createPerson: {
                         externalId: technicianExternalId
                     },

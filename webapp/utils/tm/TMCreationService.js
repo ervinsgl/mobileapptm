@@ -307,7 +307,7 @@ sap.ui.define([
             const defaultTech = this._defaultTechnician;
             const defaultExpenseType = this._defaultExpenseType;
             return {
-                type: "Expense Report",
+                type: "Expense",
                 icon: "sap-icon://money-bills",
                 expanded: true,
                 saveButtonText: "Create",
@@ -343,11 +343,11 @@ sap.ui.define([
             const defaultItem = this._defaultItem;
             const defaultQuantity = this._defaultQuantity;
             return {
-                type: "Mileage Report",
+                type: "Mileage",
                 icon: "sap-icon://car-rental",
                 expanded: true,
-                saveButtonText: "Save",
-                saveButtonIcon: "sap-icon://save",
+                saveButtonText: "Create",
+                saveButtonIcon: "sap-icon://create",
                 saveButtonType: "Emphasized",
                 saveButtonState: "unsaved",
                 technicianId: defaultTech ? defaultTech.id : "",
@@ -380,8 +380,8 @@ sap.ui.define([
                 type: "Time & Material",
                 icon: "sap-icon://checklist-item-2",
                 expanded: true,
-                saveButtonText: "Save",
-                saveButtonIcon: "sap-icon://save",
+                saveButtonText: "Create",
+                saveButtonIcon: "sap-icon://create",
                 saveButtonType: "Emphasized",
                 saveButtonState: "unsaved",
                 technicianId: defaultTech ? defaultTech.id : "",
@@ -453,10 +453,10 @@ sap.ui.define([
                         if (!entry.item) errors.push(`Entry ${index + 1}: Item is required`);
                         if (!entry.quantity) errors.push(`Entry ${index + 1}: Quantity is required`);
                         break;
-                    case "Expense Report":
+                    case "Expense":
                         if (!entry.itemDisplay) errors.push(`Entry ${index + 1}: Type is required`);
                         break;
-                    case "Mileage Report":
+                    case "Mileage":
                         if (!entry.distance) errors.push(`Entry ${index + 1}: Distance is required`);
                         break;
                     case "Time & Material":

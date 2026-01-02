@@ -353,12 +353,21 @@ sap.ui.define([
             const oEntry = oContext.getObject();
             const sCurrentState = oEntry.saveButtonState || "unsaved";
 
-            console.log('TMDialogMixin onSaveEntry - Entry type:', oEntry.type, '- State:', sCurrentState);
-
             // Handle Expense with direct confirmation flow
             if (oEntry.type === "Expense" || oEntry.type === "Expense Report") {
-                console.log('TMDialogMixin: Showing Expense confirmation');
                 this._showExpenseConfirmation(oEntry, sPath, oModel);
+                return;
+            }
+
+            // Handle Mileage with direct confirmation flow
+            if (oEntry.type === "Mileage" || oEntry.type === "Mileage Report") {
+                this._showMileageConfirmation(oEntry, sPath, oModel);
+                return;
+            }
+
+            // Handle Time & Material with direct confirmation flow
+            if (oEntry.type === "Time & Material") {
+                this._showTimeAndMaterialConfirmation(oEntry, sPath, oModel);
                 return;
             }
 
@@ -479,6 +488,217 @@ sap.ui.define([
                 console.error('TMDialogMixin: Error submitting expense:', error);
                 MessageBox.error(
                     `Error creating expense: ${error.message}`,
+                    { title: "Error" }
+                );
+            }
+        },
+
+        /**
+         * Show Mileage confirmation dialog with preview
+         * @private
+         */
+        _showMileageConfirmation(oEntry, sPath, oModel) {
+            const oDialogModel = this._tmCreateDialog.getModel("createTM");
+            const activityId = oDialogModel.getProperty("/activityId");
+            const activityCode = oDialogModel.getProperty("/activityExternalId");
+            const orgLevelId = oDialogModel.getProperty("/orgLevelId");
+
+            const payload = TMPayloadService.buildPayload(oEntry, activityId, orgLevelId);
+            
+            // Format preview text
+            const previewText = this._formatMileagePreview(oEntry, payload);
+
+            MessageBox.confirm(previewText, {
+                title: "Confirm Mileage Report",
+                actions: ["Send for Approval", MessageBox.Action.CLOSE],
+                emphasizedAction: "Send for Approval",
+                styleClass: "sapUiSizeCompact",
+                onClose: (sAction) => {
+                    if (sAction === "Send for Approval") {
+                        this._submitMileageToFSM(payload, oEntry, sPath, oModel, activityCode);
+                    }
+                }
+            });
+        },
+
+        /**
+         * Format mileage preview for confirmation dialog
+         * @private
+         */
+        _formatMileagePreview(oEntry, payload) {
+            const lines = [
+                `Type: ${oEntry.itemDisplay || 'N/A'}`,
+                `Technician: ${oEntry.technicianDisplay || 'N/A'}`,
+                `Distance: ${oEntry.distance || 0} KM`,
+                `Duration: ${oEntry.travelDuration || 0} min`,
+                `Remarks: ${oEntry.remarks || 'N/A'}`,
+                '',
+                'Send this mileage report for approval?'
+            ];
+            return lines.join('\n');
+        },
+
+        /**
+         * Submit mileage to FSM API
+         * @private
+         */
+        async _submitMileageToFSM(payload, oEntry, sPath, oModel, activityCode) {
+            try {
+                // Show busy indicator
+                sap.ui.core.BusyIndicator.show(0);
+
+                const response = await fetch('/api/create-mileage', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                sap.ui.core.BusyIndicator.hide();
+
+                if (result.success) {
+                    // Get activity ID before closing dialog
+                    const activityId = oModel.getProperty("/activityId");
+                    
+                    // Close the Create dialog
+                    TMDialogService.closeTMCreationDialog();
+                    
+                    // Refresh T&M Reports data
+                    await this._refreshTMReportsAfterCreate(activityId);
+                    
+                    MessageBox.success(
+                        `Mileage Report created successfully for Activity ${activityCode}`,
+                        { title: "Success" }
+                    );
+                } else {
+                    MessageBox.error(
+                        `Failed to create mileage: ${result.message || 'Unknown error'}`,
+                        { title: "Error" }
+                    );
+                }
+
+            } catch (error) {
+                sap.ui.core.BusyIndicator.hide();
+                console.error('TMDialogMixin: Error submitting mileage:', error);
+                MessageBox.error(
+                    `Error creating mileage: ${error.message}`,
+                    { title: "Error" }
+                );
+            }
+        },
+
+        /**
+         * Show Time & Material confirmation dialog with preview
+         * @private
+         */
+        _showTimeAndMaterialConfirmation(oEntry, sPath, oModel) {
+            const oDialogModel = this._tmCreateDialog.getModel("createTM");
+            const activityId = oDialogModel.getProperty("/activityId");
+            const activityCode = oDialogModel.getProperty("/activityExternalId");
+            const orgLevelId = oDialogModel.getProperty("/orgLevelId");
+
+            const payload = TMPayloadService.buildPayload(oEntry, activityId, orgLevelId);
+            
+            // Format preview text
+            const previewText = this._formatTimeAndMaterialPreview(oEntry, payload);
+
+            MessageBox.confirm(previewText, {
+                title: "Confirm Time & Material Report",
+                actions: ["Send for Approval", MessageBox.Action.CLOSE],
+                emphasizedAction: "Send for Approval",
+                styleClass: "sapUiSizeCompact",
+                onClose: (sAction) => {
+                    if (sAction === "Send for Approval") {
+                        this._submitTimeAndMaterialToFSM(payload, oEntry, sPath, oModel, activityCode);
+                    }
+                }
+            });
+        },
+
+        /**
+         * Format Time & Material preview for confirmation dialog
+         * @private
+         */
+        _formatTimeAndMaterialPreview(oEntry, payload) {
+            const timeEffortCount = (oEntry.timeEffortsAZ?.length || 0) + 
+                                    (oEntry.timeEffortsFZ?.length || 0) + 
+                                    (oEntry.timeEffortsWZ?.length || 0);
+            
+            const lines = [
+                `Material: ${oEntry.itemDisplay || 'N/A'}`,
+                `Quantity: ${oEntry.quantity || 0}`,
+                `Technician: ${oEntry.technicianDisplay || 'N/A'}`,
+                `Time Efforts: ${timeEffortCount} entries`,
+                `  - Arbeitszeit (AZ): ${oEntry.timeEffortsAZ?.length || 0}`,
+                `  - Fahrzeit (FZ): ${oEntry.timeEffortsFZ?.length || 0}`,
+                `  - Wartezeit (WZ): ${oEntry.timeEffortsWZ?.length || 0}`,
+                '',
+                'Send this Time & Material report for approval?'
+            ];
+            return lines.join('\n');
+        },
+
+        /**
+         * Submit Time & Material to FSM API (placeholder - returns to T&M Reports for now)
+         * @private
+         */
+        async _submitTimeAndMaterialToFSM(payload, oEntry, sPath, oModel, activityCode) {
+            try {
+                // Show busy indicator
+                sap.ui.core.BusyIndicator.show(0);
+
+                // Payload contains: material, timeEffortsFZ, timeEffortsWZ, timeEffortsAZ
+                const response = await fetch('/api/create-time-material', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                sap.ui.core.BusyIndicator.hide();
+
+                if (result.success || result.partialSuccess) {
+                    // Get activity ID before closing dialog
+                    const activityId = oModel.getProperty("/activityId");
+                    
+                    // Close the Create dialog
+                    TMDialogService.closeTMCreationDialog();
+                    
+                    // Refresh T&M Reports data
+                    await this._refreshTMReportsAfterCreate(activityId);
+                    
+                    // Count created items
+                    const timeEffortCount = result.data?.timeEfforts?.length || 0;
+                    
+                    if (result.partialSuccess) {
+                        MessageBox.warning(
+                            `Time & Material created with some errors for Activity ${activityCode}.\n` +
+                            `Material: Created\n` +
+                            `Time Efforts: ${timeEffortCount} created, ${result.data?.errors?.length || 0} failed`,
+                            { title: "Partial Success" }
+                        );
+                    } else {
+                        MessageBox.success(
+                            `Time & Material created successfully for Activity ${activityCode}.\n` +
+                            `Material: 1\n` +
+                            `Time Efforts: ${timeEffortCount}`,
+                            { title: "Success" }
+                        );
+                    }
+                } else {
+                    MessageBox.error(
+                        `Failed to create Time & Material: ${result.message || 'Unknown error'}`,
+                        { title: "Error" }
+                    );
+                }
+
+            } catch (error) {
+                sap.ui.core.BusyIndicator.hide();
+                console.error('TMDialogMixin: Error submitting Time & Material:', error);
+                MessageBox.error(
+                    `Error creating Time & Material: ${error.message}`,
                     { title: "Error" }
                 );
             }

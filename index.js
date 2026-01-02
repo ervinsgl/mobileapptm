@@ -255,11 +255,7 @@ app.post("/api/create-expense", async (req, res) => {
     }
 
     try {
-        console.log('Backend: Creating expense with data:', JSON.stringify(expenseData, null, 2));
-        
         const result = await FSMService.createExpense(expenseData);
-        
-        console.log('Backend: Expense created successfully:', result);
         
         res.json({
             success: true,
@@ -273,6 +269,147 @@ app.post("/api/create-expense", async (req, res) => {
             success: false,
             message: error.response?.data?.message || 'Failed to create expense',
             error: error.response?.data || error.message
+        });
+    }
+});
+
+// Create Mileage Report
+app.post("/api/create-mileage", async (req, res) => {
+    const mileageData = req.body;
+
+    if (!mileageData || !mileageData.object) {
+        return res.status(400).json({ message: 'Mileage data is required' });
+    }
+
+    try {
+        const result = await FSMService.createMileage(mileageData);
+        
+        res.json({
+            success: true,
+            data: result,
+            message: 'Mileage created successfully'
+        });
+
+    } catch (error) {
+        console.error("Error creating mileage:", error.response?.data || error.message);
+        res.status(error.response?.status || 500).json({
+            success: false,
+            message: error.response?.data?.message || 'Failed to create mileage',
+            error: error.response?.data || error.message
+        });
+    }
+});
+
+// Create Material
+app.post("/api/create-material", async (req, res) => {
+    const materialData = req.body;
+
+    if (!materialData || !materialData.object) {
+        return res.status(400).json({ message: 'Material data is required' });
+    }
+
+    try {
+        const result = await FSMService.createMaterial(materialData);
+        
+        res.json({
+            success: true,
+            data: result,
+            message: 'Material created successfully'
+        });
+
+    } catch (error) {
+        console.error("Error creating material:", error.response?.data || error.message);
+        res.status(error.response?.status || 500).json({
+            success: false,
+            message: error.response?.data?.message || 'Failed to create material',
+            error: error.response?.data || error.message
+        });
+    }
+});
+
+// Create TimeEffort
+app.post("/api/create-time-effort", async (req, res) => {
+    const timeEffortData = req.body;
+
+    if (!timeEffortData || !timeEffortData.object) {
+        return res.status(400).json({ message: 'TimeEffort data is required' });
+    }
+
+    try {
+        const result = await FSMService.createTimeEffort(timeEffortData);
+        
+        res.json({
+            success: true,
+            data: result,
+            message: 'TimeEffort created successfully'
+        });
+
+    } catch (error) {
+        console.error("Error creating time effort:", error.response?.data || error.message);
+        res.status(error.response?.status || 500).json({
+            success: false,
+            message: error.response?.data?.message || 'Failed to create time effort',
+            error: error.response?.data || error.message
+        });
+    }
+});
+
+// Create Time & Material (combined: 1 Material + multiple TimeEfforts)
+app.post("/api/create-time-material", async (req, res) => {
+    const { material, timeEffortsFZ, timeEffortsWZ, timeEffortsAZ } = req.body;
+
+    if (!material || !material.object) {
+        return res.status(400).json({ message: 'Material data is required' });
+    }
+
+    const results = {
+        material: null,
+        timeEfforts: [],
+        errors: []
+    };
+
+    try {
+        // 1. Create Material first
+        results.material = await FSMService.createMaterial(material);
+
+        // 2. Create all TimeEfforts in order: AZ first, then FZ, then WZ
+        const allTimeEfforts = [
+            ...(timeEffortsAZ || []),
+            ...(timeEffortsFZ || []),
+            ...(timeEffortsWZ || [])
+        ];
+
+        for (const timeEffort of allTimeEfforts) {
+            try {
+                const teResult = await FSMService.createTimeEffort(timeEffort);
+                results.timeEfforts.push({ success: true, data: teResult });
+            } catch (teError) {
+                results.errors.push({
+                    type: 'TimeEffort',
+                    task: timeEffort.task?.code,
+                    error: teError.response?.data?.message || teError.message
+                });
+            }
+        }
+
+        const hasErrors = results.errors.length > 0;
+        
+        res.json({
+            success: !hasErrors,
+            partialSuccess: hasErrors && results.timeEfforts.length > 0,
+            data: results,
+            message: hasErrors 
+                ? `Created with ${results.errors.length} error(s)` 
+                : 'Time & Material created successfully'
+        });
+
+    } catch (error) {
+        console.error("Error creating Time & Material:", error.response?.data || error.message);
+        res.status(error.response?.status || 500).json({
+            success: false,
+            message: error.response?.data?.message || 'Failed to create Time & Material',
+            error: error.response?.data || error.message,
+            partialResults: results
         });
     }
 });
