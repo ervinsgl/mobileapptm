@@ -182,7 +182,13 @@ sap.ui.define([
             const oEntry = oContext.getObject();
 
             if (bCurrentEditMode) {
-                // Exiting edit mode -> Send for Approval
+                // Exiting edit mode -> Show confirmation for update
+                if (sType === "Expense") {
+                    this._showExpenseUpdateConfirmation(oEntry, sPath, oModel);
+                    return;
+                }
+
+                // For other types, show JSON (existing behavior)
                 const editedValues = TMEditService.getEditedValues(sType, oModel, sPath);
                 const payload = TMEditService.buildUpdatePayload(sType, oEntry.id, editedValues);
                 const jsonString = TMEditService.formatPayloadJSON(payload);
@@ -488,6 +494,104 @@ sap.ui.define([
                 console.error('TMDialogMixin: Error submitting expense:', error);
                 MessageBox.error(
                     `Error creating expense: ${error.message}`,
+                    { title: "Error" }
+                );
+            }
+        },
+
+        /**
+         * Show Expense update confirmation dialog with preview
+         * @private
+         */
+        _showExpenseUpdateConfirmation(oEntry, sPath, oModel) {
+            const editedValues = TMEditService.getEditedValues("Expense", oModel, sPath);
+            
+            // Build payload without ID (ID goes in URL)
+            const payload = {
+                date: editedValues.date,
+                externalAmount: { amount: parseFloat(editedValues.externalAmount) || 0, currency: "EUR" },
+                internalAmount: { amount: parseFloat(editedValues.internalAmount) || 0, currency: "EUR" },
+                remarks: editedValues.remarks || ""
+            };
+            
+            // Format preview text
+            const previewText = this._formatExpenseUpdatePreview(oEntry, payload);
+
+            MessageBox.confirm(previewText, {
+                title: "Confirm Expense Update",
+                actions: ["Send for Approval", MessageBox.Action.CLOSE],
+                emphasizedAction: "Send for Approval",
+                styleClass: "sapUiSizeCompact",
+                onClose: (sAction) => {
+                    if (sAction === "Send for Approval") {
+                        this._submitExpenseUpdate(oEntry.id, payload, sPath, oModel);
+                    }
+                }
+            });
+        },
+
+        /**
+         * Format expense update preview for confirmation dialog
+         * @private
+         */
+        _formatExpenseUpdatePreview(oEntry, payload) {
+            const lines = [
+                `Expense ID: ${oEntry.id}`,
+                `Type: ${oEntry.expenseTypeDisplayText || 'N/A'}`,
+                '',
+                'Updated Values:',
+                `Date: ${payload.date || 'N/A'}`,
+                `External Amount: ${payload.externalAmount?.amount || 0} EUR`,
+                `Internal Amount: ${payload.internalAmount?.amount || 0} EUR`,
+                `Remarks: ${payload.remarks || 'N/A'}`,
+                '',
+                'Send this update for approval?'
+            ];
+            return lines.join('\n');
+        },
+
+        /**
+         * Submit expense update to FSM API
+         * @private
+         */
+        async _submitExpenseUpdate(expenseId, payload, sPath, oModel) {
+            try {
+                sap.ui.core.BusyIndicator.show(0);
+
+                const response = await fetch(`/api/update-expense/${expenseId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                sap.ui.core.BusyIndicator.hide();
+
+                if (result.success) {
+                    // Exit edit mode
+                    oModel.setProperty(sPath + "/editMode", false);
+                    
+                    // Refresh T&M Reports data
+                    const activityId = oModel.getProperty("/activityId");
+                    await this._refreshTMReportsAfterCreate(activityId);
+                    
+                    MessageBox.success(
+                        `Expense updated successfully`,
+                        { title: "Success" }
+                    );
+                } else {
+                    MessageBox.error(
+                        `Failed to update expense: ${result.message || 'Unknown error'}`,
+                        { title: "Error" }
+                    );
+                }
+
+            } catch (error) {
+                sap.ui.core.BusyIndicator.hide();
+                console.error('TMDialogMixin: Error updating expense:', error);
+                MessageBox.error(
+                    `Error updating expense: ${error.message}`,
                     { title: "Error" }
                 );
             }

@@ -90,7 +90,7 @@
                                     <core:Icon src="{= ${dialog>type} === 'Time Effort' ? 'sap-icon://time-entry-request' : ${dialog>type} === 'Material' ? 'sap-icon://product' : ${dialog>type} === 'Expense' ? 'sap-icon://money-bills' : 'sap-icon://car-rental'}" class="sapUiSmallMarginEnd"/>
                                     <Title text="{dialog>entryHeaderText}" level="H5"/>
                                     <ToolbarSpacer/>
-                                    <Button text="{= ${dialog>editMode} ? 'Send for Approval' : 'Edit T&amp;M Entry'}" type="Emphasized" icon="{= ${dialog>editMode} ? 'sap-icon://paper-plane' : 'sap-icon://edit'}" press=".onToggleEditMode" visible="{= ${dialog>decisionStatus} === 'PENDING'}" class="sapUiTinyMarginEnd"/>
+                                    <Button text="{= ${dialog>editMode} ? 'Update' : 'Edit T&amp;M Entry'}" type="Emphasized" icon="{= ${dialog>editMode} ? 'sap-icon://save' : 'sap-icon://edit'}" press=".onToggleEditMode" visible="{= ${dialog>decisionStatus} === 'PENDING'}" class="sapUiTinyMarginEnd"/>
                                     <ObjectStatus text="{dialog>decisionStatusText}" state="{dialog>decisionStatusState}" class="decisionStatusValue sapUiSmallMarginEnd"/>
                                     <Label text="ID: {dialog>id}"/>
                                 </OverflowToolbar>

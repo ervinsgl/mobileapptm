@@ -129,6 +129,60 @@ class FSMService {
     }
 
     /**
+     * Make PATCH request to FSM API.
+     * @param {string} path - API path (e.g., '/Expense/ID')
+     * @param {Object} data - Request body
+     * @param {Object} params - Query parameters
+     * @returns {Promise<Object>} Response data
+     */
+    async patchRequest(path, data, params = {}) {
+        try {
+            const destination = await DestinationService.getDestination('FSM_S4E');
+            const token = await TokenCache.getToken(destination);
+
+            const baseUrl = destination.destinationConfiguration.URL;
+            const fullUrl = `${baseUrl}/api/data/v4${path}`;
+
+            const queryParams = {
+                ...params,
+                forceUpdate: true,
+                account: destination.destinationConfiguration.account || this.config.account,
+                company: destination.destinationConfiguration.company || this.config.company
+            };
+
+            const headers = {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+                'X-Account-ID': destination.destinationConfiguration['URL.headers.X-Account-ID'],
+                'X-Company-ID': destination.destinationConfiguration['URL.headers.X-Company-ID'],
+                'X-Client-ID': destination.destinationConfiguration['URL.headers.X-Client-ID'],
+                'X-Client-Version': destination.destinationConfiguration['URL.headers.X-Client-Version']
+            };
+
+            const response = await axios.patch(fullUrl, data, {
+                params: queryParams,
+                headers: headers
+            });
+
+            return response.data;
+
+        } catch (error) {
+            console.error('FSMService: PATCH Error:', error.response?.data || error.message);
+            throw error;
+        }
+    }
+
+    /**
+     * Update Expense in FSM.
+     * @param {string} expenseId - Expense ID
+     * @param {Object} expenseData - Expense update payload
+     * @returns {Promise<Object>} Updated expense data
+     */
+    async updateExpense(expenseId, expenseData) {
+        return this.patchRequest(`/Expense/${expenseId}`, expenseData, { dtos: 'Expense.17' });
+    }
+
+    /**
      * Create Expense in FSM.
      * @param {Object} expenseData - Expense payload
      * @returns {Promise<Object>} Created expense data

@@ -273,6 +273,34 @@ app.post("/api/create-expense", async (req, res) => {
     }
 });
 
+// Update Expense Report
+app.patch("/api/update-expense/:id", async (req, res) => {
+    const expenseId = req.params.id;
+    const expenseData = req.body;
+
+    if (!expenseId) {
+        return res.status(400).json({ message: 'Expense ID is required' });
+    }
+
+    try {
+        const result = await FSMService.updateExpense(expenseId, expenseData);
+        
+        res.json({
+            success: true,
+            data: result,
+            message: 'Expense updated successfully'
+        });
+
+    } catch (error) {
+        console.error("Error updating expense:", error.response?.data || error.message);
+        res.status(error.response?.status || 500).json({
+            success: false,
+            message: error.response?.data?.message || 'Failed to update expense',
+            error: error.response?.data || error.message
+        });
+    }
+});
+
 // Create Mileage Report
 app.post("/api/create-mileage", async (req, res) => {
     const mileageData = req.body;
