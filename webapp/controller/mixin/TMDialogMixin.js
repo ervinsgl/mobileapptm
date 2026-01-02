@@ -119,12 +119,12 @@ sap.ui.define([
                 }
                 
                 // Expense: type name
-                if (report.type === "Expense" && report.fullData?.type) {
+                if ((report.type === "Expense" || report.type === "Expense Report") && report.fullData?.type) {
                     report.expenseTypeDisplayText = ExpenseTypeService.getExpenseTypeDisplayTextById(report.fullData.type);
                 }
                 
                 // Mileage: type from UDF
-                if (report.type === "Mileage") {
+                if (report.type === "Mileage" || report.type === "Mileage Report") {
                     const mileageTypeValue = this._getUdfValueByExternalId(report.udfValues, "Z_Mileage_MatID");
                     if (mileageTypeValue) {
                         report.mileageTypeDisplayText = ItemService.getItemDisplayTextByExternalId(mileageTypeValue);
@@ -353,6 +353,16 @@ sap.ui.define([
             const oEntry = oContext.getObject();
             const sCurrentState = oEntry.saveButtonState || "unsaved";
 
+            console.log('TMDialogMixin onSaveEntry - Entry type:', oEntry.type, '- State:', sCurrentState);
+
+            // Handle Expense with direct confirmation flow
+            if (oEntry.type === "Expense" || oEntry.type === "Expense Report") {
+                console.log('TMDialogMixin: Showing Expense confirmation');
+                this._showExpenseConfirmation(oEntry, sPath, oModel);
+                return;
+            }
+
+            // Standard flow for other entry types
             switch (sCurrentState) {
                 case "unsaved":
                     oModel.setProperty(sPath + "/saveButtonState", "ready");
@@ -379,7 +389,184 @@ sap.ui.define([
         },
 
         /**
-         * Show entry JSON in dialog
+         * Show Expense confirmation dialog with preview
+         * @private
+         */
+        _showExpenseConfirmation(oEntry, sPath, oModel) {
+            const oDialogModel = this._tmCreateDialog.getModel("createTM");
+            const activityId = oDialogModel.getProperty("/activityId");
+            const activityCode = oDialogModel.getProperty("/activityExternalId");
+            const orgLevelId = oDialogModel.getProperty("/orgLevelId");
+
+            const payload = TMPayloadService.buildPayload(oEntry, activityId, orgLevelId);
+            
+            // Format preview text
+            const previewText = this._formatExpensePreview(oEntry, payload);
+
+            MessageBox.confirm(previewText, {
+                title: "Confirm Expense Report",
+                actions: ["Send for Approval", MessageBox.Action.CLOSE],
+                emphasizedAction: "Send for Approval",
+                styleClass: "sapUiSizeCompact",
+                onClose: (sAction) => {
+                    if (sAction === "Send for Approval") {
+                        this._submitExpenseToFSM(payload, oEntry, sPath, oModel, activityCode);
+                    }
+                }
+            });
+        },
+
+        /**
+         * Format expense preview for confirmation dialog
+         * @private
+         */
+        _formatExpensePreview(oEntry, payload) {
+            const lines = [
+                `Type: ${oEntry.expenseTypeDisplay || 'N/A'}`,
+                `Technician: ${oEntry.technicianDisplay || 'N/A'}`,
+                `Date: ${payload.date || 'N/A'}`,
+                `External Amount: ${payload.externalAmount?.amount || 0} EUR`,
+                `Internal Amount: ${payload.internalAmount?.amount || 0} EUR`,
+                `Remarks: ${oEntry.remarks || 'N/A'}`,
+                '',
+                'Send this expense for approval?'
+            ];
+            return lines.join('\n');
+        },
+
+        /**
+         * Submit expense to FSM API
+         * @private
+         */
+        async _submitExpenseToFSM(payload, oEntry, sPath, oModel, activityCode) {
+            try {
+                // Show busy indicator
+                sap.ui.core.BusyIndicator.show(0);
+
+                const response = await fetch('/api/create-expense', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                sap.ui.core.BusyIndicator.hide();
+
+                if (result.success) {
+                    // Get activity ID before closing dialog
+                    const activityId = oModel.getProperty("/activityId");
+                    
+                    // Close the Create dialog
+                    TMDialogService.closeTMCreationDialog();
+                    
+                    // Refresh T&M Reports data
+                    await this._refreshTMReportsAfterCreate(activityId);
+                    
+                    MessageBox.success(
+                        `Expense Report created successfully for Activity ${activityCode}`,
+                        { title: "Success" }
+                    );
+                } else {
+                    MessageBox.error(
+                        `Failed to create expense: ${result.message || 'Unknown error'}`,
+                        { title: "Error" }
+                    );
+                }
+
+            } catch (error) {
+                sap.ui.core.BusyIndicator.hide();
+                console.error('TMDialogMixin: Error submitting expense:', error);
+                MessageBox.error(
+                    `Error creating expense: ${error.message}`,
+                    { title: "Error" }
+                );
+            }
+        },
+
+        /**
+         * Refresh T&M Reports after creating a new entry
+         * @private
+         */
+        async _refreshTMReportsAfterCreate(activityId) {
+            try {
+                // Load fresh T&M data
+                const tmData = await TMDataService.loadTMReports(activityId);
+                
+                // Preload lookups
+                await UdfMetaService.preloadUdfMetaForReports(tmData.reports);
+                await ApprovalService.preloadStatusesForReports(tmData.reports);
+                
+                const personIds = tmData.reports
+                    .map(r => r.createPerson)
+                    .filter(id => id && id !== 'N/A');
+                if (personIds.length > 0) {
+                    await PersonService.preloadPersonsById(personIds);
+                }
+                
+                // Enrich each report
+                tmData.reports.forEach(report => {
+                    report.editMode = false;
+                    
+                    // Person name
+                    if (report.createPerson) {
+                        report.createPersonDisplayText = PersonService.getPersonDisplayTextById(report.createPerson);
+                    } else {
+                        report.createPersonDisplayText = 'N/A';
+                    }
+                    
+                    // Time Effort: task name
+                    if (report.type === "Time Effort" && report.task) {
+                        report.taskDisplayText = TimeTaskService.getTaskDisplayTextById(report.task);
+                    }
+                    
+                    // Material: item name
+                    if (report.type === "Material" && report.fullData?.item) {
+                        report.itemDisplayText = ItemService.getItemDisplayTextById(report.fullData.item);
+                    }
+                    
+                    // Expense: type name
+                    if ((report.type === "Expense" || report.type === "Expense Report") && report.fullData?.type) {
+                        report.expenseTypeDisplayText = ExpenseTypeService.getExpenseTypeDisplayTextById(report.fullData.type);
+                    }
+                    
+                    // Mileage: type from UDF
+                    if (report.type === "Mileage" || report.type === "Mileage Report") {
+                        const mileageTypeValue = this._getUdfValueByExternalId(report.udfValues, "Z_Mileage_MatID");
+                        if (mileageTypeValue) {
+                            report.mileageTypeDisplayText = ItemService.getItemDisplayTextByExternalId(mileageTypeValue);
+                        } else {
+                            report.mileageTypeDisplayText = 'N/A';
+                        }
+                    }
+                    
+                    // Approval status
+                    const approvalStatus = ApprovalService.getStatusById(report.id);
+                    report.decisionStatus = approvalStatus;
+                    report.decisionStatusText = ApprovalService.getStatusDisplayText(approvalStatus);
+                    report.decisionStatusState = ApprovalService.getStatusState(approvalStatus);
+                    
+                    // Entry header
+                    report.entryHeaderText = this._buildEntryHeaderText(report);
+                });
+                
+                // Update the reports dialog model
+                if (this._tmReportsDialog) {
+                    const oDialogModel = this._tmReportsDialog.getModel("dialog");
+                    if (oDialogModel) {
+                        oDialogModel.setProperty("/reports", tmData.reports);
+                        oDialogModel.setProperty("/reportCount", tmData.totalCount);
+                    }
+                }
+                
+                console.log('TMDialogMixin: T&M Reports refreshed after create');
+            } catch (error) {
+                console.error('TMDialogMixin: Error refreshing T&M Reports:', error);
+            }
+        },
+
+        /**
+         * Show entry JSON in dialog (for other entry types)
          * @private
          */
         _showEntryJSON(oEntry) {

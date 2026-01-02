@@ -239,16 +239,23 @@ sap.ui.define([
                 MessageToast.show("Warning: Item search may not be available");
             }
 
-            // Load Expense Types and set default
+            // Load Expense Types and set default based on Activity Service Product
             let expenseTypeSuggestions = [];
             try {
                 await ExpenseTypeService.fetchExpenseTypes();
                 expenseTypeSuggestions = ExpenseTypeService.getExpenseTypesForDropdown();
                 
                 if (expenseTypeSuggestions.length > 0) {
-                    let defaultExpType = expenseTypeSuggestions.find(et => et.code === 'Z40000001');
+                    // Match ExpenseType code to Activity's Service Product externalId
+                    const serviceProductExtId = activityData.serviceProductExternalId;
+                    let defaultExpType = expenseTypeSuggestions.find(et => et.code === serviceProductExtId);
+                    
                     if (!defaultExpType) {
+                        // Fallback to first expense type if no match
                         defaultExpType = expenseTypeSuggestions[0];
+                        console.log('TMDialogService: No matching ExpenseType for ServiceProduct', serviceProductExtId, '- using fallback');
+                    } else {
+                        console.log('TMDialogService: Matched ExpenseType', defaultExpType.code, 'to ServiceProduct', serviceProductExtId);
                     }
                     
                     TMCreationService.setDefaultExpenseType({

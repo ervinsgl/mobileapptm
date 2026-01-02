@@ -86,6 +86,61 @@ class FSMService {
     }
 
     /**
+     * Make POST request to FSM API.
+     * @param {string} path - API path (e.g., '/Expense')
+     * @param {Object} data - Request body
+     * @param {Object} params - Query parameters
+     * @returns {Promise<Object>} API response
+     */
+    async postRequest(path, data, params = {}) {
+        try {
+            const destination = await DestinationService.getDestination('FSM_S4E');
+            const token = await TokenCache.getToken(destination);
+
+            const baseUrl = destination.destinationConfiguration.URL;
+            const fullUrl = `${baseUrl}/api/data/v4${path}`;
+
+            const queryParams = {
+                ...params,
+                account: destination.destinationConfiguration.account || this.config.account,
+                company: destination.destinationConfiguration.company || this.config.company
+            };
+
+            const headers = {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+                'X-Account-ID': destination.destinationConfiguration['URL.headers.X-Account-ID'],
+                'X-Company-ID': destination.destinationConfiguration['URL.headers.X-Company-ID'],
+                'X-Client-ID': destination.destinationConfiguration['URL.headers.X-Client-ID'],
+                'X-Client-Version': destination.destinationConfiguration['URL.headers.X-Client-Version']
+            };
+
+            console.log('FSMService: POST to', fullUrl);
+            console.log('FSMService: POST body:', JSON.stringify(data, null, 2));
+
+            const response = await axios.post(fullUrl, data, {
+                params: queryParams,
+                headers: headers
+            });
+
+            return response.data;
+
+        } catch (error) {
+            console.error('FSMService: POST Error:', error.response?.data || error.message);
+            throw error;
+        }
+    }
+
+    /**
+     * Create Expense in FSM.
+     * @param {Object} expenseData - Expense payload
+     * @returns {Promise<Object>} Created expense data
+     */
+    async createExpense(expenseData) {
+        return this.postRequest('/Expense', expenseData, { dtos: 'Expense.17' });
+    }
+
+    /**
      * Get activity by ID.
      * @param {string} activityId - Activity ID
      * @returns {Promise<Object>} Activity data
@@ -390,7 +445,7 @@ class FSMService {
                     `${mileage.distance} ${mileage.distanceUnit}` : 'N/A';
 
                 const routeText = mileage.source && mileage.destination ?
-                    `${mileage.source} → ${mileage.destination}` : 'N/A';
+                    `${mileage.source} â†’ ${mileage.destination}` : 'N/A';
 
                 // Calculate travel duration in minutes
                 let travelDurationMinutes = 'N/A';

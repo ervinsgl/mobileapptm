@@ -58,6 +58,13 @@ sap.ui.define([
         _defaultQuantity: null,
 
         /**
+         * Default expense type data.
+         * @type {Object|null}
+         * @private
+         */
+        _defaultExpenseType: null,
+
+        /**
          * Set activity planned start date.
          * @param {string} plannedStartDate - ISO datetime string from activity
          */
@@ -102,6 +109,29 @@ sap.ui.define([
          */
         clearDefaultQuantity() {
             this._defaultQuantity = null;
+        },
+
+        /**
+         * Set default expense type.
+         * @param {Object} expenseType - Expense type object {id, code, displayText}
+         */
+        setDefaultExpenseType(expenseType) {
+            this._defaultExpenseType = expenseType;
+        },
+
+        /**
+         * Get default expense type.
+         * @returns {Object|null} Expense type object or null
+         */
+        getDefaultExpenseType() {
+            return this._defaultExpenseType;
+        },
+
+        /**
+         * Clear default expense type.
+         */
+        clearDefaultExpenseType() {
+            this._defaultExpenseType = null;
         },
 
         /**
@@ -275,20 +305,21 @@ sap.ui.define([
          */
         createExpenseEntry() {
             const defaultTech = this._defaultTechnician;
-            const defaultItem = this._defaultItem;
+            const defaultExpenseType = this._defaultExpenseType;
             return {
                 type: "Expense Report",
                 icon: "sap-icon://money-bills",
                 expanded: true,
-                saveButtonText: "Save",
-                saveButtonIcon: "sap-icon://save",
+                saveButtonText: "Create",
+                saveButtonIcon: "sap-icon://create",
                 saveButtonType: "Emphasized",
                 saveButtonState: "unsaved",
                 technicianId: defaultTech ? defaultTech.id : "",
                 technicianExternalId: defaultTech ? defaultTech.externalId : "",
                 technicianDisplay: defaultTech ? defaultTech.displayText : "",
-                itemId: defaultItem ? defaultItem.id : "",
-                itemDisplay: defaultItem ? defaultItem.displayText : "",
+                expenseTypeId: defaultExpenseType ? defaultExpenseType.id : "",
+                expenseTypeCode: defaultExpenseType ? defaultExpenseType.code : "",
+                expenseTypeDisplay: defaultExpenseType ? defaultExpenseType.displayText : "",
                 externalAmountValue: 0,
                 internalAmountValue: 0,
                 chargeOption: "CHARGEABLE",

@@ -192,13 +192,13 @@
                                 </HBox>
                                 
                                 <!-- ===== EXPENSE LAYOUT (2-Column) ===== -->
-                                <HBox class="tmEntryContent" visible="{= ${createTM>type} === 'Expense Report'}" width="100%">
+                                <HBox class="tmEntryContent" visible="{= ${createTM>type} === 'Expense' || ${createTM>type} === 'Expense Report'}" width="100%">
                                     
                                     <!-- Col 1: Type, Technician -->
                                     <VBox class="tmColumn">
                                         <HBox class="tmFieldRow" width="100%">
                                             <Label text="Type:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{createTM>itemDisplay}" editable="false" class="tmFieldInputNarrow"/>
+                                            <Input value="{createTM>expenseTypeDisplay}" editable="false" class="tmFieldInputNarrow"/>
                                         </HBox>
                                         <HBox class="tmFieldRow" width="100%">
                                             <Label text="Technician:" design="Bold" class="tmFieldLabel"/>
@@ -226,7 +226,7 @@
                                 </HBox>
                                 
                                 <!-- ===== MILEAGE LAYOUT (2-Column) ===== -->
-                                <HBox class="tmEntryContent" visible="{= ${createTM>type} === 'Mileage Report'}" width="100%">
+                                <HBox class="tmEntryContent" visible="{= ${createTM>type} === 'Mileage' || ${createTM>type} === 'Mileage Report'}" width="100%">
                                     
                                     <!-- Col 1: Type, Technician -->
                                     <VBox class="tmColumn">

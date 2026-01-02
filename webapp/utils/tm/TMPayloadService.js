@@ -47,8 +47,10 @@ sap.ui.define([
                 case "Material":
                     return this.buildMaterialPayload(oEntry, activityId, orgLevelId);
                 case "Expense":
+                case "Expense Report":
                     return this.buildExpensePayload(oEntry, activityId, orgLevelId);
                 case "Mileage":
+                case "Mileage Report":
                     return this.buildMileagePayload(oEntry, activityId, orgLevelId);
                 case "Time & Material":
                     return this.buildTimeAndMaterialPayload(oEntry, activityId, orgLevelId);
@@ -159,11 +161,8 @@ sap.ui.define([
          * @returns {Object} Expense payload
          */
         buildExpensePayload(oEntry, activityId, orgLevelId) {
-            // Get item externalId from Service Product
-            let itemExternalId = "";
-            if (oEntry.itemDisplay) {
-                itemExternalId = oEntry.itemDisplay.split(' - ')[0];
-            }
+            // Get expense type ID (UUID)
+            const expenseTypeId = oEntry.expenseTypeId || "";
 
             // Get activity planned start date and extract date portion
             const activityPlannedStart = TMCreationService.getActivityPlannedStartDate();
@@ -187,7 +186,7 @@ sap.ui.define([
                 createPerson: {
                     externalId: oEntry.technicianExternalId || ""
                 },
-                type: itemExternalId ? { externalId: itemExternalId } : null,
+                type: expenseTypeId || null,
                 remarks: oEntry.remarks || "",
                 syncStatus: "REQUIRES_APPROVAL",
                 object: {

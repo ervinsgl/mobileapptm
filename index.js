@@ -246,6 +246,37 @@ app.post("/api/get-reported-items", async (req, res) => {
     }
 });
 
+// Create Expense Report
+app.post("/api/create-expense", async (req, res) => {
+    const expenseData = req.body;
+
+    if (!expenseData || !expenseData.object) {
+        return res.status(400).json({ message: 'Expense data is required' });
+    }
+
+    try {
+        console.log('Backend: Creating expense with data:', JSON.stringify(expenseData, null, 2));
+        
+        const result = await FSMService.createExpense(expenseData);
+        
+        console.log('Backend: Expense created successfully:', result);
+        
+        res.json({
+            success: true,
+            data: result,
+            message: 'Expense created successfully'
+        });
+
+    } catch (error) {
+        console.error("Error creating expense:", error.response?.data || error.message);
+        res.status(error.response?.status || 500).json({
+            success: false,
+            message: error.response?.data?.message || 'Failed to create expense',
+            error: error.response?.data || error.message
+        });
+    }
+});
+
 // Get all Persons (Technicians)
 app.post("/api/get-persons", async (req, res) => {
     try {
