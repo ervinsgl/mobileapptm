@@ -328,6 +328,34 @@ app.post("/api/create-mileage", async (req, res) => {
     }
 });
 
+// Update Mileage Report
+app.patch("/api/update-mileage/:id", async (req, res) => {
+    const mileageId = req.params.id;
+    const mileageData = req.body;
+
+    if (!mileageId) {
+        return res.status(400).json({ message: 'Mileage ID is required' });
+    }
+
+    try {
+        const result = await FSMService.updateMileage(mileageId, mileageData);
+        
+        res.json({
+            success: true,
+            data: result,
+            message: 'Mileage updated successfully'
+        });
+
+    } catch (error) {
+        console.error("Error updating mileage:", error.response?.data || error.message);
+        res.status(error.response?.status || 500).json({
+            success: false,
+            message: error.response?.data?.message || 'Failed to update mileage',
+            error: error.response?.data || error.message
+        });
+    }
+});
+
 // Create Material
 app.post("/api/create-material", async (req, res) => {
     const materialData = req.body;
@@ -377,6 +405,62 @@ app.post("/api/create-time-effort", async (req, res) => {
         res.status(error.response?.status || 500).json({
             success: false,
             message: error.response?.data?.message || 'Failed to create time effort',
+            error: error.response?.data || error.message
+        });
+    }
+});
+
+// Update Material
+app.patch("/api/update-material/:id", async (req, res) => {
+    const materialId = req.params.id;
+    const materialData = req.body;
+
+    if (!materialId) {
+        return res.status(400).json({ message: 'Material ID is required' });
+    }
+
+    try {
+        const result = await FSMService.updateMaterial(materialId, materialData);
+        
+        res.json({
+            success: true,
+            data: result,
+            message: 'Material updated successfully'
+        });
+
+    } catch (error) {
+        console.error("Error updating material:", error.response?.data || error.message);
+        res.status(error.response?.status || 500).json({
+            success: false,
+            message: error.response?.data?.message || 'Failed to update material',
+            error: error.response?.data || error.message
+        });
+    }
+});
+
+// Update TimeEffort
+app.patch("/api/update-time-effort/:id", async (req, res) => {
+    const timeEffortId = req.params.id;
+    const timeEffortData = req.body;
+
+    if (!timeEffortId) {
+        return res.status(400).json({ message: 'TimeEffort ID is required' });
+    }
+
+    try {
+        const result = await FSMService.updateTimeEffort(timeEffortId, timeEffortData);
+        
+        res.json({
+            success: true,
+            data: result,
+            message: 'TimeEffort updated successfully'
+        });
+
+    } catch (error) {
+        console.error("Error updating time effort:", error.response?.data || error.message);
+        res.status(error.response?.status || 500).json({
+            success: false,
+            message: error.response?.data?.message || 'Failed to update time effort',
             error: error.response?.data || error.message
         });
     }

@@ -201,6 +201,16 @@ class FSMService {
     }
 
     /**
+     * Update Mileage in FSM.
+     * @param {string} mileageId - Mileage ID
+     * @param {Object} mileageData - Mileage update payload
+     * @returns {Promise<Object>} Updated mileage data
+     */
+    async updateMileage(mileageId, mileageData) {
+        return this.patchRequest(`/Mileage/${mileageId}`, mileageData, { dtos: 'Mileage.19' });
+    }
+
+    /**
      * Create Material in FSM.
      * @param {Object} materialData - Material payload
      * @returns {Promise<Object>} Created material data
@@ -216,6 +226,26 @@ class FSMService {
      */
     async createTimeEffort(timeEffortData) {
         return this.postRequest('/TimeEffort', timeEffortData, { dtos: 'TimeEffort.17' });
+    }
+
+    /**
+     * Update Material in FSM.
+     * @param {string} materialId - Material ID
+     * @param {Object} materialData - Material update payload
+     * @returns {Promise<Object>} Updated material data
+     */
+    async updateMaterial(materialId, materialData) {
+        return this.patchRequest(`/Material/${materialId}`, materialData, { dtos: 'Material.22' });
+    }
+
+    /**
+     * Update TimeEffort in FSM.
+     * @param {string} timeEffortId - TimeEffort ID
+     * @param {Object} timeEffortData - TimeEffort update payload
+     * @returns {Promise<Object>} Updated time effort data
+     */
+    async updateTimeEffort(timeEffortId, timeEffortData) {
+        return this.patchRequest(`/TimeEffort/${timeEffortId}`, timeEffortData, { dtos: 'TimeEffort.17' });
     }
 
     /**

@@ -176,15 +176,10 @@
                                     
                                     <!-- Col 2: Date, Quantity -->
                                     <VBox class="tmColumn">
-                                        <!-- Date: View -->
-                                        <HBox class="tmFieldRow" visible="{= !${dialog>editMode}}">
+                                        <!-- Date: View (read-only) -->
+                                        <HBox class="tmFieldRow">
                                             <Label text="Date:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{dialog>dateText}" class="tmFieldValue"/>
-                                        </HBox>
-                                        <!-- Date: Edit -->
-                                        <HBox class="tmFieldRow" visible="{= ${dialog>editMode}}">
-                                            <Label text="Date:" design="Bold" class="tmFieldLabel"/>
-                                            <DatePicker value="{dialog>editDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="130px" class="tmFieldInput"/>
                                         </HBox>
                                         <!-- Quantity: View -->
                                         <HBox class="tmFieldRow" visible="{= !${dialog>editMode}}">
@@ -230,15 +225,10 @@
                                             <Label text="Technician:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{dialog>createPersonDisplayText}" class="tmFieldValue"/>
                                         </HBox>
-                                        <!-- Date: View -->
-                                        <HBox class="tmFieldRow" visible="{= !${dialog>editMode}}">
+                                        <!-- Date: View (read-only) -->
+                                        <HBox class="tmFieldRow">
                                             <Label text="Date:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{dialog>dateText}" class="tmFieldValue"/>
-                                        </HBox>
-                                        <!-- Date: Edit -->
-                                        <HBox class="tmFieldRow" visible="{= ${dialog>editMode}}">
-                                            <Label text="Date:" design="Bold" class="tmFieldLabel"/>
-                                            <DatePicker value="{dialog>editDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="130px" class="tmFieldInput"/>
                                         </HBox>
                                     </VBox>
                                     
@@ -298,21 +288,6 @@
                                             <Label text="Technician:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{dialog>createPersonDisplayText}" class="tmFieldValue"/>
                                         </HBox>
-                                        <!-- Route: View -->
-                                        <HBox class="tmFieldRow" visible="{= !${dialog>editMode}}">
-                                            <Label text="Route:" design="Bold" class="tmFieldLabel"/>
-                                            <Text text="{dialog>routeText}" class="tmFieldValue"/>
-                                        </HBox>
-                                        <!-- Source: Edit -->
-                                        <HBox class="tmFieldRow" visible="{= ${dialog>editMode}}">
-                                            <Label text="Source:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{dialog>editSource}" placeholder="Start location..." width="150px" class="tmFieldInput"/>
-                                        </HBox>
-                                        <!-- Destination: Edit -->
-                                        <HBox class="tmFieldRow" visible="{= ${dialog>editMode}}">
-                                            <Label text="Destination:" design="Bold" class="tmFieldLabel"/>
-                                            <Input value="{dialog>editDestination}" placeholder="End location..." width="150px" class="tmFieldInput"/>
-                                        </HBox>
                                         <!-- Distance: View -->
                                         <HBox class="tmFieldRow" visible="{= !${dialog>editMode}}">
                                             <Label text="Distance:" design="Bold" class="tmFieldLabel"/>
@@ -325,18 +300,8 @@
                                         </HBox>
                                     </VBox>
                                     
-                                    <!-- Col 2: Date, Duration, Travel Times -->
+                                    <!-- Col 2: Duration, Travel Times -->
                                     <VBox class="tmColumn">
-                                        <!-- Date: View -->
-                                        <HBox class="tmFieldRow" visible="{= !${dialog>editMode}}">
-                                            <Label text="Date:" design="Bold" class="tmFieldLabel"/>
-                                            <Text text="{dialog>dateText}" class="tmFieldValue"/>
-                                        </HBox>
-                                        <!-- Date: Edit -->
-                                        <HBox class="tmFieldRow" visible="{= ${dialog>editMode}}">
-                                            <Label text="Date:" design="Bold" class="tmFieldLabel"/>
-                                            <DatePicker value="{dialog>editDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="130px" class="tmFieldInput"/>
-                                        </HBox>
                                         <!-- Duration: View -->
                                         <HBox class="tmFieldRow" visible="{= !${dialog>editMode}}">
                                             <Label text="Duration:" design="Bold" class="tmFieldLabel"/>
@@ -363,16 +328,8 @@
                                         </HBox>
                                     </VBox>
                                     
-                                    <!-- Col 3: Driver, Private Car, Charge, Remarks -->
+                                    <!-- Col 3: Charge, Remarks -->
                                     <VBox class="tmColumn">
-                                        <HBox class="tmFieldRow">
-                                            <Label text="Driver:" design="Bold" class="tmFieldLabel"/>
-                                            <Text text="{dialog>driverText}" class="tmFieldValue"/>
-                                        </HBox>
-                                        <HBox class="tmFieldRow">
-                                            <Label text="Private Car:" design="Bold" class="tmFieldLabel"/>
-                                            <Text text="{dialog>privateCarText}" class="tmFieldValue"/>
-                                        </HBox>
                                         <HBox class="tmFieldRow">
                                             <Label text="Charge Option:" design="Bold" class="tmFieldLabel"/>
                                             <Text text="{dialog>chargeOption}" class="tmFieldValue"/>

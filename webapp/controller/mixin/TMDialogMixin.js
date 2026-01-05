@@ -188,17 +188,22 @@ sap.ui.define([
                     return;
                 }
 
-                // For other types, show JSON (existing behavior)
-                const editedValues = TMEditService.getEditedValues(sType, oModel, sPath);
-                const payload = TMEditService.buildUpdatePayload(sType, oEntry.id, editedValues);
-                const jsonString = TMEditService.formatPayloadJSON(payload);
+                if (sType === "Mileage") {
+                    this._showMileageUpdateConfirmation(oEntry, sPath, oModel);
+                    return;
+                }
 
-                MessageBox.information(jsonString, {
-                    title: `Updated ${sType} Entry Data`,
-                    contentWidth: "500px",
-                    styleClass: "sapUiSizeCompact"
-                });
+                if (sType === "Material") {
+                    this._showMaterialUpdateConfirmation(oEntry, sPath, oModel);
+                    return;
+                }
 
+                if (sType === "Time Effort") {
+                    this._showTimeEffortUpdateConfirmation(oEntry, sPath, oModel);
+                    return;
+                }
+
+                // Fallback - exit edit mode
                 oModel.setProperty(sPath + "/editMode", false);
             } else {
                 // Entering edit mode - initialize edit fields
@@ -506,9 +511,8 @@ sap.ui.define([
         _showExpenseUpdateConfirmation(oEntry, sPath, oModel) {
             const editedValues = TMEditService.getEditedValues("Expense", oModel, sPath);
             
-            // Build payload without ID (ID goes in URL)
+            // Build payload without ID (ID goes in URL) - date is read-only
             const payload = {
-                date: editedValues.date,
                 externalAmount: { amount: parseFloat(editedValues.externalAmount) || 0, currency: "EUR" },
                 internalAmount: { amount: parseFloat(editedValues.internalAmount) || 0, currency: "EUR" },
                 remarks: editedValues.remarks || ""
@@ -540,7 +544,6 @@ sap.ui.define([
                 `Type: ${oEntry.expenseTypeDisplayText || 'N/A'}`,
                 '',
                 'Updated Values:',
-                `Date: ${payload.date || 'N/A'}`,
                 `External Amount: ${payload.externalAmount?.amount || 0} EUR`,
                 `Internal Amount: ${payload.internalAmount?.amount || 0} EUR`,
                 `Remarks: ${payload.remarks || 'N/A'}`,
@@ -592,6 +595,318 @@ sap.ui.define([
                 console.error('TMDialogMixin: Error updating expense:', error);
                 MessageBox.error(
                     `Error updating expense: ${error.message}`,
+                    { title: "Error" }
+                );
+            }
+        },
+
+        /**
+         * Show Mileage update confirmation dialog with preview
+         * @private
+         */
+        _showMileageUpdateConfirmation(oEntry, sPath, oModel) {
+            const editedValues = TMEditService.getEditedValues("Mileage", oModel, sPath);
+            
+            // Calculate travelEndDateTime from travelStartDateTime + duration
+            const travelStartDateTime = oEntry.travelStartDateTime;
+            const durationMinutes = parseInt(editedValues.travelDuration) || 0;
+            
+            let travelEndDateTime = editedValues.travelEndDateTime;
+            if (travelStartDateTime && durationMinutes >= 0) {
+                const startDate = new Date(travelStartDateTime);
+                const endDate = new Date(startDate.getTime() + durationMinutes * 60 * 1000);
+                travelEndDateTime = endDate.toISOString().replace(/\.\d{3}Z$/, 'Z');
+            }
+            
+            // Build payload - only fields we are changing
+            const payload = {
+                distance: parseFloat(editedValues.distance) || 0,
+                distanceUnit: "KM",
+                travelStartDateTime: travelStartDateTime,
+                travelEndDateTime: travelEndDateTime,
+                remarks: editedValues.remarks || ""
+            };
+            
+            // Format preview text
+            const previewText = this._formatMileageUpdatePreview(oEntry, payload, durationMinutes);
+
+            MessageBox.confirm(previewText, {
+                title: "Confirm Mileage Update",
+                actions: ["Send for Approval", MessageBox.Action.CLOSE],
+                emphasizedAction: "Send for Approval",
+                styleClass: "sapUiSizeCompact",
+                onClose: (sAction) => {
+                    if (sAction === "Send for Approval") {
+                        this._submitMileageUpdate(oEntry.id, payload, sPath, oModel);
+                    }
+                }
+            });
+        },
+
+        /**
+         * Format mileage update preview for confirmation dialog
+         * @private
+         */
+        _formatMileageUpdatePreview(oEntry, payload, durationMinutes) {
+            const lines = [
+                `Mileage ID: ${oEntry.id}`,
+                `Type: ${oEntry.mileageTypeDisplayText || 'N/A'}`,
+                '',
+                'Updated Values:',
+                `Distance: ${payload.distance} KM`,
+                `Duration: ${durationMinutes} min`,
+                `Start: ${payload.travelStartDateTime}`,
+                `End: ${payload.travelEndDateTime}`,
+                `Remarks: ${payload.remarks || 'N/A'}`,
+                '',
+                'Send this update for approval?'
+            ];
+            return lines.join('\n');
+        },
+
+        /**
+         * Submit mileage update to FSM API
+         * @private
+         */
+        async _submitMileageUpdate(mileageId, payload, sPath, oModel) {
+            try {
+                sap.ui.core.BusyIndicator.show(0);
+
+                const response = await fetch(`/api/update-mileage/${mileageId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                sap.ui.core.BusyIndicator.hide();
+
+                if (result.success) {
+                    // Exit edit mode
+                    oModel.setProperty(sPath + "/editMode", false);
+                    
+                    // Refresh T&M Reports data
+                    const activityId = oModel.getProperty("/activityId");
+                    await this._refreshTMReportsAfterCreate(activityId);
+                    
+                    MessageBox.success(
+                        `Mileage updated successfully`,
+                        { title: "Success" }
+                    );
+                } else {
+                    MessageBox.error(
+                        `Failed to update mileage: ${result.message || 'Unknown error'}`,
+                        { title: "Error" }
+                    );
+                }
+
+            } catch (error) {
+                sap.ui.core.BusyIndicator.hide();
+                console.error('TMDialogMixin: Error updating mileage:', error);
+                MessageBox.error(
+                    `Error updating mileage: ${error.message}`,
+                    { title: "Error" }
+                );
+            }
+        },
+
+        /**
+         * Show Material update confirmation dialog with preview
+         * @private
+         */
+        _showMaterialUpdateConfirmation(oEntry, sPath, oModel) {
+            const editedValues = TMEditService.getEditedValues("Material", oModel, sPath);
+            
+            // Build payload - only fields we are changing (date is read-only)
+            const payload = {
+                quantity: parseFloat(editedValues.quantity) || 0,
+                remarks: editedValues.remarks || ""
+            };
+            
+            // Format preview text
+            const previewText = this._formatMaterialUpdatePreview(oEntry, payload);
+
+            MessageBox.confirm(previewText, {
+                title: "Confirm Material Update",
+                actions: ["Send for Approval", MessageBox.Action.CLOSE],
+                emphasizedAction: "Send for Approval",
+                styleClass: "sapUiSizeCompact",
+                onClose: (sAction) => {
+                    if (sAction === "Send for Approval") {
+                        this._submitMaterialUpdate(oEntry.id, payload, sPath, oModel);
+                    }
+                }
+            });
+        },
+
+        /**
+         * Format material update preview for confirmation dialog
+         * @private
+         */
+        _formatMaterialUpdatePreview(oEntry, payload) {
+            const lines = [
+                `Material ID: ${oEntry.id}`,
+                `Item: ${oEntry.itemDisplayText || 'N/A'}`,
+                '',
+                'Updated Values:',
+                `Quantity: ${payload.quantity}`,
+                `Remarks: ${payload.remarks || 'N/A'}`,
+                '',
+                'Send this update for approval?'
+            ];
+            return lines.join('\n');
+        },
+
+        /**
+         * Submit material update to FSM API
+         * @private
+         */
+        async _submitMaterialUpdate(materialId, payload, sPath, oModel) {
+            try {
+                sap.ui.core.BusyIndicator.show(0);
+
+                const response = await fetch(`/api/update-material/${materialId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                sap.ui.core.BusyIndicator.hide();
+
+                if (result.success) {
+                    // Exit edit mode
+                    oModel.setProperty(sPath + "/editMode", false);
+                    
+                    // Refresh T&M Reports data
+                    const activityId = oModel.getProperty("/activityId");
+                    await this._refreshTMReportsAfterCreate(activityId);
+                    
+                    MessageBox.success(
+                        `Material updated successfully`,
+                        { title: "Success" }
+                    );
+                } else {
+                    MessageBox.error(
+                        `Failed to update material: ${result.message || 'Unknown error'}`,
+                        { title: "Error" }
+                    );
+                }
+
+            } catch (error) {
+                sap.ui.core.BusyIndicator.hide();
+                console.error('TMDialogMixin: Error updating material:', error);
+                MessageBox.error(
+                    `Error updating material: ${error.message}`,
+                    { title: "Error" }
+                );
+            }
+        },
+
+        /**
+         * Show TimeEffort update confirmation dialog with preview
+         * @private
+         */
+        _showTimeEffortUpdateConfirmation(oEntry, sPath, oModel) {
+            const editedValues = TMEditService.getEditedValues("Time Effort", oModel, sPath);
+            
+            // Calculate endDateTime from startDateTime + duration
+            const startDateTime = oEntry.startDateTime;
+            const durationMinutes = parseInt(editedValues.durationMinutes) || 0;
+            
+            let endDateTime = editedValues.endDateTime;
+            if (startDateTime && durationMinutes >= 0) {
+                const startDate = new Date(startDateTime);
+                const endDate = new Date(startDate.getTime() + durationMinutes * 60 * 1000);
+                endDateTime = endDate.toISOString().replace(/\.\d{3}Z$/, 'Z');
+            }
+            
+            // Build payload - only fields we are changing
+            const payload = {
+                endDateTime: endDateTime,
+                remarks: editedValues.remarks || ""
+            };
+            
+            // Format preview text
+            const previewText = this._formatTimeEffortUpdatePreview(oEntry, payload, durationMinutes);
+
+            MessageBox.confirm(previewText, {
+                title: "Confirm Time Effort Update",
+                actions: ["Send for Approval", MessageBox.Action.CLOSE],
+                emphasizedAction: "Send for Approval",
+                styleClass: "sapUiSizeCompact",
+                onClose: (sAction) => {
+                    if (sAction === "Send for Approval") {
+                        this._submitTimeEffortUpdate(oEntry.id, payload, sPath, oModel);
+                    }
+                }
+            });
+        },
+
+        /**
+         * Format time effort update preview for confirmation dialog
+         * @private
+         */
+        _formatTimeEffortUpdatePreview(oEntry, payload, durationMinutes) {
+            const lines = [
+                `Time Effort ID: ${oEntry.id}`,
+                `Task: ${oEntry.taskDisplayText || 'N/A'}`,
+                '',
+                'Updated Values:',
+                `Duration: ${durationMinutes} min`,
+                `Start: ${oEntry.startDateTime}`,
+                `End: ${payload.endDateTime}`,
+                `Remarks: ${payload.remarks || 'N/A'}`,
+                '',
+                'Send this update for approval?'
+            ];
+            return lines.join('\n');
+        },
+
+        /**
+         * Submit time effort update to FSM API
+         * @private
+         */
+        async _submitTimeEffortUpdate(timeEffortId, payload, sPath, oModel) {
+            try {
+                sap.ui.core.BusyIndicator.show(0);
+
+                const response = await fetch(`/api/update-time-effort/${timeEffortId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                sap.ui.core.BusyIndicator.hide();
+
+                if (result.success) {
+                    // Exit edit mode
+                    oModel.setProperty(sPath + "/editMode", false);
+                    
+                    // Refresh T&M Reports data
+                    const activityId = oModel.getProperty("/activityId");
+                    await this._refreshTMReportsAfterCreate(activityId);
+                    
+                    MessageBox.success(
+                        `Time Effort updated successfully`,
+                        { title: "Success" }
+                    );
+                } else {
+                    MessageBox.error(
+                        `Failed to update time effort: ${result.message || 'Unknown error'}`,
+                        { title: "Error" }
+                    );
+                }
+
+            } catch (error) {
+                sap.ui.core.BusyIndicator.hide();
+                console.error('TMDialogMixin: Error updating time effort:', error);
+                MessageBox.error(
+                    `Error updating time effort: ${error.message}`,
                     { title: "Error" }
                 );
             }

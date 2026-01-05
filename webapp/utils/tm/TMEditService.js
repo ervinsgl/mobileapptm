@@ -214,7 +214,7 @@ sap.ui.define([
 
                 case "Mileage":
                     const routeText = (values.source && values.destination) 
-                        ? values.source + " → " + values.destination 
+                        ? values.source + " â†’ " + values.destination 
                         : "N/A";
                     return {
                         "fullData/date": values.date,
