@@ -64,16 +64,15 @@
                                             <Title text="{view>code}" level="H5"/>
                                             <ToolbarSpacer/>
                                             <ObjectStatus text="{view>status}" state="{view>statusState}" class="sapUiTinyMarginEnd"/>
-                                            <ObjectStatus text="{view>executionStage}" state="{view>stageState}"/>
+                                            <ObjectStatus text="{view>executionStage}" state="{view>stageState}" class="sapUiTinyMarginEnd"/>
+                                            <Label text="ID: {view>externalId}" class="activityHeaderId"/>
                                         </OverflowToolbar>
                                     </headerToolbar>
                                     
                                     <content>
-                                        <!-- Activity Info Bar: Subject, ID -->
+                                        <!-- Activity Info Bar: Subject only -->
                                         <Toolbar design="Info" class="activitySubjectBar sapUiTinyMarginBottom">
                                             <Title text="{view>subject}" level="H6" wrapping="true"/>
-                                            <ToolbarSpacer/>
-                                            <Label text="ID: {view>externalId}" class="sapUiTinyMarginEnd"/>
                                         </Toolbar>
                                         
                                         <!-- Activity Details: 3-Column Layout -->

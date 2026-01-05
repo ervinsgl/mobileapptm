@@ -24,6 +24,19 @@
    ======================================== */
 
 /* ========================================
+   PAGE HEADER WITH CUSTOMER LOGO
+   ======================================== */
+
+.customerLogo {
+    vertical-align: middle;
+}
+
+/* Custom header toolbar styling */
+#mobileAppServiceConfirmationPage .sapMPageHeader .sapMITBHead {
+    background-color: #fff;
+}
+
+/* ========================================
    SESSION CONTEXT PANEL (WebContainerContext fragment)
    ======================================== */
 
@@ -132,6 +145,13 @@
 .productPanelId {
     font-size: 0.6875rem;
     color: #666;
+}
+
+/* Activity Header ID - in activity header toolbar */
+.activityHeaderId {
+    font-size: 0.75rem;
+    color: #0854a0;
+    font-weight: 500;
 }
 
 /* Activity Panel Header - code styling */
@@ -908,7 +928,8 @@
     .activityEntryPanel .sapMTB.sapMTBInfo .sapMLabel,
     .sapMDialog .sapMTB.sapMTBInfo .sapMLabel,
     .sapMDialog .sapMDialogSubHeader .sapMLabel,
-    .productPanelId {
+    .productPanelId,
+    .activityHeaderId {
         display: none !important;
     }
 }
@@ -941,7 +962,6 @@
     /* ----- COLUMN LAYOUTS ----- */
     /* Grid auto-fit handles column count automatically */
     .tmEntryContent,
-    .tmEntryContent3Col,
     .activityEntryContent,
     .serviceOrderContent {
         gap: 1rem !important;

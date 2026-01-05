@@ -17,12 +17,18 @@
     -->
     <Page
         id="mobileAppServiceConfirmationPage"
-        title="T&amp;M Journal for Service Order: {view>/serviceCall/externalId}"
+        showHeader="true"
         showNavButton="false"
         class="sapUiContentPadding"
         busy="{view>/pageLoading}"
         busyIndicatorDelay="0"
     >
+        <customHeader>
+            <OverflowToolbar design="Info">
+                <Image src="./images/TUEV-NORD_Logo.png" height="2rem" class="sapUiTinyMarginEnd customerLogo"/>
+                <Title text="T&amp;M Journal for Service Order: {view>/serviceCall/externalId}" level="H4"/>
+            </OverflowToolbar>
+        </customHeader>
         <content>
             <layout:VerticalLayout id="mobileAppMainLayout" width="100%" class="sapUiContentPadding">
                 

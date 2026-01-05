@@ -182,7 +182,7 @@
                                     <VBox class="tmColumn">
                                         <HBox class="tmFieldRow" width="100%">
                                             <Label text="Quantity:" design="Bold" class="tmFieldLabel"/>
-                                            <StepInput value="{createTM>quantity}" min="0" step="1" displayValuePrecision="2" class="tmFieldInputNarrow"/>
+                                            <StepInput value="{createTM>quantity}" min="0" step="1" displayValuePrecision="2" description="Pcs." class="tmFieldInputNarrow" valueState="{= parseFloat(${createTM>quantity}) > parseFloat(${createTM>/quantity}) ? 'Warning' : 'None'}" valueStateText="Quantity exceeds Activity quantity"/>
                                         </HBox>
                                         <HBox class="tmFieldRow" width="100%">
                                             <Label text="Remarks:" design="Bold" class="tmFieldLabel"/>
@@ -246,7 +246,7 @@
                                     <VBox class="tmColumn">
                                         <HBox class="tmFieldRow" width="100%">
                                             <Label text="Distance:" design="Bold" class="tmFieldLabel"/>
-                                            <StepInput value="{createTM>distance}" min="0" step="1" description="KM" class="tmFieldInputNarrow"/>
+                                            <StepInput value="{createTM>distance}" min="0" step="1" description="KM" class="tmFieldInputNarrow" valueState="{= parseFloat(${createTM>distance}) > parseFloat(${createTM>/quantity}) ? 'Warning' : 'None'}" valueStateText="Distance exceeds Activity quantity"/>
                                         </HBox>
                                         <HBox class="tmFieldRow" width="100%">
                                             <Label text="Duration:" design="Bold" class="tmFieldLabel"/>
@@ -282,7 +282,7 @@
                                         <VBox class="tmColumn">
                                             <HBox class="tmFieldRow" width="100%">
                                                 <Label text="Quantity:" design="Bold" class="tmFieldLabel"/>
-                                                <StepInput value="{createTM>quantity}" min="0" step="1" displayValuePrecision="2" class="tmFieldInputNarrow"/>
+                                                <StepInput value="{createTM>quantity}" min="0" step="1" displayValuePrecision="2" description="Pcs." class="tmFieldInputNarrow" valueState="{= parseFloat(${createTM>quantity}) > parseFloat(${createTM>/quantity}) ? 'Warning' : 'None'}" valueStateText="Quantity exceeds Activity quantity"/>
                                             </HBox>
                                             <HBox class="tmFieldRow" width="100%">
                                                 <Label text="Remarks:" design="Bold" class="tmFieldLabel"/>

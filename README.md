@@ -300,66 +300,101 @@ POST /web-container-access-point
 ---
 
 ## 📁 Project Structure
-
-All source files are in the project root directory (flat structure for simplified deployment):
 ```
 mobileappsc/
 │
-├── # ─────────── VIEWS & FRAGMENTS ───────────
-├── App_view.xml                         # Root view
-├── View1_view.xml                       # Main view (T&M Journal page)
-├── WebContainerContext_fragment.xml     # Session Context panel
-├── ServiceCall_fragment.xml             # Service Order panel
-├── ProductGroups_fragment.xml           # Activity panels by product (~11KB)
-├── TMReportsDialog_fragment.xml         # T&M Reports dialog (~30KB)
-├── TMCreateDialog_fragment.xml          # T&M Creation dialog (~32KB)
-│
-├── # ─────────── CONTROLLERS & MIXINS ───────────
-├── App_controller.js                    # Root controller
-├── View1_controller.js                  # Main controller (~400 lines)
-├── DataLoadingMixin.js                  # Data loading logic (~530 lines)
-├── TMDialogMixin.js                     # T&M dialog event handlers (~560 lines)
-├── TechnicianMixin.js                   # Technician suggestion handling
-│
-├── # ─────────── FRONTEND SERVICES ───────────
-├── formatter.js                         # Date/number formatting
-├── URLHelper.js                         # Web container context handling
-├── ActivityService.js                   # Activity data management
-├── ServiceOrderService.js               # Service order/composite tree
-├── ProductGroupService.js               # Activity grouping by product
-├── OrganizationService.js               # Organization level + user resolution
-├── PersonService.js                     # Person ID/name lookup
-├── TechnicianService.js                 # Technician suggestions (large dataset)
-├── BusinessPartnerService.js            # Business partner lookup
-├── TimeTaskService.js                   # Time task ID lookup
-├── ItemService.js                       # Item ID/ExternalId lookup
-├── ExpenseTypeService.js                # Expense type ID lookup
-├── UdfMetaService.js                    # UDF Meta ID lookup
-├── ApprovalService.js                   # Approval status lookup
-├── DateTimeService.js                   # Date/time utilities
-├── ReportedItemsData.js                 # T&M data fetching
-├── TMDataService.js                     # T&M data management
-├── TMDialogService.js                   # T&M dialog management (~20KB)
-├── TMCreationService.js                 # T&M entry creation (~18KB)
-├── TMEditService.js                     # T&M entry editing
-├── TMPayloadService.js                  # T&M API payload building (~16KB)
+├── # ─────────── ROOT LEVEL ───────────
+├── index.js                             # Express server (~800 lines)
+├── package.json                         # Node.js dependencies
+├── package-lock.json                    # Dependency lock file
+├── manifest.yaml                        # Cloud Foundry deployment
+├── mta.yaml                             # Multi-Target Application descriptor
+├── xs-app.json                          # App Router configuration
+├── xs-security.json                     # Security configuration
+├── ui5.yaml                             # UI5 tooling configuration
+├── ui5-local.yaml                       # UI5 local development config
+├── ui5-deploy.yaml                      # UI5 deployment config
+├── .gitignore                           # Git ignore rules
+├── README.md                            # This file
 │
 ├── # ─────────── BACKEND SERVICES ───────────
-├── DestinationService.js                # BTP Destination handling
-├── FSMService.js                        # FSM API integration (~880 lines)
-├── TokenCache.js                        # OAuth token caching
+├── utils/
+│   ├── DestinationService.js            # BTP Destination handling
+│   ├── FSMService.js                    # FSM API integration (~1050 lines)
+│   └── TokenCache.js                    # OAuth token caching
 │
-├── # ─────────── CONFIGURATION ───────────
-├── index.html                           # App entry point
-├── index.js                             # Express server (~520 lines)
-├── manifest.json                        # UI5 app descriptor
-├── Component.js                         # UI5 Component
-├── models.js                            # Device model
-├── style.css                            # Custom styles (~1000 lines)
-├── i18n.properties                      # Internationalization
-├── package.json                         # Node.js dependencies
-├── manifest.yaml                        # Cloud Foundry deployment
-└── README.md                            # This file
+└── # ─────────── FRONTEND (SAP UI5) ───────────
+    webapp/
+    │
+    ├── # ─────────── ENTRY POINTS ───────────
+    ├── index.html                       # App entry point
+    ├── manifest.json                    # UI5 app descriptor
+    ├── Component.js                     # UI5 Component
+    │
+    ├── # ─────────── VIEWS & FRAGMENTS ───────────
+    ├── view/
+    │   ├── App.view.xml                 # Root view
+    │   ├── View1.view.xml               # Main view (T&M Journal page)
+    │   └── fragments/
+    │       ├── WebContainerContext.fragment.xml  # Session Context panel
+    │       ├── ServiceCall.fragment.xml          # Service Order panel
+    │       ├── ProductGroups.fragment.xml        # Activity panels (~11KB)
+    │       ├── TMReportsDialog.fragment.xml      # T&M Reports dialog (~30KB)
+    │       └── TMCreateDialog.fragment.xml       # T&M Creation dialog (~32KB)
+    │
+    ├── # ─────────── CONTROLLERS & MIXINS ───────────
+    ├── controller/
+    │   ├── App.controller.js            # Root controller
+    │   ├── View1.controller.js          # Main controller (~400 lines)
+    │   └── mixin/
+    │       ├── DataLoadingMixin.js      # Data loading logic (~530 lines)
+    │       ├── TechnicianMixin.js       # Technician suggestion handling
+    │       └── TMDialogMixin.js         # T&M dialog handlers (~1200 lines)
+    │
+    ├── # ─────────── FRONTEND SERVICES ───────────
+    ├── utils/
+    │   ├── helpers/
+    │   │   ├── DateTimeService.js       # Date/time utilities
+    │   │   ├── ProductGroupService.js   # Activity grouping by product
+    │   │   ├── ReportedItemsData.js     # T&M data fetching
+    │   │   └── URLHelper.js             # Web container context handling
+    │   │
+    │   ├── services/
+    │   │   ├── ActivityService.js       # Activity data management
+    │   │   ├── ApprovalService.js       # Approval status lookup
+    │   │   ├── BusinessPartnerService.js# Business partner lookup
+    │   │   ├── ExpenseTypeService.js    # Expense type ID lookup
+    │   │   ├── ItemService.js           # Item ID/ExternalId lookup
+    │   │   ├── OrganizationService.js   # Organization level + user resolution
+    │   │   ├── PersonService.js         # Person ID/name lookup
+    │   │   ├── ServiceOrderService.js   # Service order/composite tree
+    │   │   ├── TechnicianService.js     # Technician suggestions (large dataset)
+    │   │   ├── TimeTaskService.js       # Time task ID lookup
+    │   │   └── UdfMetaService.js        # UDF Meta ID lookup
+    │   │
+    │   └── tm/
+    │       ├── TMCreationService.js     # T&M entry creation (~18KB)
+    │       ├── TMDataService.js         # T&M data management
+    │       ├── TMDialogService.js       # T&M dialog management (~20KB)
+    │       ├── TMEditService.js         # T&M entry editing
+    │       └── TMPayloadService.js      # T&M API payload building (~16KB)
+    │
+    ├── # ─────────── MODEL ───────────
+    ├── model/
+    │   ├── formatter.js                 # Date/number formatting
+    │   └── models.js                    # Device model
+    │
+    ├── # ─────────── STYLES ───────────
+    ├── css/
+    │   └── style.css                    # Custom styles (~1000 lines)
+    │
+    ├── # ─────────── IMAGES ───────────
+    ├── images/
+    │   └── TUEV-NORD_Logo_Electric-Blue.png  # Customer logo
+    │
+    └── # ─────────── I18N ───────────
+        i18n/
+        └── i18n.properties              # Internationalization
 ```
 
 ---

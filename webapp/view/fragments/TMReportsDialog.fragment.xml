@@ -189,7 +189,7 @@
                                         <!-- Quantity: Edit -->
                                         <HBox class="tmFieldRow" visible="{= ${dialog>editMode}}">
                                             <Label text="Quantity:" design="Bold" class="tmFieldLabel"/>
-                                            <StepInput value="{dialog>editQuantity}" min="0" step="1" width="100px" class="tmFieldInput"/>
+                                            <StepInput value="{dialog>editQuantity}" min="0" step="1" description="Pcs." width="120px" class="tmFieldInput" valueState="{= parseFloat(${dialog>editQuantity}) > parseFloat(${dialog>/quantity}) ? 'Warning' : 'None'}" valueStateText="Quantity exceeds Activity quantity"/>
                                         </HBox>
                                     </VBox>
                                     
@@ -296,7 +296,7 @@
                                         <!-- Distance: Edit -->
                                         <HBox class="tmFieldRow" visible="{= ${dialog>editMode}}">
                                             <Label text="Distance:" design="Bold" class="tmFieldLabel"/>
-                                            <StepInput value="{dialog>editDistance}" min="0" step="1" description="KM" width="100px" class="tmFieldInput"/>
+                                            <StepInput value="{dialog>editDistance}" min="0" step="1" description="KM" width="120px" class="tmFieldInput" valueState="{= parseFloat(${dialog>editDistance}) > parseFloat(${dialog>/quantity}) ? 'Warning' : 'None'}" valueStateText="Distance exceeds Activity quantity"/>
                                         </HBox>
                                     </VBox>
                                     
