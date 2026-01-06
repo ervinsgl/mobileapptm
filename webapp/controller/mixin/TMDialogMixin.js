@@ -1132,6 +1132,9 @@ sap.ui.define([
                 // Load fresh T&M data
                 const tmData = await TMDataService.loadTMReports(activityId);
                 
+                // Clear approval cache to ensure fresh statuses
+                ApprovalService.clearCache();
+                
                 // Preload lookups
                 await UdfMetaService.preloadUdfMetaForReports(tmData.reports);
                 await ApprovalService.preloadStatusesForReports(tmData.reports);
@@ -1198,9 +1201,56 @@ sap.ui.define([
                     }
                 }
                 
+                // Update the main view model's T&M counts for this activity
+                this._updateMainViewTMCounts(activityId, tmData.reports);
+                
                 console.log('TMDialogMixin: T&M Reports refreshed after create');
             } catch (error) {
                 console.error('TMDialogMixin: Error refreshing T&M Reports:', error);
+            }
+        },
+
+        /**
+         * Update T&M counts on the main view for a specific activity
+         * @param {string} activityId - Activity ID
+         * @param {Array} reports - T&M reports array
+         * @private
+         */
+        _updateMainViewTMCounts(activityId, reports) {
+            try {
+                const oViewModel = this.getView().getModel("view");
+                const productGroups = oViewModel.getProperty("/productGroups") || [];
+                
+                // Find the activity in the view model
+                for (let gIndex = 0; gIndex < productGroups.length; gIndex++) {
+                    const activities = productGroups[gIndex].activities || [];
+                    for (let aIndex = 0; aIndex < activities.length; aIndex++) {
+                        if (activities[aIndex].id === activityId) {
+                            const activityPath = `/productGroups/${gIndex}/activities/${aIndex}`;
+                            
+                            // Calculate counts
+                            const timeEffortCount = reports.filter(r => r.type === "Time Effort").length;
+                            const materialCount = reports.filter(r => r.type === "Material").length;
+                            const expenseCount = reports.filter(r => r.type === "Expense").length;
+                            const mileageCount = reports.filter(r => r.type === "Mileage").length;
+                            
+                            // Update the view model
+                            oViewModel.setProperty(activityPath + "/tmReportsCount", reports.length);
+                            oViewModel.setProperty(activityPath + "/tmTimeEffortCount", timeEffortCount);
+                            oViewModel.setProperty(activityPath + "/tmMaterialCount", materialCount);
+                            oViewModel.setProperty(activityPath + "/tmExpenseCount", expenseCount);
+                            oViewModel.setProperty(activityPath + "/tmMileageCount", mileageCount);
+                            oViewModel.setProperty(activityPath + "/tmReports", reports);
+                            
+                            console.log(`TMDialogMixin: Updated main view T&M counts for activity ${activityId}: ${reports.length} total`);
+                            return;
+                        }
+                    }
+                }
+                
+                console.warn(`TMDialogMixin: Activity ${activityId} not found in view model for count update`);
+            } catch (error) {
+                console.error('TMDialogMixin: Error updating main view T&M counts:', error);
             }
         },
 

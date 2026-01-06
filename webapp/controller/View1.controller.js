@@ -287,7 +287,7 @@ sap.ui.define([
         /**
          * Extract name from display text by removing code prefix
          * e.g., "AZ - Arbeitszeit" -> "Arbeitszeit"
-         * e.g., "Z12000007 - Prüfung" -> "Prüfung"
+         * e.g., "Z12000007 - PrÃ¼fung" -> "PrÃ¼fung"
          * @private
          */
         _extractNameFromDisplayText(displayText) {
@@ -347,6 +347,10 @@ sap.ui.define([
 
             model.setProperty("/organizationSelected", false);
             model.setProperty("/userOrgLevelResolved", false);
+            
+            // Clear all service caches to ensure fresh data
+            this._clearAllServiceCaches();
+            
             this._resetActivityData();
 
             this._loadWebContainerContext().then(() => {

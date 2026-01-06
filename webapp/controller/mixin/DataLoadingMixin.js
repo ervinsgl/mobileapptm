@@ -29,11 +29,14 @@ sap.ui.define([
     "mobileappsc/utils/services/ServiceOrderService",
     "mobileappsc/utils/services/PersonService",
     "mobileappsc/utils/services/BusinessPartnerService",
+    "mobileappsc/utils/services/ApprovalService",
+    "mobileappsc/utils/services/UdfMetaService",
+    "mobileappsc/utils/services/TechnicianService",
     "mobileappsc/utils/helpers/URLHelper",
     "mobileappsc/utils/helpers/ProductGroupService",
     "mobileappsc/utils/helpers/ReportedItemsData",
     "mobileappsc/utils/tm/TMDataService"
-], (MessageToast, MessageBox, OrganizationService, TimeTaskService, ItemService, ExpenseTypeService, ActivityService, ServiceOrderService, PersonService, BusinessPartnerService, URLHelper, ProductGroupService, ReportedItemsData, TMDataService) => {
+], (MessageToast, MessageBox, OrganizationService, TimeTaskService, ItemService, ExpenseTypeService, ActivityService, ServiceOrderService, PersonService, BusinessPartnerService, ApprovalService, UdfMetaService, TechnicianService, URLHelper, ProductGroupService, ReportedItemsData, TMDataService) => {
     "use strict";
 
     return {
@@ -413,6 +416,30 @@ sap.ui.define([
         _resetActivityData() {
             const model = this.getView().getModel("view");
             model.setProperty("/productGroups", []);
+        },
+
+        /**
+         * Clear all service caches.
+         * Called during refresh to ensure fresh data is loaded.
+         * @private
+         */
+        _clearAllServiceCaches() {
+            console.log('DataLoadingMixin: Clearing all service caches');
+            
+            // Clear approval status cache (important for status updates)
+            ApprovalService.clearCache();
+            
+            // Clear other service caches
+            PersonService.clearCache();
+            BusinessPartnerService.clearCache();
+            TimeTaskService.clearCache();
+            ItemService.clearCache();
+            ExpenseTypeService.clearCache();
+            UdfMetaService.clearCache();
+            TechnicianService.clearCache();
+            OrganizationService.clearCache();
+            
+            console.log('DataLoadingMixin: All service caches cleared');
         },
 
         /* =========================================================================
