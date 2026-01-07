@@ -167,16 +167,56 @@ sap.ui.define([
         },
 
         /**
+         * Extract activityId from model path or model property
+         * For view model: path is /productGroups/X/activities/Y/tmReports/Z
+         * For dialog model: activityId is at /activityId
+         * @private
+         */
+        _getActivityIdFromPath(sPath, oModel) {
+            // Check if this is a dialog model (has /activityId)
+            const dialogActivityId = oModel.getProperty("/activityId");
+            if (dialogActivityId) {
+                return dialogActivityId;
+            }
+            
+            // For view model, extract activity path and get activity id
+            // Path format: /productGroups/X/activities/Y/tmReports/Z
+            const activityPathMatch = sPath.match(/^(\/productGroups\/\d+\/activities\/\d+)/);
+            if (activityPathMatch) {
+                const activityPath = activityPathMatch[1];
+                const activity = oModel.getProperty(activityPath);
+                if (activity && activity.id) {
+                    return activity.id;
+                }
+            }
+            
+            console.warn('TMDialogMixin: Could not extract activityId from path:', sPath);
+            return null;
+        },
+
+        /**
          * Toggle Edit Mode for T&M Entry
          */
         onToggleEditMode(oEvent) {
             const oButton = oEvent.getSource();
-            const oContext = oButton.getBindingContext("dialog");
-
-            if (!oContext) return;
+            
+            // Try view context first (inline entries), then dialog context
+            let oContext = oButton.getBindingContext("view");
+            let oModel, sModelName;
+            
+            if (oContext) {
+                // Inline mode - using view model
+                oModel = this.getView().getModel("view");
+                sModelName = "view";
+            } else {
+                // Dialog mode - using dialog model (legacy)
+                oContext = oButton.getBindingContext("dialog");
+                if (!oContext) return;
+                oModel = this._tmReportsDialog.getModel("dialog");
+                sModelName = "dialog";
+            }
 
             const sPath = oContext.getPath();
-            const oModel = this._tmReportsDialog.getModel("dialog");
             const bCurrentEditMode = oModel.getProperty(sPath + "/editMode") || false;
             const sType = oModel.getProperty(sPath + "/type");
             const oEntry = oContext.getObject();
@@ -217,10 +257,18 @@ sap.ui.define([
          * Handle duration change in edit mode (Time Effort)
          */
         onEditDurationChange(oEvent) {
-            const oContext = oEvent.getSource().getBindingContext("dialog");
-            if (!oContext) return;
+            // Try view context first, then dialog context
+            let oContext = oEvent.getSource().getBindingContext("view");
+            let oModel;
+            
+            if (oContext) {
+                oModel = this.getView().getModel("view");
+            } else {
+                oContext = oEvent.getSource().getBindingContext("dialog");
+                if (!oContext) return;
+                oModel = this._tmReportsDialog.getModel("dialog");
+            }
 
-            const oModel = this._tmReportsDialog.getModel("dialog");
             const newDuration = oEvent.getParameter("value");
             TMEditService.handleDurationChange(oModel, oContext.getPath(), "Time Effort", newDuration);
         },
@@ -229,10 +277,18 @@ sap.ui.define([
          * Handle mileage duration change in edit mode
          */
         onEditMileageDurationChange(oEvent) {
-            const oContext = oEvent.getSource().getBindingContext("dialog");
-            if (!oContext) return;
+            // Try view context first, then dialog context
+            let oContext = oEvent.getSource().getBindingContext("view");
+            let oModel;
+            
+            if (oContext) {
+                oModel = this.getView().getModel("view");
+            } else {
+                oContext = oEvent.getSource().getBindingContext("dialog");
+                if (!oContext) return;
+                oModel = this._tmReportsDialog.getModel("dialog");
+            }
 
-            const oModel = this._tmReportsDialog.getModel("dialog");
             const newDuration = oEvent.getParameter("value");
             TMEditService.handleDurationChange(oModel, oContext.getPath(), "Mileage", newDuration);
         },
@@ -242,7 +298,46 @@ sap.ui.define([
          * ======================================== */
 
         /**
-         * Add new T&M Report - Opens unified creation dialog
+         * Add new T&M Entry from inline button (main view)
+         */
+        async onAddNewTMEntry(oEvent) {
+            const oButton = oEvent.getSource();
+            const oContext = oButton.getBindingContext("view");
+
+            if (!oContext) {
+                MessageToast.show("Activity context not available");
+                return;
+            }
+
+            const oActivity = oContext.getObject();
+            
+            const activityData = {
+                activityId: oActivity.id,
+                activityCode: oActivity.code,
+                activitySubject: oActivity.subject,
+                activityExternalId: oActivity.externalId || 'N/A',
+                orgLevelId: oActivity.orgLevelId || null,
+                serviceProduct: oActivity.serviceProductDisplayText || 'N/A',
+                serviceProductExternalId: oActivity.serviceProductId || null,
+                plannedStartDate: oActivity.plannedStartDate || null,
+                formattedStartDate: oActivity.formattedStartDate || 'N/A',
+                formattedEndDate: oActivity.formattedEndDate || 'N/A',
+                formattedDuration: oActivity.formattedDuration || 'N/A',
+                quantity: oActivity.quantity || 'N/A',
+                quantityUoM: oActivity.quantityUoM || 'N/A',
+                responsibleExternalId: oActivity.responsibleId || 'N/A'
+            };
+
+            if (!activityData.activityCode) {
+                MessageToast.show("Activity information not available");
+                return;
+            }
+
+            await TMDialogService.openTMCreationDialog(activityData);
+        },
+
+        /**
+         * Add new T&M Report - Opens unified creation dialog (legacy, from dialog)
          */
         async onAddTMReport(oEvent) {
             const oButton = oEvent.getSource();
@@ -576,8 +671,10 @@ sap.ui.define([
                     oModel.setProperty(sPath + "/editMode", false);
                     
                     // Refresh T&M Reports data
-                    const activityId = oModel.getProperty("/activityId");
-                    await this._refreshTMReportsAfterCreate(activityId);
+                    const activityId = this._getActivityIdFromPath(sPath, oModel);
+                    if (activityId) {
+                        await this._refreshTMReportsAfterCreate(activityId);
+                    }
                     
                     MessageBox.success(
                         `Expense updated successfully`,
@@ -687,8 +784,10 @@ sap.ui.define([
                     oModel.setProperty(sPath + "/editMode", false);
                     
                     // Refresh T&M Reports data
-                    const activityId = oModel.getProperty("/activityId");
-                    await this._refreshTMReportsAfterCreate(activityId);
+                    const activityId = this._getActivityIdFromPath(sPath, oModel);
+                    if (activityId) {
+                        await this._refreshTMReportsAfterCreate(activityId);
+                    }
                     
                     MessageBox.success(
                         `Mileage updated successfully`,
@@ -781,8 +880,10 @@ sap.ui.define([
                     oModel.setProperty(sPath + "/editMode", false);
                     
                     // Refresh T&M Reports data
-                    const activityId = oModel.getProperty("/activityId");
-                    await this._refreshTMReportsAfterCreate(activityId);
+                    const activityId = this._getActivityIdFromPath(sPath, oModel);
+                    if (activityId) {
+                        await this._refreshTMReportsAfterCreate(activityId);
+                    }
                     
                     MessageBox.success(
                         `Material updated successfully`,
@@ -888,8 +989,10 @@ sap.ui.define([
                     oModel.setProperty(sPath + "/editMode", false);
                     
                     // Refresh T&M Reports data
-                    const activityId = oModel.getProperty("/activityId");
-                    await this._refreshTMReportsAfterCreate(activityId);
+                    const activityId = this._getActivityIdFromPath(sPath, oModel);
+                    if (activityId) {
+                        await this._refreshTMReportsAfterCreate(activityId);
+                    }
                     
                     MessageBox.success(
                         `Time Effort updated successfully`,
