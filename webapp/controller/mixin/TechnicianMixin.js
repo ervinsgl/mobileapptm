@@ -179,5 +179,52 @@ sap.ui.define([
             }
         },
 
+        /* ========================================
+         * TIME ENTRY TECHNICIAN SEARCH HANDLERS
+         * ======================================== */
+
+        /**
+         * Handle technician live change for time entries (as user types)
+         */
+        onTimeEntryTechnicianLiveChange(oEvent) {
+            const sValue = oEvent.getParameter("value") || "";
+            const aSuggestions = TechnicianService.searchTechnicians(sValue);
+            
+            const oModel = this._tmCreateDialog.getModel("createTM");
+            oModel.setProperty("/timeEntryTechnicianSuggestions", aSuggestions);
+            
+            console.log('TimeEntryTechnicianLiveChange:', sValue, '- Found:', aSuggestions.length, 'results');
+        },
+
+        /**
+         * Handle technician suggestion selection for time entries
+         */
+        onTimeEntryTechnicianSuggestionSelect(oEvent) {
+            const oSelectedItem = oEvent.getParameter("selectedItem");
+            const oInput = oEvent.getSource();
+            const oContext = oInput.getBindingContext("createTM");
+            
+            if (!oContext) {
+                console.warn('TimeEntryTechnicianSuggestionSelect: No binding context found');
+                return;
+            }
+            
+            const sPath = oContext.getPath();
+            const oModel = this._tmCreateDialog.getModel("createTM");
+            
+            if (oSelectedItem) {
+                const oItemContext = oSelectedItem.getBindingContext("createTM");
+                if (oItemContext) {
+                    const oTechnician = oItemContext.getObject();
+                    
+                    oModel.setProperty(sPath + "/technicianId", oTechnician.id);
+                    oModel.setProperty(sPath + "/technicianExternalId", oTechnician.externalId);
+                    oModel.setProperty(sPath + "/technicianDisplay", oTechnician.displayText);
+                    
+                    console.log('TimeEntryTechnicianSuggestionSelect: Selected', oTechnician.displayText, 'ID:', oTechnician.id);
+                }
+            }
+        },
+
     };
 });

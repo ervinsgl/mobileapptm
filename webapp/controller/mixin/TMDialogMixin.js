@@ -1115,6 +1115,16 @@ sap.ui.define([
          * @private
          */
         _showTimeAndMaterialConfirmation(oEntry, sPath, oModel) {
+            // Validate mandatory Task fields for all time entries
+            const validation = this._validateTimeAndMaterialTasks(oEntry);
+            if (!validation.valid) {
+                MessageBox.error(validation.message, {
+                    title: "Validation Error",
+                    styleClass: "sapUiSizeCompact"
+                });
+                return;
+            }
+
             const oDialogModel = this._tmCreateDialog.getModel("createTM");
             const activityId = oDialogModel.getProperty("/activityId");
             const activityCode = oDialogModel.getProperty("/activityExternalId");
@@ -1136,6 +1146,44 @@ sap.ui.define([
                     }
                 }
             });
+        },
+
+        /**
+         * Validate mandatory Task fields for Time & Material entries
+         * @private
+         */
+        _validateTimeAndMaterialTasks(oEntry) {
+            const errors = [];
+            
+            // Check Arbeitszeit entries
+            (oEntry.timeEffortsAZ || []).forEach((entry, idx) => {
+                if (!entry.taskCode) {
+                    errors.push(`Time - Arbeitszeit entry ${idx + 1}: Task is required`);
+                }
+            });
+            
+            // Check Fahrzeit entries
+            (oEntry.timeEffortsFZ || []).forEach((entry, idx) => {
+                if (!entry.taskCode) {
+                    errors.push(`Time - Fahrzeit entry ${idx + 1}: Task is required`);
+                }
+            });
+            
+            // Check Wartezeit entries
+            (oEntry.timeEffortsWZ || []).forEach((entry, idx) => {
+                if (!entry.taskCode) {
+                    errors.push(`Time - Wartezeit entry ${idx + 1}: Task is required`);
+                }
+            });
+            
+            if (errors.length > 0) {
+                return {
+                    valid: false,
+                    message: "Please select a Task for all Time entries or remove entries without a Task:\n\n" + errors.join("\n")
+                };
+            }
+            
+            return { valid: true };
         },
 
         /**
@@ -1553,14 +1601,22 @@ sap.ui.define([
 
             const sPath = oContext.getPath();
             const oModel = this._tmCreateDialog.getModel("createTM");
+            const oEntry = oModel.getProperty(sPath);
             const aTimeEfforts = oModel.getProperty(sPath + "/" + sArrayProperty) || [];
             
-            // Create new time effort entry
-            const newEntry = TMCreationService.createTimeEffortForTM(sType);
+            // Get default technician from parent T&M entry
+            const defaultTechnician = oEntry.technicianId ? {
+                id: oEntry.technicianId,
+                externalId: oEntry.technicianExternalId,
+                displayText: oEntry.technicianDisplay
+            } : null;
+            
+            // Create new time effort entry with default technician
+            const newEntry = TMCreationService.createTimeEffortForTM(sType, defaultTechnician);
             aTimeEfforts.push(newEntry);
             
             oModel.setProperty(sPath + "/" + sArrayProperty, aTimeEfforts);
-            console.log('Added time effort', sType, 'to', sPath, '- total:', aTimeEfforts.length);
+            console.log('Added time effort', sType, 'to', sPath, '- total:', aTimeEfforts.length, 'with technician:', defaultTechnician?.displayText);
         },
 
         /**

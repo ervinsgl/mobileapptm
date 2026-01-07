@@ -336,6 +336,9 @@ sap.ui.define([
                 // Get task UUID from code
                 const taskId = TimeTaskService.getTaskIdByCode(entry.taskCode);
                 
+                // Use individual time entry's technician, fallback to parent entry's technician
+                const entryTechnicianExternalId = entry.technicianExternalId || technicianExternalId;
+                
                 return {
                     chargeOption: "CHARGEABLE",
                     ...timeEffortConstants,
@@ -345,7 +348,7 @@ sap.ui.define([
                     endDateTime: formatDateTime(endTime),
                     remarks: entry.remarks || "",
                     createPerson: {
-                        externalId: technicianExternalId
+                        externalId: entryTechnicianExternalId
                     },
                     object: objectRef
                 };

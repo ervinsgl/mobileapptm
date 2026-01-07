@@ -306,8 +306,26 @@
                                                     <HBox class="tmTimeEntryContent" width="100%">
                                                         <VBox class="sapUiTinyMarginEnd" width="100%">
                                                             <HBox class="tmFieldRow" width="100%">
-                                                                <Label text="Task:" design="Bold" class="tmFieldLabelNarrow"/>
-                                                                <Select selectedKey="{createTM>taskCode}" items="{path: 'createTM>/taskSuggestionsAZ', templateShareable: false}" forceSelection="false" class="tmTimeEntrySelect">
+                                                                <Label text="Technician:" design="Bold" class="tmFieldLabelNarrow"/>
+                                                                <Input 
+                                                                    value="{createTM>technicianDisplay}" 
+                                                                    showSuggestion="true" 
+                                                                    suggestionItems="{path: 'createTM>/timeEntryTechnicianSuggestions', templateShareable: false}"
+                                                                    liveChange=".onTimeEntryTechnicianLiveChange"
+                                                                    suggestionItemSelected=".onTimeEntryTechnicianSuggestionSelect"
+                                                                    placeholder="Search technician..."
+                                                                    class="tmTimeEntrySelect"
+                                                                    maxSuggestionWidth="400px"
+                                                                    startSuggestion="2"
+                                                                    showTableSuggestionValueHelp="false">
+                                                                    <suggestionItems>
+                                                                        <core:Item key="{createTM>id}" text="{createTM>displayText}"/>
+                                                                    </suggestionItems>
+                                                                </Input>
+                                                            </HBox>
+                                                            <HBox class="tmFieldRow" width="100%">
+                                                                <Label text="Task:" design="Bold" class="tmFieldLabelNarrow tmFieldLabelRequired"/>
+                                                                <Select selectedKey="{createTM>taskCode}" items="{path: 'createTM>/taskSuggestionsAZ', templateShareable: false}" forceSelection="false" class="tmTimeEntrySelect" valueState="{= ${createTM>taskCode} ? 'None' : 'Error'}" valueStateText="Task is required">
                                                                     <core:Item key="{createTM>code}" text="{createTM>name}"/>
                                                                 </Select>
                                                             </HBox>
@@ -338,8 +356,26 @@
                                                     <HBox class="tmTimeEntryContent" width="100%">
                                                         <VBox class="sapUiTinyMarginEnd" width="100%">
                                                             <HBox class="tmFieldRow" width="100%">
-                                                                <Label text="Task:" design="Bold" class="tmFieldLabelNarrow"/>
-                                                                <Select selectedKey="{createTM>taskCode}" items="{path: 'createTM>/taskSuggestionsFZ', templateShareable: false}" forceSelection="false" class="tmTimeEntrySelect">
+                                                                <Label text="Technician:" design="Bold" class="tmFieldLabelNarrow"/>
+                                                                <Input 
+                                                                    value="{createTM>technicianDisplay}" 
+                                                                    showSuggestion="true" 
+                                                                    suggestionItems="{path: 'createTM>/timeEntryTechnicianSuggestions', templateShareable: false}"
+                                                                    liveChange=".onTimeEntryTechnicianLiveChange"
+                                                                    suggestionItemSelected=".onTimeEntryTechnicianSuggestionSelect"
+                                                                    placeholder="Search technician..."
+                                                                    class="tmTimeEntrySelect"
+                                                                    maxSuggestionWidth="400px"
+                                                                    startSuggestion="2"
+                                                                    showTableSuggestionValueHelp="false">
+                                                                    <suggestionItems>
+                                                                        <core:Item key="{createTM>id}" text="{createTM>displayText}"/>
+                                                                    </suggestionItems>
+                                                                </Input>
+                                                            </HBox>
+                                                            <HBox class="tmFieldRow" width="100%">
+                                                                <Label text="Task:" design="Bold" class="tmFieldLabelNarrow tmFieldLabelRequired"/>
+                                                                <Select selectedKey="{createTM>taskCode}" items="{path: 'createTM>/taskSuggestionsFZ', templateShareable: false}" forceSelection="false" class="tmTimeEntrySelect" valueState="{= ${createTM>taskCode} ? 'None' : 'Error'}" valueStateText="Task is required">
                                                                     <core:Item key="{createTM>code}" text="{createTM>name}"/>
                                                                 </Select>
                                                             </HBox>
@@ -370,8 +406,26 @@
                                                     <HBox class="tmTimeEntryContent" width="100%">
                                                         <VBox class="sapUiTinyMarginEnd" width="100%">
                                                             <HBox class="tmFieldRow" width="100%">
-                                                                <Label text="Task:" design="Bold" class="tmFieldLabelNarrow"/>
-                                                                <Select selectedKey="{createTM>taskCode}" items="{path: 'createTM>/taskSuggestionsWZ', templateShareable: false}" forceSelection="false" class="tmTimeEntrySelect">
+                                                                <Label text="Technician:" design="Bold" class="tmFieldLabelNarrow"/>
+                                                                <Input 
+                                                                    value="{createTM>technicianDisplay}" 
+                                                                    showSuggestion="true" 
+                                                                    suggestionItems="{path: 'createTM>/timeEntryTechnicianSuggestions', templateShareable: false}"
+                                                                    liveChange=".onTimeEntryTechnicianLiveChange"
+                                                                    suggestionItemSelected=".onTimeEntryTechnicianSuggestionSelect"
+                                                                    placeholder="Search technician..."
+                                                                    class="tmTimeEntrySelect"
+                                                                    maxSuggestionWidth="400px"
+                                                                    startSuggestion="2"
+                                                                    showTableSuggestionValueHelp="false">
+                                                                    <suggestionItems>
+                                                                        <core:Item key="{createTM>id}" text="{createTM>displayText}"/>
+                                                                    </suggestionItems>
+                                                                </Input>
+                                                            </HBox>
+                                                            <HBox class="tmFieldRow" width="100%">
+                                                                <Label text="Task:" design="Bold" class="tmFieldLabelNarrow tmFieldLabelRequired"/>
+                                                                <Select selectedKey="{createTM>taskCode}" items="{path: 'createTM>/taskSuggestionsWZ', templateShareable: false}" forceSelection="false" class="tmTimeEntrySelect" valueState="{= ${createTM>taskCode} ? 'None' : 'Error'}" valueStateText="Task is required">
                                                                     <core:Item key="{createTM>code}" text="{createTM>name}"/>
                                                                 </Select>
                                                             </HBox>

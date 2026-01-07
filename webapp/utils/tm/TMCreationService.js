@@ -404,12 +404,18 @@ sap.ui.define([
         /**
          * Create a single Time Effort entry for Time & Material.
          * @param {string} type - Time type: 'FZ', 'WZ', or 'AZ'
+         * @param {Object} defaultTechnician - Optional default technician from parent entry
          * @returns {Object} Time Effort entry
          */
-        createTimeEffortForTM(type) {
+        createTimeEffortForTM(type, defaultTechnician) {
             return {
                 id: Date.now() + '_' + Math.random().toString(36).substr(2, 9),
                 type: type,
+                // Technician fields - default from parent T&M entry
+                technicianId: defaultTechnician?.id || "",
+                technicianExternalId: defaultTechnician?.externalId || "",
+                technicianDisplay: defaultTechnician?.displayText || "",
+                // Task fields
                 taskCode: "",
                 taskDisplay: "",
                 duration: 30,

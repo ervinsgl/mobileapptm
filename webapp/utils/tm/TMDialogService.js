@@ -309,7 +309,8 @@ sap.ui.define([
                 taskSuggestionsAZ: taskSuggestionsAZ,
                 taskSuggestionsFZ: taskSuggestionsFZ,
                 taskSuggestionsWZ: taskSuggestionsWZ,
-                expenseTypeSuggestions: expenseTypeSuggestions
+                expenseTypeSuggestions: expenseTypeSuggestions,
+                timeEntryTechnicianSuggestions: [] // Dynamic suggestions for time entry technician search
             });
 
             await this._openDialog("TMCreateDialog", oCreateTMDialogModel, "createTM", "_tmCreateDialog");
