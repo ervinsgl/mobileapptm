@@ -42,16 +42,17 @@ sap.ui.define([
          * Enrich T&M reports with lookup data
          */
         async _enrichTMReports(reports) {
-            await UdfMetaService.preloadUdfMetaForReports(reports);
-            await ApprovalService.preloadStatusesForReports(reports);
-
+            // Extract person IDs before parallel loading
             const personIds = reports
                 .map(r => r.createPerson)
                 .filter(id => id && id !== 'N/A');
 
-            if (personIds.length > 0) {
-                await PersonService.preloadPersonsById(personIds);
-            }
+            // Parallel loading of lookup data
+            await Promise.all([
+                UdfMetaService.preloadUdfMetaForReports(reports),
+                ApprovalService.preloadStatusesForReports(reports),
+                personIds.length > 0 ? PersonService.preloadPersonsById(personIds) : Promise.resolve()
+            ]);
 
             reports.forEach(report => {
                 report.editMode = false;

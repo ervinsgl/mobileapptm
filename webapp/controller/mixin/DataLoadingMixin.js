@@ -326,21 +326,35 @@ sap.ui.define([
                     activities: group.activities.map(activity => this._prepareActivityDataOptimized(activity, entryActivityId))
                 }));
 
-                // Enrich service order data
+                // Enrich service order data (parallel preloading)
                 if (serviceOrderData) {
+                    const preloadPromises = [];
+                    
                     if (serviceOrderData.responsibleExternalId && serviceOrderData.responsibleExternalId !== 'N/A') {
-                        await PersonService.preloadPersonsByExternalId([serviceOrderData.responsibleExternalId]);
-                        serviceOrderData.responsibleDisplayText = PersonService.getPersonDisplayTextByExternalId(serviceOrderData.responsibleExternalId);
-                    } else {
-                        serviceOrderData.responsibleDisplayText = serviceOrderData.responsibleExternalId;
+                        preloadPromises.push(
+                            PersonService.preloadPersonsByExternalId([serviceOrderData.responsibleExternalId])
+                        );
                     }
                     
                     if (serviceOrderData.businessPartnerExternalId && serviceOrderData.businessPartnerExternalId !== 'N/A') {
-                        await BusinessPartnerService.preloadBusinessPartnersByExternalId([serviceOrderData.businessPartnerExternalId]);
-                        serviceOrderData.businessPartnerDisplayText = BusinessPartnerService.getBusinessPartnerDisplayTextByExternalId(serviceOrderData.businessPartnerExternalId);
-                    } else {
-                        serviceOrderData.businessPartnerDisplayText = serviceOrderData.businessPartnerExternalId;
+                        preloadPromises.push(
+                            BusinessPartnerService.preloadBusinessPartnersByExternalId([serviceOrderData.businessPartnerExternalId])
+                        );
                     }
+                    
+                    // Wait for all preloads to complete
+                    if (preloadPromises.length > 0) {
+                        await Promise.all(preloadPromises);
+                    }
+                    
+                    // Now set display texts from cache
+                    serviceOrderData.responsibleDisplayText = serviceOrderData.responsibleExternalId && serviceOrderData.responsibleExternalId !== 'N/A'
+                        ? PersonService.getPersonDisplayTextByExternalId(serviceOrderData.responsibleExternalId)
+                        : serviceOrderData.responsibleExternalId;
+                    
+                    serviceOrderData.businessPartnerDisplayText = serviceOrderData.businessPartnerExternalId && serviceOrderData.businessPartnerExternalId !== 'N/A'
+                        ? BusinessPartnerService.getBusinessPartnerDisplayTextByExternalId(serviceOrderData.businessPartnerExternalId)
+                        : serviceOrderData.businessPartnerExternalId;
                     
                     viewModel.setProperty("/serviceCall", serviceOrderData);
                 }

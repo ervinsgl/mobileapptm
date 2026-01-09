@@ -187,29 +187,35 @@ sap.ui.define([
                 MessageToast.show("Warning: Technician data may not be available");
             }
 
-            // Load Time Tasks and filter by prefix
+            // Parallel loading of lookup data (Time Tasks, Items, Expense Types)
             let taskSuggestions = [];
             let taskSuggestionsAZ = [];
             let taskSuggestionsFZ = [];
             let taskSuggestionsWZ = [];
-            try {
-                await TimeTaskService.fetchTimeTasks();
-                taskSuggestions = TimeTaskService.getTasksForDropdown();
-                
-                taskSuggestionsAZ = taskSuggestions.filter(task => task.code && task.code.startsWith('AZ'));
-                taskSuggestionsFZ = taskSuggestions.filter(task => task.code && task.code.startsWith('FZ'));
-                taskSuggestionsWZ = taskSuggestions.filter(task => task.code && task.code.startsWith('WZ'));
-            } catch (error) {
-                console.error('TMDialogService: Failed to load time tasks:', error);
-                MessageToast.show("Warning: Time tasks may not be available");
-            }
-
-            // Load Items and set default from service product
             let itemSuggestions = [];
             let defaultItemDisplay = "";
             let defaultItemId = "";
-            try {
-                await ItemService.fetchItems();
+            let expenseTypeSuggestions = [];
+
+            const [timeTasksResult, itemsResult, expenseTypesResult] = await Promise.allSettled([
+                TimeTaskService.fetchTimeTasks(),
+                ItemService.fetchItems(),
+                ExpenseTypeService.fetchExpenseTypes()
+            ]);
+
+            // Process Time Tasks result
+            if (timeTasksResult.status === 'fulfilled') {
+                taskSuggestions = TimeTaskService.getTasksForDropdown();
+                taskSuggestionsAZ = taskSuggestions.filter(task => task.code && task.code.startsWith('AZ'));
+                taskSuggestionsFZ = taskSuggestions.filter(task => task.code && task.code.startsWith('FZ'));
+                taskSuggestionsWZ = taskSuggestions.filter(task => task.code && task.code.startsWith('WZ'));
+            } else {
+                console.error('TMDialogService: Failed to load time tasks:', timeTasksResult.reason);
+                MessageToast.show("Warning: Time tasks may not be available");
+            }
+
+            // Process Items result
+            if (itemsResult.status === 'fulfilled') {
                 itemSuggestions = ItemService.getAllForSuggestions();
                 
                 const serviceProductExtId = activityData.serviceProductExternalId;
@@ -225,15 +231,13 @@ sap.ui.define([
                     id: defaultItemId,
                     displayText: defaultItemDisplay
                 });
-            } catch (error) {
-                console.error('TMDialogService: Failed to load items:', error);
+            } else {
+                console.error('TMDialogService: Failed to load items:', itemsResult.reason);
                 MessageToast.show("Warning: Item search may not be available");
             }
 
-            // Load Expense Types and set default based on Activity Service Product
-            let expenseTypeSuggestions = [];
-            try {
-                await ExpenseTypeService.fetchExpenseTypes();
+            // Process Expense Types result
+            if (expenseTypesResult.status === 'fulfilled') {
                 expenseTypeSuggestions = ExpenseTypeService.getExpenseTypesForDropdown();
                 
                 if (expenseTypeSuggestions.length > 0) {
@@ -252,8 +256,8 @@ sap.ui.define([
                         displayText: defaultExpType.text
                     });
                 }
-            } catch (error) {
-                console.error('TMDialogService: Failed to load expense types:', error);
+            } else {
+                console.error('TMDialogService: Failed to load expense types:', expenseTypesResult.reason);
                 MessageToast.show("Warning: Expense types may not be available");
             }
 
