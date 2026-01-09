@@ -56,6 +56,7 @@ sap.ui.define([
 
             reports.forEach(report => {
                 report.editMode = false;
+                report.expanded = false;
                 
                 // Technician
                 if (report.createPerson) {
@@ -1230,6 +1231,7 @@ sap.ui.define([
                 // Enrich each report
                 tmData.reports.forEach(report => {
                     report.editMode = false;
+                    report.expanded = false;
                     
                     // Person name
                     if (report.createPerson) {

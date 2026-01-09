@@ -305,7 +305,7 @@
                                                                 <Input 
                                                                     value="{createTM>technicianDisplay}" 
                                                                     showSuggestion="true" 
-                                                                    suggestionItems="{path: 'createTM>/timeEntryTechnicianSuggestions', templateShareable: false}"
+                                                                    suggestionItems="{path: 'createTM>technicianSuggestions', templateShareable: false}"
                                                                     liveChange=".onTimeEntryTechnicianLiveChange"
                                                                     suggestionItemSelected=".onTimeEntryTechnicianSuggestionSelect"
                                                                     placeholder="Search technician..."
@@ -355,7 +355,7 @@
                                                                 <Input 
                                                                     value="{createTM>technicianDisplay}" 
                                                                     showSuggestion="true" 
-                                                                    suggestionItems="{path: 'createTM>/timeEntryTechnicianSuggestions', templateShareable: false}"
+                                                                    suggestionItems="{path: 'createTM>technicianSuggestions', templateShareable: false}"
                                                                     liveChange=".onTimeEntryTechnicianLiveChange"
                                                                     suggestionItemSelected=".onTimeEntryTechnicianSuggestionSelect"
                                                                     placeholder="Search technician..."
@@ -405,7 +405,7 @@
                                                                 <Input 
                                                                     value="{createTM>technicianDisplay}" 
                                                                     showSuggestion="true" 
-                                                                    suggestionItems="{path: 'createTM>/timeEntryTechnicianSuggestions', templateShareable: false}"
+                                                                    suggestionItems="{path: 'createTM>technicianSuggestions', templateShareable: false}"
                                                                     liveChange=".onTimeEntryTechnicianLiveChange"
                                                                     suggestionItemSelected=".onTimeEntryTechnicianSuggestionSelect"
                                                                     placeholder="Search technician..."

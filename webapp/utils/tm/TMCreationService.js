@@ -371,6 +371,7 @@ sap.ui.define([
                 technicianId: defaultTechnician?.id || "",
                 technicianExternalId: defaultTechnician?.externalId || "",
                 technicianDisplay: defaultTechnician?.displayText || "",
+                technicianSuggestions: [], // Local suggestions for this entry
                 // Task fields
                 taskCode: "",
                 taskDisplay: "",

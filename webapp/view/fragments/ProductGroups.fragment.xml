@@ -151,7 +151,7 @@
                                             <!-- ========== T&M ENTRIES LIST (INLINE) ========== -->
                                             <List items="{path: 'view>tmReports', templateShareable: false}" mode="None" showSeparators="None" visible="{= ${view>tmReportsCount} > 0 }">
                                                 <CustomListItem type="Inactive">
-                                                    <Panel headerText="{view>entryHeaderText}" expandable="true" expanded="false" class="tmEntryPanel">
+                                                    <Panel headerText="{view>entryHeaderText}" expandable="true" expanded="{view>expanded}" class="tmEntryPanel">
                                                         
                                                         <!-- Panel Header Toolbar -->
                                                         <headerToolbar>
@@ -159,7 +159,7 @@
                                                                 <core:Icon src="{= ${view>type} === 'Time Effort' ? 'sap-icon://time-entry-request' : ${view>type} === 'Material' ? 'sap-icon://product' : ${view>type} === 'Expense' ? 'sap-icon://money-bills' : 'sap-icon://car-rental'}" class="sapUiSmallMarginEnd"/>
                                                                 <Title text="{view>entryHeaderText}" level="H5"/>
                                                                 <ToolbarSpacer/>
-                                                                <Button text="{= ${view>editMode} ? 'Update' : 'Edit T&amp;M Entry'}" type="Emphasized" icon="{= ${view>editMode} ? 'sap-icon://save' : 'sap-icon://edit'}" press=".onToggleEditMode" visible="{= ${view>decisionStatus} === 'PENDING'}" class="sapUiTinyMarginEnd"/>
+                                                                <Button text="{= ${view>editMode} ? 'Update' : 'Edit T&amp;M Entry'}" type="Emphasized" icon="{= ${view>editMode} ? 'sap-icon://save' : 'sap-icon://edit'}" press=".onToggleEditMode" visible="{= ${view>decisionStatus} === 'PENDING' &amp;&amp; ${view>expanded} }" class="sapUiTinyMarginEnd"/>
                                                                 <ObjectStatus text="{view>decisionStatusText}" state="{view>decisionStatusState}" class="decisionStatusValue sapUiSmallMarginEnd"/>
                                                                 <Label text="ID: {view>id}"/>
                                                             </OverflowToolbar>

@@ -81,14 +81,22 @@ sap.ui.define([
          * ======================================== */
 
         /**
-         * Handle technician live change for time entries
+         * Handle technician live change for time entries.
+         * Uses entry-local suggestions path to avoid cross-entry interference.
          */
         onTimeEntryTechnicianLiveChange(oEvent) {
             const sValue = oEvent.getParameter("value") || "";
-            const aSuggestions = TechnicianService.searchTechnicians(sValue);
+            const oInput = oEvent.getSource();
+            const oContext = oInput.getBindingContext("createTM");
             
+            if (!oContext) return;
+            
+            const sPath = oContext.getPath();
             const oModel = this._tmCreateDialog.getModel("createTM");
-            oModel.setProperty("/timeEntryTechnicianSuggestions", aSuggestions);
+            
+            // Search all technicians and set on THIS entry's local path
+            const aSuggestions = TechnicianService.searchTechnicians(sValue);
+            oModel.setProperty(sPath + "/technicianSuggestions", aSuggestions);
         },
 
         /**
