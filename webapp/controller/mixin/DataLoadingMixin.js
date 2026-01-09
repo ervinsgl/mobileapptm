@@ -34,9 +34,8 @@ sap.ui.define([
     "mobileappsc/utils/services/TechnicianService",
     "mobileappsc/utils/helpers/URLHelper",
     "mobileappsc/utils/helpers/ProductGroupService",
-    "mobileappsc/utils/helpers/ReportedItemsData",
     "mobileappsc/utils/tm/TMDataService"
-], (MessageToast, MessageBox, OrganizationService, TimeTaskService, ItemService, ExpenseTypeService, ActivityService, ServiceOrderService, PersonService, BusinessPartnerService, ApprovalService, UdfMetaService, TechnicianService, URLHelper, ProductGroupService, ReportedItemsData, TMDataService) => {
+], (MessageToast, MessageBox, OrganizationService, TimeTaskService, ItemService, ExpenseTypeService, ActivityService, ServiceOrderService, PersonService, BusinessPartnerService, ApprovalService, UdfMetaService, TechnicianService, URLHelper, ProductGroupService, TMDataService) => {
     "use strict";
 
     return {
@@ -60,13 +59,9 @@ sap.ui.define([
                 const userName = webContext?.userName;
 
                 if (userName && userName !== 'N/A') {
-                    console.log('View1: Attempting to auto-resolve org level for user:', userName);
-                    
                     const resolvedOrgLevel = await OrganizationService.getUserResolvedOrgLevel(userName);
                     
                     if (resolvedOrgLevel && resolvedOrgLevel.found) {
-                        console.log('View1: Auto-resolved org level:', resolvedOrgLevel.name);
-                        
                         viewModel.setProperty("/webContainerContext/orgLevelId", resolvedOrgLevel.id);
                         viewModel.setProperty("/webContainerContext/orgLevelName", resolvedOrgLevel.name);
                         viewModel.setProperty("/selectedOrganizationLevel", {
@@ -79,7 +74,6 @@ sap.ui.define([
                         await this._loadActivityFromURL();
                         return;
                     } else {
-                        console.log('View1: Could not auto-resolve org level');
                         viewModel.setProperty("/webContainerContext/orgLevelName", "Not Assigned");
                     }
                 } else {
@@ -103,9 +97,7 @@ sap.ui.define([
          */
         async _loadOrganizationalHierarchy() {
             try {
-                console.log('Loading full organizational hierarchy...');
                 await OrganizationService.loadOrganizationalHierarchy();
-                console.log('Organizational hierarchy loaded successfully');
             } catch (error) {
                 console.error("Failed to load organizational hierarchy:", error);
             }
@@ -117,9 +109,7 @@ sap.ui.define([
          */
         async _loadTimeTasks() {
             try {
-                console.log('Loading time tasks for lookup...');
                 await TimeTaskService.fetchTimeTasks();
-                console.log('Time tasks loaded successfully');
             } catch (error) {
                 console.error("Failed to load time tasks:", error);
             }
@@ -131,9 +121,7 @@ sap.ui.define([
          */
         async _loadItems() {
             try {
-                console.log('Loading items for lookup...');
                 await ItemService.fetchItems();
-                console.log('Items loaded successfully');
             } catch (error) {
                 console.error("Failed to load items:", error);
             }
@@ -145,9 +133,7 @@ sap.ui.define([
          */
         async _loadExpenseTypes() {
             try {
-                console.log('Loading expense types for lookup...');
                 await ExpenseTypeService.fetchExpenseTypes();
-                console.log('Expense types loaded successfully');
             } catch (error) {
                 console.error("Failed to load expense types:", error);
             }
@@ -169,7 +155,6 @@ sap.ui.define([
                 
                 if (response.ok) {
                     const webContext = await response.json();
-                    console.log('Web container context loaded:', webContext);
                     
                     viewModel.setProperty("/webContainerContext", {
                         available: true,
@@ -186,11 +171,9 @@ sap.ui.define([
                     URLHelper.setWebContainerContext(webContext);
                     return webContext;
                 } else {
-                    console.log('No web container context available');
                     return null;
                 }
             } catch (error) {
-                console.log('Could not load web container context:', error.message);
                 return null;
             }
         },
@@ -204,11 +187,8 @@ sap.ui.define([
             const contextInfo = await URLHelper.getContextInfo();
             
             if (!contextInfo) {
-                console.log('No context found - no Activity or ServiceCall ID in URL or web container');
                 return;
             }
-
-            console.log(`Loading from ${contextInfo.source}: ${contextInfo.objectType} = ${contextInfo.objectId}`);
 
             // Store entry context for highlighting and reference
             const viewModel = this.getView().getModel("view");
@@ -219,10 +199,8 @@ sap.ui.define([
             });
 
             if (contextInfo.objectType === URLHelper.OBJECT_TYPES.ACTIVITY) {
-                // Activity context: fetch activity first to get service call ID
                 await this._loadActivity(contextInfo.objectId);
             } else if (contextInfo.objectType === URLHelper.OBJECT_TYPES.SERVICECALL) {
-                // ServiceCall context: go directly to service call loading
                 await this._loadServiceCallDirect(contextInfo.objectId);
             }
         },
@@ -237,14 +215,6 @@ sap.ui.define([
             await this._loadFromContext();
         },
 
-        /**
-         * Get current activity ID from URL or web container
-         * @private
-         */
-        async _getCurrentActivityId() {
-            return await URLHelper.getActivityIdAsync();
-        },
-
         /* =========================================================================
          * ACTIVITY LOADING METHODS
          * ========================================================================= */
@@ -254,8 +224,6 @@ sap.ui.define([
          * @private
          */
         async _loadActivity(activityId) {
-            console.log('Loading activity:', activityId);
-
             const viewModel = this.getView().getModel("view");
             viewModel.setProperty("/busy", true);
 
@@ -281,20 +249,15 @@ sap.ui.define([
 
         /**
          * Load service call directly (when opened from ServiceCall context).
-         * Skips the activity fetch step and goes directly to service call API.
          * @param {string} serviceCallId - The service call ID
          * @private
          */
         async _loadServiceCallDirect(serviceCallId) {
-            console.log('Loading service call directly:', serviceCallId);
-
             const viewModel = this.getView().getModel("view");
             viewModel.setProperty("/busy", true);
 
             try {
-                // Go directly to service call activities loading
                 await this._loadServiceCallActivities(serviceCallId);
-                
                 MessageToast.show("Service Call loaded");
 
             } catch (error) {
@@ -310,8 +273,6 @@ sap.ui.define([
          * @private
          */
         async _loadServiceCallActivities(serviceCallId) {
-            console.log('Loading service call activities:', serviceCallId);
-            
             const viewModel = this.getView().getModel("view");
             viewModel.setProperty("/activitiesLoading", true);
 
@@ -327,27 +288,15 @@ sap.ui.define([
                     activity.executionStage === "EXECUTION" || activity.executionStage === "CLOSED"
                 );
 
-                console.log('Filtered activities (EXECUTION + CLOSED):', filteredActivities.length);
-
                 // Filter by user's org level if available
                 if (userOrgLevelId) {
-                    console.log('Filtering activities by user org level:', userOrgLevelId);
-                    
                     filteredActivities = filteredActivities.filter(activity => {
                         const activityOrgLevelIds = activity.orgLevelIds || [];
-                        console.log('Activity', activity.code, 'orgLevelIds:', activityOrgLevelIds);
-                        
                         return activityOrgLevelIds.some(activityOrgLevelId => {
                             const formattedActivityOrgLevelId = OrganizationService.formatOrgLevelId(activityOrgLevelId);
-                            const match = formattedActivityOrgLevelId === userOrgLevelId;
-                            if (match) {
-                                console.log('  -> MATCH:', formattedActivityOrgLevelId, '===', userOrgLevelId);
-                            }
-                            return match;
+                            return formattedActivityOrgLevelId === userOrgLevelId;
                         });
                     });
-
-                    console.log('Filtered activities (by org level):', filteredActivities.length);
                 }
 
                 // Preload activity responsible persons for display
@@ -357,7 +306,6 @@ sap.ui.define([
                 
                 if (responsibleExternalIds.length > 0) {
                     const uniqueResponsibleIds = [...new Set(responsibleExternalIds)];
-                    console.log('Preloading activity responsible persons:', uniqueResponsibleIds.length);
                     await PersonService.preloadPersonsByExternalId(uniqueResponsibleIds);
                 }
 
@@ -424,12 +372,7 @@ sap.ui.define([
          * @private
          */
         _clearAllServiceCaches() {
-            console.log('DataLoadingMixin: Clearing all service caches');
-            
-            // Clear approval status cache (important for status updates)
             ApprovalService.clearCache();
-            
-            // Clear other service caches
             PersonService.clearCache();
             BusinessPartnerService.clearCache();
             TimeTaskService.clearCache();
@@ -438,8 +381,6 @@ sap.ui.define([
             UdfMetaService.clearCache();
             TechnicianService.clearCache();
             OrganizationService.clearCache();
-            
-            console.log('DataLoadingMixin: All service caches cleared');
         },
 
         /* =========================================================================
@@ -451,8 +392,6 @@ sap.ui.define([
          * @private
          */
         async _batchLoadTMReports(productGroups) {
-            console.log('Starting batch T&M loading...');
-
             const allActivities = [];
 
             productGroups.forEach((group, groupIndex) => {
@@ -465,12 +404,8 @@ sap.ui.define([
                 });
             });
 
-            console.log(`Batch loading T&M for ${allActivities.length} activities`);
-
             const model = this.getView().getModel("view");
             await this._batchLoadWithEnrichment(allActivities, model);
-
-            console.log('Batch T&M loading completed');
             model.refresh(true);
         },
 
@@ -517,45 +452,6 @@ sap.ui.define([
             } catch (error) {
                 console.error(`Error loading T&M for activity ${activityId}:`, error);
                 TMDataService.setErrorState(model, activityPath);
-            }
-        },
-
-        /**
-         * Load T&M Reports for an activity (legacy method)
-         * @private
-         */
-        async _loadTMReports(activityPath, activityId) {
-            const oModel = this.getView().getModel("view");
-
-            oModel.setProperty(activityPath + "/tmReportsLoading", true);
-
-            try {
-                const reports = await ReportedItemsData.getReportedItems(activityId);
-
-                const timeEffortCount = reports.filter(r => r.type === "Time Effort").length;
-                const materialCount = reports.filter(r => r.type === "Material").length;
-                const expenseCount = reports.filter(r => r.type === "Expense").length;
-                const mileageCount = reports.filter(r => r.type === "Mileage").length;
-
-                oModel.setProperty(activityPath + "/tmReports", reports);
-                oModel.setProperty(activityPath + "/tmReportsCount", reports.length);
-                oModel.setProperty(activityPath + "/tmReportsLoaded", true);
-                oModel.setProperty(activityPath + "/tmTimeEffortCount", timeEffortCount);
-                oModel.setProperty(activityPath + "/tmMaterialCount", materialCount);
-                oModel.setProperty(activityPath + "/tmExpenseCount", expenseCount);
-                oModel.setProperty(activityPath + "/tmMileageCount", mileageCount);
-
-                if (reports.length > 0) {
-                    MessageToast.show(`Loaded ${reports.length} T&M report(s)`);
-                }
-
-            } catch (error) {
-                console.error("Error loading T&M reports:", error);
-                MessageToast.show("Failed to load T&M reports: " + error.message);
-                oModel.setProperty(activityPath + "/tmReports", []);
-                oModel.setProperty(activityPath + "/tmReportsCount", 0);
-            } finally {
-                oModel.setProperty(activityPath + "/tmReportsLoading", false);
             }
         }
     };

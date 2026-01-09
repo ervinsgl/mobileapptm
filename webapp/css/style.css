@@ -27,6 +27,106 @@
    PAGE HEADER WITH CUSTOMER LOGO
    ======================================== */
 
+/* ========================================
+   GLOBAL FONT SIZE REDUCTION (~20% smaller)
+   ======================================== */
+
+/* Main app container - reduce base font size */
+.sapMPage,
+.sapMDialog {
+    font-size: 0.8rem;
+}
+
+/* Titles and headers - proportionally smaller */
+.sapMTitle {
+    font-size: 0.9rem !important;
+}
+
+.sapMTitle.sapMTitleStyleH4 {
+    font-size: 0.95rem !important;
+}
+
+.sapMTitle.sapMTitleStyleH5 {
+    font-size: 0.85rem !important;
+}
+
+.sapMTitle.sapMTitleStyleH6 {
+    font-size: 0.8rem !important;
+}
+
+/* Labels */
+.sapMLabel {
+    font-size: 0.75rem !important;
+}
+
+/* Text elements */
+.sapMText {
+    font-size: 0.75rem !important;
+}
+
+/* Input fields and controls */
+.sapMInput .sapMInputBaseInner,
+.sapMSelect .sapMSelectListItemText,
+.sapMComboBoxTextField .sapMInputBaseInner,
+.sapMTextArea .sapMInputBaseInner {
+    font-size: 0.75rem !important;
+}
+
+/* Buttons */
+.sapMBtn .sapMBtnContent {
+    font-size: 0.75rem !important;
+}
+
+/* ObjectStatus (Approved, Pending, etc.) */
+.sapMObjectStatus .sapMObjStatusText {
+    font-size: 0.7rem !important;
+}
+
+/* ObjectNumber */
+.sapMObjectNumber .sapMObjectNumberText {
+    font-size: 0.8rem !important;
+}
+
+/* List items */
+.sapMListTblCell,
+.sapMListTblRow {
+    font-size: 0.75rem !important;
+}
+
+/* Panel headers */
+.sapMPanelHdr {
+    font-size: 0.8rem !important;
+}
+
+/* Toolbar text */
+.sapMTB .sapMLabel,
+.sapMTB .sapMText {
+    font-size: 0.7rem !important;
+}
+
+/* StepInput */
+.sapMStepInput .sapMInputBaseInner {
+    font-size: 0.75rem !important;
+}
+
+.sapMStepInput .sapMStepInputDescription {
+    font-size: 0.7rem !important;
+}
+
+/* Select dropdown items */
+.sapMSelectList .sapMSelectListItemBase {
+    font-size: 0.75rem !important;
+}
+
+/* TextArea */
+.sapMTextArea textarea {
+    font-size: 0.75rem !important;
+}
+
+/* ========================================
+   END GLOBAL FONT SIZE REDUCTION
+   ======================================== */
+
 .customerLogo {
     vertical-align: middle;
 }
@@ -303,16 +403,6 @@
 .tmSummarySection {
     padding: 0.75rem 1rem;
     background: #fafafa;
-}
-
-/* ========================================
-   ACTION BUTTONS (ProductGroups fragment)
-   ======================================== */
-
-.activityActions {
-    display: flex;
-    gap: 0.5rem;
-    margin-top: 0.75rem;
 }
 
 /* ========================================
@@ -1006,18 +1096,7 @@
     }
 }
 
-/* ========================================
-   ACCESSIBILITY
-   ======================================== */
-
 .sapMComboBox:focus {
     outline: 2px solid #0854a0;
     outline-offset: 2px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .productGroupPanel,
-    .serviceOrderPanel {
-        transition: none;
-    }
 }

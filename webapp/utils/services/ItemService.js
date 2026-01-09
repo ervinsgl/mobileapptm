@@ -187,18 +187,6 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Get full item object by external ID.
-         * @param {string} externalId - Item external ID
-         * @returns {Object|null} Item object or null
-         */
-        getItemByExternalId(externalId) {
-            if (!externalId || !_itemsMapByExternalId) {
-                return null;
-            }
-            return _itemsMapByExternalId.get(externalId) || null;
-        },
-
-        /**
          * Get all cached items.
          * @returns {Array} Array of item objects
          */
@@ -224,23 +212,6 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Search items by name or externalId (client-side filtering).
-         * @param {string} searchTerm - Search term
-         * @returns {Array} Filtered array of items
-         */
-        searchItems(searchTerm) {
-            if (!_itemsCache || !searchTerm) {
-                return _itemsCache || [];
-            }
-
-            const lowerSearch = searchTerm.toLowerCase();
-            return _itemsCache.filter(item => 
-                (item.name && item.name.toLowerCase().includes(lowerSearch)) ||
-                (item.externalId && item.externalId.toLowerCase().includes(lowerSearch))
-            );
-        },
-
-        /**
          * Get all items formatted for Input suggestions.
          * @returns {Array<{id: string, externalId: string, name: string, displayText: string}>}
          */
@@ -255,40 +226,6 @@ sap.ui.define([], () => {
                 name: item.name,
                 displayText: `${item.externalId} - ${item.name}`
             }));
-        },
-
-        /**
-         * Filter items by search term for suggestions (optimized for liveChange).
-         * @param {string} searchTerm - Search term (minimum 2 characters)
-         * @returns {Array} Filtered array of suggestion items (max 50)
-         */
-        filterBySearch(searchTerm) {
-            if (!searchTerm || searchTerm.length < 2) {
-                return [];
-            }
-
-            const lowerSearch = searchTerm.toLowerCase();
-            const results = [];
-
-            if (_itemsCache) {
-                _itemsCache.forEach(item => {
-                    const nameMatch = item.name && item.name.toLowerCase().includes(lowerSearch);
-                    const externalIdMatch = item.externalId && item.externalId.toLowerCase().includes(lowerSearch);
-
-                    if (nameMatch || externalIdMatch) {
-                        results.push({
-                            id: item.id,
-                            externalId: item.externalId,
-                            name: item.name,
-                            displayText: `${item.externalId} - ${item.name}`
-                        });
-                    }
-                });
-            }
-
-            results.sort((a, b) => a.externalId.localeCompare(b.externalId));
-
-            return results.slice(0, 50);
         },
 
         /**
@@ -311,14 +248,6 @@ sap.ui.define([], () => {
                 };
             }
             return null;
-        },
-
-        /**
-         * Check if items are loaded.
-         * @returns {boolean} True if cache is populated
-         */
-        isLoaded() {
-            return _itemsCache !== null;
         },
 
         /**

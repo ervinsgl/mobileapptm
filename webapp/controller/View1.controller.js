@@ -373,30 +373,6 @@ sap.ui.define([
                 const model = this.getView().getModel("view");
                 model.setProperty(productPath + "/expanded", expanded);
             }
-        },
-
-        /**
-         * Toggle T&M Reports (legacy method)
-         */
-        async onToggleTMReports(oEvent) {
-            const oIcon = oEvent.getSource();
-            const oContext = oIcon.getBindingContext("view");
-
-            if (!oContext) return;
-
-            const sPath = oContext.getPath();
-            const oModel = this.getView().getModel("view");
-            const oActivity = oContext.getObject();
-
-            const bCurrentState = oModel.getProperty(sPath + "/tmReportsExpanded");
-            const bNewState = !bCurrentState;
-
-            oModel.setProperty(sPath + "/tmReportsExpanded", bNewState);
-            oModel.setProperty(sPath + "/tmIconClass", bNewState ? 'expandIcon expandIconRotated' : 'expandIcon');
-
-            if (bNewState && !oModel.getProperty(sPath + "/tmReportsLoaded")) {
-                await this._loadTMReports(sPath, oActivity.id);
-            }
         }
 
     }));

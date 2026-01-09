@@ -95,59 +95,6 @@ sap.ui.define([
             model.setProperty(`${activityPath}/tmReportsLoadingState`, 'error');
             model.setProperty(`${activityPath}/tmReportsLoading`, false);
             model.setProperty(`${activityPath}/tmReportsCount`, 0);
-        },
-
-        /**
-         * Batch load T&M reports for multiple activities.
-         * Processes in chunks with rate limiting to avoid API overload.
-         * @param {Array<{id: string, path: string}>} activities - Array of activity objects with paths
-         * @param {sap.ui.model.json.JSONModel} model - View model
-         * @param {number} [chunkSize=10] - Number of activities to process in parallel
-         * @returns {Promise<void>}
-         */
-        async batchLoadTMReports(activities, model, chunkSize = 10) {
-            for (let i = 0; i < activities.length; i += chunkSize) {
-                const chunk = activities.slice(i, i + chunkSize);
-
-                chunk.forEach(activity => {
-                    this.setLoadingState(model, activity.path, true);
-                });
-
-                const promises = chunk.map(activity =>
-                    this.loadSingleActivityTM(activity.id, activity.path, model)
-                );
-
-                try {
-                    await Promise.allSettled(promises);
-                } catch (error) {
-                    console.error('TMDataService: Error in batch loading chunk:', error);
-                }
-
-                // Small delay between chunks to avoid API rate limiting
-                if (i + chunkSize < activities.length) {
-                    await new Promise(resolve => setTimeout(resolve, 100));
-                }
-            }
-
-            model.refresh(true);
-        },
-
-        /**
-         * Load T&M for single activity (used in batch loading).
-         * @param {string} activityId - Activity ID
-         * @param {string} activityPath - Path to activity in model
-         * @param {sap.ui.model.json.JSONModel} model - View model
-         * @returns {Promise<void>}
-         * @private
-         */
-        async loadSingleActivityTM(activityId, activityPath, model) {
-            try {
-                const tmData = await this.loadTMReports(activityId);
-                this.updateActivityWithTMData(model, activityPath, tmData);
-            } catch (error) {
-                console.error(`TMDataService: Error loading T&M for activity ${activityId}:`, error);
-                this.setErrorState(model, activityPath);
-            }
         }
     };
 });

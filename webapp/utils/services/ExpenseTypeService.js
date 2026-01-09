@@ -122,18 +122,6 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Get full expense type object by ID.
-         * @param {string} expenseTypeId - Expense type ID
-         * @returns {Object|null} Expense type object or null
-         */
-        getExpenseTypeById(expenseTypeId) {
-            if (!expenseTypeId || !_expenseTypesMap) {
-                return null;
-            }
-            return _expenseTypesMap.get(expenseTypeId) || null;
-        },
-
-        /**
          * Get all cached expense types.
          * @returns {Array} Array of expense type objects
          */

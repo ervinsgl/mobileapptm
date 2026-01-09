@@ -230,14 +230,6 @@ sap.ui.define([
         },
 
         /**
-         * Get total count of loaded technicians.
-         * @returns {number} Total count
-         */
-        getTotalCount() {
-            return this._personsArray.length;
-        },
-
-        /**
          * Clear cache and reset state.
          */
         clearCache() {

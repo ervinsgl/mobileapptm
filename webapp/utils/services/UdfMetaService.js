@@ -170,23 +170,6 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Check if a UDF Meta ID is cached.
-         * @param {string} udfMetaId - UDF Meta ID
-         * @returns {boolean} True if cached
-         */
-        isCached(udfMetaId) {
-            return _udfMetaCache.has(udfMetaId);
-        },
-
-        /**
-         * Get cache size.
-         * @returns {number} Number of cached entries
-         */
-        getCacheSize() {
-            return _udfMetaCache.size;
-        },
-
-        /**
          * Clear the cache.
          */
         clearCache() {

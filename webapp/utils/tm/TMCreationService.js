@@ -69,7 +69,6 @@ sap.ui.define([
          * @param {string} plannedStartDate - ISO datetime string from activity
          */
         setActivityPlannedStartDate(plannedStartDate) {
-            console.log('TMCreationService: Setting activity planned start date:', plannedStartDate);
             this._activityPlannedStartDate = plannedStartDate;
         },
 
@@ -79,13 +78,6 @@ sap.ui.define([
          */
         getActivityPlannedStartDate() {
             return this._activityPlannedStartDate;
-        },
-
-        /**
-         * Clear activity planned start date.
-         */
-        clearActivityPlannedStartDate() {
-            this._activityPlannedStartDate = null;
         },
 
         /**
@@ -102,13 +94,6 @@ sap.ui.define([
          */
         getDefaultQuantity() {
             return this._defaultQuantity;
-        },
-
-        /**
-         * Clear default quantity.
-         */
-        clearDefaultQuantity() {
-            this._defaultQuantity = null;
         },
 
         /**
@@ -135,28 +120,11 @@ sap.ui.define([
         },
 
         /**
-         * Get today's date in yyyy-MM-dd format.
-         * @returns {string} Date string (e.g., "2025-10-29")
-         */
-        getTodayDateString() {
-            return DateTimeService.getTodayDateString();
-        },
-
-        /**
          * Get current datetime in ISO format.
          * @returns {string} ISO datetime string (e.g., "2025-11-28T12:30:00Z")
          */
         getNowDateTimeString() {
             return DateTimeService.getNowDateTimeString();
-        },
-
-        /**
-         * Get datetime with offset in ISO format.
-         * @param {number} offsetMinutes - Minutes to add (can be negative)
-         * @returns {string} ISO datetime string
-         */
-        getDateTimeWithOffset(offsetMinutes) {
-            return DateTimeService.getDateTimeWithOffset(offsetMinutes);
         },
 
         /**
@@ -167,16 +135,6 @@ sap.ui.define([
          */
         calculateEndDateTime(startDateTime, durationMinutes) {
             return DateTimeService.calculateEndDateTime(startDateTime, durationMinutes);
-        },
-
-        /**
-         * Calculate duration in minutes between two datetimes.
-         * @param {string} startDateTime - ISO datetime string
-         * @param {string} endDateTime - ISO datetime string
-         * @returns {number} Duration in minutes
-         */
-        calculateDurationMinutes(startDateTime, endDateTime) {
-            return DateTimeService.calculateDurationMinutes(startDateTime, endDateTime);
         },
 
         /**
@@ -239,8 +197,6 @@ sap.ui.define([
             // Use activity planned start date, fallback to current time
             const startDateTime = this._activityPlannedStartDate || this.getNowDateTimeString();
             const endDateTime = this.calculateEndDateTime(startDateTime, defaultDuration);
-            
-            console.log('TMCreationService: Creating Time Effort entry with startDateTime:', startDateTime, '(from planned:', this._activityPlannedStartDate, ')');
             
             return {
                 type: "Time Effort",

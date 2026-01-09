@@ -56,43 +56,22 @@ app.enable('trust proxy');
 // Configure this URL in FSM Admin > Web Containers
 
 app.post("/web-container-access-point", (req, res) => {
-    console.log('\n========================================');
-    console.log('FSM WEB CONTAINER: POST Request Received');
-    console.log('========================================');
-    console.log('Content-Type:', req.headers['content-type']);
-    console.log('Body:', JSON.stringify(req.body, null, 2));
-    
     // Store context in memory (for frontend Session Context panel and cloudId)
     mobileAppContext = req.body || {};
     
-    console.log('\n--- Stored Context ---');
-    console.log('cloudId (objectId):', mobileAppContext.cloudId);
-    console.log('objectType:', mobileAppContext.objectType);
-    console.log('userName:', mobileAppContext.userName);
-    console.log('cloudAccount:', mobileAppContext.cloudAccount);
-    console.log('companyName:', mobileAppContext.companyName);
-    console.log('language:', mobileAppContext.language);
-    
     // Redirect to app root (frontend will fetch context via GET)
     const redirectUrl = req.protocol + '://' + req.get('host');
-    console.log('\nRedirecting to:', redirectUrl);
-    
     res.redirect(redirectUrl);
 });
 
 // GET endpoint for frontend to retrieve stored context
 app.get("/web-container-context", (req, res) => {
-    console.log('FSM WEB CONTAINER: Context requested');
-    
     if (mobileAppContext === undefined) {
-        console.log('  -> No context available');
         return res.status(404).json({ 
             message: 'Context from mobile web container is not available.',
             hint: 'Open this app from FSM Mobile web container, not directly in browser.'
         });
     }
-    
-    console.log('  -> Returning context for cloudId:', mobileAppContext.cloudId);
     
     // Return context (for Session Context panel and cloudId)
     return res.json(mobileAppContext);
@@ -100,7 +79,6 @@ app.get("/web-container-context", (req, res) => {
 
 // Also handle POST to root "/" in case FSM sends there
 app.post("/", (req, res) => {
-    console.log('FSM WEB CONTAINER: POST to "/" - storing context');
     mobileAppContext = req.body || {};
     const redirectUrl = req.protocol + '://' + req.get('host');
     res.redirect(redirectUrl);
@@ -223,8 +201,6 @@ app.post("/api/get-reported-items", async (req, res) => {
             ...expenses,
             ...mileages
         ];
-
-        console.log('Backend: Sending enhanced T&M data:', allItems);
 
         res.json({
             items: allItems,     // Full data including all fields
@@ -530,9 +506,6 @@ app.post("/api/create-time-material", async (req, res) => {
 app.post("/api/get-persons", async (req, res) => {
     try {
         const persons = await FSMService.getPersons();
-
-        console.log(`Backend: Loaded ${persons.length} persons`);
-
         res.json({ persons });
 
     } catch (error) {
@@ -626,9 +599,6 @@ app.post("/api/get-business-partner-by-external-id", async (req, res) => {
 app.get("/api/get-organization-levels-full", async (req, res) => {
     try {
         const data = await FSMService.getOrganizationLevels();
-        
-        console.log('Backend: Sending full organization levels hierarchy');
-
         res.json(data);
 
     } catch (error) {
@@ -644,8 +614,6 @@ app.get("/api/get-organization-levels-full", async (req, res) => {
 app.get("/api/get-time-tasks", async (req, res) => {
     try {
         const timeTasks = await FSMService.getTimeTasks();
-        
-        console.log('Backend: Sending', timeTasks.length, 'time tasks');
         
         res.json({
             timeTasks: timeTasks,
@@ -666,8 +634,6 @@ app.get("/api/get-items", async (req, res) => {
     try {
         const items = await FSMService.getItems();
         
-        console.log('Backend: Sending', items.length, 'items');
-        
         res.json({
             items: items,
             count: items.length
@@ -686,8 +652,6 @@ app.get("/api/get-items", async (req, res) => {
 app.get("/api/get-expense-types", async (req, res) => {
     try {
         const expenseTypes = await FSMService.getExpenseTypes();
-        
-        console.log('Backend: Sending', expenseTypes.length, 'expense types');
         
         res.json({
             expenseTypes: expenseTypes,
@@ -714,8 +678,6 @@ app.post("/api/get-udf-meta", async (req, res) => {
     try {
         const externalId = await FSMService.getUdfMetaById(udfMetaId);
         
-        console.log('Backend: Resolved UDF Meta', udfMetaId, 'to', externalId);
-        
         res.json({
             id: udfMetaId,
             externalId: externalId
@@ -741,8 +703,6 @@ app.post("/api/get-approval-status", async (req, res) => {
     try {
         const statusMap = await FSMService.getApprovalStatusBatch(objectIds);
         
-        console.log('Backend: Retrieved approval statuses for', Object.keys(statusMap).length, 'objects');
-        
         res.json({
             statuses: statusMap,
             count: Object.keys(statusMap).length
@@ -767,8 +727,6 @@ app.post("/api/get-user-org-level", async (req, res) => {
     }
 
     try {
-        console.log('Backend: Getting org level for user:', username);
-        
         const userOrgLevel = await FSMService.getUserOrgLevel(username);
         
         if (!userOrgLevel) {
@@ -778,8 +736,6 @@ app.post("/api/get-user-org-level", async (req, res) => {
             });
         }
 
-        console.log('Backend: Found org level for user:', userOrgLevel);
-        
         res.json({
             success: true,
             data: userOrgLevel

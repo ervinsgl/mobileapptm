@@ -130,112 +130,6 @@ sap.ui.define([
         },
 
         /**
-         * Build update payload for API.
-         * @param {string} type - Report type
-         * @param {string} id - Report ID
-         * @param {Object} values - Edited values
-         * @returns {Object} API payload
-         */
-        buildUpdatePayload(type, id, values) {
-            const payload = { id };
-
-            switch (type) {
-                case "Time Effort":
-                    payload.endDateTime = values.endDateTime;
-                    payload.remarks = values.remarks;
-                    payload.durationMinutes = values.durationMinutes;
-                    break;
-
-                case "Material":
-                    payload.date = values.date;
-                    payload.quantity = values.quantity;
-                    payload.remarks = values.remarks;
-                    break;
-
-                case "Expense":
-                    payload.date = values.date;
-                    payload.externalAmount = { amount: values.externalAmount, currency: "EUR" };
-                    payload.internalAmount = { amount: values.internalAmount, currency: "EUR" };
-                    payload.remarks = values.remarks;
-                    break;
-
-                case "Mileage":
-                    payload.date = values.date;
-                    payload.distance = values.distance;
-                    payload.distanceUnit = "KM";
-                    payload.source = values.source;
-                    payload.destination = values.destination;
-                    payload.travelStartDateTime = values.travelStartDateTime;
-                    payload.travelEndDateTime = values.travelEndDateTime;
-                    payload.remarks = values.remarks;
-                    break;
-            }
-
-            return payload;
-        },
-
-        /**
-         * Get display value updates after save.
-         * @param {string} type - Report type
-         * @param {Object} values - Edited values
-         * @returns {Object} Display updates as {path: value} pairs
-         */
-        getDisplayUpdates(type, values) {
-            const orNA = (val) => val || "N/A";
-
-            switch (type) {
-                case "Time Effort":
-                    return {
-                        "endDateTime": values.endDateTime,
-                        "remarksText": orNA(values.remarks),
-                        "durationMinutes": values.durationMinutes,
-                        "durationText": values.durationMinutes + " min"
-                    };
-
-                case "Material":
-                    return {
-                        "fullData/date": values.date,
-                        "fullData/quantity": values.quantity,
-                        "dateText": orNA(values.date),
-                        "quantityText": values.quantity ? String(values.quantity) : "N/A",
-                        "remarksText": orNA(values.remarks)
-                    };
-
-                case "Expense":
-                    return {
-                        "fullData/date": values.date,
-                        "fullData/externalAmount/amount": values.externalAmount,
-                        "fullData/internalAmount/amount": values.internalAmount,
-                        "dateText": orNA(values.date),
-                        "externalAmountText": values.externalAmount + " EUR",
-                        "internalAmountText": values.internalAmount + " EUR",
-                        "remarksText": orNA(values.remarks)
-                    };
-
-                case "Mileage":
-                    const routeText = (values.source && values.destination) 
-                        ? values.source + " â†’ " + values.destination 
-                        : "N/A";
-                    return {
-                        "fullData/date": values.date,
-                        "fullData/distance": values.distance,
-                        "source": values.source,
-                        "destination": values.destination,
-                        "travelEndDateTime": values.travelEndDateTime,
-                        "travelDurationMinutes": values.travelDuration,
-                        "travelDurationText": values.travelDuration + " min",
-                        "dateText": orNA(values.date),
-                        "distanceText": values.distance + " KM",
-                        "routeText": routeText,
-                        "remarksText": orNA(values.remarks)
-                    };
-
-                default:
-                    return {};
-            }
-        },
-
-        /**
          * Apply edit values to model.
          * @param {sap.ui.model.json.JSONModel} model - Dialog model
          * @param {string} path - Path to report in model
@@ -244,18 +138,6 @@ sap.ui.define([
         applyEditValues(model, path, editValues) {
             Object.keys(editValues).forEach(key => {
                 model.setProperty(path + "/" + key, editValues[key]);
-            });
-        },
-
-        /**
-         * Apply display updates to model.
-         * @param {sap.ui.model.json.JSONModel} model - Dialog model
-         * @param {string} path - Path to report in model
-         * @param {Object} displayUpdates - Values from getDisplayUpdates
-         */
-        applyDisplayUpdates(model, path, displayUpdates) {
-            Object.keys(displayUpdates).forEach(key => {
-                model.setProperty(path + "/" + key, displayUpdates[key]);
             });
         },
 
@@ -293,15 +175,6 @@ sap.ui.define([
                 const newEndDateTime = this.calculateEndDateTime(startDateTime, newDuration);
                 model.setProperty(path + endProperty, newEndDateTime);
             }
-        },
-
-        /**
-         * Format payload as JSON string for display.
-         * @param {Object} payload - Payload object
-         * @returns {string} Formatted JSON
-         */
-        formatPayloadJSON(payload) {
-            return JSON.stringify(payload, null, 2);
         }
     };
 });

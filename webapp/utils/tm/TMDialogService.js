@@ -131,8 +131,6 @@ sap.ui.define([
                         defaultTechExternalId = responsibleTech.externalId;
                         defaultTechDisplay = responsibleTech.displayText;
                         TMCreationService.setDefaultTechnician(responsibleTech);
-                        
-                        console.log('TMDialogService: Added responsible technician:', responsibleTech.displayText);
                     }
                 }
                 
@@ -152,7 +150,6 @@ sap.ui.define([
                                     isResponsible: true
                                 });
                                 addedTechnicianIds.add(tech.id);
-                                console.log('TMDialogService: Added additional responsible:', tech.displayText);
                             }
                         }
                     }
@@ -169,14 +166,10 @@ sap.ui.define([
                                     isResponsible: false
                                 });
                                 addedTechnicianIds.add(tech.id);
-                                console.log('TMDialogService: Added supporting person:', tech.displayText);
-                            } else {
-                                console.warn('TMDialogService: Could not resolve supporting person ID:', id);
                             }
                         }
                     }
                 } catch (apiError) {
-                    console.warn('TMDialogService: Failed to fetch supportingPersons, using responsible only:', apiError.message);
                     // Continue with just the responsible - dropdown will still work
                 }
                 
@@ -188,8 +181,6 @@ sap.ui.define([
                     defaultTechDisplay = firstTech.displayText;
                     TMCreationService.setDefaultTechnician(firstTech);
                 }
-                
-                console.log('TMDialogService: Activity technicians dropdown:', activityTechnicians.length, 'technicians');
                 
             } catch (error) {
                 console.error('TMDialogService: Failed to initialize TechnicianService:', error);
@@ -253,9 +244,6 @@ sap.ui.define([
                     if (!defaultExpType) {
                         // Fallback to first expense type if no match
                         defaultExpType = expenseTypeSuggestions[0];
-                        console.log('TMDialogService: No matching ExpenseType for ServiceProduct', serviceProductExtId, '- using fallback');
-                    } else {
-                        console.log('TMDialogService: Matched ExpenseType', defaultExpType.code, 'to ServiceProduct', serviceProductExtId);
                     }
                     
                     TMCreationService.setDefaultExpenseType({
@@ -282,7 +270,6 @@ sap.ui.define([
             TMCreationService.setDefaultQuantity(defaultQuantity);
 
             // Set activity planned start date for Time Effort entries
-            console.log('TMDialogService: Activity planned start date from activityData:', activityData.plannedStartDate);
             TMCreationService.setActivityPlannedStartDate(activityData.plannedStartDate);
 
             const oCreateTMDialogModel = new JSONModel({

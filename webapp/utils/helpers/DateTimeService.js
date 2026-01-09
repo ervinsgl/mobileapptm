@@ -46,18 +46,6 @@ sap.ui.define([], () => {
             return date.toISOString().replace(/\.\d{3}Z$/, 'Z');
         },
 
-        /**
-         * Get today's date in yyyy-MM-dd format for API.
-         * @returns {string} Date string (e.g., "2025-11-28")
-         */
-        getTodayDateString() {
-            const today = new Date();
-            const year = today.getFullYear();
-            const month = String(today.getMonth() + 1).padStart(2, '0');
-            const day = String(today.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
-        },
-
         /* =========================================================================
          * DURATION CALCULATIONS
          * ========================================================================= */
@@ -75,22 +63,6 @@ sap.ui.define([], () => {
             const start = new Date(startDateTime);
             start.setMinutes(start.getMinutes() + durationMinutes);
             return start.toISOString().replace(/\.\d{3}Z$/, 'Z');
-        },
-
-        /**
-         * Calculate duration in minutes between two datetimes.
-         * @param {string} startDateTime - ISO datetime string
-         * @param {string} endDateTime - ISO datetime string
-         * @returns {number} Duration in minutes (minimum 0)
-         */
-        calculateDurationMinutes(startDateTime, endDateTime) {
-            if (!startDateTime || !endDateTime) {
-                return 30;
-            }
-            const start = new Date(startDateTime);
-            const end = new Date(endDateTime);
-            const diffMs = end - start;
-            return Math.max(0, Math.round(diffMs / 60000));
         },
 
         /* =========================================================================
@@ -138,54 +110,6 @@ sap.ui.define([], () => {
                 return sEndDateTime;
             }
             return null;
-        },
-
-        /* =========================================================================
-         * DEFAULT VALUES FOR ENTRY CREATION
-         * ========================================================================= */
-
-        /**
-         * Get default datetime values for a new entry.
-         * @param {number} [defaultDuration=30] - Default duration in minutes
-         * @returns {{duration: number, startDateTime: string, endDateTime: string}}
-         */
-        getDefaultDateTimeValues(defaultDuration) {
-            const duration = defaultDuration || 30;
-            return {
-                duration: duration,
-                startDateTime: this.getNowDateTimeString(),
-                endDateTime: this.getDateTimeWithOffset(duration)
-            };
-        },
-
-        /**
-         * Get default travel datetime values for Mileage entry.
-         * @param {number} [defaultDuration=30] - Default duration in minutes
-         * @returns {{travelDuration: number, travelStartDateTime: string, travelEndDateTime: string}}
-         */
-        getDefaultTravelDateTimeValues(defaultDuration) {
-            const duration = defaultDuration || 30;
-            return {
-                travelDuration: duration,
-                travelStartDateTime: this.getNowDateTimeString(),
-                travelEndDateTime: this.getDateTimeWithOffset(duration)
-            };
-        },
-
-        /**
-         * Get default datetime values for Time & Material column.
-         * @param {number} columnIndex - Column index (1, 2, or 3)
-         * @param {number} [defaultDuration=30] - Default duration in minutes
-         * @returns {Object} Object with duration{n}, startDateTime{n}, endDateTime{n}
-         */
-        getDefaultColumnDateTimeValues(columnIndex, defaultDuration) {
-            const duration = defaultDuration || 30;
-            const n = columnIndex;
-            return {
-                [`duration${n}`]: duration,
-                [`startDateTime${n}`]: this.getNowDateTimeString(),
-                [`endDateTime${n}`]: this.getDateTimeWithOffset(duration)
-            };
         }
     };
 });

@@ -35,53 +35,8 @@ sap.ui.define([
     return {
 
         /* ========================================
-         * T&M REPORTS DIALOG METHODS
+         * ACTIVITY DETAILS TOGGLE
          * ======================================== */
-
-        /**
-         * Toggle extended activity details
-         */
-        onToggleDetails(oEvent) {
-            const oLink = oEvent.getSource();
-            const oContext = oLink.getBindingContext("view");
-
-            if (!oContext) return;
-
-            const sPath = oContext.getPath();
-            const oModel = this.getView().getModel("view");
-            const bCurrentState = oModel.getProperty(sPath + "/detailsExpanded");
-
-            oModel.setProperty(sPath + "/detailsExpanded", !bCurrentState);
-        },
-
-        /**
-         * View T&M Reports (opens dialog)
-         */
-        async onViewTMReports(oEvent) {
-            const oButton = oEvent.getSource();
-            const oContext = oButton.getBindingContext("view");
-
-            if (!oContext) return;
-
-            const oActivity = oContext.getObject();
-
-            try {
-                let reports = oActivity.tmReports;
-                
-                if (!oActivity.tmReportsLoaded || !reports || reports.length === 0) {
-                    console.log('Loading fresh T&M data for activity:', oActivity.code);
-                    const tmData = await TMDataService.loadTMReports(oActivity.id);
-                    reports = tmData.reports;
-                }
-
-                await this._enrichTMReports(reports);
-                await TMDialogService.openTMReportsDialog(oActivity, reports);
-
-            } catch (error) {
-                console.error('Error loading T&M data:', error);
-                MessageToast.show("Failed to load T&M data: " + error.message);
-            }
-        },
 
         /**
          * Enrich T&M reports with lookup data
@@ -160,13 +115,6 @@ sap.ui.define([
         },
 
         /**
-         * Close T&M Reports Dialog
-         */
-        onCloseTMReportsDialog() {
-            TMDialogService.closeTMReportsDialog();
-        },
-
-        /**
          * Extract activityId from model path or model property
          * For view model: path is /productGroups/X/activities/Y/tmReports/Z
          * For dialog model: activityId is at /activityId
@@ -190,7 +138,6 @@ sap.ui.define([
                 }
             }
             
-            console.warn('TMDialogMixin: Could not extract activityId from path:', sPath);
             return null;
         },
 
@@ -351,24 +298,6 @@ sap.ui.define([
             }
 
             await TMDialogService.openTMCreationDialog(activityData);
-        },
-
-        /**
-         * Add Time Effort Entry
-         */
-        onAddTimeEffortEntry() {
-            const oModel = this._tmCreateDialog.getModel("createTM");
-            const entry = TMCreationService.createTimeEffortEntry();
-            TMCreationService.addEntryToModel(oModel, entry, "Time Effort");
-        },
-
-        /**
-         * Add Material Entry
-         */
-        onAddMaterialEntry() {
-            const oModel = this._tmCreateDialog.getModel("createTM");
-            const entry = TMCreationService.createMaterialEntry();
-            TMCreationService.addEntryToModel(oModel, entry, "Material");
         },
 
         /**
@@ -1354,8 +1283,6 @@ sap.ui.define([
                 
                 // Update the main view model's T&M counts for this activity
                 this._updateMainViewTMCounts(activityId, tmData.reports);
-                
-                console.log('TMDialogMixin: T&M Reports refreshed after create');
             } catch (error) {
                 console.error('TMDialogMixin: Error refreshing T&M Reports:', error);
             }
@@ -1392,14 +1319,10 @@ sap.ui.define([
                             oViewModel.setProperty(activityPath + "/tmExpenseCount", expenseCount);
                             oViewModel.setProperty(activityPath + "/tmMileageCount", mileageCount);
                             oViewModel.setProperty(activityPath + "/tmReports", reports);
-                            
-                            console.log(`TMDialogMixin: Updated main view T&M counts for activity ${activityId}: ${reports.length} total`);
                             return;
                         }
                     }
                 }
-                
-                console.warn(`TMDialogMixin: Activity ${activityId} not found in view model for count update`);
             } catch (error) {
                 console.error('TMDialogMixin: Error updating main view T&M counts:', error);
             }
@@ -1422,113 +1345,6 @@ sap.ui.define([
                 contentWidth: "500px",
                 styleClass: "sapUiSizeCompact"
             });
-        },
-
-        /* ========================================
-         * DURATION / DATETIME CHANGE HANDLERS
-         * ======================================== */
-
-        /**
-         * Handle duration change for Time Effort
-         */
-        onDurationChange(oEvent) {
-            const oContext = oEvent.getSource().getBindingContext("createTM");
-            if (!oContext) return;
-
-            const oModel = this._tmCreateDialog.getModel("createTM");
-            const iDuration = oEvent.getParameter("value");
-            DateTimeService.handleDurationChange(oModel, oContext.getPath(), iDuration, "startDateTime", "endDateTime");
-        },
-
-        /**
-         * Handle start datetime change for Time Effort
-         */
-        onStartDateTimeChange(oEvent) {
-            const oContext = oEvent.getSource().getBindingContext("createTM");
-            if (!oContext) return;
-
-            const oModel = this._tmCreateDialog.getModel("createTM");
-            DateTimeService.handleStartDateTimeChange(oModel, oContext.getPath(), "startDateTime", "duration", "endDateTime", 30);
-        },
-
-        /**
-         * Handle duration1 change for Time & Material
-         */
-        onDuration1Change(oEvent) {
-            this._handleTimeAndMaterialDurationChange(oEvent, 1);
-        },
-
-        /**
-         * Handle duration2 change for Time & Material
-         */
-        onDuration2Change(oEvent) {
-            this._handleTimeAndMaterialDurationChange(oEvent, 2);
-        },
-
-        /**
-         * Handle duration3 change for Time & Material
-         */
-        onDuration3Change(oEvent) {
-            this._handleTimeAndMaterialDurationChange(oEvent, 3);
-        },
-
-        /**
-         * Handle start datetime change for T&M column 1
-         */
-        onStartDateTime1Change(oEvent) {
-            this._handleTimeAndMaterialStartChange(oEvent, 1);
-        },
-
-        /**
-         * Handle start datetime change for T&M column 2
-         */
-        onStartDateTime2Change(oEvent) {
-            this._handleTimeAndMaterialStartChange(oEvent, 2);
-        },
-
-        /**
-         * Handle start datetime change for T&M column 3
-         */
-        onStartDateTime3Change(oEvent) {
-            this._handleTimeAndMaterialStartChange(oEvent, 3);
-        },
-
-        /**
-         * Generic handler for Time & Material duration changes
-         * @private
-         */
-        _handleTimeAndMaterialDurationChange(oEvent, iColumnIndex) {
-            const oContext = oEvent.getSource().getBindingContext("createTM");
-            if (!oContext) return;
-
-            const oModel = this._tmCreateDialog.getModel("createTM");
-            const iDuration = oEvent.getParameter("value");
-            DateTimeService.handleDurationChange(
-                oModel, 
-                oContext.getPath(), 
-                iDuration, 
-                "startDateTime" + iColumnIndex, 
-                "endDateTime" + iColumnIndex
-            );
-        },
-
-        /**
-         * Generic handler for Time & Material start datetime changes
-         * @private
-         */
-        _handleTimeAndMaterialStartChange(oEvent, iColumnIndex) {
-            const oContext = oEvent.getSource().getBindingContext("createTM");
-            if (!oContext) return;
-
-            const oModel = this._tmCreateDialog.getModel("createTM");
-            DateTimeService.handleStartDateTimeChange(
-                oModel, 
-                oContext.getPath(), 
-                "startDateTime" + iColumnIndex, 
-                "duration" + iColumnIndex, 
-                "endDateTime" + iColumnIndex, 
-                30
-            );
         },
 
         /* ========================================
@@ -1616,7 +1432,6 @@ sap.ui.define([
             aTimeEfforts.push(newEntry);
             
             oModel.setProperty(sPath + "/" + sArrayProperty, aTimeEfforts);
-            console.log('Added time effort', sType, 'to', sPath, '- total:', aTimeEfforts.length, 'with technician:', defaultTechnician?.displayText);
         },
 
         /**
@@ -1644,8 +1459,6 @@ sap.ui.define([
             const aTimeEfforts = oModel.getProperty(sArrayPath) || [];
             aTimeEfforts.splice(iIndex, 1);
             oModel.setProperty(sArrayPath, aTimeEfforts);
-            
-            console.log('Removed time effort at index', iIndex, 'from', sArrayPath);
         }
     };
 });

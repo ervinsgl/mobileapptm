@@ -6,16 +6,16 @@
  * 
  * Key Features:
  * - Caches full organizational hierarchy from FSM
- * - Formats org level IDs (raw → UUID format)
+ * - Formats org level IDs (raw â†’ UUID format)
  * - Resolves user's org level from username
  * - Provides lookup methods for org level names
  * 
  * Flow for User Org Level Resolution:
  * 1. getUserResolvedOrgLevel(username)
- * 2. → fetchUserOrgLevel() calls /api/get-user-org-level
- * 3. → Backend: User API (get user ID) → Query API (get orgLevel)
- * 4. → findMatchingOrgLevel() matches against cached hierarchy
- * 5. → Returns resolved org level with id, name, etc.
+ * 2. â†’ fetchUserOrgLevel() calls /api/get-user-org-level
+ * 3. â†’ Backend: User API (get user ID) â†’ Query API (get orgLevel)
+ * 4. â†’ findMatchingOrgLevel() matches against cached hierarchy
+ * 5. â†’ Returns resolved org level with id, name, etc.
  * 
  * @file OrganizationService.js
  * @module mobileappsc/utils/services/OrganizationService
@@ -62,13 +62,10 @@ sap.ui.define([], () => {
          */
         async loadOrganizationalHierarchy() {
             if (this._hierarchyLoaded) {
-                console.log('OrganizationService: Hierarchy already loaded');
                 return;
             }
 
             try {
-                console.log('OrganizationService: Loading full organizational hierarchy...');
-
                 const response = await fetch("/api/get-organization-levels-full", {
                     method: "GET",
                     headers: { "Content-Type": "application/json" }
@@ -86,7 +83,6 @@ sap.ui.define([], () => {
                 }
 
                 this._hierarchyLoaded = true;
-                console.log('OrganizationService: Loaded', this._orgLevelCache.size, 'organization levels');
 
             } catch (error) {
                 console.error("OrganizationService: Error loading hierarchy:", error);
@@ -150,7 +146,6 @@ sap.ui.define([], () => {
         clearCache() {
             this._orgLevelCache.clear();
             this._hierarchyLoaded = false;
-            console.log('OrganizationService: Cache cleared');
         },
 
         /**
@@ -161,11 +156,8 @@ sap.ui.define([], () => {
         async fetchUserOrgLevel(username) {
             try {
                 if (!username) {
-                    console.log('OrganizationService: No username provided');
                     return null;
                 }
-
-                console.log('OrganizationService: Fetching org level for user:', username);
 
                 const response = await fetch("/api/get-user-org-level", {
                     method: "POST",
@@ -174,13 +166,10 @@ sap.ui.define([], () => {
                 });
 
                 if (!response.ok) {
-                    console.error('OrganizationService: Failed to fetch user org level:', response.status);
                     return null;
                 }
 
                 const data = await response.json();
-                console.log('OrganizationService: User org level response:', data);
-
                 return data.success ? data.data : null;
 
             } catch (error) {
@@ -197,18 +186,11 @@ sap.ui.define([], () => {
          * @returns {Object|null} Matched org level from cache or null
          */
         findMatchingOrgLevel(orgLevel, orgLevelIds) {
-            console.log('OrganizationService: Finding matching org level...');
-            console.log('  orgLevel:', orgLevel);
-            console.log('  orgLevelIds:', orgLevelIds);
-
             // First try to match orgLevel (primary)
             if (orgLevel) {
                 const formattedId = this.formatOrgLevelId(orgLevel);
-                console.log('  Formatted orgLevel:', formattedId);
-
                 const matched = this._orgLevelCache.get(formattedId);
                 if (matched) {
-                    console.log('OrganizationService: Matched orgLevel:', matched.name);
                     return {
                         ...matched,
                         matchedBy: 'orgLevel',
@@ -222,11 +204,8 @@ sap.ui.define([], () => {
             if (orgLevelIds && Array.isArray(orgLevelIds) && orgLevelIds.length > 0) {
                 for (const id of orgLevelIds) {
                     const formattedId = this.formatOrgLevelId(id);
-                    console.log('  Trying orgLevelIds item:', id, '-> formatted:', formattedId);
-
                     const matched = this._orgLevelCache.get(formattedId);
                     if (matched) {
-                        console.log('OrganizationService: Matched from orgLevelIds:', matched.name);
                         return {
                             ...matched,
                             matchedBy: 'orgLevelIds',
@@ -237,7 +216,6 @@ sap.ui.define([], () => {
                 }
             }
 
-            console.log('OrganizationService: No matching org level found');
             return null;
         },
 
@@ -257,22 +235,18 @@ sap.ui.define([], () => {
                 // Fetch user's org level from backend
                 const userOrgData = await this.fetchUserOrgLevel(username);
                 if (!userOrgData) {
-                    console.log('OrganizationService: Could not fetch user org level data');
                     return null;
                 }
 
                 // Find matching org level in hierarchy
                 const matched = this.findMatchingOrgLevel(userOrgData.orgLevel, userOrgData.orgLevelIds);
                 if (!matched) {
-                    console.log('OrganizationService: Org level not found in hierarchy');
                     return {
                         found: false,
                         userOrgData: userOrgData,
                         message: 'Organization level not found in hierarchy'
                     };
                 }
-
-                console.log('OrganizationService: Successfully resolved user org level:', matched.name);
 
                 return {
                     found: true,

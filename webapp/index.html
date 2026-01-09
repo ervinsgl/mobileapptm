@@ -120,13 +120,12 @@
         // Hide loading screen
         function hideLoadingScreen() {
             var loadingScreen = document.getElementById('loading-screen');
-            if (loadingScreen) {
+            if (loadingScreen && !loadingScreen.classList.contains('hidden')) {
                 loadingScreen.classList.add('hidden');
-                loadingScreen.style.display = 'none';
             }
         }
         
-        // Force hide after 3 seconds (fallback)
+        // Fallback: Force hide after 3 seconds
         setTimeout(hideLoadingScreen, 3000);
     </script>
     
@@ -147,21 +146,14 @@
     
     <!-- UI5 Init Handler -->
     <script>
+        // Hide loading screen when UI5 initializes
         (function waitForUI5() {
             if (window.sap && window.sap.ui && window.sap.ui.getCore) {
                 sap.ui.getCore().attachInit(hideLoadingScreen);
             } else {
-                setTimeout(waitForUI5, 50);
+                setTimeout(waitForUI5, 100);
             }
         })();
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(hideLoadingScreen, 1000);
-        });
-        
-        window.addEventListener('load', function() {
-            setTimeout(hideLoadingScreen, 1500);
-        });
     </script>
 </head>
 <body class="sapUiBody sapUiSizeCompact" id="content">
