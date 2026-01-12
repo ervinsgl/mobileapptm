@@ -317,6 +317,9 @@
                                                                     maxSuggestionWidth="400px"
                                                                     startSuggestion="2"
                                                                     showTableSuggestionValueHelp="false">
+                                                                    <layoutData>
+                                                                        <FlexItemData growFactor="1" shrinkFactor="1" minWidth="0"/>
+                                                                    </layoutData>
                                                                     <suggestionItems>
                                                                         <core:Item key="{createTM>id}" text="{createTM>displayText}"/>
                                                                     </suggestionItems>
@@ -325,20 +328,35 @@
                                                             <HBox class="tmFieldRow" width="100%">
                                                                 <Label text="Task:" design="Bold" class="tmFieldLabelNarrow tmFieldLabelRequired"/>
                                                                 <Select selectedKey="{createTM>taskCode}" items="{path: 'createTM>/taskSuggestionsAZ', templateShareable: false}" forceSelection="false" class="tmTimeEntrySelect" valueState="{= ${createTM>taskCode} ? 'None' : 'Error'}" valueStateText="Task is required">
+                                                                    <layoutData>
+                                                                        <FlexItemData growFactor="1" shrinkFactor="1" minWidth="0"/>
+                                                                    </layoutData>
                                                                     <core:Item key="{createTM>code}" text="{createTM>name}"/>
                                                                 </Select>
                                                             </HBox>
                                                             <HBox class="tmFieldRow" width="100%">
                                                                 <Label text="Duration:" design="Bold" class="tmFieldLabelNarrow"/>
-                                                                <StepInput value="{createTM>durationHours}" min="0" step="0.25" displayValuePrecision="2" description="hrs" change=".onTimeEffortDurationChange" class="tmTimeEntryInput"/>
+                                                                <StepInput value="{createTM>durationHours}" min="0" step="0.25" displayValuePrecision="2" description="hrs" change=".onTimeEffortDurationChange" class="tmTimeEntryInput">
+                                                                    <layoutData>
+                                                                        <FlexItemData growFactor="1" shrinkFactor="1" minWidth="0"/>
+                                                                    </layoutData>
+                                                                </StepInput>
                                                             </HBox>
                                                             <HBox class="tmFieldRow" width="100%">
                                                                 <Label text="Date:" design="Bold" class="tmFieldLabelNarrow"/>
-                                                                <DatePicker value="{createTM>entryDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" class="tmTimeEntryInput"/>
+                                                                <DatePicker value="{createTM>entryDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" class="tmTimeEntryInput">
+                                                                    <layoutData>
+                                                                        <FlexItemData growFactor="1" shrinkFactor="1" minWidth="0"/>
+                                                                    </layoutData>
+                                                                </DatePicker>
                                                             </HBox>
                                                             <HBox class="tmFieldRow" width="100%">
                                                                 <Label text="Remarks:" design="Bold" class="tmFieldLabelNarrow"/>
-                                                                <TextArea value="{createTM>remarks}" rows="2" placeholder="Remarks..." class="tmTimeEntryInput"/>
+                                                                <TextArea value="{createTM>remarks}" rows="2" placeholder="Remarks..." class="tmTimeEntryInput">
+                                                                    <layoutData>
+                                                                        <FlexItemData growFactor="1" shrinkFactor="1" minWidth="0"/>
+                                                                    </layoutData>
+                                                                </TextArea>
                                                             </HBox>
                                                         </VBox>
                                                         <Button icon="sap-icon://decline" type="Transparent" tooltip="Remove" press=".onRemoveTimeEffortAZ"/>
@@ -371,6 +389,9 @@
                                                                     maxSuggestionWidth="400px"
                                                                     startSuggestion="2"
                                                                     showTableSuggestionValueHelp="false">
+                                                                    <layoutData>
+                                                                        <FlexItemData growFactor="1" shrinkFactor="1" minWidth="0"/>
+                                                                    </layoutData>
                                                                     <suggestionItems>
                                                                         <core:Item key="{createTM>id}" text="{createTM>displayText}"/>
                                                                     </suggestionItems>
@@ -379,20 +400,35 @@
                                                             <HBox class="tmFieldRow" width="100%">
                                                                 <Label text="Task:" design="Bold" class="tmFieldLabelNarrow tmFieldLabelRequired"/>
                                                                 <Select selectedKey="{createTM>taskCode}" items="{path: 'createTM>/taskSuggestionsFZ', templateShareable: false}" forceSelection="false" class="tmTimeEntrySelect" valueState="{= ${createTM>taskCode} ? 'None' : 'Error'}" valueStateText="Task is required">
+                                                                    <layoutData>
+                                                                        <FlexItemData growFactor="1" shrinkFactor="1" minWidth="0"/>
+                                                                    </layoutData>
                                                                     <core:Item key="{createTM>code}" text="{createTM>name}"/>
                                                                 </Select>
                                                             </HBox>
                                                             <HBox class="tmFieldRow" width="100%">
                                                                 <Label text="Duration:" design="Bold" class="tmFieldLabelNarrow"/>
-                                                                <StepInput value="{createTM>durationHours}" min="0" step="0.25" displayValuePrecision="2" description="hrs" change=".onTimeEffortDurationChange" class="tmTimeEntryInput"/>
+                                                                <StepInput value="{createTM>durationHours}" min="0" step="0.25" displayValuePrecision="2" description="hrs" change=".onTimeEffortDurationChange" class="tmTimeEntryInput">
+                                                                    <layoutData>
+                                                                        <FlexItemData growFactor="1" shrinkFactor="1" minWidth="0"/>
+                                                                    </layoutData>
+                                                                </StepInput>
                                                             </HBox>
                                                             <HBox class="tmFieldRow" width="100%">
                                                                 <Label text="Date:" design="Bold" class="tmFieldLabelNarrow"/>
-                                                                <DatePicker value="{createTM>entryDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" class="tmTimeEntryInput"/>
+                                                                <DatePicker value="{createTM>entryDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" class="tmTimeEntryInput">
+                                                                    <layoutData>
+                                                                        <FlexItemData growFactor="1" shrinkFactor="1" minWidth="0"/>
+                                                                    </layoutData>
+                                                                </DatePicker>
                                                             </HBox>
                                                             <HBox class="tmFieldRow" width="100%">
                                                                 <Label text="Remarks:" design="Bold" class="tmFieldLabelNarrow"/>
-                                                                <TextArea value="{createTM>remarks}" rows="2" placeholder="Remarks..." class="tmTimeEntryInput"/>
+                                                                <TextArea value="{createTM>remarks}" rows="2" placeholder="Remarks..." class="tmTimeEntryInput">
+                                                                    <layoutData>
+                                                                        <FlexItemData growFactor="1" shrinkFactor="1" minWidth="0"/>
+                                                                    </layoutData>
+                                                                </TextArea>
                                                             </HBox>
                                                         </VBox>
                                                         <Button icon="sap-icon://decline" type="Transparent" tooltip="Remove" press=".onRemoveTimeEffortFZ"/>
@@ -425,6 +461,9 @@
                                                                     maxSuggestionWidth="400px"
                                                                     startSuggestion="2"
                                                                     showTableSuggestionValueHelp="false">
+                                                                    <layoutData>
+                                                                        <FlexItemData growFactor="1" shrinkFactor="1" minWidth="0"/>
+                                                                    </layoutData>
                                                                     <suggestionItems>
                                                                         <core:Item key="{createTM>id}" text="{createTM>displayText}"/>
                                                                     </suggestionItems>
@@ -433,20 +472,35 @@
                                                             <HBox class="tmFieldRow" width="100%">
                                                                 <Label text="Task:" design="Bold" class="tmFieldLabelNarrow tmFieldLabelRequired"/>
                                                                 <Select selectedKey="{createTM>taskCode}" items="{path: 'createTM>/taskSuggestionsWZ', templateShareable: false}" forceSelection="false" class="tmTimeEntrySelect" valueState="{= ${createTM>taskCode} ? 'None' : 'Error'}" valueStateText="Task is required">
+                                                                    <layoutData>
+                                                                        <FlexItemData growFactor="1" shrinkFactor="1" minWidth="0"/>
+                                                                    </layoutData>
                                                                     <core:Item key="{createTM>code}" text="{createTM>name}"/>
                                                                 </Select>
                                                             </HBox>
                                                             <HBox class="tmFieldRow" width="100%">
                                                                 <Label text="Duration:" design="Bold" class="tmFieldLabelNarrow"/>
-                                                                <StepInput value="{createTM>durationHours}" min="0" step="0.25" displayValuePrecision="2" description="hrs" change=".onTimeEffortDurationChange" class="tmTimeEntryInput"/>
+                                                                <StepInput value="{createTM>durationHours}" min="0" step="0.25" displayValuePrecision="2" description="hrs" change=".onTimeEffortDurationChange" class="tmTimeEntryInput">
+                                                                    <layoutData>
+                                                                        <FlexItemData growFactor="1" shrinkFactor="1" minWidth="0"/>
+                                                                    </layoutData>
+                                                                </StepInput>
                                                             </HBox>
                                                             <HBox class="tmFieldRow" width="100%">
                                                                 <Label text="Date:" design="Bold" class="tmFieldLabelNarrow"/>
-                                                                <DatePicker value="{createTM>entryDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" class="tmTimeEntryInput"/>
+                                                                <DatePicker value="{createTM>entryDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" class="tmTimeEntryInput">
+                                                                    <layoutData>
+                                                                        <FlexItemData growFactor="1" shrinkFactor="1" minWidth="0"/>
+                                                                    </layoutData>
+                                                                </DatePicker>
                                                             </HBox>
                                                             <HBox class="tmFieldRow" width="100%">
                                                                 <Label text="Remarks:" design="Bold" class="tmFieldLabelNarrow"/>
-                                                                <TextArea value="{createTM>remarks}" rows="2" placeholder="Remarks..." class="tmTimeEntryInput"/>
+                                                                <TextArea value="{createTM>remarks}" rows="2" placeholder="Remarks..." class="tmTimeEntryInput">
+                                                                    <layoutData>
+                                                                        <FlexItemData growFactor="1" shrinkFactor="1" minWidth="0"/>
+                                                                    </layoutData>
+                                                                </TextArea>
                                                             </HBox>
                                                         </VBox>
                                                         <Button icon="sap-icon://decline" type="Transparent" tooltip="Remove" press=".onRemoveTimeEffortWZ"/>

@@ -739,15 +739,45 @@
 /* Time Entry field sizing */
 .tmTimeEntrySelect,
 .tmTimeEntryInput {
-    flex: 1;
-    min-width: 100px;
+    flex: 0 1 auto !important;
+    min-width: 150px !important;
+    max-width: 150px !important;
+    width: 100% !important;
 }
 
-/* Narrower label for time entries */
+/* StepInput internal - give more space to input, less to description */
+.tmTimeEntryItem .sapMStepInput .sapMInputBaseContentWrapper {
+    width: 70% !important;
+}
+
+.tmTimeEntryItem .sapMStepInput .sapMInputDescriptionWrapper {
+    width: 30% !important;
+}
+
+/* Force all time entry input wrappers to fixed width */
+.tmTimeEntryItem .tmFieldRow > div.sapMFlexItem {
+    flex: 0 1 auto !important;
+    min-width: 150px !important;
+    max-width: 150px !important;
+}
+
+/* Label wrapper - fit content only */
+.tmTimeEntryItem .tmFieldRow > div.sapMFlexItem:first-child {
+    flex: 0 0 auto !important;
+    min-width: auto !important;
+    max-width: none !important;
+}
+
+/* Time entry rows - align items to start */
+.tmTimeEntryItem .tmFieldRow {
+    justify-content: flex-start !important;
+}
+
+/* Label for time entries */
 .tmFieldLabelNarrow {
     min-width: 4.5rem;
     width: 4.5rem;
-    margin-right: 0.5rem;
+    margin-right: 0.25rem;
     flex-shrink: 0;
 }
 
