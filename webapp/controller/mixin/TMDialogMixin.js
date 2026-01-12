@@ -1451,8 +1451,12 @@ sap.ui.define([
                 displayText: oEntry.technicianDisplay
             } : null;
             
-            // Create new time effort entry with default technician
-            const newEntry = TMCreationService.createTimeEffortForTM(sType, defaultTechnician);
+            // Get default date from Activity's Planned Start Date
+            const plannedStartDate = oModel.getProperty("/plannedStartDate");
+            const defaultDate = plannedStartDate ? plannedStartDate.split('T')[0] : "";
+            
+            // Create new time effort entry with default technician and date
+            const newEntry = TMCreationService.createTimeEffortForTM(sType, defaultTechnician, defaultDate);
             aTimeEfforts.push(newEntry);
             
             oModel.setProperty(sPath + "/" + sArrayProperty, aTimeEfforts);

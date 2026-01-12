@@ -332,6 +332,8 @@ sap.ui.define([
             const defaultTech = this._defaultTechnician;
             const defaultItem = this._defaultItem;
             const defaultQuantity = this._defaultQuantity;
+            // Extract date from Activity Planned Start (YYYY-MM-DD format)
+            const defaultDate = this._activityPlannedStartDate ? this._activityPlannedStartDate.split('T')[0] : "";
             return {
                 type: "Time & Material",
                 icon: "sap-icon://checklist-item-2",
@@ -347,6 +349,7 @@ sap.ui.define([
                 itemId: defaultItem ? defaultItem.id : "",
                 itemDisplay: defaultItem ? defaultItem.displayText : "",
                 quantity: defaultQuantity || "",
+                materialDate: defaultDate,  // Date for Material entry
                 remarksMaterial: "",
                 // Dynamic Time Effort arrays (FZ=Fahrzeit, WZ=Wartezeit, AZ=Arbeitszeit)
                 timeEffortsFZ: [],
@@ -361,9 +364,10 @@ sap.ui.define([
          * Create a single Time Effort entry for Time & Material.
          * @param {string} type - Time type: 'FZ', 'WZ', or 'AZ'
          * @param {Object} defaultTechnician - Optional default technician from parent entry
+         * @param {string} defaultDate - Optional default date (YYYY-MM-DD format)
          * @returns {Object} Time Effort entry
          */
-        createTimeEffortForTM(type, defaultTechnician) {
+        createTimeEffortForTM(type, defaultTechnician, defaultDate) {
             return {
                 id: Date.now() + '_' + Math.random().toString(36).substr(2, 9),
                 type: type,
@@ -377,6 +381,7 @@ sap.ui.define([
                 taskDisplay: "",
                 duration: 30,           // Backend value in minutes
                 durationHours: 0.50,    // UI display in hours (30 min = 0.50 hrs)
+                entryDate: defaultDate || "",  // Date for this entry (YYYY-MM-DD)
                 remarks: ""
             };
         },

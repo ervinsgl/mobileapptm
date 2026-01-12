@@ -312,26 +312,72 @@ sap.ui.define([
                 syncStatus: "REQUIRES_APPROVAL"
             };
 
-            // Get activity planned start date for sequential time calculation
+            // Get activity planned start date for time portion
             const activityPlannedStart = TMCreationService.getActivityPlannedStartDate();
             const baseStartDateTime = activityPlannedStart || new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
+            
+            // Extract time portion from planned start (HH:mm:ss)
+            const baseTimePortion = baseStartDateTime.split('T')[1] || '12:00:00Z';
 
-            // Extract date portion for Material (yyyy-MM-dd format)
-            const materialDate = baseStartDateTime.split('T')[0];
+            // Use entry's materialDate or fallback to planned start date
+            const materialDate = oEntry.materialDate || baseStartDateTime.split('T')[0];
 
             // Format dates as ISO strings without milliseconds
             const formatDateTime = (date) => date.toISOString().replace(/\.\d{3}Z$/, 'Z');
 
-            // Build time efforts arrays from dynamic entries
-            let currentTime = new Date(baseStartDateTime);
+            // Collect all time entries with their type for sorting
+            // Type order: AZ (1) → FZ (2) → WZ (3)
+            const allTimeEntries = [];
             
-            const buildTimeEffortPayload = (entry) => {
-                if (!entry || !entry.taskCode) return null;
+            (oEntry.timeEffortsAZ || []).forEach(entry => {
+                if (entry && entry.taskCode) {
+                    allTimeEntries.push({ ...entry, typeOrder: 1, typeCode: 'AZ' });
+                }
+            });
+            
+            (oEntry.timeEffortsFZ || []).forEach(entry => {
+                if (entry && entry.taskCode) {
+                    allTimeEntries.push({ ...entry, typeOrder: 2, typeCode: 'FZ' });
+                }
+            });
+            
+            (oEntry.timeEffortsWZ || []).forEach(entry => {
+                if (entry && entry.taskCode) {
+                    allTimeEntries.push({ ...entry, typeOrder: 3, typeCode: 'WZ' });
+                }
+            });
+
+            // Sort entries: first by date, then by type order (AZ → FZ → WZ)
+            allTimeEntries.sort((a, b) => {
+                const dateA = a.entryDate || baseStartDateTime.split('T')[0];
+                const dateB = b.entryDate || baseStartDateTime.split('T')[0];
                 
-                const startTime = new Date(currentTime);
+                if (dateA !== dateB) {
+                    return dateA.localeCompare(dateB);
+                }
+                return a.typeOrder - b.typeOrder;
+            });
+
+            // Track end times per date for sequential chaining
+            const endTimesByDate = {};
+
+            // Build payload for each entry with sequential times per date
+            const buildTimeEffortPayload = (entry) => {
+                const entryDateStr = entry.entryDate || baseStartDateTime.split('T')[0];
+                
+                // Get start time: either from previous entry's end time (same date) or base time
+                let startTime;
+                if (endTimesByDate[entryDateStr]) {
+                    startTime = new Date(endTimesByDate[entryDateStr]);
+                } else {
+                    startTime = new Date(`${entryDateStr}T${baseTimePortion}`);
+                }
+                
                 const durationMinutes = parseInt(entry.duration) || 0;
                 const endTime = new Date(startTime.getTime() + durationMinutes * 60 * 1000);
-                currentTime = endTime; // Next entry starts where this one ends
+                
+                // Store end time for next entry on same date
+                endTimesByDate[entryDateStr] = endTime.toISOString();
                 
                 // Get task UUID from code
                 const taskId = TimeTaskService.getTaskIdByCode(entry.taskCode);
@@ -354,20 +400,24 @@ sap.ui.define([
                 };
             };
 
-            // Build arrays for each time type
-            // Order: AZ (Arbeitszeit) first, then FZ (Fahrzeit), then WZ (Wartezeit)
-            // Times are sequential - each starts where the previous ends
-            const timeEffortsAZ = (oEntry.timeEffortsAZ || [])
-                .map(buildTimeEffortPayload)
-                .filter(e => e !== null);
+            // Build payloads in sorted order (sequential times per date)
+            const allPayloads = allTimeEntries.map(buildTimeEffortPayload);
 
-            const timeEffortsFZ = (oEntry.timeEffortsFZ || [])
-                .map(buildTimeEffortPayload)
-                .filter(e => e !== null);
+            // Separate back into type arrays for API calls
+            const timeEffortsAZ = [];
+            const timeEffortsFZ = [];
+            const timeEffortsWZ = [];
             
-            const timeEffortsWZ = (oEntry.timeEffortsWZ || [])
-                .map(buildTimeEffortPayload)
-                .filter(e => e !== null);
+            allTimeEntries.forEach((entry, index) => {
+                const payload = allPayloads[index];
+                if (entry.typeCode === 'AZ') {
+                    timeEffortsAZ.push(payload);
+                } else if (entry.typeCode === 'FZ') {
+                    timeEffortsFZ.push(payload);
+                } else if (entry.typeCode === 'WZ') {
+                    timeEffortsWZ.push(payload);
+                }
+            });
 
             return {
                 note: "Time & Material creates multiple API calls",
