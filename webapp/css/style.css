@@ -247,11 +247,39 @@
     color: #666;
 }
 
-/* Activity Header ID - in activity header toolbar */
+/* Activity Header Subject - wrapping title in header */
+.activityHeaderSubject {
+    flex: 1;
+    min-width: 0;
+}
+
+.activityHeaderSubject .sapMTitleStyleH5 {
+    white-space: normal !important;
+    word-wrap: break-word;
+    line-height: 1.3;
+}
+
+/* Activity Header ID - same styling as subject */
 .activityHeaderId {
-    font-size: 0.75rem;
-    color: #0854a0;
-    font-weight: 500;
+    flex-shrink: 0;
+}
+
+/* Activity Header - OPEN status (green) using data attribute on Panel */
+.activityEntryPanel[data-activitystatus="OPEN"] .activityHeaderToolbar .sapMTitle,
+.activityEntryPanel[data-activitystatus="OPEN"] .activityHeaderToolbar .sapUiIcon {
+    color: #107e3e !important;
+}
+
+/* Activity Header - CLOSED status (grey) using data attribute */
+.activityEntryPanel[data-activitystatus="CLOSED"] .activityHeaderToolbar .sapMTitle,
+.activityEntryPanel[data-activitystatus="CLOSED"] .activityHeaderToolbar .sapUiIcon {
+    color: #6a6d70 !important;
+}
+
+/* Activity Header - CANCELLED status (grey) using data attribute */
+.activityEntryPanel[data-activitystatus="CANCELLED"] .activityHeaderToolbar .sapMTitle,
+.activityEntryPanel[data-activitystatus="CANCELLED"] .activityHeaderToolbar .sapUiIcon {
+    color: #6a6d70 !important;
 }
 
 /* Activity Panel Header - code styling */
@@ -1018,8 +1046,7 @@
     .activityEntryPanel .sapMTB.sapMTBInfo .sapMLabel,
     .sapMDialog .sapMTB.sapMTBInfo .sapMLabel,
     .sapMDialog .sapMDialogSubHeader .sapMLabel,
-    .productPanelId,
-    .activityHeaderId {
+    .productPanelId {
         display: none !important;
     }
 }

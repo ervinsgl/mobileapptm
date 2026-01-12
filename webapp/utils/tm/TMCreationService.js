@@ -375,7 +375,8 @@ sap.ui.define([
                 // Task fields
                 taskCode: "",
                 taskDisplay: "",
-                duration: 30,
+                duration: 30,           // Backend value in minutes
+                durationHours: 0.50,    // UI display in hours (30 min = 0.50 hrs)
                 remarks: ""
             };
         },

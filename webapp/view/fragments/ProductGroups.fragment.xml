@@ -58,22 +58,23 @@
                                     class="activityEntryPanel">
                                     <customData>
                                         <core:CustomData key="highlighted" value="{view>entryActivityFlag}" writeToDom="true"/>
+                                        <core:CustomData key="activitystatus" value="{view>status}" writeToDom="true"/>
                                     </customData>
                                     <headerToolbar>
-                                        <OverflowToolbar design="Info">
+                                        <OverflowToolbar design="Info" class="activityHeaderToolbar">
                                             <core:Icon src="sap-icon://activity-individual" class="sapUiSmallMarginEnd"/>
-                                            <Title text="{view>code}" level="H5"/>
-                                            <ToolbarSpacer/>
-                                            <ObjectStatus text="{view>status}" state="{view>statusState}" class="sapUiTinyMarginEnd"/>
-                                            <ObjectStatus text="{view>executionStage}" state="{view>stageState}" class="sapUiTinyMarginEnd"/>
-                                            <Label text="ID: {view>externalId}" class="activityHeaderId"/>
+                                            <Title text="ID: {view>externalId}" level="H5" class="sapUiSmallMarginEnd activityHeaderId"/>
+                                            <Title text="{view>subject}" level="H5" wrapping="true" class="activityHeaderSubject"/>
                                         </OverflowToolbar>
                                     </headerToolbar>
                                     
                                     <content>
-                                        <!-- Activity Info Bar: Subject only -->
+                                        <!-- Activity Info Bar: Code + Status -->
                                         <Toolbar design="Info" class="activitySubjectBar sapUiTinyMarginBottom">
-                                            <Title text="{view>subject}" level="H6" wrapping="true"/>
+                                            <Title text="{view>code}" level="H6"/>
+                                            <ToolbarSpacer/>
+                                            <ObjectStatus text="{view>status}" state="{view>statusState}" class="sapUiTinyMarginEnd"/>
+                                            <ObjectStatus text="{view>executionStage}" state="{view>stageState}"/>
                                         </Toolbar>
                                         
                                         <!-- Activity Details: 3-Column Layout -->

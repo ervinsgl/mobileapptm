@@ -121,6 +121,29 @@ sap.ui.define([
                     oModel.setProperty(sPath + "/technicianDisplay", oTechnician.displayText);
                 }
             }
+        },
+
+        /* ========================================
+         * TIME ENTRY DURATION HANDLERS
+         * ======================================== */
+
+        /**
+         * Handle duration change for time entries.
+         * Converts hours (UI display) to minutes (backend storage).
+         */
+        onTimeEffortDurationChange(oEvent) {
+            const oStepInput = oEvent.getSource();
+            const oContext = oStepInput.getBindingContext("createTM");
+            
+            if (!oContext) return;
+            
+            const sPath = oContext.getPath();
+            const oModel = this._tmCreateDialog.getModel("createTM");
+            const durationHours = oEvent.getParameter("value") || 0;
+            
+            // Convert hours to minutes for backend
+            const durationMinutes = Math.round(durationHours * 60);
+            oModel.setProperty(sPath + "/duration", durationMinutes);
         }
 
     };

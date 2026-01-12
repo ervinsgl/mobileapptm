@@ -326,7 +326,7 @@
                                                             </HBox>
                                                             <HBox class="tmFieldRow" width="100%">
                                                                 <Label text="Duration:" design="Bold" class="tmFieldLabelNarrow"/>
-                                                                <StepInput value="{createTM>duration}" min="0" step="5" description="min" class="tmTimeEntryInput"/>
+                                                                <StepInput value="{createTM>durationHours}" min="0" step="0.25" displayValuePrecision="2" description="hrs" change=".onTimeEffortDurationChange" class="tmTimeEntryInput"/>
                                                             </HBox>
                                                             <HBox class="tmFieldRow" width="100%">
                                                                 <Label text="Remarks:" design="Bold" class="tmFieldLabelNarrow"/>
@@ -376,7 +376,7 @@
                                                             </HBox>
                                                             <HBox class="tmFieldRow" width="100%">
                                                                 <Label text="Duration:" design="Bold" class="tmFieldLabelNarrow"/>
-                                                                <StepInput value="{createTM>duration}" min="0" step="5" description="min" class="tmTimeEntryInput"/>
+                                                                <StepInput value="{createTM>durationHours}" min="0" step="0.25" displayValuePrecision="2" description="hrs" change=".onTimeEffortDurationChange" class="tmTimeEntryInput"/>
                                                             </HBox>
                                                             <HBox class="tmFieldRow" width="100%">
                                                                 <Label text="Remarks:" design="Bold" class="tmFieldLabelNarrow"/>
@@ -426,7 +426,7 @@
                                                             </HBox>
                                                             <HBox class="tmFieldRow" width="100%">
                                                                 <Label text="Duration:" design="Bold" class="tmFieldLabelNarrow"/>
-                                                                <StepInput value="{createTM>duration}" min="0" step="5" description="min" class="tmTimeEntryInput"/>
+                                                                <StepInput value="{createTM>durationHours}" min="0" step="0.25" displayValuePrecision="2" description="hrs" change=".onTimeEffortDurationChange" class="tmTimeEntryInput"/>
                                                             </HBox>
                                                             <HBox class="tmFieldRow" width="100%">
                                                                 <Label text="Remarks:" design="Bold" class="tmFieldLabelNarrow"/>
