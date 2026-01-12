@@ -146,7 +146,7 @@ sap.ui.define([
         /**
          * Toggle Edit Mode for T&M Entry
          */
-        onToggleEditMode(oEvent) {
+        async onToggleEditMode(oEvent) {
             const oButton = oEvent.getSource();
             
             // Try view context first (inline entries), then dialog context
@@ -195,7 +195,28 @@ sap.ui.define([
                 // Fallback - exit edit mode
                 oModel.setProperty(sPath + "/editMode", false);
             } else {
-                // Entering edit mode - initialize edit fields
+                // Entering edit mode - refresh status first to check if still PENDING
+                const entryId = oEntry.id;
+                if (entryId) {
+                    try {
+                        const freshStatus = await ApprovalService.refreshStatusForEntry(entryId);
+                        
+                        if (freshStatus && freshStatus !== 'PENDING') {
+                            // Status changed - update UI and notify user
+                            oModel.setProperty(sPath + "/decisionStatus", freshStatus);
+                            oModel.setProperty(sPath + "/decisionStatusText", ApprovalService.getStatusDisplayText(freshStatus));
+                            oModel.setProperty(sPath + "/decisionStatusState", ApprovalService.getStatusState(freshStatus));
+                            
+                            MessageToast.show(`Entry status changed to ${ApprovalService.getStatusDisplayText(freshStatus)}`);
+                            return; // Don't enter edit mode for non-PENDING entries
+                        }
+                    } catch (error) {
+                        console.error("Error refreshing entry status:", error);
+                        // Continue to edit mode even if refresh fails
+                    }
+                }
+                
+                // Initialize edit fields and enter edit mode
                 const editValues = TMEditService.initEditMode(sType, oEntry);
                 TMEditService.applyEditValues(oModel, sPath, editValues);
                 oModel.setProperty(sPath + "/editMode", true);

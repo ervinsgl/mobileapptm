@@ -39,7 +39,7 @@ sap.ui.define([], () => {
          * Fetch approval statuses for multiple T&M entry IDs.
          * Uses cache to avoid redundant API calls.
          * @param {string[]} objectIds - Array of T&M entry IDs
-         * @returns {Promise<Object>} Map of objectId → decisionStatus
+         * @returns {Promise<Object>} Map of objectId â†’ decisionStatus
          */
         async fetchApprovalStatuses(objectIds) {
             if (!objectIds || objectIds.length === 0) {
@@ -162,6 +162,45 @@ sap.ui.define([], () => {
 
             const objectIds = reports.map(report => report.id).filter(id => id);
             await this.fetchApprovalStatuses(objectIds);
+        },
+
+        /**
+         * Refresh status for a single entry (bypasses cache).
+         * Used when opening an entry for edit to get fresh status.
+         * @param {string} objectId - T&M entry ID
+         * @returns {Promise<string|null>} Fresh decision status
+         */
+        async refreshStatusForEntry(objectId) {
+            if (!objectId) {
+                return null;
+            }
+
+            // Remove from cache to force fresh fetch
+            this._statusCache.delete(objectId);
+
+            try {
+                const response = await fetch("/api/get-approval-status", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ objectIds: [objectId] })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Failed to refresh approval status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const status = data.statuses?.[objectId] || null;
+
+                // Update cache with fresh value
+                this._statusCache.set(objectId, status);
+
+                return status;
+
+            } catch (error) {
+                console.error("ApprovalService: Error refreshing status for", objectId, ":", error);
+                return null;
+            }
         },
 
         /**
