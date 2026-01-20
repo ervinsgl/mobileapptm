@@ -276,6 +276,10 @@ sap.ui.define([
             // Set activity planned start date for Time Effort entries
             TMCreationService.setActivityPlannedStartDate(activityData.plannedStartDate);
 
+            // Get default expense type and mileage type for new entries
+            const defaultExpenseType = TMCreationService.getDefaultExpenseType();
+            const defaultItem = TMCreationService.getDefaultItem();
+
             const oCreateTMDialogModel = new JSONModel({
                 activityId: activityData.activityId,
                 activityCode: activityData.activityCode,
@@ -295,12 +299,24 @@ sap.ui.define([
                 entries: [],
                 activityTechnicians: activityTechnicians,
                 defaultTechnicianId: defaultTechId,
+                defaultTechnicianDisplay: defaultTechDisplay,
+                defaultTechnicianExternalId: defaultTechExternalId,
                 itemSuggestions: itemSuggestions,
                 taskSuggestions: taskSuggestions,
                 taskSuggestionsAZ: taskSuggestionsAZ,
                 taskSuggestionsFZ: taskSuggestionsFZ,
                 taskSuggestionsWZ: taskSuggestionsWZ,
-                expenseTypeSuggestions: expenseTypeSuggestions
+                expenseTypeSuggestions: expenseTypeSuggestions,
+                // New table-based creation arrays
+                expenseEntries: [],
+                mileageEntries: [],
+                technicianSuggestions: [],
+                // Default values for new entries
+                defaultExpenseTypeId: defaultExpenseType?.id || "",
+                defaultExpenseTypeCode: defaultExpenseType?.code || "",
+                defaultExpenseTypeDisplay: defaultExpenseType?.displayText || "",
+                defaultMileageTypeId: defaultItem?.id || "",
+                defaultMileageTypeDisplay: defaultItem?.displayText || ""
             });
 
             await this._openDialog("TMCreateDialog", oCreateTMDialogModel, "createTM", "_tmCreateDialog");
@@ -347,6 +363,9 @@ sap.ui.define([
                 const oModel = this._controller._tmCreateDialog.getModel("createTM");
                 if (oModel) {
                     oModel.setProperty("/entries", []);
+                    oModel.setProperty("/expenseEntries", []);
+                    oModel.setProperty("/mileageEntries", []);
+                    oModel.setProperty("/technicianSuggestions", []);
                 }
                 
                 TMCreationService.clearDefaultTechnician();

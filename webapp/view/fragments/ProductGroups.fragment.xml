@@ -1,8 +1,6 @@
 <core:FragmentDefinition
     xmlns="sap.m"
     xmlns:core="sap.ui.core"
-    xmlns:t="sap.ui.table"
-    xmlns:rm="sap.ui.table.rowmodes"
 >
     <VBox class="sapUiResponsiveMargin">
     
@@ -125,6 +123,14 @@
                                                                 <SegmentedButtonItem key="Material" icon="sap-icon://product" tooltip="Material"/>
                                                             </items>
                                                         </SegmentedButton>
+                                                        <Select selectedKey="startDateTime-desc" change=".onTMSortChange" class="sapUiTinyMarginBegin" tooltip="Sort by">
+                                                            <core:Item key="startDateTime-desc" text="Date ↓"/>
+                                                            <core:Item key="startDateTime-asc" text="Date ↑"/>
+                                                            <core:Item key="createPersonDisplayText-asc" text="Technician A-Z"/>
+                                                            <core:Item key="createPersonDisplayText-desc" text="Technician Z-A"/>
+                                                            <core:Item key="decisionStatus-asc" text="Status A-Z"/>
+                                                            <core:Item key="decisionStatus-desc" text="Status Z-A"/>
+                                                        </Select>
                                                         <Button text="Edit Selected" icon="sap-icon://edit" press=".onEditSelectedTM" visible="{= ${view>tmEditMode} !== true}" class="sapUiTinyMarginBegin"/>
                                                         <Button text="Save All" icon="sap-icon://save" type="Emphasized" press=".onSaveAllTM" visible="{= ${view>tmEditMode} === true}" class="sapUiTinyMarginBegin"/>
                                                         <Button text="End Edit" icon="sap-icon://sys-cancel" press=".onEndEditTM" visible="{= ${view>tmEditMode} === true}" class="sapUiTinyMarginBegin"/>
@@ -133,63 +139,50 @@
                                                     </OverflowToolbar>
                                                 </headerToolbar>
                                                 <content>
-                                                    <t:Table
-                                                        rows="{path: 'view>tmReports', filters: [{ path: 'type', operator: 'NE', value1: 'Expense' }, { path: 'type', operator: 'NE', value1: 'Mileage' }], sorter: { path: 'startDateTime', descending: true }}"
-                                                        selectionMode="None"
-                                                        class="tmGridTable"
+                                                    <Table
+                                                        items="{path: 'view>tmReports', filters: [{ path: 'type', operator: 'NE', value1: 'Expense' }, { path: 'type', operator: 'NE', value1: 'Mileage' }], sorter: { path: 'startDateTime', descending: true }}"
+                                                        class="tmMTable"
                                                         width="100%"
-                                                        visibleRowCount="{= ${view>tmTimeEffortCount} + ${view>tmMaterialCount} }"
                                                     >
-                                                        <t:columns>
-                                                            <t:Column width="2.5rem" hAlign="Begin" resizable="false">
-                                                                <Label text=""/>
-                                                                <t:template><CheckBox selected="{view>selected}" visible="{= ${view>decisionStatus} === 'PENDING'}"/></t:template>
-                                                            </t:Column>
-                                                            <t:Column width="2.5rem" hAlign="Begin">
-                                                                <Label text=""/>
-                                                                <t:template><core:Icon src="{= ${view>type} === 'Time Effort' ? 'sap-icon://time-entry-request' : 'sap-icon://product'}" color="{= ${view>type} === 'Time Effort' ? '#0854A0' : '#107E3E'}" tooltip="{view>type}"/></t:template>
-                                                            </t:Column>
-                                                            <t:Column hAlign="Center" sortProperty="taskDisplayText" filterProperty="taskDisplayText">
-                                                                <Label text="Description"/>
-                                                                <t:template><Text text="{= ${view>type} === 'Time Effort' ? ${view>taskDisplayText} : ${view>itemDisplayText}}" textAlign="Begin"/></t:template>
-                                                            </t:Column>
-                                                            <t:Column width="9rem" hAlign="Begin" sortProperty="createPersonDisplayText" filterProperty="createPersonDisplayText">
-                                                                <Label text="Technician"/>
-                                                                <t:template><Text text="{view>createPersonDisplayText}" textAlign="Begin"/></t:template>
-                                                            </t:Column>
-                                                            <t:Column width="4.5rem" hAlign="Begin" sortProperty="durationMinutes">
-                                                                <Label text="Time"/>
-                                                                <t:template><Input value="{view>durationMinutes}" type="Number" width="4rem" editable="{view>editMode}" visible="{= ${view>type} === 'Time Effort'}"/></t:template>
-                                                            </t:Column>
-                                                            <t:Column width="2.5rem" hAlign="Begin">
-                                                                <Label text=""/>
-                                                                <t:template><Text text="min" visible="{= ${view>type} === 'Time Effort'}" textAlign="Begin"/></t:template>
-                                                            </t:Column>
-                                                            <t:Column width="4.5rem" hAlign="Begin" sortProperty="quantity">
-                                                                <Label text="Qty"/>
-                                                                <t:template><Input value="{view>quantity}" type="Number" width="4rem" editable="{view>editMode}" visible="{= ${view>type} === 'Material'}"/></t:template>
-                                                            </t:Column>
-                                                            <t:Column width="2.5rem" hAlign="Begin">
-                                                                <Label text=""/>
-                                                                <t:template><Text text="pcs" visible="{= ${view>type} === 'Material'}" textAlign="Begin"/></t:template>
-                                                            </t:Column>
-                                                            <t:Column width="4.5rem" hAlign="Begin" sortProperty="startDateTime">
-                                                                <Label text="Date"/>
-                                                                <t:template><Text text="{path: 'view>startDateTime', formatter: '.formatter.formatDateShort'}" textAlign="Begin"/></t:template>
-                                                            </t:Column>
-                                                            <t:Column hAlign="Begin" sortProperty="remarksText" filterProperty="remarksText">
-                                                                <Label text="Remarks"/>
-                                                                <t:template><Input value="{view>remarksText}" width="100%" editable="{view>editMode}"/></t:template>
-                                                            </t:Column>
-                                                            <t:Column width="5.5rem" hAlign="Center" sortProperty="decisionStatus" filterProperty="decisionStatus">
-                                                                <Label text="Status"/>
-                                                                <t:template><ObjectStatus text="{= ${view>decisionStatus} === 'DECLINED_CLOSED' ? 'DECLINED' : ${view>decisionStatus}}" state="{view>decisionStatusState}" icon="{= ${view>decisionStatus} === 'APPROVED' ? 'sap-icon://accept' : (${view>decisionStatus} === 'DECLINED' || ${view>decisionStatus} === 'CANCELLED' || ${view>decisionStatus} === 'DECLINED_CLOSED') ? 'sap-icon://decline' : ''}"/></t:template>
-                                                            </t:Column>
-                                                        </t:columns>
-                                                        <t:rowSettingsTemplate>
-                                                            <t:RowSettings highlight="{= ${view>decisionStatus} === 'APPROVED' ? 'Success' : (${view>decisionStatus} === 'DECLINED' || ${view>decisionStatus} === 'CANCELLED' || ${view>decisionStatus} === 'DECLINED_CLOSED') ? 'Error' : ${view>editMode} ? 'Information' : 'None'}"/>
-                                                        </t:rowSettingsTemplate>
-                                                    </t:Table>
+                                                        <columns>
+                                                            <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
+                                                            <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
+                                                            <Column hAlign="Begin"><Text text="Description"/></Column>
+                                                            <Column width="10rem" hAlign="Begin"><Text text="Technician"/></Column>
+                                                            <Column width="5rem" hAlign="Begin"><Text text="Time"/></Column>
+                                                            <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
+                                                            <Column width="5rem" hAlign="Begin"><Text text="Qty"/></Column>
+                                                            <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
+                                                            <Column width="5rem" hAlign="Begin"><Text text="Date"/></Column>
+                                                            <Column hAlign="Begin"><Text text="Remarks"/></Column>
+                                                            <Column width="6rem" hAlign="Center"><Text text="Status"/></Column>
+                                                        </columns>
+                                                        <items>
+                                                            <ColumnListItem type="Inactive" highlight="{= ${view>decisionStatus} === 'APPROVED' ? 'Success' : (${view>decisionStatus} === 'DECLINED' || ${view>decisionStatus} === 'CANCELLED' || ${view>decisionStatus} === 'DECLINED_CLOSED') ? 'Error' : ${view>editMode} ? 'Information' : 'None'}">
+                                                                <cells>
+                                                                    <CheckBox selected="{view>selected}" visible="{= ${view>decisionStatus} === 'PENDING'}"/>
+                                                                    <core:Icon src="{= ${view>type} === 'Time Effort' ? 'sap-icon://time-entry-request' : 'sap-icon://product'}" color="{= ${view>type} === 'Time Effort' ? '#0854A0' : '#107E3E'}" tooltip="{view>type}"/>
+                                                                    <Text text="{= ${view>type} === 'Time Effort' ? ${view>taskDisplayText} : ${view>itemDisplayText}}"/>
+                                                                    <Text text="{view>createPersonDisplayText}"/>
+                                                                    <!-- Time: show Input for Time Effort, N/A for Material -->
+                                                                    <HBox>
+                                                                        <Input value="{view>durationMinutes}" type="Number" width="4rem" editable="{view>editMode}" visible="{= ${view>type} === 'Time Effort'}"/>
+                                                                        <Text text="N/A" visible="{= ${view>type} !== 'Time Effort'}"/>
+                                                                    </HBox>
+                                                                    <Text text="{= ${view>type} === 'Time Effort' ? 'min' : ''}"/>
+                                                                    <!-- Qty: show Input for Material, N/A for Time Effort -->
+                                                                    <HBox>
+                                                                        <Input value="{view>quantity}" type="Number" width="4rem" editable="{view>editMode}" visible="{= ${view>type} === 'Material'}"/>
+                                                                        <Text text="N/A" visible="{= ${view>type} !== 'Material'}"/>
+                                                                    </HBox>
+                                                                    <Text text="{= ${view>type} === 'Material' ? 'pcs' : ''}"/>
+                                                                    <Text text="{path: 'view>startDateTime', formatter: '.formatter.formatDateShort'}"/>
+                                                                    <Input value="{view>remarksText}" width="100%" editable="{view>editMode}"/>
+                                                                    <ObjectStatus text="{= ${view>decisionStatus} === 'DECLINED_CLOSED' ? 'DECLINED' : ${view>decisionStatus}}" state="{view>decisionStatusState}" icon="{= ${view>decisionStatus} === 'APPROVED' ? 'sap-icon://accept' : (${view>decisionStatus} === 'DECLINED' || ${view>decisionStatus} === 'CANCELLED' || ${view>decisionStatus} === 'DECLINED_CLOSED') ? 'sap-icon://decline' : ''}"/>
+                                                                </cells>
+                                                            </ColumnListItem>
+                                                        </items>
+                                                    </Table>
                                                 </content>
                                             </Panel>
                                             
@@ -200,6 +193,17 @@
                                                         <core:Icon src="sap-icon://money-bills" class="sapUiTinyMarginEnd" color="#E9730C"/>
                                                         <Title text="Expenses" level="H5"/>
                                                         <ToolbarSpacer/>
+                                                        <Select selectedKey="createDateTime-desc" change=".onTMSortChange" class="sapUiTinyMarginBegin" tooltip="Sort by">
+                                                            <core:Item key="createDateTime-desc" text="Date ↓"/>
+                                                            <core:Item key="createDateTime-asc" text="Date ↑"/>
+                                                            <core:Item key="expenseTypeDisplayText-asc" text="Type A-Z"/>
+                                                            <core:Item key="expenseTypeDisplayText-desc" text="Type Z-A"/>
+                                                            <core:Item key="createPersonDisplayText-asc" text="Technician A-Z"/>
+                                                            <core:Item key="createPersonDisplayText-desc" text="Technician Z-A"/>
+                                                            <core:Item key="externalAmountValue-desc" text="Amount ↓"/>
+                                                            <core:Item key="externalAmountValue-asc" text="Amount ↑"/>
+                                                            <core:Item key="decisionStatus-asc" text="Status A-Z"/>
+                                                        </Select>
                                                         <Button text="Edit Selected" icon="sap-icon://edit" press=".onEditSelectedTM" visible="{= ${view>expenseEditMode} !== true}" class="sapUiTinyMarginBegin"/>
                                                         <Button text="Save All" icon="sap-icon://save" type="Emphasized" press=".onSaveAllTM" visible="{= ${view>expenseEditMode} === true}" class="sapUiTinyMarginBegin"/>
                                                         <Button text="End Edit" icon="sap-icon://sys-cancel" press=".onEndEditTM" visible="{= ${view>expenseEditMode} === true}" class="sapUiTinyMarginBegin"/>
@@ -208,51 +212,36 @@
                                                     </OverflowToolbar>
                                                 </headerToolbar>
                                                 <content>
-                                                    <t:Table
-                                                        rows="{path: 'view>tmReports', filters: [{ path: 'type', operator: 'EQ', value1: 'Expense' }], sorter: { path: 'createDateTime', descending: true }}"
-                                                        selectionMode="None"
-                                                        class="tmGridTable"
+                                                    <Table
+                                                        items="{path: 'view>tmReports', filters: [{ path: 'type', operator: 'EQ', value1: 'Expense' }], sorter: { path: 'createDateTime', descending: true }}"
+                                                        class="tmMTable"
                                                         width="100%"
-                                                        visibleRowCount="{view>tmExpenseCount}"
                                                     >
-                                                        <t:columns>
-                                                            <t:Column width="2.5rem" hAlign="Begin" resizable="false">
-                                                                <Label text=""/>
-                                                                <t:template><CheckBox selected="{view>selected}" visible="{= ${view>decisionStatus} === 'PENDING'}"/></t:template>
-                                                            </t:Column>
-                                                            <t:Column hAlign="Center" sortProperty="expenseTypeDisplayText" filterProperty="expenseTypeDisplayText">
-                                                                <Label text="Expense Type"/>
-                                                                <t:template><Text text="{view>expenseTypeDisplayText}" textAlign="Begin"/></t:template>
-                                                            </t:Column>
-                                                            <t:Column width="9rem" hAlign="Begin" sortProperty="createPersonDisplayText" filterProperty="createPersonDisplayText">
-                                                                <Label text="Technician"/>
-                                                                <t:template><Text text="{view>createPersonDisplayText}" textAlign="Begin"/></t:template>
-                                                            </t:Column>
-                                                            <t:Column width="5.5rem" hAlign="Begin" sortProperty="externalAmountValue">
-                                                                <Label text="Ext. Amt"/>
-                                                                <t:template><Input value="{view>externalAmountValue}" type="Number" width="5rem" editable="{view>editMode}"/></t:template>
-                                                            </t:Column>
-                                                            <t:Column width="5.5rem" hAlign="Begin" sortProperty="internalAmountValue">
-                                                                <Label text="Int. Amt"/>
-                                                                <t:template><Input value="{view>internalAmountValue}" type="Number" width="5rem" editable="{view>editMode}"/></t:template>
-                                                            </t:Column>
-                                                            <t:Column width="3rem" hAlign="Begin">
-                                                                <Label text=""/>
-                                                                <t:template><Text text="EUR" textAlign="Begin"/></t:template>
-                                                            </t:Column>
-                                                            <t:Column hAlign="Begin" sortProperty="remarksText" filterProperty="remarksText">
-                                                                <Label text="Remarks"/>
-                                                                <t:template><Input value="{view>remarksText}" width="100%" editable="{view>editMode}"/></t:template>
-                                                            </t:Column>
-                                                            <t:Column width="5.5rem" hAlign="Center" sortProperty="decisionStatus" filterProperty="decisionStatus">
-                                                                <Label text="Status"/>
-                                                                <t:template><ObjectStatus text="{= ${view>decisionStatus} === 'DECLINED_CLOSED' ? 'DECLINED' : ${view>decisionStatus}}" state="{view>decisionStatusState}" icon="{= ${view>decisionStatus} === 'APPROVED' ? 'sap-icon://accept' : (${view>decisionStatus} === 'DECLINED' || ${view>decisionStatus} === 'CANCELLED' || ${view>decisionStatus} === 'DECLINED_CLOSED') ? 'sap-icon://decline' : ''}"/></t:template>
-                                                            </t:Column>
-                                                        </t:columns>
-                                                        <t:rowSettingsTemplate>
-                                                            <t:RowSettings highlight="{= ${view>decisionStatus} === 'APPROVED' ? 'Success' : (${view>decisionStatus} === 'DECLINED' || ${view>decisionStatus} === 'CANCELLED' || ${view>decisionStatus} === 'DECLINED_CLOSED') ? 'Error' : ${view>editMode} ? 'Information' : 'None'}"/>
-                                                        </t:rowSettingsTemplate>
-                                                    </t:Table>
+                                                        <columns>
+                                                            <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
+                                                            <Column hAlign="Begin"><Text text="Expense Type"/></Column>
+                                                            <Column width="10rem" hAlign="Begin"><Text text="Technician"/></Column>
+                                                            <Column width="6rem" hAlign="Begin"><Text text="Ext. Amt"/></Column>
+                                                            <Column width="6rem" hAlign="Begin"><Text text="Int. Amt"/></Column>
+                                                            <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
+                                                            <Column hAlign="Begin"><Text text="Remarks"/></Column>
+                                                            <Column width="6rem" hAlign="Center"><Text text="Status"/></Column>
+                                                        </columns>
+                                                        <items>
+                                                            <ColumnListItem type="Inactive" highlight="{= ${view>decisionStatus} === 'APPROVED' ? 'Success' : (${view>decisionStatus} === 'DECLINED' || ${view>decisionStatus} === 'CANCELLED' || ${view>decisionStatus} === 'DECLINED_CLOSED') ? 'Error' : ${view>editMode} ? 'Information' : 'None'}">
+                                                                <cells>
+                                                                    <CheckBox selected="{view>selected}" visible="{= ${view>decisionStatus} === 'PENDING'}"/>
+                                                                    <Text text="{view>expenseTypeDisplayText}"/>
+                                                                    <Text text="{view>createPersonDisplayText}"/>
+                                                                    <Input value="{view>externalAmountValue}" type="Number" width="5rem" editable="{view>editMode}"/>
+                                                                    <Input value="{view>internalAmountValue}" type="Number" width="5rem" editable="{view>editMode}"/>
+                                                                    <Text text="EUR"/>
+                                                                    <Input value="{view>remarksText}" width="100%" editable="{view>editMode}"/>
+                                                                    <ObjectStatus text="{= ${view>decisionStatus} === 'DECLINED_CLOSED' ? 'DECLINED' : ${view>decisionStatus}}" state="{view>decisionStatusState}" icon="{= ${view>decisionStatus} === 'APPROVED' ? 'sap-icon://accept' : (${view>decisionStatus} === 'DECLINED' || ${view>decisionStatus} === 'CANCELLED' || ${view>decisionStatus} === 'DECLINED_CLOSED') ? 'sap-icon://decline' : ''}"/>
+                                                                </cells>
+                                                            </ColumnListItem>
+                                                        </items>
+                                                    </Table>
                                                 </content>
                                             </Panel>
                                             
@@ -263,6 +252,17 @@
                                                         <core:Icon src="sap-icon://car-rental" class="sapUiTinyMarginEnd" color="#6C32A9"/>
                                                         <Title text="Mileage" level="H5"/>
                                                         <ToolbarSpacer/>
+                                                        <Select selectedKey="createDateTime-desc" change=".onTMSortChange" class="sapUiTinyMarginBegin" tooltip="Sort by">
+                                                            <core:Item key="createDateTime-desc" text="Date ↓"/>
+                                                            <core:Item key="createDateTime-asc" text="Date ↑"/>
+                                                            <core:Item key="mileageTypeDisplayText-asc" text="Type A-Z"/>
+                                                            <core:Item key="mileageTypeDisplayText-desc" text="Type Z-A"/>
+                                                            <core:Item key="createPersonDisplayText-asc" text="Technician A-Z"/>
+                                                            <core:Item key="createPersonDisplayText-desc" text="Technician Z-A"/>
+                                                            <core:Item key="distanceValue-desc" text="Distance ↓"/>
+                                                            <core:Item key="distanceValue-asc" text="Distance ↑"/>
+                                                            <core:Item key="decisionStatus-asc" text="Status A-Z"/>
+                                                        </Select>
                                                         <Button text="Edit Selected" icon="sap-icon://edit" press=".onEditSelectedTM" visible="{= ${view>mileageEditMode} !== true}" class="sapUiTinyMarginBegin"/>
                                                         <Button text="Save All" icon="sap-icon://save" type="Emphasized" press=".onSaveAllTM" visible="{= ${view>mileageEditMode} === true}" class="sapUiTinyMarginBegin"/>
                                                         <Button text="End Edit" icon="sap-icon://sys-cancel" press=".onEndEditTM" visible="{= ${view>mileageEditMode} === true}" class="sapUiTinyMarginBegin"/>
@@ -271,55 +271,38 @@
                                                     </OverflowToolbar>
                                                 </headerToolbar>
                                                 <content>
-                                                    <t:Table
-                                                        rows="{path: 'view>tmReports', filters: [{ path: 'type', operator: 'EQ', value1: 'Mileage' }], sorter: { path: 'createDateTime', descending: true }}"
-                                                        selectionMode="None"
-                                                        class="tmGridTable"
+                                                    <Table
+                                                        items="{path: 'view>tmReports', filters: [{ path: 'type', operator: 'EQ', value1: 'Mileage' }], sorter: { path: 'createDateTime', descending: true }}"
+                                                        class="tmMTable"
                                                         width="100%"
-                                                        visibleRowCount="{view>tmMileageCount}"
                                                     >
-                                                        <t:columns>
-                                                            <t:Column width="2.5rem" hAlign="Begin" resizable="false">
-                                                                <Label text=""/>
-                                                                <t:template><CheckBox selected="{view>selected}" visible="{= ${view>decisionStatus} === 'PENDING'}"/></t:template>
-                                                            </t:Column>
-                                                            <t:Column hAlign="Center" sortProperty="mileageTypeDisplayText" filterProperty="mileageTypeDisplayText">
-                                                                <Label text="Mileage Type"/>
-                                                                <t:template><Text text="{view>mileageTypeDisplayText}" textAlign="Begin"/></t:template>
-                                                            </t:Column>
-                                                            <t:Column width="9rem" hAlign="Begin" sortProperty="createPersonDisplayText" filterProperty="createPersonDisplayText">
-                                                                <Label text="Technician"/>
-                                                                <t:template><Text text="{view>createPersonDisplayText}" textAlign="Begin"/></t:template>
-                                                            </t:Column>
-                                                            <t:Column width="4.5rem" hAlign="Begin" sortProperty="distanceValue">
-                                                                <Label text="Dist."/>
-                                                                <t:template><Input value="{view>distanceValue}" type="Number" width="4rem" editable="{view>editMode}"/></t:template>
-                                                            </t:Column>
-                                                            <t:Column width="2.5rem" hAlign="Begin">
-                                                                <Label text=""/>
-                                                                <t:template><Text text="KM" textAlign="Begin"/></t:template>
-                                                            </t:Column>
-                                                            <t:Column width="4.5rem" hAlign="Begin" sortProperty="travelDurationMinutes">
-                                                                <Label text="Dur."/>
-                                                                <t:template><Input value="{view>travelDurationMinutes}" type="Number" width="4rem" editable="{view>editMode}"/></t:template>
-                                                            </t:Column>
-                                                            <t:Column width="2.5rem" hAlign="Begin">
-                                                                <Label text=""/>
-                                                                <t:template><Text text="min" textAlign="Begin"/></t:template>
-                                                            </t:Column>
-                                                            <t:Column hAlign="Begin" sortProperty="remarksText" filterProperty="remarksText">
-                                                                <Label text="Remarks"/>
-                                                                <t:template><Input value="{view>remarksText}" width="100%" editable="{view>editMode}"/></t:template>
-                                                            </t:Column>
-                                                            <t:Column width="5.5rem" hAlign="Center" sortProperty="decisionStatus" filterProperty="decisionStatus">
-                                                                <Label text="Status"/>
-                                                                <t:template><ObjectStatus text="{= ${view>decisionStatus} === 'DECLINED_CLOSED' ? 'DECLINED' : ${view>decisionStatus}}" state="{view>decisionStatusState}" icon="{= ${view>decisionStatus} === 'APPROVED' ? 'sap-icon://accept' : (${view>decisionStatus} === 'DECLINED' || ${view>decisionStatus} === 'CANCELLED' || ${view>decisionStatus} === 'DECLINED_CLOSED') ? 'sap-icon://decline' : ''}"/></t:template>
-                                                            </t:Column>
-                                                        </t:columns>
-                                                        <t:rowSettingsTemplate>
-                                                            <t:RowSettings highlight="{= ${view>decisionStatus} === 'APPROVED' ? 'Success' : (${view>decisionStatus} === 'DECLINED' || ${view>decisionStatus} === 'CANCELLED' || ${view>decisionStatus} === 'DECLINED_CLOSED') ? 'Error' : ${view>editMode} ? 'Information' : 'None'}"/>
-                                                        </t:rowSettingsTemplate>
-                                                    </t:Table>
+                                                        <columns>
+                                                            <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
+                                                            <Column hAlign="Begin"><Text text="Mileage Type"/></Column>
+                                                            <Column width="10rem" hAlign="Begin"><Text text="Technician"/></Column>
+                                                            <Column width="5rem" hAlign="Begin"><Text text="Dist."/></Column>
+                                                            <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
+                                                            <Column width="5rem" hAlign="Begin"><Text text="Dur."/></Column>
+                                                            <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
+                                                            <Column hAlign="Begin"><Text text="Remarks"/></Column>
+                                                            <Column width="6rem" hAlign="Center"><Text text="Status"/></Column>
+                                                        </columns>
+                                                        <items>
+                                                            <ColumnListItem type="Inactive" highlight="{= ${view>decisionStatus} === 'APPROVED' ? 'Success' : (${view>decisionStatus} === 'DECLINED' || ${view>decisionStatus} === 'CANCELLED' || ${view>decisionStatus} === 'DECLINED_CLOSED') ? 'Error' : ${view>editMode} ? 'Information' : 'None'}">
+                                                                <cells>
+                                                                    <CheckBox selected="{view>selected}" visible="{= ${view>decisionStatus} === 'PENDING'}"/>
+                                                                    <Text text="{view>mileageTypeDisplayText}"/>
+                                                                    <Text text="{view>createPersonDisplayText}"/>
+                                                                    <Input value="{view>distanceValue}" type="Number" width="4rem" editable="{view>editMode}"/>
+                                                                    <Text text="KM"/>
+                                                                    <Input value="{view>travelDurationMinutes}" type="Number" width="4rem" editable="{view>editMode}"/>
+                                                                    <Text text="min"/>
+                                                                    <Input value="{view>remarksText}" width="100%" editable="{view>editMode}"/>
+                                                                    <ObjectStatus text="{= ${view>decisionStatus} === 'DECLINED_CLOSED' ? 'DECLINED' : ${view>decisionStatus}}" state="{view>decisionStatusState}" icon="{= ${view>decisionStatus} === 'APPROVED' ? 'sap-icon://accept' : (${view>decisionStatus} === 'DECLINED' || ${view>decisionStatus} === 'CANCELLED' || ${view>decisionStatus} === 'DECLINED_CLOSED') ? 'sap-icon://decline' : ''}"/>
+                                                                </cells>
+                                                            </ColumnListItem>
+                                                        </items>
+                                                    </Table>
                                                 </content>
                                             </Panel>
                                             
