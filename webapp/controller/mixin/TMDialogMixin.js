@@ -2413,6 +2413,516 @@ sap.ui.define([
             oModel.setProperty(sPath + "/technicianId", sTechId);
             oModel.setProperty(sPath + "/technicianDisplay", sTechDisplay);
             oModel.setProperty(sPath + "/technicianExternalId", oTech?.externalId || "");
+        },
+
+        /* ========================================
+         * MATERIAL TABLE CREATION HANDLERS
+         * ======================================== */
+
+        /**
+         * Add new row to Material creation table
+         */
+        onAddCreateMaterialRow() {
+            console.log("onAddCreateMaterialRow called");
+            
+            if (!this._tmCreateDialog) {
+                MessageToast.show("Dialog not initialized");
+                return;
+            }
+            
+            const oModel = this._tmCreateDialog.getModel("createTM");
+            if (!oModel) {
+                MessageToast.show("Model not initialized");
+                return;
+            }
+            
+            const aEntries = oModel.getProperty("/materialEntries") || [];
+            
+            // Get defaults - technician from activity (responsible/supporting)
+            const defaultTechId = oModel.getProperty("/defaultTechnicianId") || "";
+            const defaultTechDisplay = oModel.getProperty("/defaultTechnicianDisplay") || "";
+            const defaultTechExternalId = oModel.getProperty("/defaultTechnicianExternalId") || "";
+            const defaultItemId = oModel.getProperty("/defaultItemId") || "";
+            const defaultItemDisplay = oModel.getProperty("/defaultItemDisplay") || "";
+            const defaultDate = oModel.getProperty("/defaultDate") || "";
+            const defaultQuantity = oModel.getProperty("/quantity") || 1;
+            
+            const newEntry = {
+                id: Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+                type: "Material",
+                technicianId: defaultTechId,
+                technicianExternalId: defaultTechExternalId,
+                technicianDisplay: defaultTechDisplay,
+                itemId: defaultItemId,
+                itemDisplay: defaultItemDisplay,
+                quantity: parseFloat(defaultQuantity) || 1,
+                entryDate: defaultDate,
+                remarks: ""
+            };
+            
+            aEntries.push(newEntry);
+            oModel.setProperty("/materialEntries", aEntries);
+            oModel.refresh(true);
+            console.log("Material entries now:", aEntries.length);
+            MessageToast.show("Material entry added");
+        },
+
+        /**
+         * Remove row from Material creation table
+         */
+        onRemoveCreateMaterialRow(oEvent) {
+            const oButton = oEvent.getSource();
+            const oContext = oButton.getBindingContext("createTM");
+            
+            if (!oContext) {
+                MessageToast.show("Could not identify entry to remove");
+                return;
+            }
+            
+            const sPath = oContext.getPath();
+            const oModel = this._tmCreateDialog.getModel("createTM");
+            
+            const iIndex = parseInt(sPath.split("/").pop());
+            const aEntries = oModel.getProperty("/materialEntries") || [];
+            aEntries.splice(iIndex, 1);
+            oModel.setProperty("/materialEntries", aEntries);
+            MessageToast.show("Material entry removed");
+        },
+
+        /**
+         * Handle technician selection for Material
+         */
+        onCreateMaterialTechnicianSelect(oEvent) {
+            const oSelect = oEvent.getSource();
+            const oContext = oSelect.getBindingContext("createTM");
+            if (!oContext) return;
+            
+            const sPath = oContext.getPath();
+            const oModel = this._tmCreateDialog.getModel("createTM");
+            const oSelectedItem = oEvent.getParameter("selectedItem");
+            
+            if (oSelectedItem) {
+                const oTech = oSelectedItem.getBindingContext("createTM").getObject();
+                oModel.setProperty(sPath + "/technicianId", oTech.id);
+                oModel.setProperty(sPath + "/technicianDisplay", oTech.displayText);
+                oModel.setProperty(sPath + "/technicianExternalId", oTech.externalId);
+            }
+        },
+
+        /* ========================================
+         * TIME ENTRY TABLE CREATION HANDLERS
+         * ======================================== */
+
+        /**
+         * Add new row to Time Entry AZ (Arbeitszeit) creation table
+         */
+        onAddCreateTimeEntryAZ() {
+            this._addTimeEntry("AZ", "/timeEntriesAZ");
+        },
+
+        /**
+         * Add new row to Time Entry FZ (Fahrzeit) creation table
+         */
+        onAddCreateTimeEntryFZ() {
+            this._addTimeEntry("FZ", "/timeEntriesFZ");
+        },
+
+        /**
+         * Add new row to Time Entry WZ (Wartezeit) creation table
+         */
+        onAddCreateTimeEntryWZ() {
+            this._addTimeEntry("WZ", "/timeEntriesWZ");
+        },
+
+        /**
+         * Generic time entry add helper
+         * @private
+         */
+        _addTimeEntry(sType, sArrayPath) {
+            console.log(`onAddCreateTimeEntry${sType} called`);
+            
+            if (!this._tmCreateDialog) {
+                MessageToast.show("Dialog not initialized");
+                return;
+            }
+            
+            const oModel = this._tmCreateDialog.getModel("createTM");
+            if (!oModel) {
+                MessageToast.show("Model not initialized");
+                return;
+            }
+            
+            const aEntries = oModel.getProperty(sArrayPath) || [];
+            
+            // Get defaults - for time entries, default technician is from activity
+            const defaultTechId = oModel.getProperty("/defaultTechnicianId") || "";
+            const defaultTechDisplay = oModel.getProperty("/defaultTechnicianDisplay") || "";
+            const defaultTechExternalId = oModel.getProperty("/defaultTechnicianExternalId") || "";
+            const defaultDate = oModel.getProperty("/defaultDate") || "";
+            
+            const newEntry = {
+                id: Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+                timeType: sType,
+                technicianId: defaultTechId,
+                technicianExternalId: defaultTechExternalId,
+                technicianDisplay: defaultTechDisplay,
+                technicianSuggestions: [], // Local suggestions for this entry
+                taskCode: "",
+                taskDisplay: "",
+                duration: 30, // Default 30 minutes
+                entryDate: defaultDate,
+                remarks: ""
+            };
+            
+            aEntries.push(newEntry);
+            oModel.setProperty(sArrayPath, aEntries);
+            oModel.refresh(true);
+            console.log(`${sType} time entries now:`, aEntries.length);
+            MessageToast.show(`${sType === 'AZ' ? 'Arbeitszeit' : sType === 'FZ' ? 'Fahrzeit' : 'Wartezeit'} entry added`);
+        },
+
+        /**
+         * Remove row from Time Entry AZ creation table
+         */
+        onRemoveCreateTimeEntryAZ(oEvent) {
+            this._removeTimeEntry(oEvent, "/timeEntriesAZ");
+        },
+
+        /**
+         * Remove row from Time Entry FZ creation table
+         */
+        onRemoveCreateTimeEntryFZ(oEvent) {
+            this._removeTimeEntry(oEvent, "/timeEntriesFZ");
+        },
+
+        /**
+         * Remove row from Time Entry WZ creation table
+         */
+        onRemoveCreateTimeEntryWZ(oEvent) {
+            this._removeTimeEntry(oEvent, "/timeEntriesWZ");
+        },
+
+        /**
+         * Generic time entry remove helper
+         * @private
+         */
+        _removeTimeEntry(oEvent, sArrayPath) {
+            const oButton = oEvent.getSource();
+            const oContext = oButton.getBindingContext("createTM");
+            
+            if (!oContext) {
+                MessageToast.show("Could not identify entry to remove");
+                return;
+            }
+            
+            const sPath = oContext.getPath();
+            const oModel = this._tmCreateDialog.getModel("createTM");
+            
+            const iIndex = parseInt(sPath.split("/").pop());
+            const aEntries = oModel.getProperty(sArrayPath) || [];
+            aEntries.splice(iIndex, 1);
+            oModel.setProperty(sArrayPath, aEntries);
+            MessageToast.show("Time entry removed");
+        },
+
+        /**
+         * Handle technician live change for Time Entry search (all technicians)
+         */
+        onCreateTimeEntryTechnicianLiveChange(oEvent) {
+            const sValue = oEvent.getParameter("value");
+            const oInput = oEvent.getSource();
+            const oContext = oInput.getBindingContext("createTM");
+            
+            if (!oContext) return;
+            
+            const sPath = oContext.getPath();
+            const oModel = this._tmCreateDialog.getModel("createTM");
+            
+            if (sValue.length < 2) {
+                oModel.setProperty(sPath + "/technicianSuggestions", []);
+                return;
+            }
+            
+            // Search all technicians (not just activity technicians)
+            const aSuggestions = TechnicianService.searchTechnicians(sValue);
+            oModel.setProperty(sPath + "/technicianSuggestions", aSuggestions);
+        },
+
+        /**
+         * Handle technician suggestion select for Time Entry
+         */
+        onCreateTimeEntrySuggestionSelect(oEvent) {
+            const oItem = oEvent.getParameter("selectedItem");
+            if (!oItem) return;
+            
+            const oInput = oEvent.getSource();
+            const oContext = oInput.getBindingContext("createTM");
+            if (!oContext) return;
+            
+            const sPath = oContext.getPath();
+            const oModel = this._tmCreateDialog.getModel("createTM");
+            
+            const sTechId = oItem.getKey();
+            const sTechDisplay = oItem.getText();
+            
+            // Get full technician data
+            const oTech = TechnicianService.getTechnicianById(sTechId);
+            
+            oModel.setProperty(sPath + "/technicianId", sTechId);
+            oModel.setProperty(sPath + "/technicianDisplay", sTechDisplay);
+            oModel.setProperty(sPath + "/technicianExternalId", oTech?.externalId || "");
+        },
+
+        /* ========================================
+         * SAVE ALL TIME & MATERIAL ENTRIES
+         * ======================================== */
+
+        /**
+         * Save all Time & Material entries with confirmation
+         */
+        onSaveAllCreateTM() {
+            const oModel = this._tmCreateDialog.getModel("createTM");
+            const aMaterialEntries = oModel.getProperty("/materialEntries") || [];
+            const aTimeEntriesAZ = oModel.getProperty("/timeEntriesAZ") || [];
+            const aTimeEntriesFZ = oModel.getProperty("/timeEntriesFZ") || [];
+            const aTimeEntriesWZ = oModel.getProperty("/timeEntriesWZ") || [];
+            
+            const totalEntries = aMaterialEntries.length + aTimeEntriesAZ.length + aTimeEntriesFZ.length + aTimeEntriesWZ.length;
+            
+            if (totalEntries === 0) {
+                MessageToast.show("No entries to save");
+                return;
+            }
+            
+            // Validate entries
+            let hasErrors = false;
+            
+            // Check time entries have tasks
+            [...aTimeEntriesAZ, ...aTimeEntriesFZ, ...aTimeEntriesWZ].forEach((entry, idx) => {
+                if (!entry.taskCode) {
+                    hasErrors = true;
+                }
+            });
+            
+            if (hasErrors) {
+                MessageBox.warning("Please select a task for all time entries before saving.");
+                return;
+            }
+            
+            // Build preview
+            const lines = [];
+            
+            if (aMaterialEntries.length > 0) {
+                lines.push(`Materials (${aMaterialEntries.length}):`);
+                aMaterialEntries.forEach((e, i) => {
+                    lines.push(`  ${i + 1}. ${e.itemDisplay || 'N/A'} - Qty: ${e.quantity}`);
+                });
+            }
+            
+            if (aTimeEntriesAZ.length > 0) {
+                lines.push(`\nArbeitszeit (${aTimeEntriesAZ.length}):`);
+                aTimeEntriesAZ.forEach((e, i) => {
+                    const taskName = this._getTaskNameByCode(oModel, 'AZ', e.taskCode);
+                    lines.push(`  ${i + 1}. ${taskName} - ${e.duration} min`);
+                });
+            }
+            
+            if (aTimeEntriesFZ.length > 0) {
+                lines.push(`\nFahrzeit (${aTimeEntriesFZ.length}):`);
+                aTimeEntriesFZ.forEach((e, i) => {
+                    const taskName = this._getTaskNameByCode(oModel, 'FZ', e.taskCode);
+                    lines.push(`  ${i + 1}. ${taskName} - ${e.duration} min`);
+                });
+            }
+            
+            if (aTimeEntriesWZ.length > 0) {
+                lines.push(`\nWartezeit (${aTimeEntriesWZ.length}):`);
+                aTimeEntriesWZ.forEach((e, i) => {
+                    const taskName = this._getTaskNameByCode(oModel, 'WZ', e.taskCode);
+                    lines.push(`  ${i + 1}. ${taskName} - ${e.duration} min`);
+                });
+            }
+            
+            MessageBox.confirm(
+                `Create ${totalEntries} entries?\n\n${lines.join('\n')}`,
+                {
+                    title: "Confirm Creation",
+                    onClose: (sAction) => {
+                        if (sAction === MessageBox.Action.OK) {
+                            this._submitCreateTMEntries(aMaterialEntries, aTimeEntriesAZ, aTimeEntriesFZ, aTimeEntriesWZ, oModel);
+                        }
+                    }
+                }
+            );
+        },
+
+        /**
+         * Get task name by code from suggestions
+         * @private
+         */
+        _getTaskNameByCode(oModel, sType, sCode) {
+            if (!sCode) return 'N/A';
+            
+            const aSuggestions = oModel.getProperty(`/taskSuggestions${sType}`) || [];
+            const oTask = aSuggestions.find(t => t.code === sCode);
+            return oTask ? oTask.name : sCode;
+        },
+
+        /**
+         * Submit all Time & Material entries to backend
+         * @private
+         */
+        async _submitCreateTMEntries(aMaterialEntries, aTimeEntriesAZ, aTimeEntriesFZ, aTimeEntriesWZ, oModel) {
+            try {
+                sap.ui.core.BusyIndicator.show(0);
+                
+                const activityId = oModel.getProperty("/activityId");
+                const activityCode = oModel.getProperty("/activityExternalId");
+                const orgLevelId = oModel.getProperty("/orgLevelId");
+                const plannedStartDate = oModel.getProperty("/plannedStartDate");
+                
+                let successCount = 0;
+                let errorCount = 0;
+                
+                // Combine all time entries with their type info, then sort by date and type
+                const allTimeEntries = [
+                    ...aTimeEntriesAZ.map(e => ({ ...e, typeOrder: 1, timeType: 'AZ' })),
+                    ...aTimeEntriesFZ.map(e => ({ ...e, typeOrder: 2, timeType: 'FZ' })),
+                    ...aTimeEntriesWZ.map(e => ({ ...e, typeOrder: 3, timeType: 'WZ' }))
+                ];
+                
+                // Sort by date, then type order (AZ=1, FZ=2, WZ=3)
+                allTimeEntries.sort((a, b) => {
+                    const dateA = a.entryDate || '';
+                    const dateB = b.entryDate || '';
+                    if (dateA !== dateB) return dateA.localeCompare(dateB);
+                    return a.typeOrder - b.typeOrder;
+                });
+                
+                // Create Materials first
+                for (const entry of aMaterialEntries) {
+                    const payload = TMPayloadService.buildPayload({
+                        type: "Material",
+                        technicianId: entry.technicianId,
+                        technicianExternalId: entry.technicianExternalId,
+                        itemId: entry.itemId,
+                        itemDisplay: entry.itemDisplay,
+                        quantity: entry.quantity,
+                        date: entry.entryDate,
+                        remarks: entry.remarks,
+                        chargeOption: "CHARGEABLE"
+                    }, activityId, orgLevelId);
+                    
+                    try {
+                        const response = await fetch('/api/create-material', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                        
+                        const result = await response.json();
+                        if (result.success) {
+                            successCount++;
+                        } else {
+                            console.error('Material creation failed:', result.message);
+                            errorCount++;
+                        }
+                    } catch (err) {
+                        console.error('Error creating material:', err);
+                        errorCount++;
+                    }
+                }
+                
+                // Track start times per date for sequential time calculation
+                const dateStartTimes = {};
+                
+                // Create Time Entries sequentially
+                for (const entry of allTimeEntries) {
+                    const entryDate = entry.entryDate || plannedStartDate?.split('T')[0];
+                    
+                    // Get or initialize start time for this date
+                    if (!dateStartTimes[entryDate]) {
+                        // Start at 08:00 for each new date
+                        dateStartTimes[entryDate] = new Date(`${entryDate}T08:00:00Z`);
+                    }
+                    
+                    const startDateTime = dateStartTimes[entryDate].toISOString();
+                    const durationMs = (entry.duration || 0) * 60 * 1000;
+                    const endDate = new Date(dateStartTimes[entryDate].getTime() + durationMs);
+                    const endDateTime = endDate.toISOString();
+                    
+                    // Update start time for next entry on same date
+                    dateStartTimes[entryDate] = endDate;
+                    
+                    const payload = TMPayloadService.buildPayload({
+                        type: "Time Effort",
+                        technicianId: entry.technicianId,
+                        technicianExternalId: entry.technicianExternalId,
+                        taskCode: entry.taskCode,
+                        startDateTime: startDateTime,
+                        endDateTime: endDateTime,
+                        duration: entry.duration,
+                        remarks: entry.remarks,
+                        chargeOption: "CHARGEABLE"
+                    }, activityId, orgLevelId);
+                    
+                    try {
+                        const response = await fetch('/api/create-time-effort', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                        
+                        const result = await response.json();
+                        if (result.success) {
+                            successCount++;
+                        } else {
+                            console.error('Time effort creation failed:', result.message);
+                            errorCount++;
+                        }
+                    } catch (err) {
+                        console.error('Error creating time effort:', err);
+                        errorCount++;
+                    }
+                }
+                
+                sap.ui.core.BusyIndicator.hide();
+                
+                // Clear entries
+                oModel.setProperty("/materialEntries", []);
+                oModel.setProperty("/timeEntriesAZ", []);
+                oModel.setProperty("/timeEntriesFZ", []);
+                oModel.setProperty("/timeEntriesWZ", []);
+                
+                // Refresh T&M Reports
+                await this._refreshTMReportsAfterCreate(activityId);
+                
+                // Show result
+                if (errorCount === 0) {
+                    MessageBox.success(
+                        `Successfully created ${successCount} entries.`,
+                        {
+                            title: "Success",
+                            onClose: () => {
+                                TMDialogService.closeTMCreationDialog();
+                            }
+                        }
+                    );
+                } else {
+                    MessageBox.warning(
+                        `Created ${successCount} entries with ${errorCount} errors.`,
+                        { title: "Partial Success" }
+                    );
+                }
+                
+            } catch (error) {
+                sap.ui.core.BusyIndicator.hide();
+                console.error('TMDialogMixin: Error submitting T&M entries:', error);
+                MessageBox.error(
+                    `Error creating entries: ${error.message}`,
+                    { title: "Error" }
+                );
+            }
         }
     };
 });

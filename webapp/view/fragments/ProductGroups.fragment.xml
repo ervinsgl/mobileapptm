@@ -126,8 +126,16 @@
                                                         <Select selectedKey="startDateTime-desc" change=".onTMSortChange" class="sapUiTinyMarginBegin" tooltip="Sort by">
                                                             <core:Item key="startDateTime-desc" text="Date ↓"/>
                                                             <core:Item key="startDateTime-asc" text="Date ↑"/>
+                                                            <core:Item key="type-asc" text="Type A-Z"/>
+                                                            <core:Item key="type-desc" text="Type Z-A"/>
+                                                            <core:Item key="taskDisplayText-asc" text="Description A-Z"/>
+                                                            <core:Item key="taskDisplayText-desc" text="Description Z-A"/>
                                                             <core:Item key="createPersonDisplayText-asc" text="Technician A-Z"/>
                                                             <core:Item key="createPersonDisplayText-desc" text="Technician Z-A"/>
+                                                            <core:Item key="durationMinutes-desc" text="Time ↓"/>
+                                                            <core:Item key="durationMinutes-asc" text="Time ↑"/>
+                                                            <core:Item key="quantity-desc" text="Qty ↓"/>
+                                                            <core:Item key="quantity-asc" text="Qty ↑"/>
                                                             <core:Item key="decisionStatus-asc" text="Status A-Z"/>
                                                             <core:Item key="decisionStatus-desc" text="Status Z-A"/>
                                                         </Select>

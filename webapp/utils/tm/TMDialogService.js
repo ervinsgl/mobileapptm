@@ -310,13 +310,22 @@ sap.ui.define([
                 // New table-based creation arrays
                 expenseEntries: [],
                 mileageEntries: [],
+                materialEntries: [],
+                timeEntriesAZ: [],
+                timeEntriesFZ: [],
+                timeEntriesWZ: [],
                 technicianSuggestions: [],
                 // Default values for new entries
                 defaultExpenseTypeId: defaultExpenseType?.id || "",
                 defaultExpenseTypeCode: defaultExpenseType?.code || "",
                 defaultExpenseTypeDisplay: defaultExpenseType?.displayText || "",
                 defaultMileageTypeId: defaultItem?.id || "",
-                defaultMileageTypeDisplay: defaultItem?.displayText || ""
+                defaultMileageTypeDisplay: defaultItem?.displayText || "",
+                // Default item for Material
+                defaultItemId: defaultItem?.id || "",
+                defaultItemDisplay: defaultItem?.displayText || "",
+                // Default date from activity
+                defaultDate: activityData.plannedStartDate ? activityData.plannedStartDate.split('T')[0] : ""
             });
 
             await this._openDialog("TMCreateDialog", oCreateTMDialogModel, "createTM", "_tmCreateDialog");
@@ -365,6 +374,10 @@ sap.ui.define([
                     oModel.setProperty("/entries", []);
                     oModel.setProperty("/expenseEntries", []);
                     oModel.setProperty("/mileageEntries", []);
+                    oModel.setProperty("/materialEntries", []);
+                    oModel.setProperty("/timeEntriesAZ", []);
+                    oModel.setProperty("/timeEntriesFZ", []);
+                    oModel.setProperty("/timeEntriesWZ", []);
                     oModel.setProperty("/technicianSuggestions", []);
                 }
                 

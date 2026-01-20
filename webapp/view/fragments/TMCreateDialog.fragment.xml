@@ -248,266 +248,320 @@
                     </content>
                 </Panel>
                 
-                <!-- ========== TIME & MATERIAL - PANEL BASED ========== -->
+                <!-- ========== TIME & MATERIAL - TABLE BASED ========== -->
                 <!-- Visible for all other Service Products -->
                 <VBox 
                     visible="{= ${createTM>/serviceProductExternalId} !== 'Z40000001' &amp;&amp; ${createTM>/serviceProductExternalId} !== 'Z40000007' &amp;&amp; ${createTM>/serviceProductExternalId} !== 'Z50000000' &amp;&amp; ${createTM>/serviceProductExternalId} !== 'Z40000038' &amp;&amp; ${createTM>/serviceProductExternalId} !== 'Z40000008' }"
                     class="sapUiSmallMarginTop"
                 >
-                    <!-- Entry Type Button -->
-                    <HBox class="sapUiSmallMarginBottom" width="100%" wrap="Wrap">
+                    <!-- ===== MATERIAL TABLE ===== -->
+                    <Panel expandable="false" expanded="true" class="tmTypePanel sapUiTinyMarginBottom">
+                        <headerToolbar>
+                            <OverflowToolbar design="Info">
+                                <core:Icon src="sap-icon://product" class="sapUiTinyMarginEnd" color="#107E3E"/>
+                                <Title text="Material" level="H5"/>
+                                <ToolbarSpacer/>
+                                <Button 
+                                    text="Add Material" 
+                                    icon="sap-icon://add" 
+                                    type="Emphasized" 
+                                    press=".onAddCreateMaterialRow" 
+                                    class="sapUiTinyMarginBegin"
+                                />
+                                <ObjectNumber number="{= ${createTM>/materialEntries}.length }" unit="entries" class="sapUiSmallMarginBegin"/>
+                            </OverflowToolbar>
+                        </headerToolbar>
+                        <content>
+                            <!-- Empty state when no entries -->
+                            <VBox visible="{= ${createTM>/materialEntries}.length === 0 }" alignItems="Center" class="sapUiMediumMarginTopBottom">
+                                <core:Icon src="sap-icon://product" size="2.5rem" color="#107E3E"/>
+                                <Text text="No material entries yet" class="sapUiSmallMarginTop"/>
+                                <Text text="Click 'Add Material' to create a material entry" class="sapUiTinyMarginTop sapMTextGrey"/>
+                            </VBox>
+                            
+                            <!-- Material Table -->
+                            <Table
+                                items="{path: 'createTM>/materialEntries', templateShareable: false}"
+                                visible="{= ${createTM>/materialEntries}.length > 0 }"
+                                class="tmMTable"
+                                width="100%"
+                            >
+                                <columns>
+                                    <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
+                                    <Column hAlign="Begin"><Text text="Item"/></Column>
+                                    <Column width="14rem" hAlign="Begin"><Text text="Technician"/></Column>
+                                    <Column width="6rem" hAlign="Begin"><Text text="Qty"/></Column>
+                                    <Column width="9rem" hAlign="Begin"><Text text="Date"/></Column>
+                                    <Column hAlign="Begin"><Text text="Remarks"/></Column>
+                                </columns>
+                                <items>
+                                    <ColumnListItem type="Inactive">
+                                        <cells>
+                                            <Button icon="sap-icon://decline" type="Transparent" press=".onRemoveCreateMaterialRow"/>
+                                            <Text text="{createTM>itemDisplay}"/>
+                                            <Select 
+                                                selectedKey="{createTM>technicianId}" 
+                                                items="{path: 'createTM>/activityTechnicians', templateShareable: false}" 
+                                                change=".onCreateMaterialTechnicianSelect"
+                                                forceSelection="false"
+                                                width="100%"
+                                            >
+                                                <core:Item key="{createTM>id}" text="{createTM>displayText}"/>
+                                            </Select>
+                                            <StepInput value="{createTM>quantity}" min="0" step="1" displayValuePrecision="2" width="100%"/>
+                                            <DatePicker value="{createTM>entryDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="100%"/>
+                                            <Input value="{createTM>remarks}" placeholder="Remarks..." width="100%"/>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+                        </content>
+                    </Panel>
+                    
+                    <!-- ===== TIME ENTRIES - ARBEITSZEIT (AZ) ===== -->
+                    <Panel expandable="false" expanded="true" class="tmTypePanel sapUiTinyMarginBottom">
+                        <headerToolbar>
+                            <OverflowToolbar design="Info">
+                                <core:Icon src="sap-icon://time-entry-request" class="sapUiTinyMarginEnd" color="#0854A0"/>
+                                <Title text="Time - Arbeitszeit (AZ)" level="H5"/>
+                                <ToolbarSpacer/>
+                                <Button 
+                                    text="Add Time Entry" 
+                                    icon="sap-icon://add" 
+                                    type="Emphasized" 
+                                    press=".onAddCreateTimeEntryAZ" 
+                                    class="sapUiTinyMarginBegin"
+                                />
+                                <ObjectNumber number="{= ${createTM>/timeEntriesAZ}.length }" unit="entries" class="sapUiSmallMarginBegin"/>
+                            </OverflowToolbar>
+                        </headerToolbar>
+                        <content>
+                            <!-- Empty state when no entries -->
+                            <VBox visible="{= ${createTM>/timeEntriesAZ}.length === 0 }" alignItems="Center" class="sapUiMediumMarginTopBottom">
+                                <core:Icon src="sap-icon://time-entry-request" size="2.5rem" color="#0854A0"/>
+                                <Text text="No Arbeitszeit entries yet" class="sapUiSmallMarginTop"/>
+                                <Text text="Click 'Add Time Entry' to create an Arbeitszeit entry" class="sapUiTinyMarginTop sapMTextGrey"/>
+                            </VBox>
+                            
+                            <!-- Time Entries Table -->
+                            <Table
+                                items="{path: 'createTM>/timeEntriesAZ', templateShareable: false}"
+                                visible="{= ${createTM>/timeEntriesAZ}.length > 0 }"
+                                class="tmMTable"
+                                width="100%"
+                            >
+                                <columns>
+                                    <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
+                                    <Column hAlign="Begin"><Text text="Task"/></Column>
+                                    <Column width="14rem" hAlign="Begin"><Text text="Technician"/></Column>
+                                    <Column width="6rem" hAlign="Begin"><Text text="Duration"/></Column>
+                                    <Column width="9rem" hAlign="Begin"><Text text="Date"/></Column>
+                                    <Column hAlign="Begin"><Text text="Remarks"/></Column>
+                                </columns>
+                                <items>
+                                    <ColumnListItem type="Inactive">
+                                        <cells>
+                                            <Button icon="sap-icon://decline" type="Transparent" press=".onRemoveCreateTimeEntryAZ"/>
+                                            <Select 
+                                                selectedKey="{createTM>taskCode}" 
+                                                items="{path: 'createTM>/taskSuggestionsAZ', templateShareable: false}" 
+                                                forceSelection="false"
+                                                width="100%"
+                                                valueState="{= ${createTM>taskCode} ? 'None' : 'Error'}"
+                                            >
+                                                <core:Item key="{createTM>code}" text="{createTM>name}"/>
+                                            </Select>
+                                            <Input 
+                                                value="{createTM>technicianDisplay}" 
+                                                showSuggestion="true" 
+                                                suggestionItems="{path: 'createTM>technicianSuggestions', templateShareable: false}"
+                                                liveChange=".onCreateTimeEntryTechnicianLiveChange"
+                                                suggestionItemSelected=".onCreateTimeEntrySuggestionSelect"
+                                                placeholder="Search technician..."
+                                                width="100%"
+                                                maxSuggestionWidth="400px"
+                                                startSuggestion="2"
+                                            >
+                                                <suggestionItems>
+                                                    <core:Item key="{createTM>id}" text="{createTM>displayText}"/>
+                                                </suggestionItems>
+                                            </Input>
+                                            <StepInput value="{createTM>duration}" min="0" step="5" description="min" width="100%"/>
+                                            <DatePicker value="{createTM>entryDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="100%"/>
+                                            <Input value="{createTM>remarks}" placeholder="Remarks..." width="100%"/>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+                        </content>
+                    </Panel>
+                    
+                    <!-- ===== TIME ENTRIES - FAHRZEIT (FZ) ===== -->
+                    <Panel expandable="false" expanded="true" class="tmTypePanel sapUiTinyMarginBottom">
+                        <headerToolbar>
+                            <OverflowToolbar design="Info">
+                                <core:Icon src="sap-icon://car-rental" class="sapUiTinyMarginEnd" color="#E9730C"/>
+                                <Title text="Time - Fahrzeit (FZ)" level="H5"/>
+                                <ToolbarSpacer/>
+                                <Button 
+                                    text="Add Time Entry" 
+                                    icon="sap-icon://add" 
+                                    type="Emphasized" 
+                                    press=".onAddCreateTimeEntryFZ" 
+                                    class="sapUiTinyMarginBegin"
+                                />
+                                <ObjectNumber number="{= ${createTM>/timeEntriesFZ}.length }" unit="entries" class="sapUiSmallMarginBegin"/>
+                            </OverflowToolbar>
+                        </headerToolbar>
+                        <content>
+                            <!-- Empty state when no entries -->
+                            <VBox visible="{= ${createTM>/timeEntriesFZ}.length === 0 }" alignItems="Center" class="sapUiMediumMarginTopBottom">
+                                <core:Icon src="sap-icon://car-rental" size="2.5rem" color="#E9730C"/>
+                                <Text text="No Fahrzeit entries yet" class="sapUiSmallMarginTop"/>
+                                <Text text="Click 'Add Time Entry' to create a Fahrzeit entry" class="sapUiTinyMarginTop sapMTextGrey"/>
+                            </VBox>
+                            
+                            <!-- Time Entries Table -->
+                            <Table
+                                items="{path: 'createTM>/timeEntriesFZ', templateShareable: false}"
+                                visible="{= ${createTM>/timeEntriesFZ}.length > 0 }"
+                                class="tmMTable"
+                                width="100%"
+                            >
+                                <columns>
+                                    <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
+                                    <Column hAlign="Begin"><Text text="Task"/></Column>
+                                    <Column width="14rem" hAlign="Begin"><Text text="Technician"/></Column>
+                                    <Column width="6rem" hAlign="Begin"><Text text="Duration"/></Column>
+                                    <Column width="9rem" hAlign="Begin"><Text text="Date"/></Column>
+                                    <Column hAlign="Begin"><Text text="Remarks"/></Column>
+                                </columns>
+                                <items>
+                                    <ColumnListItem type="Inactive">
+                                        <cells>
+                                            <Button icon="sap-icon://decline" type="Transparent" press=".onRemoveCreateTimeEntryFZ"/>
+                                            <Select 
+                                                selectedKey="{createTM>taskCode}" 
+                                                items="{path: 'createTM>/taskSuggestionsFZ', templateShareable: false}" 
+                                                forceSelection="false"
+                                                width="100%"
+                                                valueState="{= ${createTM>taskCode} ? 'None' : 'Error'}"
+                                            >
+                                                <core:Item key="{createTM>code}" text="{createTM>name}"/>
+                                            </Select>
+                                            <Input 
+                                                value="{createTM>technicianDisplay}" 
+                                                showSuggestion="true" 
+                                                suggestionItems="{path: 'createTM>technicianSuggestions', templateShareable: false}"
+                                                liveChange=".onCreateTimeEntryTechnicianLiveChange"
+                                                suggestionItemSelected=".onCreateTimeEntrySuggestionSelect"
+                                                placeholder="Search technician..."
+                                                width="100%"
+                                                maxSuggestionWidth="400px"
+                                                startSuggestion="2"
+                                            >
+                                                <suggestionItems>
+                                                    <core:Item key="{createTM>id}" text="{createTM>displayText}"/>
+                                                </suggestionItems>
+                                            </Input>
+                                            <StepInput value="{createTM>duration}" min="0" step="5" description="min" width="100%"/>
+                                            <DatePicker value="{createTM>entryDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="100%"/>
+                                            <Input value="{createTM>remarks}" placeholder="Remarks..." width="100%"/>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+                        </content>
+                    </Panel>
+                    
+                    <!-- ===== TIME ENTRIES - WARTEZEIT (WZ) ===== -->
+                    <Panel expandable="false" expanded="true" class="tmTypePanel sapUiTinyMarginBottom">
+                        <headerToolbar>
+                            <OverflowToolbar design="Info">
+                                <core:Icon src="sap-icon://pending" class="sapUiTinyMarginEnd" color="#BB0000"/>
+                                <Title text="Time - Wartezeit (WZ)" level="H5"/>
+                                <ToolbarSpacer/>
+                                <Button 
+                                    text="Add Time Entry" 
+                                    icon="sap-icon://add" 
+                                    type="Emphasized" 
+                                    press=".onAddCreateTimeEntryWZ" 
+                                    class="sapUiTinyMarginBegin"
+                                />
+                                <ObjectNumber number="{= ${createTM>/timeEntriesWZ}.length }" unit="entries" class="sapUiSmallMarginBegin"/>
+                            </OverflowToolbar>
+                        </headerToolbar>
+                        <content>
+                            <!-- Empty state when no entries -->
+                            <VBox visible="{= ${createTM>/timeEntriesWZ}.length === 0 }" alignItems="Center" class="sapUiMediumMarginTopBottom">
+                                <core:Icon src="sap-icon://pending" size="2.5rem" color="#BB0000"/>
+                                <Text text="No Wartezeit entries yet" class="sapUiSmallMarginTop"/>
+                                <Text text="Click 'Add Time Entry' to create a Wartezeit entry" class="sapUiTinyMarginTop sapMTextGrey"/>
+                            </VBox>
+                            
+                            <!-- Time Entries Table -->
+                            <Table
+                                items="{path: 'createTM>/timeEntriesWZ', templateShareable: false}"
+                                visible="{= ${createTM>/timeEntriesWZ}.length > 0 }"
+                                class="tmMTable"
+                                width="100%"
+                            >
+                                <columns>
+                                    <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
+                                    <Column hAlign="Begin"><Text text="Task"/></Column>
+                                    <Column width="14rem" hAlign="Begin"><Text text="Technician"/></Column>
+                                    <Column width="6rem" hAlign="Begin"><Text text="Duration"/></Column>
+                                    <Column width="9rem" hAlign="Begin"><Text text="Date"/></Column>
+                                    <Column hAlign="Begin"><Text text="Remarks"/></Column>
+                                </columns>
+                                <items>
+                                    <ColumnListItem type="Inactive">
+                                        <cells>
+                                            <Button icon="sap-icon://decline" type="Transparent" press=".onRemoveCreateTimeEntryWZ"/>
+                                            <Select 
+                                                selectedKey="{createTM>taskCode}" 
+                                                items="{path: 'createTM>/taskSuggestionsWZ', templateShareable: false}" 
+                                                forceSelection="false"
+                                                width="100%"
+                                                valueState="{= ${createTM>taskCode} ? 'None' : 'Error'}"
+                                            >
+                                                <core:Item key="{createTM>code}" text="{createTM>name}"/>
+                                            </Select>
+                                            <Input 
+                                                value="{createTM>technicianDisplay}" 
+                                                showSuggestion="true" 
+                                                suggestionItems="{path: 'createTM>technicianSuggestions', templateShareable: false}"
+                                                liveChange=".onCreateTimeEntryTechnicianLiveChange"
+                                                suggestionItemSelected=".onCreateTimeEntrySuggestionSelect"
+                                                placeholder="Search technician..."
+                                                width="100%"
+                                                maxSuggestionWidth="400px"
+                                                startSuggestion="2"
+                                            >
+                                                <suggestionItems>
+                                                    <core:Item key="{createTM>id}" text="{createTM>displayText}"/>
+                                                </suggestionItems>
+                                            </Input>
+                                            <StepInput value="{createTM>duration}" min="0" step="5" description="min" width="100%"/>
+                                            <DatePicker value="{createTM>entryDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="100%"/>
+                                            <Input value="{createTM>remarks}" placeholder="Remarks..." width="100%"/>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+                        </content>
+                    </Panel>
+                    
+                    <!-- ===== SEND FOR APPROVAL BUTTON ===== -->
+                    <HBox justifyContent="End" class="sapUiSmallMarginTop">
                         <Button 
-                            text="Time &amp; Material Report" 
-                            icon="sap-icon://checklist-item-2" 
-                            press=".onAddTimeAndMaterialEntry" 
-                            class="sapUiTinyMarginBottom" 
-                            type="Emphasized"
+                            text="Send for Approval" 
+                            icon="sap-icon://paper-plane" 
+                            type="Emphasized" 
+                            press=".onSaveAllCreateTM"
+                            visible="{= (${createTM>/materialEntries}.length + ${createTM>/timeEntriesAZ}.length + ${createTM>/timeEntriesFZ}.length + ${createTM>/timeEntriesWZ}.length) > 0 }"
                         />
                     </HBox>
-                    
-                    <!-- Legacy entries list for Time & Material -->
-                    <List items="{path: 'createTM>/entries', templateShareable: false}" mode="None" showSeparators="None" visible="{= ${createTM>/entries}.length > 0 }">
-                        <CustomListItem type="Inactive">
-                            <Panel headerText="{createTM>type}" expandable="true" expanded="{createTM>expanded}" class="tmEntryPanel">
-                                <headerToolbar>
-                                    <OverflowToolbar design="Info">
-                                        <core:Icon src="{createTM>icon}" class="sapUiSmallMarginEnd"/>
-                                        <Title text="{createTM>type}" level="H5"/>
-                                        <ToolbarSpacer/>
-                                        <Button text="Close Entry" icon="sap-icon://decline" type="Reject" press=".onCloseEntry" class="sapUiTinyMarginEnd"/>
-                                        <Button text="{createTM>saveButtonText}" icon="{createTM>saveButtonIcon}" type="{createTM>saveButtonType}" press=".onSaveEntry" enabled="{createTM>saveButtonEnabled}"/>
-                                    </OverflowToolbar>
-                                </headerToolbar>
-                                <content>
-                                    <!-- ===== TIME & MATERIAL LAYOUT ===== -->
-                                    <VBox visible="{= ${createTM>type} === 'Time &amp; Material'}" width="100%" class="sapUiSmallMarginTop">
-                                        
-                                        <!-- Material Section -->
-                                        <Title text="Material" level="H6" class="tmColumnHeader sapUiTinyMarginBottom"/>
-                                        <HBox width="100%" class="tmEntryContent sapUiSmallMarginBottom">
-                                            <VBox class="tmColumn">
-                                                <HBox class="tmFieldRow" width="100%">
-                                                    <Label text="Technician:" design="Bold" class="tmFieldLabel"/>
-                                                    <Select selectedKey="{createTM>technicianId}" items="{path: 'createTM>/activityTechnicians', templateShareable: false}" change=".onTechnicianSelect" forceSelection="false" class="tmFieldSelectNarrow">
-                                                        <core:Item key="{createTM>id}" text="{createTM>displayText}"/>
-                                                    </Select>
-                                                </HBox>
-                                                <HBox class="tmFieldRow" width="100%">
-                                                    <Label text="Item:" design="Bold" class="tmFieldLabel"/>
-                                                    <Input value="{createTM>itemDisplay}" editable="false" class="tmFieldInputNarrow"/>
-                                                </HBox>
-                                                <HBox class="tmFieldRow" width="100%">
-                                                    <Label text="Date:" design="Bold" class="tmFieldLabel"/>
-                                                    <DatePicker value="{createTM>materialDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" class="tmFieldInputNarrow"/>
-                                                </HBox>
-                                            </VBox>
-                                            <VBox class="tmColumn">
-                                                <HBox class="tmFieldRow" width="100%">
-                                                    <Label text="Quantity:" design="Bold" class="tmFieldLabel"/>
-                                                    <StepInput value="{createTM>quantity}" min="0" step="1" displayValuePrecision="2" description="Pcs." class="tmFieldInputNarrow" valueState="{= parseFloat(${createTM>quantity}) > parseFloat(${createTM>/quantity}) ? 'Warning' : 'None'}" valueStateText="Quantity exceeds Activity quantity"/>
-                                                </HBox>
-                                                <HBox class="tmFieldRow" width="100%">
-                                                    <Label text="Remarks:" design="Bold" class="tmFieldLabel"/>
-                                                    <TextArea value="{createTM>remarksMaterial}" rows="2" placeholder="Remarks..." class="tmFieldInputNarrow"/>
-                                                </HBox>
-                                            </VBox>
-                                        </HBox>
-                                        
-                                        <!-- Time Entries - 3 Panels -->
-                                        <HBox width="100%" class="tmTimeColumns">
-                                            
-                                            <!-- Panel: Time - Arbeitszeit -->
-                                            <VBox class="tmColumn tmTimePanel">
-                                                <HBox alignItems="Center" class="sapUiTinyMarginBottom">
-                                                    <Title text="Time - Arbeitszeit" level="H6" class="tmColumnHeader"/>
-                                                    <ToolbarSpacer/>
-                                                    <Button icon="sap-icon://add" type="Transparent" tooltip="Add Arbeitszeit" press=".onAddTimeEffortAZ"/>
-                                                </HBox>
-                                                <List items="{path: 'createTM>timeEffortsAZ', templateShareable: false}" noDataText="Tap + to add" showSeparators="None" class="tmTimeEntryList">
-                                                    <CustomListItem class="tmTimeEntryItem">
-                                                        <HBox class="tmTimeEntryContent" width="100%">
-                                                            <VBox class="sapUiTinyMarginEnd" width="100%">
-                                                                <HBox class="tmFieldRow" width="100%">
-                                                                    <Label text="Technician:" design="Bold" class="tmFieldLabelNarrow"/>
-                                                                    <Input 
-                                                                        value="{createTM>technicianDisplay}" 
-                                                                        showSuggestion="true" 
-                                                                        suggestionItems="{path: 'createTM>technicianSuggestions', templateShareable: false}"
-                                                                        liveChange=".onTimeEntryTechnicianLiveChange"
-                                                                        suggestionItemSelected=".onTimeEntryTechnicianSuggestionSelect"
-                                                                        placeholder="Search technician..."
-                                                                        class="tmTimeEntrySelect"
-                                                                        maxSuggestionWidth="400px"
-                                                                        startSuggestion="2"
-                                                                        showTableSuggestionValueHelp="false">
-                                                                        <layoutData><FlexItemData growFactor="1" shrinkFactor="1" minWidth="0"/></layoutData>
-                                                                        <suggestionItems>
-                                                                            <core:Item key="{createTM>id}" text="{createTM>displayText}"/>
-                                                                        </suggestionItems>
-                                                                    </Input>
-                                                                </HBox>
-                                                                <HBox class="tmFieldRow" width="100%">
-                                                                    <Label text="Task:" design="Bold" class="tmFieldLabelNarrow tmFieldLabelRequired"/>
-                                                                    <Select selectedKey="{createTM>taskCode}" items="{path: 'createTM>/taskSuggestionsAZ', templateShareable: false}" forceSelection="false" class="tmTimeEntrySelect" valueState="{= ${createTM>taskCode} ? 'None' : 'Error'}" valueStateText="Task is required">
-                                                                        <layoutData><FlexItemData growFactor="1" shrinkFactor="1" minWidth="0"/></layoutData>
-                                                                        <core:Item key="{createTM>code}" text="{createTM>name}"/>
-                                                                    </Select>
-                                                                </HBox>
-                                                                <HBox class="tmFieldRow" width="100%">
-                                                                    <Label text="Duration:" design="Bold" class="tmFieldLabelNarrow"/>
-                                                                    <StepInput value="{createTM>durationHours}" min="0" step="0.25" displayValuePrecision="2" description="hrs" change=".onTimeEffortDurationChange" class="tmTimeEntryInput">
-                                                                        <layoutData><FlexItemData growFactor="1" shrinkFactor="1" minWidth="0"/></layoutData>
-                                                                    </StepInput>
-                                                                </HBox>
-                                                                <HBox class="tmFieldRow" width="100%">
-                                                                    <Label text="Date:" design="Bold" class="tmFieldLabelNarrow"/>
-                                                                    <DatePicker value="{createTM>entryDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" class="tmTimeEntryInput">
-                                                                        <layoutData><FlexItemData growFactor="1" shrinkFactor="1" minWidth="0"/></layoutData>
-                                                                    </DatePicker>
-                                                                </HBox>
-                                                                <HBox class="tmFieldRow" width="100%">
-                                                                    <Label text="Remarks:" design="Bold" class="tmFieldLabelNarrow"/>
-                                                                    <TextArea value="{createTM>remarks}" rows="2" placeholder="Remarks..." class="tmTimeEntryInput">
-                                                                        <layoutData><FlexItemData growFactor="1" shrinkFactor="1" minWidth="0"/></layoutData>
-                                                                    </TextArea>
-                                                                </HBox>
-                                                            </VBox>
-                                                            <Button icon="sap-icon://decline" type="Transparent" tooltip="Remove" press=".onRemoveTimeEffortAZ"/>
-                                                        </HBox>
-                                                    </CustomListItem>
-                                                </List>
-                                            </VBox>
-                                            
-                                            <!-- Panel: Time - Fahrzeit -->
-                                            <VBox class="tmColumn tmTimePanel">
-                                                <HBox alignItems="Center" class="sapUiTinyMarginBottom">
-                                                    <Title text="Time - Fahrzeit" level="H6" class="tmColumnHeader"/>
-                                                    <ToolbarSpacer/>
-                                                    <Button icon="sap-icon://add" type="Transparent" tooltip="Add Fahrzeit" press=".onAddTimeEffortFZ"/>
-                                                </HBox>
-                                                <List items="{path: 'createTM>timeEffortsFZ', templateShareable: false}" noDataText="Tap + to add" showSeparators="None" class="tmTimeEntryList">
-                                                    <CustomListItem class="tmTimeEntryItem">
-                                                        <HBox class="tmTimeEntryContent" width="100%">
-                                                            <VBox class="sapUiTinyMarginEnd" width="100%">
-                                                                <HBox class="tmFieldRow" width="100%">
-                                                                    <Label text="Technician:" design="Bold" class="tmFieldLabelNarrow"/>
-                                                                    <Input 
-                                                                        value="{createTM>technicianDisplay}" 
-                                                                        showSuggestion="true" 
-                                                                        suggestionItems="{path: 'createTM>technicianSuggestions', templateShareable: false}"
-                                                                        liveChange=".onTimeEntryTechnicianLiveChange"
-                                                                        suggestionItemSelected=".onTimeEntryTechnicianSuggestionSelect"
-                                                                        placeholder="Search technician..."
-                                                                        class="tmTimeEntrySelect"
-                                                                        maxSuggestionWidth="400px"
-                                                                        startSuggestion="2"
-                                                                        showTableSuggestionValueHelp="false">
-                                                                        <layoutData><FlexItemData growFactor="1" shrinkFactor="1" minWidth="0"/></layoutData>
-                                                                        <suggestionItems>
-                                                                            <core:Item key="{createTM>id}" text="{createTM>displayText}"/>
-                                                                        </suggestionItems>
-                                                                    </Input>
-                                                                </HBox>
-                                                                <HBox class="tmFieldRow" width="100%">
-                                                                    <Label text="Task:" design="Bold" class="tmFieldLabelNarrow tmFieldLabelRequired"/>
-                                                                    <Select selectedKey="{createTM>taskCode}" items="{path: 'createTM>/taskSuggestionsFZ', templateShareable: false}" forceSelection="false" class="tmTimeEntrySelect" valueState="{= ${createTM>taskCode} ? 'None' : 'Error'}" valueStateText="Task is required">
-                                                                        <layoutData><FlexItemData growFactor="1" shrinkFactor="1" minWidth="0"/></layoutData>
-                                                                        <core:Item key="{createTM>code}" text="{createTM>name}"/>
-                                                                    </Select>
-                                                                </HBox>
-                                                                <HBox class="tmFieldRow" width="100%">
-                                                                    <Label text="Duration:" design="Bold" class="tmFieldLabelNarrow"/>
-                                                                    <StepInput value="{createTM>durationHours}" min="0" step="0.25" displayValuePrecision="2" description="hrs" change=".onTimeEffortDurationChange" class="tmTimeEntryInput">
-                                                                        <layoutData><FlexItemData growFactor="1" shrinkFactor="1" minWidth="0"/></layoutData>
-                                                                    </StepInput>
-                                                                </HBox>
-                                                                <HBox class="tmFieldRow" width="100%">
-                                                                    <Label text="Date:" design="Bold" class="tmFieldLabelNarrow"/>
-                                                                    <DatePicker value="{createTM>entryDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" class="tmTimeEntryInput">
-                                                                        <layoutData><FlexItemData growFactor="1" shrinkFactor="1" minWidth="0"/></layoutData>
-                                                                    </DatePicker>
-                                                                </HBox>
-                                                                <HBox class="tmFieldRow" width="100%">
-                                                                    <Label text="Remarks:" design="Bold" class="tmFieldLabelNarrow"/>
-                                                                    <TextArea value="{createTM>remarks}" rows="2" placeholder="Remarks..." class="tmTimeEntryInput">
-                                                                        <layoutData><FlexItemData growFactor="1" shrinkFactor="1" minWidth="0"/></layoutData>
-                                                                    </TextArea>
-                                                                </HBox>
-                                                            </VBox>
-                                                            <Button icon="sap-icon://decline" type="Transparent" tooltip="Remove" press=".onRemoveTimeEffortFZ"/>
-                                                        </HBox>
-                                                    </CustomListItem>
-                                                </List>
-                                            </VBox>
-                                            
-                                            <!-- Panel: Time - Wartezeit -->
-                                            <VBox class="tmColumn tmTimePanel">
-                                                <HBox alignItems="Center" class="sapUiTinyMarginBottom">
-                                                    <Title text="Time - Wartezeit" level="H6" class="tmColumnHeader"/>
-                                                    <ToolbarSpacer/>
-                                                    <Button icon="sap-icon://add" type="Transparent" tooltip="Add Wartezeit" press=".onAddTimeEffortWZ"/>
-                                                </HBox>
-                                                <List items="{path: 'createTM>timeEffortsWZ', templateShareable: false}" noDataText="Tap + to add" showSeparators="None" class="tmTimeEntryList">
-                                                    <CustomListItem class="tmTimeEntryItem">
-                                                        <HBox class="tmTimeEntryContent" width="100%">
-                                                            <VBox class="sapUiTinyMarginEnd" width="100%">
-                                                                <HBox class="tmFieldRow" width="100%">
-                                                                    <Label text="Technician:" design="Bold" class="tmFieldLabelNarrow"/>
-                                                                    <Input 
-                                                                        value="{createTM>technicianDisplay}" 
-                                                                        showSuggestion="true" 
-                                                                        suggestionItems="{path: 'createTM>technicianSuggestions', templateShareable: false}"
-                                                                        liveChange=".onTimeEntryTechnicianLiveChange"
-                                                                        suggestionItemSelected=".onTimeEntryTechnicianSuggestionSelect"
-                                                                        placeholder="Search technician..."
-                                                                        class="tmTimeEntrySelect"
-                                                                        maxSuggestionWidth="400px"
-                                                                        startSuggestion="2"
-                                                                        showTableSuggestionValueHelp="false">
-                                                                        <layoutData><FlexItemData growFactor="1" shrinkFactor="1" minWidth="0"/></layoutData>
-                                                                        <suggestionItems>
-                                                                            <core:Item key="{createTM>id}" text="{createTM>displayText}"/>
-                                                                        </suggestionItems>
-                                                                    </Input>
-                                                                </HBox>
-                                                                <HBox class="tmFieldRow" width="100%">
-                                                                    <Label text="Task:" design="Bold" class="tmFieldLabelNarrow tmFieldLabelRequired"/>
-                                                                    <Select selectedKey="{createTM>taskCode}" items="{path: 'createTM>/taskSuggestionsWZ', templateShareable: false}" forceSelection="false" class="tmTimeEntrySelect" valueState="{= ${createTM>taskCode} ? 'None' : 'Error'}" valueStateText="Task is required">
-                                                                        <layoutData><FlexItemData growFactor="1" shrinkFactor="1" minWidth="0"/></layoutData>
-                                                                        <core:Item key="{createTM>code}" text="{createTM>name}"/>
-                                                                    </Select>
-                                                                </HBox>
-                                                                <HBox class="tmFieldRow" width="100%">
-                                                                    <Label text="Duration:" design="Bold" class="tmFieldLabelNarrow"/>
-                                                                    <StepInput value="{createTM>durationHours}" min="0" step="0.25" displayValuePrecision="2" description="hrs" change=".onTimeEffortDurationChange" class="tmTimeEntryInput">
-                                                                        <layoutData><FlexItemData growFactor="1" shrinkFactor="1" minWidth="0"/></layoutData>
-                                                                    </StepInput>
-                                                                </HBox>
-                                                                <HBox class="tmFieldRow" width="100%">
-                                                                    <Label text="Date:" design="Bold" class="tmFieldLabelNarrow"/>
-                                                                    <DatePicker value="{createTM>entryDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" class="tmTimeEntryInput">
-                                                                        <layoutData><FlexItemData growFactor="1" shrinkFactor="1" minWidth="0"/></layoutData>
-                                                                    </DatePicker>
-                                                                </HBox>
-                                                                <HBox class="tmFieldRow" width="100%">
-                                                                    <Label text="Remarks:" design="Bold" class="tmFieldLabelNarrow"/>
-                                                                    <TextArea value="{createTM>remarks}" rows="2" placeholder="Remarks..." class="tmTimeEntryInput">
-                                                                        <layoutData><FlexItemData growFactor="1" shrinkFactor="1" minWidth="0"/></layoutData>
-                                                                    </TextArea>
-                                                                </HBox>
-                                                            </VBox>
-                                                            <Button icon="sap-icon://decline" type="Transparent" tooltip="Remove" press=".onRemoveTimeEffortWZ"/>
-                                                        </HBox>
-                                                    </CustomListItem>
-                                                </List>
-                                            </VBox>
-                                            
-                                        </HBox>
-                                    </VBox>
-                                </content>
-                            </Panel>
-                        </CustomListItem>
-                    </List>
                 </VBox>
                 
             </VBox>
