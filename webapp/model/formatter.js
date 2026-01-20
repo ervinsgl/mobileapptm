@@ -61,6 +61,44 @@ sap.ui.define([], () => {
         },
 
         /**
+         * Format ISO datetime string for compact table display.
+         * Returns short date format: "28.11" (DD.MM)
+         * @param {string} dateTime - ISO datetime string
+         * @returns {string} Short date string
+         */
+        formatDateShort(dateTime) {
+            if (!dateTime) return "";
+            try {
+                const date = new Date(dateTime);
+                const day = date.getDate().toString().padStart(2, '0');
+                const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                return `${day}.${month}`;
+            } catch (e) {
+                return dateTime;
+            }
+        },
+
+        /**
+         * Format expense external amount from object.
+         * @param {Object} amountObj - Amount object {amount, currency}
+         * @returns {number} Amount value or 0
+         */
+        formatExpenseAmount(amountObj) {
+            if (!amountObj || typeof amountObj !== 'object') return 0;
+            return amountObj.amount || 0;
+        },
+
+        /**
+         * Format mileage duration (handles 'N/A' string).
+         * @param {number|string} duration - Duration in minutes or 'N/A'
+         * @returns {number} Duration value or 0
+         */
+        formatMileageDuration(duration) {
+            if (duration === 'N/A' || duration === null || duration === undefined) return 0;
+            return parseInt(duration, 10) || 0;
+        },
+
+        /**
          * Format quantity value (removes trailing zeros).
          * @param {string|number} quantity - Quantity value
          * @returns {number} Parsed float value or 0

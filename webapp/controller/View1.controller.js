@@ -177,6 +177,9 @@ sap.ui.define([
                 tmMaterialCount: 0,
                 tmExpenseCount: 0,
                 tmMileageCount: 0,
+                tmEditMode: false,
+                expenseEditMode: false,
+                mileageEditMode: false,
 
                 // Auto-expand entry activity, collapse others
                 detailsExpanded: isEntryActivity,
@@ -287,7 +290,7 @@ sap.ui.define([
         /**
          * Extract name from display text by removing code prefix
          * e.g., "AZ - Arbeitszeit" -> "Arbeitszeit"
-         * e.g., "Z12000007 - PrÃ¼fung" -> "PrÃ¼fung"
+         * e.g., "Z12000007 - PrÃƒÂ¼fung" -> "PrÃƒÂ¼fung"
          * @private
          */
         _extractNameFromDisplayText(displayText) {
@@ -353,8 +356,16 @@ sap.ui.define([
             
             this._resetActivityData();
 
-            this._loadWebContainerContext().then(() => {
-                this._loadOrganizationLevels();
+            // Reload lookup data BEFORE loading activities
+            // These must complete before T&M enrichment runs
+            Promise.all([
+                this._loadTimeTasks(),
+                this._loadItems(),
+                this._loadExpenseTypes()
+            ]).then(() => {
+                this._loadWebContainerContext().then(() => {
+                    this._loadOrganizationLevels();
+                });
             });
 
             MessageToast.show("View refreshed");

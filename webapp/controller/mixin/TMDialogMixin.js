@@ -75,9 +75,15 @@ sap.ui.define([
                     report.itemDisplayText = ItemService.getItemDisplayTextById(report.fullData.item);
                 }
                 
-                // Expense: type name
+                // Expense: type name and amounts
                 if ((report.type === "Expense" || report.type === "Expense Report") && report.fullData?.type) {
                     report.expenseTypeDisplayText = ExpenseTypeService.getExpenseTypeDisplayTextById(report.fullData.type);
+                }
+                
+                // Expense: amounts for display (amounts are at root level)
+                if (report.type === "Expense" || report.type === "Expense Report") {
+                    report.externalAmountValue = report.externalAmount?.amount || 0;
+                    report.internalAmountValue = report.internalAmount?.amount || 0;
                 }
                 
                 // Mileage: type from UDF
@@ -89,6 +95,10 @@ sap.ui.define([
                         report.mileageTypeDisplayText = 'N/A';
                     }
                     
+                    // Distance for display (distance is at root level)
+                    report.distanceValue = report.distance || 0;
+                    
+                    // Duration - travelDurationMinutes might be "N/A" string from backend
                     if (report.travelStartDateTime && report.travelEndDateTime) {
                         const startTime = new Date(report.travelStartDateTime);
                         const endTime = new Date(report.travelEndDateTime);
@@ -658,7 +668,7 @@ sap.ui.define([
             
             // Calculate travelEndDateTime from travelStartDateTime + duration
             const travelStartDateTime = oEntry.travelStartDateTime;
-            const durationMinutes = parseInt(editedValues.travelDuration) || 0;
+            const durationMinutes = parseInt(editedValues.travelDurationMinutes) || 0;
             
             let travelEndDateTime = editedValues.travelEndDateTime;
             if (travelStartDateTime && durationMinutes >= 0) {
@@ -667,7 +677,7 @@ sap.ui.define([
                 travelEndDateTime = endDate.toISOString().replace(/\.\d{3}Z$/, 'Z');
             }
             
-            // Build payload - only fields we are changing
+            // Build payload - all editable fields
             const payload = {
                 distance: parseFloat(editedValues.distance) || 0,
                 distanceUnit: "KM",
@@ -1343,6 +1353,11 @@ sap.ui.define([
                             oViewModel.setProperty(activityPath + "/tmExpenseCount", expenseCount);
                             oViewModel.setProperty(activityPath + "/tmMileageCount", mileageCount);
                             oViewModel.setProperty(activityPath + "/tmReports", reports);
+                            oViewModel.setProperty(activityPath + "/tmReportsLoaded", true);
+                            // Initialize edit mode flags to false
+                            oViewModel.setProperty(activityPath + "/tmEditMode", false);
+                            oViewModel.setProperty(activityPath + "/expenseEditMode", false);
+                            oViewModel.setProperty(activityPath + "/mileageEditMode", false);
                             return;
                         }
                     }
@@ -1487,6 +1502,425 @@ sap.ui.define([
             const aTimeEfforts = oModel.getProperty(sArrayPath) || [];
             aTimeEfforts.splice(iIndex, 1);
             oModel.setProperty(sArrayPath, aTimeEfforts);
+        },
+
+        /* ========================================
+        /* ========================================
+         * T&M TYPE FILTER (SegmentedButton)
+         * ======================================== */
+
+        onTMTypeFilterChange(oEvent) {
+            const sSelectedKey = oEvent.getParameter("item")?.getKey() || "ALL";
+            const oSegmentedButton = oEvent.getSource();
+            const oToolbar = oSegmentedButton.getParent();
+            const oPanel = oToolbar ? oToolbar.getParent() : null;
+            
+            if (!oPanel) return;
+            
+            const aContent = oPanel.getContent();
+            const oTable = aContent && aContent.length > 0 ? aContent[0] : null;
+            
+            if (!oTable) return;
+            
+            // sap.m.Table uses "items" binding, sap.ui.table.Table uses "rows"
+            const oBinding = oTable.getBinding("rows");
+            if (!oBinding) return;
+            
+            const Filter = sap.ui.model.Filter;
+            const FilterOperator = sap.ui.model.FilterOperator;
+            const aFilters = [];
+            
+            aFilters.push(new Filter("type", FilterOperator.NE, "Expense"));
+            aFilters.push(new Filter("type", FilterOperator.NE, "Mileage"));
+            
+            if (sSelectedKey !== "ALL") {
+                aFilters.push(new Filter("type", FilterOperator.EQ, sSelectedKey));
+            }
+            
+            oBinding.filter(new Filter({ filters: aFilters, and: true }));
+        },
+
+        /* ========================================
+         * EDIT FLOW: Edit Selected -> Save All / End Edit
+         * ======================================== */
+
+        /**
+         * Get table type from toolbar context
+         */
+        _getTableTypeFromToolbar(oToolbar) {
+            const oPanel = oToolbar.getParent();
+            if (!oPanel) return null;
+            
+            const oHeaderToolbar = oPanel.getHeaderToolbar();
+            if (oHeaderToolbar) {
+                const aContent = oHeaderToolbar.getContent();
+                for (let item of aContent) {
+                    if (item.getText) {
+                        const text = item.getText();
+                        if (text.includes("Time Effort")) return "tm";
+                        if (text.includes("Expenses")) return "expense";
+                        if (text.includes("Mileage")) return "mileage";
+                    }
+                }
+            }
+            return "tm";
+        },
+
+        /**
+         * Get activity path from table
+         */
+        _getActivityPathFromTable(oTable) {
+            // sap.m.Table uses "items" binding, sap.ui.table.Table uses "rows"
+            const oBinding = oTable.getBinding("rows");
+            if (!oBinding) return null;
+            
+            const sPath = oBinding.getPath();
+            // Path format: view>tmReports - need to get parent activity path
+            const oContext = oBinding.getContext();
+            if (oContext) {
+                return oContext.getPath();
+            }
+            return null;
+        },
+
+        /**
+         * Handle Edit Selected - enables edit mode for checked PENDING rows
+         */
+        onEditSelectedTM(oEvent) {
+            const oButton = oEvent.getSource();
+            const oToolbar = oButton.getParent();
+            const oPanel = oToolbar ? oToolbar.getParent() : null;
+            
+            if (!oPanel || !oPanel.getContent) {
+                MessageToast.show("Could not find table");
+                return;
+            }
+            
+            const aContent = oPanel.getContent();
+            const oTable = aContent && aContent.length > 0 ? aContent[0] : null;
+            
+            if (!oTable) {
+                MessageToast.show("Could not find table");
+                return;
+            }
+            
+            const oModel = this.getView().getModel("view");
+            // sap.m.Table uses "items" binding, sap.ui.table.Table uses "rows"
+            const oBinding = oTable.getBinding("rows");
+            if (!oBinding) return;
+            
+            // Find checked PENDING rows
+            const aContexts = oBinding.getContexts();
+            let editableCount = 0;
+            const aEditPaths = [];
+            
+            aContexts.forEach(oContext => {
+                if (oContext) {
+                    const sPath = oContext.getPath();
+                    const oEntry = oModel.getProperty(sPath);
+                    
+                    if (oEntry && oEntry.selected === true && oEntry.decisionStatus === "PENDING") {
+                        oModel.setProperty(sPath + "/editMode", true);
+                        oModel.setProperty(sPath + "/selected", false);
+                        aEditPaths.push(sPath);
+                        editableCount++;
+                    }
+                }
+            });
+            
+            if (editableCount === 0) {
+                MessageToast.show("Please select PENDING rows to edit (use checkboxes)");
+                return;
+            }
+            
+            // Set activity-level edit mode flag
+            const sActivityPath = this._getActivityPathFromTable(oTable);
+            const sTableType = this._getTableTypeFromToolbar(oToolbar);
+            
+            if (sActivityPath) {
+                if (sTableType === "expense") {
+                    oModel.setProperty(sActivityPath + "/expenseEditMode", true);
+                } else if (sTableType === "mileage") {
+                    oModel.setProperty(sActivityPath + "/mileageEditMode", true);
+                } else {
+                    oModel.setProperty(sActivityPath + "/tmEditMode", true);
+                }
+            }
+            
+            // Store editing paths for save
+            this._aEditingPaths = aEditPaths;
+            this._sEditingActivityPath = sActivityPath;
+            this._sEditingTableType = sTableType;
+            
+            MessageToast.show(`${editableCount} row(s) now editable`);
+        },
+
+        /**
+         * Handle End Edit - cancel editing without saving
+         */
+        onEndEditTM(oEvent) {
+            const oButton = oEvent.getSource();
+            const oToolbar = oButton.getParent();
+            const oPanel = oToolbar ? oToolbar.getParent() : null;
+            
+            if (!oPanel || !oPanel.getContent) return;
+            
+            const aContent = oPanel.getContent();
+            const oTable = aContent && aContent.length > 0 ? aContent[0] : null;
+            if (!oTable) return;
+            
+            const oModel = this.getView().getModel("view");
+            // sap.m.Table uses "items" binding, sap.ui.table.Table uses "rows"
+            const oBinding = oTable.getBinding("rows");
+            if (!oBinding) return;
+            
+            // Clear edit mode from all rows
+            const aContexts = oBinding.getContexts();
+            aContexts.forEach(oContext => {
+                if (oContext) {
+                    const sPath = oContext.getPath();
+                    const oEntry = oModel.getProperty(sPath);
+                    if (oEntry && oEntry.editMode) {
+                        oModel.setProperty(sPath + "/editMode", false);
+                    }
+                }
+            });
+            
+            // Clear activity-level edit mode
+            const sActivityPath = this._getActivityPathFromTable(oTable);
+            const sTableType = this._getTableTypeFromToolbar(oToolbar);
+            
+            if (sActivityPath) {
+                if (sTableType === "expense") {
+                    oModel.setProperty(sActivityPath + "/expenseEditMode", false);
+                } else if (sTableType === "mileage") {
+                    oModel.setProperty(sActivityPath + "/mileageEditMode", false);
+                } else {
+                    oModel.setProperty(sActivityPath + "/tmEditMode", false);
+                }
+            }
+            
+            // Refresh to restore original values
+            const activityId = oModel.getProperty(sActivityPath + "/id");
+            if (activityId) {
+                this._refreshTMReportsAfterCreate(activityId);
+            }
+            
+            this._aEditingPaths = null;
+            MessageToast.show("Edit cancelled");
+        },
+
+        /**
+         * Handle Save All - show confirmation dialog then save all edited entries
+         */
+        onSaveAllTM(oEvent) {
+            const oButton = oEvent.getSource();
+            const oToolbar = oButton.getParent();
+            const oPanel = oToolbar ? oToolbar.getParent() : null;
+            
+            if (!oPanel || !oPanel.getContent) return;
+            
+            const aContent = oPanel.getContent();
+            const oTable = aContent && aContent.length > 0 ? aContent[0] : null;
+            if (!oTable) return;
+            
+            const oModel = this.getView().getModel("view");
+            // sap.m.Table uses "items" binding, sap.ui.table.Table uses "rows"
+            const oBinding = oTable.getBinding("rows");
+            if (!oBinding) return;
+            
+            // Collect entries in edit mode
+            const aContexts = oBinding.getContexts();
+            const aEntriesToSave = [];
+            
+            aContexts.forEach(oContext => {
+                if (oContext) {
+                    const sPath = oContext.getPath();
+                    const oEntry = oModel.getProperty(sPath);
+                    if (oEntry && oEntry.editMode === true) {
+                        aEntriesToSave.push({
+                            path: sPath,
+                            entry: oEntry
+                        });
+                    }
+                }
+            });
+            
+            if (aEntriesToSave.length === 0) {
+                MessageToast.show("No entries to save");
+                return;
+            }
+            
+            // Build list of entry descriptions
+            const aDescriptions = aEntriesToSave.map(item => {
+                const e = item.entry;
+                let desc = e.type + ": ";
+                if (e.type === "Time Effort") {
+                    desc += (e.taskDisplayText || "Time Entry") + " - " + e.durationMinutes + " min";
+                } else if (e.type === "Material") {
+                    desc += (e.itemDisplayText || "Material") + " - " + e.quantity + " pcs";
+                } else if (e.type === "Expense") {
+                    desc += (e.expenseTypeDisplayText || "Expense") + " - " + e.externalAmountValue + " EUR";
+                } else if (e.type === "Mileage") {
+                    desc += (e.mileageTypeDisplayText || "Mileage") + " - " + e.distanceValue + " KM";
+                }
+                return desc;
+            });
+            
+            // Store for later
+            this._aPendingSaveEntries = aEntriesToSave;
+            this._oPendingSaveTable = oTable;
+            this._oPendingSaveToolbar = oToolbar;
+            
+            // Show confirmation dialog
+            const sMessage = `You are about to update ${aEntriesToSave.length} entry(ies):\n\n• ` + aDescriptions.join("\n• ");
+            
+            MessageBox.show(sMessage, {
+                icon: MessageBox.Icon.QUESTION,
+                title: "Confirm Update",
+                actions: ["Send for Approval", MessageBox.Action.CLOSE],
+                emphasizedAction: "Send for Approval",
+                onClose: (sAction) => {
+                    if (sAction === "Send for Approval") {
+                        this._executeSaveAll();
+                    }
+                }
+            });
+        },
+
+        /**
+         * Execute save for all pending entries
+         */
+        async _executeSaveAll() {
+            const aEntriesToSave = this._aPendingSaveEntries;
+            const oTable = this._oPendingSaveTable;
+            const oToolbar = this._oPendingSaveToolbar;
+            
+            if (!aEntriesToSave || aEntriesToSave.length === 0) return;
+            
+            const oModel = this.getView().getModel("view");
+            sap.ui.core.BusyIndicator.show(0);
+            
+            let successCount = 0;
+            let failCount = 0;
+            
+            // Save entries one by one
+            for (const item of aEntriesToSave) {
+                try {
+                    const result = await this._saveSingleEntry(item.entry, item.path, oModel);
+                    if (result) {
+                        successCount++;
+                    } else {
+                        failCount++;
+                    }
+                } catch (error) {
+                    console.error("Save error:", error);
+                    failCount++;
+                }
+            }
+            
+            sap.ui.core.BusyIndicator.hide();
+            
+            // Clear edit modes
+            aEntriesToSave.forEach(item => {
+                oModel.setProperty(item.path + "/editMode", false);
+            });
+            
+            // Clear activity-level edit mode
+            const sActivityPath = this._getActivityPathFromTable(oTable);
+            const sTableType = this._getTableTypeFromToolbar(oToolbar);
+            
+            if (sActivityPath) {
+                if (sTableType === "expense") {
+                    oModel.setProperty(sActivityPath + "/expenseEditMode", false);
+                } else if (sTableType === "mileage") {
+                    oModel.setProperty(sActivityPath + "/mileageEditMode", false);
+                } else {
+                    oModel.setProperty(sActivityPath + "/tmEditMode", false);
+                }
+                
+                // Refresh data
+                const activityId = oModel.getProperty(sActivityPath + "/id");
+                if (activityId) {
+                    await this._refreshTMReportsAfterCreate(activityId);
+                }
+            }
+            
+            // Show result
+            if (failCount === 0) {
+                MessageToast.show(`${successCount} entry(ies) saved successfully`);
+            } else {
+                MessageBox.warning(`${successCount} saved, ${failCount} failed`);
+            }
+            
+            this._aPendingSaveEntries = null;
+            this._oPendingSaveTable = null;
+            this._oPendingSaveToolbar = null;
+        },
+
+        /**
+         * Save a single entry via API
+         */
+        async _saveSingleEntry(oEntry, sPath, oModel) {
+            let payload, endpoint;
+            
+            switch (oEntry.type) {
+                case "Time Effort":
+                    const durationMinutes = parseInt(oEntry.durationMinutes) || 0;
+                    let endDateTime = oEntry.endDateTime;
+                    if (oEntry.startDateTime && durationMinutes >= 0) {
+                        const startDate = new Date(oEntry.startDateTime);
+                        const endDate = new Date(startDate.getTime() + durationMinutes * 60 * 1000);
+                        endDateTime = endDate.toISOString().replace(/\.\d{3}Z$/, 'Z');
+                    }
+                    payload = { endDateTime, remarks: oEntry.remarksText || "" };
+                    endpoint = `/api/update-time-effort/${oEntry.id}`;
+                    break;
+                    
+                case "Material":
+                    payload = { quantity: parseFloat(oEntry.quantity) || 0, remarks: oEntry.remarksText || "" };
+                    endpoint = `/api/update-material/${oEntry.id}`;
+                    break;
+                    
+                case "Expense":
+                    payload = {
+                        externalAmount: { amount: parseFloat(oEntry.externalAmountValue) || 0, currency: "EUR" },
+                        internalAmount: { amount: parseFloat(oEntry.internalAmountValue) || 0, currency: "EUR" },
+                        remarks: oEntry.remarksText || ""
+                    };
+                    endpoint = `/api/update-expense/${oEntry.id}`;
+                    break;
+                    
+                case "Mileage":
+                    const travelDuration = parseInt(oEntry.travelDurationMinutes) || 0;
+                    let travelEndDateTime = oEntry.travelEndDateTime;
+                    if (oEntry.travelStartDateTime && travelDuration >= 0) {
+                        const startDate = new Date(oEntry.travelStartDateTime);
+                        const endDate = new Date(startDate.getTime() + travelDuration * 60 * 1000);
+                        travelEndDateTime = endDate.toISOString().replace(/\.\d{3}Z$/, 'Z');
+                    }
+                    payload = {
+                        distance: parseFloat(oEntry.distanceValue) || 0,
+                        distanceUnit: "KM",
+                        travelStartDateTime: oEntry.travelStartDateTime,
+                        travelEndDateTime: travelEndDateTime,
+                        remarks: oEntry.remarksText || ""
+                    };
+                    endpoint = `/api/update-mileage/${oEntry.id}`;
+                    break;
+                    
+                default:
+                    return false;
+            }
+            
+            const response = await fetch(endpoint, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            
+            const result = await response.json();
+            return result.success === true;
         }
     };
 });

@@ -666,7 +666,7 @@
    3-COLUMN LAYOUT (Time Effort, Material, Expense, Mileage)
    ======================================== */
 
-/* Container for 3-column Time entries - responsive 3→2→1 */
+/* Container for 3-column Time entries - responsive 3â†’2â†’1 */
 .tmTimeColumns {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -1156,4 +1156,57 @@
 .sapMComboBox:focus {
     outline: 2px solid #0854a0;
     outline-offset: 2px;
+}
+
+/* ========================================
+   T&M GRID TABLE - INLINE EDIT STYLING
+   ======================================== */
+
+/* Compact buttons inside table cells */
+.tmGridTable .sapMBtn {
+    height: 1.75rem !important;
+    min-width: 1.75rem !important;
+    padding: 0 !important;
+}
+
+.tmGridTable .sapMBtnInner {
+    height: 1.5rem !important;
+    min-width: 1.5rem !important;
+    padding: 0 0.25rem !important;
+}
+
+.tmGridTable .sapMBtnIcon {
+    font-size: 0.875rem !important;
+}
+
+/* Compact inputs in table cells */
+.tmGridTable .sapMInput {
+    height: 1.75rem !important;
+}
+
+.tmGridTable .sapMInputBaseInner {
+    height: 1.5rem !important;
+    padding: 0 0.25rem !important;
+}
+
+/* Row highlight for edit mode */
+.tmGridTable .sapUiTableRowHighlightInformation {
+    background-color: #EBF5FF !important;
+}
+
+/* Vertical center content in table cells */
+.tmGridTable .sapUiTableCell {
+    vertical-align: middle !important;
+}
+
+/* Center save button in cell */
+.tmGridTable .sapUiTableCellInner {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* Checkbox styling */
+.tmGridTable .sapMCb {
+    margin: 0 auto !important;
 }

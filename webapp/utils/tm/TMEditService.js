@@ -68,7 +68,7 @@ sap.ui.define([
                         editDistance: report.fullData?.distance || 0,
                         editSource: cleanText(report.source),
                         editDestination: cleanText(report.destination),
-                        editTravelDuration: report.travelDurationMinutes || 0,
+                        editTravelDurationMinutes: report.travelDurationMinutes || 0,
                         editTravelEnd: report.travelEndDateTime || "",
                         editRemarks: cleanRemarks(report.remarksText)
                     };
@@ -118,7 +118,7 @@ sap.ui.define([
                         distance: get("editDistance"),
                         source: get("editSource"),
                         destination: get("editDestination"),
-                        travelDuration: get("editTravelDuration"),
+                        travelDurationMinutes: get("editTravelDurationMinutes"),
                         travelStartDateTime: get("travelStartDateTime"),
                         travelEndDateTime: get("editTravelEnd"),
                         remarks: get("editRemarks")
@@ -167,6 +167,8 @@ sap.ui.define([
             } else if (type === "Mileage") {
                 startDateTime = model.getProperty(path + "/travelStartDateTime");
                 endProperty = "/editTravelEnd";
+                // Also update the duration minutes field
+                model.setProperty(path + "/editTravelDurationMinutes", newDuration);
             } else {
                 return;
             }
