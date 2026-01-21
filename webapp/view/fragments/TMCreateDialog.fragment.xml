@@ -122,9 +122,10 @@
                                 <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
                                 <Column hAlign="Begin"><Text text="Expense Type"/></Column>
                                 <Column width="14rem" hAlign="Begin"><Text text="Technician"/></Column>
-                                <Column width="6rem" hAlign="Begin"><Text text="Ext. Amt"/></Column>
-                                <Column width="6rem" hAlign="Begin"><Text text="Int. Amt"/></Column>
+                                <Column width="5rem" hAlign="Begin"><Text text="Ext. Amt"/></Column>
+                                <Column width="5rem" hAlign="Begin"><Text text="Int. Amt"/></Column>
                                 <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
+                                <Column width="9rem" hAlign="Begin"><Text text="Date"/></Column>
                                 <Column hAlign="Begin"><Text text="Remarks"/></Column>
                             </columns>
                             <items>
@@ -148,14 +149,20 @@
                                                 <core:Item key="{createTM>id}" text="{createTM>displayText}"/>
                                             </suggestionItems>
                                         </Input>
-                                        <Input value="{createTM>externalAmountValue}" type="Number" width="5rem"/>
-                                        <Input value="{createTM>internalAmountValue}" type="Number" width="5rem"/>
+                                        <Input value="{createTM>externalAmountValue}" type="Number" width="100%"/>
+                                        <Input value="{createTM>internalAmountValue}" type="Number" width="100%"/>
                                         <Text text="EUR"/>
+                                        <DatePicker value="{createTM>entryDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="100%"/>
                                         <Input value="{createTM>remarks}" width="100%" placeholder="Enter remarks..."/>
                                     </cells>
                                 </ColumnListItem>
                             </items>
                         </Table>
+                        
+                        <!-- Add button at bottom -->
+                        <HBox justifyContent="Center" class="sapUiSmallMarginTop" visible="{= ${createTM>/expenseEntries}.length > 0 }">
+                            <Button icon="sap-icon://add" type="Transparent" tooltip="Add Entry" press=".onAddCreateExpenseRow"/>
+                        </HBox>
                     </content>
                 </Panel>
                 
@@ -213,6 +220,7 @@
                                 <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
                                 <Column width="5rem" hAlign="Begin"><Text text="Dur."/></Column>
                                 <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
+                                <Column width="9rem" hAlign="Begin"><Text text="Date"/></Column>
                                 <Column hAlign="Begin"><Text text="Remarks"/></Column>
                             </columns>
                             <items>
@@ -236,15 +244,21 @@
                                                 <core:Item key="{createTM>id}" text="{createTM>displayText}"/>
                                             </suggestionItems>
                                         </Input>
-                                        <Input value="{createTM>distance}" type="Number" width="4rem"/>
+                                        <Input value="{createTM>distance}" type="Number" width="100%"/>
                                         <Text text="KM"/>
-                                        <Input value="{createTM>travelDuration}" type="Number" width="4rem"/>
+                                        <Input value="{createTM>travelDuration}" type="Number" width="100%"/>
                                         <Text text="min"/>
+                                        <DatePicker value="{createTM>entryDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="100%"/>
                                         <Input value="{createTM>remarks}" width="100%" placeholder="Enter remarks..."/>
                                     </cells>
                                 </ColumnListItem>
                             </items>
                         </Table>
+                        
+                        <!-- Add button at bottom -->
+                        <HBox justifyContent="Center" class="sapUiSmallMarginTop" visible="{= ${createTM>/mileageEntries}.length > 0 }">
+                            <Button icon="sap-icon://add" type="Transparent" tooltip="Add Entry" press=".onAddCreateMileageRow"/>
+                        </HBox>
                     </content>
                 </Panel>
                 
@@ -288,9 +302,10 @@
                             >
                                 <columns>
                                     <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
-                                    <Column hAlign="Begin"><Text text="Item"/></Column>
-                                    <Column width="14rem" hAlign="Begin"><Text text="Technician"/></Column>
-                                    <Column width="6rem" hAlign="Begin"><Text text="Qty"/></Column>
+                                    <Column width="12rem" hAlign="Begin"><Text text="Item"/></Column>
+                                    <Column width="12rem" hAlign="Begin"><Text text="Technician"/></Column>
+                                    <Column width="5rem" hAlign="Begin"><Text text="Qty"/></Column>
+                                    <Column width="3.5rem" hAlign="Begin"><Text text=""/></Column>
                                     <Column width="9rem" hAlign="Begin"><Text text="Date"/></Column>
                                     <Column hAlign="Begin"><Text text="Remarks"/></Column>
                                 </columns>
@@ -308,13 +323,27 @@
                                             >
                                                 <core:Item key="{createTM>id}" text="{createTM>displayText}"/>
                                             </Select>
-                                            <StepInput value="{createTM>quantity}" min="0" step="1" displayValuePrecision="2" width="100%"/>
+                                            <StepInput 
+                                                value="{createTM>quantity}" 
+                                                min="0" 
+                                                step="1" 
+                                                displayValuePrecision="2" 
+                                                width="100%"
+                                                valueState="{= parseFloat(${createTM>quantity}) > parseFloat(${createTM>/maxQuantity}) ? 'Warning' : 'None'}"
+                                                valueStateText="Quantity exceeds Activity quantity"
+                                            />
+                                            <Text text="pcs" class="sapUiTinyMarginBegin"/>
                                             <DatePicker value="{createTM>entryDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="100%"/>
                                             <Input value="{createTM>remarks}" placeholder="Remarks..." width="100%"/>
                                         </cells>
                                     </ColumnListItem>
                                 </items>
                             </Table>
+                            
+                            <!-- Add button at bottom -->
+                            <HBox justifyContent="Center" class="sapUiSmallMarginTop" visible="{= ${createTM>/materialEntries}.length > 0 }">
+                                <Button icon="sap-icon://add" type="Transparent" tooltip="Add Material" press=".onAddCreateMaterialRow"/>
+                            </HBox>
                         </content>
                     </Panel>
                     
@@ -352,9 +381,10 @@
                             >
                                 <columns>
                                     <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
-                                    <Column hAlign="Begin"><Text text="Task"/></Column>
-                                    <Column width="14rem" hAlign="Begin"><Text text="Technician"/></Column>
-                                    <Column width="6rem" hAlign="Begin"><Text text="Duration"/></Column>
+                                    <Column width="12rem" hAlign="Begin"><Text text="Task"/></Column>
+                                    <Column width="12rem" hAlign="Begin"><Text text="Technician"/></Column>
+                                    <Column width="5rem" hAlign="Begin"><Text text="Duration"/></Column>
+                                    <Column width="3.5rem" hAlign="Begin"><Text text=""/></Column>
                                     <Column width="9rem" hAlign="Begin"><Text text="Date"/></Column>
                                     <Column hAlign="Begin"><Text text="Remarks"/></Column>
                                 </columns>
@@ -386,13 +416,19 @@
                                                     <core:Item key="{createTM>id}" text="{createTM>displayText}"/>
                                                 </suggestionItems>
                                             </Input>
-                                            <StepInput value="{createTM>duration}" min="0" step="5" description="min" width="100%"/>
+                                            <StepInput value="{createTM>durationHrs}" min="0" step="0.25" displayValuePrecision="2" width="100%"/>
+                                            <Text text="hrs" class="sapUiTinyMarginBegin"/>
                                             <DatePicker value="{createTM>entryDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="100%"/>
                                             <Input value="{createTM>remarks}" placeholder="Remarks..." width="100%"/>
                                         </cells>
                                     </ColumnListItem>
                                 </items>
                             </Table>
+                            
+                            <!-- Add button at bottom -->
+                            <HBox justifyContent="Center" class="sapUiSmallMarginTop" visible="{= ${createTM>/timeEntriesAZ}.length > 0 }">
+                                <Button icon="sap-icon://add" type="Transparent" tooltip="Add Time Entry" press=".onAddCreateTimeEntryAZ"/>
+                            </HBox>
                         </content>
                     </Panel>
                     
@@ -430,9 +466,10 @@
                             >
                                 <columns>
                                     <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
-                                    <Column hAlign="Begin"><Text text="Task"/></Column>
-                                    <Column width="14rem" hAlign="Begin"><Text text="Technician"/></Column>
-                                    <Column width="6rem" hAlign="Begin"><Text text="Duration"/></Column>
+                                    <Column width="12rem" hAlign="Begin"><Text text="Task"/></Column>
+                                    <Column width="12rem" hAlign="Begin"><Text text="Technician"/></Column>
+                                    <Column width="5rem" hAlign="Begin"><Text text="Duration"/></Column>
+                                    <Column width="3.5rem" hAlign="Begin"><Text text=""/></Column>
                                     <Column width="9rem" hAlign="Begin"><Text text="Date"/></Column>
                                     <Column hAlign="Begin"><Text text="Remarks"/></Column>
                                 </columns>
@@ -464,13 +501,19 @@
                                                     <core:Item key="{createTM>id}" text="{createTM>displayText}"/>
                                                 </suggestionItems>
                                             </Input>
-                                            <StepInput value="{createTM>duration}" min="0" step="5" description="min" width="100%"/>
+                                            <StepInput value="{createTM>durationHrs}" min="0" step="0.25" displayValuePrecision="2" width="100%"/>
+                                            <Text text="hrs" class="sapUiTinyMarginBegin"/>
                                             <DatePicker value="{createTM>entryDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="100%"/>
                                             <Input value="{createTM>remarks}" placeholder="Remarks..." width="100%"/>
                                         </cells>
                                     </ColumnListItem>
                                 </items>
                             </Table>
+                            
+                            <!-- Add button at bottom -->
+                            <HBox justifyContent="Center" class="sapUiSmallMarginTop" visible="{= ${createTM>/timeEntriesFZ}.length > 0 }">
+                                <Button icon="sap-icon://add" type="Transparent" tooltip="Add Time Entry" press=".onAddCreateTimeEntryFZ"/>
+                            </HBox>
                         </content>
                     </Panel>
                     
@@ -508,9 +551,10 @@
                             >
                                 <columns>
                                     <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
-                                    <Column hAlign="Begin"><Text text="Task"/></Column>
-                                    <Column width="14rem" hAlign="Begin"><Text text="Technician"/></Column>
-                                    <Column width="6rem" hAlign="Begin"><Text text="Duration"/></Column>
+                                    <Column width="12rem" hAlign="Begin"><Text text="Task"/></Column>
+                                    <Column width="12rem" hAlign="Begin"><Text text="Technician"/></Column>
+                                    <Column width="5rem" hAlign="Begin"><Text text="Duration"/></Column>
+                                    <Column width="3.5rem" hAlign="Begin"><Text text=""/></Column>
                                     <Column width="9rem" hAlign="Begin"><Text text="Date"/></Column>
                                     <Column hAlign="Begin"><Text text="Remarks"/></Column>
                                 </columns>
@@ -542,13 +586,19 @@
                                                     <core:Item key="{createTM>id}" text="{createTM>displayText}"/>
                                                 </suggestionItems>
                                             </Input>
-                                            <StepInput value="{createTM>duration}" min="0" step="5" description="min" width="100%"/>
+                                            <StepInput value="{createTM>durationHrs}" min="0" step="0.25" displayValuePrecision="2" width="100%"/>
+                                            <Text text="hrs" class="sapUiTinyMarginBegin"/>
                                             <DatePicker value="{createTM>entryDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="100%"/>
                                             <Input value="{createTM>remarks}" placeholder="Remarks..." width="100%"/>
                                         </cells>
                                     </ColumnListItem>
                                 </items>
                             </Table>
+                            
+                            <!-- Add button at bottom -->
+                            <HBox justifyContent="Center" class="sapUiSmallMarginTop" visible="{= ${createTM>/timeEntriesWZ}.length > 0 }">
+                                <Button icon="sap-icon://add" type="Transparent" tooltip="Add Time Entry" press=".onAddCreateTimeEntryWZ"/>
+                            </HBox>
                         </content>
                     </Panel>
                     

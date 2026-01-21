@@ -97,9 +97,9 @@ sap.ui.define([
                 createPerson: {
                     externalId: oEntry.technicianExternalId || ""
                 },
-                task: oEntry.taskCode ? { code: oEntry.taskCode } : null,
+                task: TimeTaskService.getTaskIdByCode(oEntry.taskCode),
                 udfValues: [{
-                    udfMeta: {
+                    meta: {
                         externalId: "Z_TimeEffort_MatID"
                     },
                     value: "Z13000000"
@@ -326,7 +326,7 @@ sap.ui.define([
             const formatDateTime = (date) => date.toISOString().replace(/\.\d{3}Z$/, 'Z');
 
             // Collect all time entries with their type for sorting
-            // Type order: AZ (1) → FZ (2) → WZ (3)
+            // Type order: AZ (1) Ã¢â€ â€™ FZ (2) Ã¢â€ â€™ WZ (3)
             const allTimeEntries = [];
             
             (oEntry.timeEffortsAZ || []).forEach(entry => {
@@ -347,7 +347,7 @@ sap.ui.define([
                 }
             });
 
-            // Sort entries: first by date, then by type order (AZ → FZ → WZ)
+            // Sort entries: first by date, then by type order (AZ Ã¢â€ â€™ FZ Ã¢â€ â€™ WZ)
             allTimeEntries.sort((a, b) => {
                 const dateA = a.entryDate || baseStartDateTime.split('T')[0];
                 const dateB = b.entryDate || baseStartDateTime.split('T')[0];

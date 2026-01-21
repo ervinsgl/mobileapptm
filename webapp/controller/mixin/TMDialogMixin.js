@@ -66,14 +66,32 @@ sap.ui.define([
                     report.createPersonDisplayText = 'N/A';
                 }
                 
-                // Time Effort: task name
+                // Time Effort: task name and date
                 if (report.type === "Time Effort" && report.task) {
                     report.taskDisplayText = TimeTaskService.getTaskDisplayTextById(report.task);
                 }
+                if (report.type === "Time Effort") {
+                    // Extract date from startDateTime for display/edit (format: yyyy-MM-dd)
+                    const timeDate = report.startDateTime || report.createDateTime;
+                    if (timeDate) {
+                        report.entryDateFormatted = timeDate.split('T')[0];
+                    } else {
+                        report.entryDateFormatted = '';
+                    }
+                }
                 
-                // Material: item name
+                // Material: item name and date
                 if (report.type === "Material" && report.fullData?.item) {
                     report.itemDisplayText = ItemService.getItemDisplayTextById(report.fullData.item);
+                }
+                if (report.type === "Material") {
+                    // Extract date from date field or createDateTime (format: yyyy-MM-dd)
+                    const matDate = report.date || report.fullData?.date || report.createDateTime;
+                    if (matDate) {
+                        report.entryDateFormatted = matDate.split('T')[0];
+                    } else {
+                        report.entryDateFormatted = '';
+                    }
                 }
                 
                 // Expense: type name and amounts for table display
@@ -84,6 +102,14 @@ sap.ui.define([
                     // Use direct fields (report.externalAmount) or fallback to fullData
                     report.externalAmountValue = report.externalAmount?.amount ?? report.fullData?.externalAmount?.amount ?? 0;
                     report.internalAmountValue = report.internalAmount?.amount ?? report.fullData?.internalAmount?.amount ?? 0;
+                    
+                    // Extract date from createDateTime for display/edit (format: yyyy-MM-dd)
+                    const expenseDate = report.date || report.fullData?.date || report.createDateTime;
+                    if (expenseDate) {
+                        report.entryDateFormatted = expenseDate.split('T')[0];
+                    } else {
+                        report.entryDateFormatted = '';
+                    }
                 }
                 
                 // Mileage: type from UDF
@@ -107,6 +133,14 @@ sap.ui.define([
                     
                     // Distance value for table display
                     report.distanceValue = report.distance ?? report.fullData?.distance ?? 0;
+                    
+                    // Extract date from travelStartDateTime for display/edit (format: yyyy-MM-dd)
+                    const mileageDate = report.date || report.fullData?.date || report.travelStartDateTime || report.createDateTime;
+                    if (mileageDate) {
+                        report.entryDateFormatted = mileageDate.split('T')[0];
+                    } else {
+                        report.entryDateFormatted = '';
+                    }
                 }
                 
                 // UDF values
@@ -1335,14 +1369,32 @@ sap.ui.define([
                         report.createPersonDisplayText = 'N/A';
                     }
                     
-                    // Time Effort: task name
+                    // Time Effort: task name and date
                     if (report.type === "Time Effort" && report.task) {
                         report.taskDisplayText = TimeTaskService.getTaskDisplayTextById(report.task);
                     }
+                    if (report.type === "Time Effort") {
+                        // Extract date from startDateTime for display/edit (format: yyyy-MM-dd)
+                        const timeDate = report.startDateTime || report.createDateTime;
+                        if (timeDate) {
+                            report.entryDateFormatted = timeDate.split('T')[0];
+                        } else {
+                            report.entryDateFormatted = '';
+                        }
+                    }
                     
-                    // Material: item name
+                    // Material: item name and date
                     if (report.type === "Material" && report.fullData?.item) {
                         report.itemDisplayText = ItemService.getItemDisplayTextById(report.fullData.item);
+                    }
+                    if (report.type === "Material") {
+                        // Extract date from date field or createDateTime (format: yyyy-MM-dd)
+                        const matDate = report.date || report.fullData?.date || report.createDateTime;
+                        if (matDate) {
+                            report.entryDateFormatted = matDate.split('T')[0];
+                        } else {
+                            report.entryDateFormatted = '';
+                        }
                     }
                     
                     // Expense: type name and amounts
@@ -1353,6 +1405,14 @@ sap.ui.define([
                         // Use direct fields (report.externalAmount) or fallback to fullData
                         report.externalAmountValue = report.externalAmount?.amount ?? report.fullData?.externalAmount?.amount ?? 0;
                         report.internalAmountValue = report.internalAmount?.amount ?? report.fullData?.internalAmount?.amount ?? 0;
+                        
+                        // Extract date for display/edit (format: yyyy-MM-dd)
+                        const expenseDate = report.date || report.fullData?.date || report.createDateTime;
+                        if (expenseDate) {
+                            report.entryDateFormatted = expenseDate.split('T')[0];
+                        } else {
+                            report.entryDateFormatted = '';
+                        }
                     }
                     
                     // Mileage: type from UDF and distance value
@@ -1375,6 +1435,14 @@ sap.ui.define([
                         } else {
                             report.travelDurationMinutes = 0;
                             report.travelDurationText = 'N/A';
+                        }
+                        
+                        // Extract date for display/edit (format: yyyy-MM-dd)
+                        const mileageDate = report.date || report.fullData?.date || report.travelStartDateTime || report.createDateTime;
+                        if (mileageDate) {
+                            report.entryDateFormatted = mileageDate.split('T')[0];
+                        } else {
+                            report.entryDateFormatted = '';
                         }
                     }
                     
@@ -1878,11 +1946,18 @@ sap.ui.define([
                     let response, payload;
                     
                     if (oEntry.type === "Time Effort") {
-                        // Calculate endDateTime from startDateTime + duration
-                        const startDateTime = oEntry.startDateTime;
+                        // Get existing startDateTime and calculate new times based on date change
+                        let startDateTime = oEntry.startDateTime;
                         const durationMinutes = parseInt(oEntry.durationMinutes) || 0;
-                        let endDateTime = oEntry.endDateTime;
                         
+                        // If date was edited, update the startDateTime with the new date but keep original time
+                        if (oEntry.entryDateFormatted && startDateTime) {
+                            const originalTime = startDateTime.split('T')[1] || '08:00:00.000Z';
+                            startDateTime = oEntry.entryDateFormatted + 'T' + originalTime;
+                        }
+                        
+                        // Calculate endDateTime from startDateTime + duration
+                        let endDateTime = oEntry.endDateTime;
                         if (startDateTime && durationMinutes >= 0) {
                             const startDate = new Date(startDateTime);
                             const endDate = new Date(startDate.getTime() + durationMinutes * 60 * 1000);
@@ -1890,6 +1965,7 @@ sap.ui.define([
                         }
                         
                         payload = {
+                            startDateTime: startDateTime,
                             endDateTime: endDateTime,
                             remarks: oEntry.remarksText || ""
                         };
@@ -1903,6 +1979,10 @@ sap.ui.define([
                             quantity: parseFloat(oEntry.quantity) || 0,
                             remarks: oEntry.remarksText || ""
                         };
+                        // Add date if available (format: yyyy-MM-dd)
+                        if (oEntry.entryDateFormatted) {
+                            payload.date = oEntry.entryDateFormatted;
+                        }
                         response = await fetch(`/api/update-material/${oEntry.id}`, {
                             method: 'PATCH',
                             headers: { 'Content-Type': 'application/json' },
@@ -1914,6 +1994,10 @@ sap.ui.define([
                             internalAmount: { amount: parseFloat(oEntry.internalAmountValue) || 0, currency: "EUR" },
                             remarks: oEntry.remarksText || ""
                         };
+                        // Add date if available (format: yyyy-MM-dd)
+                        if (oEntry.entryDateFormatted) {
+                            payload.date = oEntry.entryDateFormatted;
+                        }
                         response = await fetch(`/api/update-expense/${oEntry.id}`, {
                             method: 'PATCH',
                             headers: { 'Content-Type': 'application/json' },
@@ -1921,8 +2005,16 @@ sap.ui.define([
                         });
                     } else if (oEntry.type === "Mileage") {
                         // Mileage uses startDateTime and calculates endDateTime from duration
-                        const startDateTime = oEntry.travelStartDateTime || new Date().toISOString();
+                        let startDateTime = oEntry.travelStartDateTime || new Date().toISOString();
                         const durationMinutes = parseInt(oEntry.travelDurationMinutes) || 0;
+                        
+                        // If date was edited, update the startDateTime with the new date
+                        if (oEntry.entryDateFormatted) {
+                            // Get time portion from existing startDateTime or use 08:00
+                            const existingTime = startDateTime.split('T')[1] || '08:00:00.000Z';
+                            startDateTime = oEntry.entryDateFormatted + 'T' + existingTime;
+                        }
+                        
                         const endDateTime = new Date(new Date(startDateTime).getTime() + durationMinutes * 60000).toISOString();
                         
                         payload = {
@@ -1932,6 +2024,10 @@ sap.ui.define([
                             travelEndDateTime: endDateTime,
                             remarks: oEntry.remarksText || ""
                         };
+                        // Add date if available (format: yyyy-MM-dd)
+                        if (oEntry.entryDateFormatted) {
+                            payload.date = oEntry.entryDateFormatted;
+                        }
                         response = await fetch(`/api/update-mileage/${oEntry.id}`, {
                             method: 'PATCH',
                             headers: { 'Content-Type': 'application/json' },
@@ -2033,6 +2129,7 @@ sap.ui.define([
             const defaultExpenseTypeId = oModel.getProperty("/defaultExpenseTypeId") || "";
             const defaultExpenseTypeCode = oModel.getProperty("/defaultExpenseTypeCode") || "";
             const defaultExpenseTypeDisplay = oModel.getProperty("/defaultExpenseTypeDisplay") || "";
+            const defaultDate = oModel.getProperty("/defaultDate") || "";
             
             const newEntry = {
                 id: Date.now() + '_' + Math.random().toString(36).substr(2, 9),
@@ -2045,6 +2142,7 @@ sap.ui.define([
                 expenseTypeDisplay: defaultExpenseTypeDisplay,
                 externalAmountValue: 0,
                 internalAmountValue: 0,
+                entryDate: defaultDate,
                 remarks: ""
             };
             
@@ -2136,6 +2234,7 @@ sap.ui.define([
                         expenseTypeCode: entry.expenseTypeCode,
                         externalAmountValue: entry.externalAmountValue,
                         internalAmountValue: entry.internalAmountValue,
+                        date: entry.entryDate,
                         remarks: entry.remarks,
                         chargeOption: "CHARGEABLE"
                     }, activityId, orgLevelId);
@@ -2217,6 +2316,7 @@ sap.ui.define([
             const defaultMileageTypeId = oModel.getProperty("/defaultMileageTypeId") || "";
             const defaultMileageTypeDisplay = oModel.getProperty("/defaultMileageTypeDisplay") || "";
             const defaultQuantity = oModel.getProperty("/quantity") || 0;
+            const defaultDate = oModel.getProperty("/defaultDate") || "";
             
             const newEntry = {
                 id: Date.now() + '_' + Math.random().toString(36).substr(2, 9),
@@ -2228,6 +2328,7 @@ sap.ui.define([
                 mileageTypeDisplay: defaultMileageTypeDisplay,
                 distance: parseFloat(defaultQuantity) || 0,
                 travelDuration: 30,
+                entryDate: defaultDate,
                 remarks: ""
             };
             
@@ -2319,6 +2420,7 @@ sap.ui.define([
                         itemDisplay: entry.mileageTypeDisplay,
                         distance: entry.distance,
                         travelDuration: entry.travelDuration,
+                        date: entry.entryDate,
                         remarks: entry.remarks,
                         chargeOption: "CHARGEABLE"
                     }, activityId, orgLevelId);
@@ -2569,7 +2671,7 @@ sap.ui.define([
                 technicianSuggestions: [], // Local suggestions for this entry
                 taskCode: "",
                 taskDisplay: "",
-                duration: 30, // Default 30 minutes
+                durationHrs: 0.5, // Default 0.5 hours (30 minutes)
                 entryDate: defaultDate,
                 remarks: ""
             };
@@ -2846,8 +2948,11 @@ sap.ui.define([
                         dateStartTimes[entryDate] = new Date(`${entryDate}T08:00:00Z`);
                     }
                     
+                    // Convert durationHrs to minutes
+                    const durationMinutes = (entry.durationHrs || 0) * 60;
+                    
                     const startDateTime = dateStartTimes[entryDate].toISOString();
-                    const durationMs = (entry.duration || 0) * 60 * 1000;
+                    const durationMs = durationMinutes * 60 * 1000;
                     const endDate = new Date(dateStartTimes[entryDate].getTime() + durationMs);
                     const endDateTime = endDate.toISOString();
                     
@@ -2861,7 +2966,7 @@ sap.ui.define([
                         taskCode: entry.taskCode,
                         startDateTime: startDateTime,
                         endDateTime: endDateTime,
-                        duration: entry.duration,
+                        duration: durationMinutes,
                         remarks: entry.remarks,
                         chargeOption: "CHARGEABLE"
                     }, activityId, orgLevelId);

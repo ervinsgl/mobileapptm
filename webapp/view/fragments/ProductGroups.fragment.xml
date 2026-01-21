@@ -161,7 +161,7 @@
                                                             <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
                                                             <Column width="5rem" hAlign="Begin"><Text text="Qty"/></Column>
                                                             <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
-                                                            <Column width="5rem" hAlign="Begin"><Text text="Date"/></Column>
+                                                            <Column width="7rem" hAlign="Begin"><Text text="Date"/></Column>
                                                             <Column hAlign="Begin"><Text text="Remarks"/></Column>
                                                             <Column width="6rem" hAlign="Center"><Text text="Status"/></Column>
                                                         </columns>
@@ -184,7 +184,8 @@
                                                                         <Text text="N/A" visible="{= ${view>type} !== 'Material'}"/>
                                                                     </HBox>
                                                                     <Text text="{= ${view>type} === 'Material' ? 'pcs' : ''}"/>
-                                                                    <Text text="{path: 'view>startDateTime', formatter: '.formatter.formatDateShort'}"/>
+                                                                    <!-- Date: editable DatePicker in edit mode -->
+                                                                    <DatePicker value="{view>entryDateFormatted}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="100%" editable="{view>editMode}"/>
                                                                     <Input value="{view>remarksText}" width="100%" editable="{view>editMode}"/>
                                                                     <ObjectStatus text="{= ${view>decisionStatus} === 'DECLINED_CLOSED' ? 'DECLINED' : ${view>decisionStatus}}" state="{view>decisionStatusState}" icon="{= ${view>decisionStatus} === 'APPROVED' ? 'sap-icon://accept' : (${view>decisionStatus} === 'DECLINED' || ${view>decisionStatus} === 'CANCELLED' || ${view>decisionStatus} === 'DECLINED_CLOSED') ? 'sap-icon://decline' : ''}"/>
                                                                 </cells>
@@ -229,9 +230,10 @@
                                                             <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
                                                             <Column hAlign="Begin"><Text text="Expense Type"/></Column>
                                                             <Column width="10rem" hAlign="Begin"><Text text="Technician"/></Column>
-                                                            <Column width="6rem" hAlign="Begin"><Text text="Ext. Amt"/></Column>
-                                                            <Column width="6rem" hAlign="Begin"><Text text="Int. Amt"/></Column>
+                                                            <Column width="5rem" hAlign="Begin"><Text text="Ext. Amt"/></Column>
+                                                            <Column width="5rem" hAlign="Begin"><Text text="Int. Amt"/></Column>
                                                             <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
+                                                            <Column width="7rem" hAlign="Begin"><Text text="Date"/></Column>
                                                             <Column hAlign="Begin"><Text text="Remarks"/></Column>
                                                             <Column width="6rem" hAlign="Center"><Text text="Status"/></Column>
                                                         </columns>
@@ -241,9 +243,10 @@
                                                                     <CheckBox selected="{view>selected}" visible="{= ${view>decisionStatus} === 'PENDING'}"/>
                                                                     <Text text="{view>expenseTypeDisplayText}"/>
                                                                     <Text text="{view>createPersonDisplayText}"/>
-                                                                    <Input value="{view>externalAmountValue}" type="Number" width="5rem" editable="{view>editMode}"/>
-                                                                    <Input value="{view>internalAmountValue}" type="Number" width="5rem" editable="{view>editMode}"/>
+                                                                    <Input value="{view>externalAmountValue}" type="Number" width="100%" editable="{view>editMode}"/>
+                                                                    <Input value="{view>internalAmountValue}" type="Number" width="100%" editable="{view>editMode}"/>
                                                                     <Text text="EUR"/>
+                                                                    <DatePicker value="{view>entryDateFormatted}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="100%" editable="{view>editMode}"/>
                                                                     <Input value="{view>remarksText}" width="100%" editable="{view>editMode}"/>
                                                                     <ObjectStatus text="{= ${view>decisionStatus} === 'DECLINED_CLOSED' ? 'DECLINED' : ${view>decisionStatus}}" state="{view>decisionStatusState}" icon="{= ${view>decisionStatus} === 'APPROVED' ? 'sap-icon://accept' : (${view>decisionStatus} === 'DECLINED' || ${view>decisionStatus} === 'CANCELLED' || ${view>decisionStatus} === 'DECLINED_CLOSED') ? 'sap-icon://decline' : ''}"/>
                                                                 </cells>
@@ -292,6 +295,7 @@
                                                             <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
                                                             <Column width="5rem" hAlign="Begin"><Text text="Dur."/></Column>
                                                             <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
+                                                            <Column width="7rem" hAlign="Begin"><Text text="Date"/></Column>
                                                             <Column hAlign="Begin"><Text text="Remarks"/></Column>
                                                             <Column width="6rem" hAlign="Center"><Text text="Status"/></Column>
                                                         </columns>
@@ -301,10 +305,11 @@
                                                                     <CheckBox selected="{view>selected}" visible="{= ${view>decisionStatus} === 'PENDING'}"/>
                                                                     <Text text="{view>mileageTypeDisplayText}"/>
                                                                     <Text text="{view>createPersonDisplayText}"/>
-                                                                    <Input value="{view>distanceValue}" type="Number" width="4rem" editable="{view>editMode}"/>
+                                                                    <Input value="{view>distanceValue}" type="Number" width="100%" editable="{view>editMode}"/>
                                                                     <Text text="KM"/>
-                                                                    <Input value="{view>travelDurationMinutes}" type="Number" width="4rem" editable="{view>editMode}"/>
+                                                                    <Input value="{view>travelDurationMinutes}" type="Number" width="100%" editable="{view>editMode}"/>
                                                                     <Text text="min"/>
+                                                                    <DatePicker value="{view>entryDateFormatted}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="100%" editable="{view>editMode}"/>
                                                                     <Input value="{view>remarksText}" width="100%" editable="{view>editMode}"/>
                                                                     <ObjectStatus text="{= ${view>decisionStatus} === 'DECLINED_CLOSED' ? 'DECLINED' : ${view>decisionStatus}}" state="{view>decisionStatusState}" icon="{= ${view>decisionStatus} === 'APPROVED' ? 'sap-icon://accept' : (${view>decisionStatus} === 'DECLINED' || ${view>decisionStatus} === 'CANCELLED' || ${view>decisionStatus} === 'DECLINED_CLOSED') ? 'sap-icon://decline' : ''}"/>
                                                                 </cells>
