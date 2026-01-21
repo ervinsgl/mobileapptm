@@ -1900,7 +1900,7 @@ sap.ui.define([
             this._oPendingSaveToolbar = oToolbar;
             
             // Show confirmation dialog
-            const sMessage = `You are about to update ${aEntriesToSave.length} entry(ies):\n\n• ` + aDescriptions.join("\n• ");
+            const sMessage = `You are about to update ${aEntriesToSave.length} entry(ies):\n\nâ€¢ ` + aDescriptions.join("\nâ€¢ ");
             
             sap.m.MessageBox.show(sMessage, {
                 icon: sap.m.MessageBox.Icon.QUESTION,
@@ -2825,7 +2825,7 @@ sap.ui.define([
                 lines.push(`\nArbeitszeit (${aTimeEntriesAZ.length}):`);
                 aTimeEntriesAZ.forEach((e, i) => {
                     const taskName = this._getTaskNameByCode(oModel, 'AZ', e.taskCode);
-                    lines.push(`  ${i + 1}. ${taskName} - ${e.duration} min`);
+                    lines.push(`  ${i + 1}. ${taskName} - ${e.durationHrs} hrs`);
                 });
             }
             
@@ -2833,7 +2833,7 @@ sap.ui.define([
                 lines.push(`\nFahrzeit (${aTimeEntriesFZ.length}):`);
                 aTimeEntriesFZ.forEach((e, i) => {
                     const taskName = this._getTaskNameByCode(oModel, 'FZ', e.taskCode);
-                    lines.push(`  ${i + 1}. ${taskName} - ${e.duration} min`);
+                    lines.push(`  ${i + 1}. ${taskName} - ${e.durationHrs} hrs`);
                 });
             }
             
@@ -2841,7 +2841,7 @@ sap.ui.define([
                 lines.push(`\nWartezeit (${aTimeEntriesWZ.length}):`);
                 aTimeEntriesWZ.forEach((e, i) => {
                     const taskName = this._getTaskNameByCode(oModel, 'WZ', e.taskCode);
-                    lines.push(`  ${i + 1}. ${taskName} - ${e.duration} min`);
+                    lines.push(`  ${i + 1}. ${taskName} - ${e.durationHrs} hrs`);
                 });
             }
             

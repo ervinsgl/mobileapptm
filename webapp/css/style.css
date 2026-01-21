@@ -666,7 +666,7 @@
    3-COLUMN LAYOUT (Time Effort, Material, Expense, Mileage)
    ======================================== */
 
-/* Container for 3-column Time entries - responsive 3â†’2â†’1 */
+/* Container for 3-column Time entries - responsive 3Ã¢â€ â€™2Ã¢â€ â€™1 */
 .tmTimeColumns {
     display: grid;
     grid-template-columns: repeat(3, 1fr);

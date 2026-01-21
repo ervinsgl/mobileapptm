@@ -86,14 +86,6 @@
                             <Title text="Expense Report" level="H5"/>
                             <ToolbarSpacer/>
                             <Button 
-                                text="Send for Approval" 
-                                icon="sap-icon://paper-plane" 
-                                type="Emphasized" 
-                                press=".onSaveAllCreateExpense" 
-                                visible="{= ${createTM>/expenseEntries}.length > 0 }" 
-                                class="sapUiTinyMarginBegin"
-                            />
-                            <Button 
                                 text="Add Entry" 
                                 icon="sap-icon://add" 
                                 type="Emphasized" 
@@ -179,14 +171,6 @@
                             <core:Icon src="sap-icon://car-rental" class="sapUiTinyMarginEnd" color="#6C32A9"/>
                             <Title text="Mileage Report" level="H5"/>
                             <ToolbarSpacer/>
-                            <Button 
-                                text="Send for Approval" 
-                                icon="sap-icon://paper-plane" 
-                                type="Emphasized" 
-                                press=".onSaveAllCreateMileage" 
-                                visible="{= ${createTM>/mileageEntries}.length > 0 }" 
-                                class="sapUiTinyMarginBegin"
-                            />
                             <Button 
                                 text="Add Entry" 
                                 icon="sap-icon://add" 
@@ -302,10 +286,10 @@
                             >
                                 <columns>
                                     <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
-                                    <Column width="12rem" hAlign="Begin"><Text text="Item"/></Column>
-                                    <Column width="12rem" hAlign="Begin"><Text text="Technician"/></Column>
-                                    <Column width="5rem" hAlign="Begin"><Text text="Qty"/></Column>
-                                    <Column width="3.5rem" hAlign="Begin"><Text text=""/></Column>
+                                    <Column width="11rem" hAlign="Begin"><Text text="Item"/></Column>
+                                    <Column width="11rem" hAlign="Begin"><Text text="Technician"/></Column>
+                                    <Column width="6.5rem" hAlign="Begin"><Text text="Qty"/></Column>
+                                    <Column width="2.5rem" hAlign="Begin"><Text text=""/></Column>
                                     <Column width="9rem" hAlign="Begin"><Text text="Date"/></Column>
                                     <Column hAlign="Begin"><Text text="Remarks"/></Column>
                                 </columns>
@@ -332,7 +316,7 @@
                                                 valueState="{= parseFloat(${createTM>quantity}) > parseFloat(${createTM>/maxQuantity}) ? 'Warning' : 'None'}"
                                                 valueStateText="Quantity exceeds Activity quantity"
                                             />
-                                            <Text text="pcs" class="sapUiTinyMarginBegin"/>
+                                            <Text text="pcs"/>
                                             <DatePicker value="{createTM>entryDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="100%"/>
                                             <Input value="{createTM>remarks}" placeholder="Remarks..." width="100%"/>
                                         </cells>
@@ -381,10 +365,10 @@
                             >
                                 <columns>
                                     <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
-                                    <Column width="12rem" hAlign="Begin"><Text text="Task"/></Column>
-                                    <Column width="12rem" hAlign="Begin"><Text text="Technician"/></Column>
-                                    <Column width="5rem" hAlign="Begin"><Text text="Duration"/></Column>
-                                    <Column width="3.5rem" hAlign="Begin"><Text text=""/></Column>
+                                    <Column width="11rem" hAlign="Begin"><Text text="Task"/></Column>
+                                    <Column width="11rem" hAlign="Begin"><Text text="Technician"/></Column>
+                                    <Column width="6.5rem" hAlign="Begin"><Text text="Duration"/></Column>
+                                    <Column width="2.5rem" hAlign="Begin"><Text text=""/></Column>
                                     <Column width="9rem" hAlign="Begin"><Text text="Date"/></Column>
                                     <Column hAlign="Begin"><Text text="Remarks"/></Column>
                                 </columns>
@@ -417,7 +401,7 @@
                                                 </suggestionItems>
                                             </Input>
                                             <StepInput value="{createTM>durationHrs}" min="0" step="0.25" displayValuePrecision="2" width="100%"/>
-                                            <Text text="hrs" class="sapUiTinyMarginBegin"/>
+                                            <Text text="hrs"/>
                                             <DatePicker value="{createTM>entryDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="100%"/>
                                             <Input value="{createTM>remarks}" placeholder="Remarks..." width="100%"/>
                                         </cells>
@@ -466,10 +450,10 @@
                             >
                                 <columns>
                                     <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
-                                    <Column width="12rem" hAlign="Begin"><Text text="Task"/></Column>
-                                    <Column width="12rem" hAlign="Begin"><Text text="Technician"/></Column>
-                                    <Column width="5rem" hAlign="Begin"><Text text="Duration"/></Column>
-                                    <Column width="3.5rem" hAlign="Begin"><Text text=""/></Column>
+                                    <Column width="11rem" hAlign="Begin"><Text text="Task"/></Column>
+                                    <Column width="11rem" hAlign="Begin"><Text text="Technician"/></Column>
+                                    <Column width="6.5rem" hAlign="Begin"><Text text="Duration"/></Column>
+                                    <Column width="2.5rem" hAlign="Begin"><Text text=""/></Column>
                                     <Column width="9rem" hAlign="Begin"><Text text="Date"/></Column>
                                     <Column hAlign="Begin"><Text text="Remarks"/></Column>
                                 </columns>
@@ -502,7 +486,7 @@
                                                 </suggestionItems>
                                             </Input>
                                             <StepInput value="{createTM>durationHrs}" min="0" step="0.25" displayValuePrecision="2" width="100%"/>
-                                            <Text text="hrs" class="sapUiTinyMarginBegin"/>
+                                            <Text text="hrs"/>
                                             <DatePicker value="{createTM>entryDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="100%"/>
                                             <Input value="{createTM>remarks}" placeholder="Remarks..." width="100%"/>
                                         </cells>
@@ -551,10 +535,10 @@
                             >
                                 <columns>
                                     <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
-                                    <Column width="12rem" hAlign="Begin"><Text text="Task"/></Column>
-                                    <Column width="12rem" hAlign="Begin"><Text text="Technician"/></Column>
-                                    <Column width="5rem" hAlign="Begin"><Text text="Duration"/></Column>
-                                    <Column width="3.5rem" hAlign="Begin"><Text text=""/></Column>
+                                    <Column width="11rem" hAlign="Begin"><Text text="Task"/></Column>
+                                    <Column width="11rem" hAlign="Begin"><Text text="Technician"/></Column>
+                                    <Column width="6.5rem" hAlign="Begin"><Text text="Duration"/></Column>
+                                    <Column width="2.5rem" hAlign="Begin"><Text text=""/></Column>
                                     <Column width="9rem" hAlign="Begin"><Text text="Date"/></Column>
                                     <Column hAlign="Begin"><Text text="Remarks"/></Column>
                                 </columns>
@@ -587,7 +571,7 @@
                                                 </suggestionItems>
                                             </Input>
                                             <StepInput value="{createTM>durationHrs}" min="0" step="0.25" displayValuePrecision="2" width="100%"/>
-                                            <Text text="hrs" class="sapUiTinyMarginBegin"/>
+                                            <Text text="hrs"/>
                                             <DatePicker value="{createTM>entryDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="100%"/>
                                             <Input value="{createTM>remarks}" placeholder="Remarks..." width="100%"/>
                                         </cells>
@@ -601,17 +585,6 @@
                             </HBox>
                         </content>
                     </Panel>
-                    
-                    <!-- ===== SEND FOR APPROVAL BUTTON ===== -->
-                    <HBox justifyContent="End" class="sapUiSmallMarginTop">
-                        <Button 
-                            text="Send for Approval" 
-                            icon="sap-icon://paper-plane" 
-                            type="Emphasized" 
-                            press=".onSaveAllCreateTM"
-                            visible="{= (${createTM>/materialEntries}.length + ${createTM>/timeEntriesAZ}.length + ${createTM>/timeEntriesFZ}.length + ${createTM>/timeEntriesWZ}.length) > 0 }"
-                        />
-                    </HBox>
                 </VBox>
                 
             </VBox>
@@ -619,6 +592,30 @@
         
         <!-- ========== DIALOG BUTTONS ========== -->
         <buttons>
+            <!-- Send for Approval - Expense Report -->
+            <Button 
+                text="Send for Approval" 
+                icon="sap-icon://paper-plane" 
+                type="Emphasized" 
+                press=".onSaveAllCreateExpense"
+                visible="{= (${createTM>/serviceProductExternalId} === 'Z40000001' || ${createTM>/serviceProductExternalId} === 'Z40000007' || ${createTM>/serviceProductExternalId} === 'Z50000000') &amp;&amp; ${createTM>/expenseEntries}.length > 0 }"
+            />
+            <!-- Send for Approval - Mileage Report -->
+            <Button 
+                text="Send for Approval" 
+                icon="sap-icon://paper-plane" 
+                type="Emphasized" 
+                press=".onSaveAllCreateMileage"
+                visible="{= (${createTM>/serviceProductExternalId} === 'Z40000038' || ${createTM>/serviceProductExternalId} === 'Z40000008') &amp;&amp; ${createTM>/mileageEntries}.length > 0 }"
+            />
+            <!-- Send for Approval - Time & Material -->
+            <Button 
+                text="Send for Approval" 
+                icon="sap-icon://paper-plane" 
+                type="Emphasized" 
+                press=".onSaveAllCreateTM"
+                visible="{= ${createTM>/serviceProductExternalId} !== 'Z40000001' &amp;&amp; ${createTM>/serviceProductExternalId} !== 'Z40000007' &amp;&amp; ${createTM>/serviceProductExternalId} !== 'Z50000000' &amp;&amp; ${createTM>/serviceProductExternalId} !== 'Z40000038' &amp;&amp; ${createTM>/serviceProductExternalId} !== 'Z40000008' &amp;&amp; (${createTM>/materialEntries}.length + ${createTM>/timeEntriesAZ}.length + ${createTM>/timeEntriesFZ}.length + ${createTM>/timeEntriesWZ}.length) > 0 }"
+            />
             <Button text="Close" press=".onCancelCreateTM"/>
         </buttons>
     </Dialog>
