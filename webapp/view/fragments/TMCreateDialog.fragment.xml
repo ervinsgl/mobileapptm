@@ -104,11 +104,12 @@
                         </VBox>
                         
                         <!-- Expense Table -->
+                        <ScrollContainer horizontal="true" vertical="false" width="100%">
                         <Table
                             items="{path: 'createTM>/expenseEntries', templateShareable: false}"
                             visible="{= ${createTM>/expenseEntries}.length > 0 }"
                             class="tmMTable"
-                            width="100%"
+                            width="auto"
                         >
                             <columns>
                                 <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
@@ -150,6 +151,7 @@
                                 </ColumnListItem>
                             </items>
                         </Table>
+                        </ScrollContainer>
                         
                         <!-- Add button at bottom -->
                         <HBox justifyContent="Center" class="sapUiSmallMarginTop" visible="{= ${createTM>/expenseEntries}.length > 0 }">
@@ -190,11 +192,12 @@
                         </VBox>
                         
                         <!-- Mileage Table -->
+                        <ScrollContainer horizontal="true" vertical="false" width="100%">
                         <Table
                             items="{path: 'createTM>/mileageEntries', templateShareable: false}"
                             visible="{= ${createTM>/mileageEntries}.length > 0 }"
                             class="tmMTable"
-                            width="100%"
+                            width="auto"
                         >
                             <columns>
                                 <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
@@ -238,6 +241,7 @@
                                 </ColumnListItem>
                             </items>
                         </Table>
+                        </ScrollContainer>
                         
                         <!-- Add button at bottom -->
                         <HBox justifyContent="Center" class="sapUiSmallMarginTop" visible="{= ${createTM>/mileageEntries}.length > 0 }">
@@ -278,11 +282,12 @@
                             </VBox>
                             
                             <!-- Material Table -->
+                            <ScrollContainer horizontal="true" vertical="false" width="100%">
                             <Table
                                 items="{path: 'createTM>/materialEntries', templateShareable: false}"
                                 visible="{= ${createTM>/materialEntries}.length > 0 }"
                                 class="tmMTable"
-                                width="100%"
+                                width="auto"
                             >
                                 <columns>
                                     <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
@@ -323,6 +328,7 @@
                                     </ColumnListItem>
                                 </items>
                             </Table>
+                            </ScrollContainer>
                             
                             <!-- Add button at bottom -->
                             <HBox justifyContent="Center" class="sapUiSmallMarginTop" visible="{= ${createTM>/materialEntries}.length > 0 }">
@@ -357,11 +363,12 @@
                             </VBox>
                             
                             <!-- Time Entries Table -->
+                            <ScrollContainer horizontal="true" vertical="false" width="100%">
                             <Table
                                 items="{path: 'createTM>/timeEntriesAZ', templateShareable: false}"
                                 visible="{= ${createTM>/timeEntriesAZ}.length > 0 }"
                                 class="tmMTable"
-                                width="100%"
+                                width="auto"
                             >
                                 <columns>
                                     <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
@@ -408,6 +415,7 @@
                                     </ColumnListItem>
                                 </items>
                             </Table>
+                            </ScrollContainer>
                             
                             <!-- Add button at bottom -->
                             <HBox justifyContent="Center" class="sapUiSmallMarginTop" visible="{= ${createTM>/timeEntriesAZ}.length > 0 }">
@@ -442,11 +450,12 @@
                             </VBox>
                             
                             <!-- Time Entries Table -->
+                            <ScrollContainer horizontal="true" vertical="false" width="100%">
                             <Table
                                 items="{path: 'createTM>/timeEntriesFZ', templateShareable: false}"
                                 visible="{= ${createTM>/timeEntriesFZ}.length > 0 }"
                                 class="tmMTable"
-                                width="100%"
+                                width="auto"
                             >
                                 <columns>
                                     <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
@@ -493,6 +502,7 @@
                                     </ColumnListItem>
                                 </items>
                             </Table>
+                            </ScrollContainer>
                             
                             <!-- Add button at bottom -->
                             <HBox justifyContent="Center" class="sapUiSmallMarginTop" visible="{= ${createTM>/timeEntriesFZ}.length > 0 }">
@@ -527,11 +537,12 @@
                             </VBox>
                             
                             <!-- Time Entries Table -->
+                            <ScrollContainer horizontal="true" vertical="false" width="100%">
                             <Table
                                 items="{path: 'createTM>/timeEntriesWZ', templateShareable: false}"
                                 visible="{= ${createTM>/timeEntriesWZ}.length > 0 }"
                                 class="tmMTable"
-                                width="100%"
+                                width="auto"
                             >
                                 <columns>
                                     <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
@@ -578,6 +589,7 @@
                                     </ColumnListItem>
                                 </items>
                             </Table>
+                            </ScrollContainer>
                             
                             <!-- Add button at bottom -->
                             <HBox justifyContent="Center" class="sapUiSmallMarginTop" visible="{= ${createTM>/timeEntriesWZ}.length > 0 }">

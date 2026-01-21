@@ -1210,3 +1210,13 @@
 .tmGridTable .sapMCb {
     margin: 0 auto !important;
 }
+
+/* ========================================
+   T&M CREATE DIALOG - TABLE SCROLL
+   ======================================== */
+
+/* Ensure tables expand to fit content for horizontal scroll */
+.tmMTable {
+    width: auto !important;
+    min-width: 52rem !important;
+}
