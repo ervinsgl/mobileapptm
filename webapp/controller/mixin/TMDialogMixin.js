@@ -1665,7 +1665,13 @@ sap.ui.define([
             if (!oPanel || !oPanel.getContent) return;
             
             const aContent = oPanel.getContent();
-            const oTable = aContent && aContent.length > 0 ? aContent[0] : null;
+            // Handle ScrollContainer wrapper - table may be direct child or inside ScrollContainer
+            let oTable = aContent && aContent.length > 0 ? aContent[0] : null;
+            if (oTable && oTable.getContent && !oTable.getBinding("items")) {
+                // It's a ScrollContainer, get its content
+                const aScrollContent = oTable.getContent();
+                oTable = aScrollContent && aScrollContent.length > 0 ? aScrollContent[0] : null;
+            }
             if (!oTable || !oTable.getBinding) return;
             
             const oBinding = oTable.getBinding("rows") || oTable.getBinding("items");
@@ -1698,7 +1704,13 @@ sap.ui.define([
             if (!oPanel || !oPanel.getContent) return;
             
             const aContent = oPanel.getContent();
-            const oTable = aContent && aContent.length > 0 ? aContent[0] : null;
+            // Handle ScrollContainer wrapper - table may be direct child or inside ScrollContainer
+            let oTable = aContent && aContent.length > 0 ? aContent[0] : null;
+            if (oTable && oTable.getContent && !oTable.getBinding("items")) {
+                // It's a ScrollContainer, get its content
+                const aScrollContent = oTable.getContent();
+                oTable = aScrollContent && aScrollContent.length > 0 ? aScrollContent[0] : null;
+            }
             if (!oTable || !oTable.getBinding) return;
             
             const oBinding = oTable.getBinding("rows") || oTable.getBinding("items");
@@ -1724,7 +1736,13 @@ sap.ui.define([
             if (!oPanel || !oPanel.getContent) return;
             
             const aContent = oPanel.getContent();
-            const oTable = aContent && aContent.length > 0 ? aContent[0] : null;
+            // Handle ScrollContainer wrapper - table may be direct child or inside ScrollContainer
+            let oTable = aContent && aContent.length > 0 ? aContent[0] : null;
+            if (oTable && oTable.getContent && !oTable.getBinding("items")) {
+                // It's a ScrollContainer, get its content
+                const aScrollContent = oTable.getContent();
+                oTable = aScrollContent && aScrollContent.length > 0 ? aScrollContent[0] : null;
+            }
             if (!oTable) return;
             
             const oModel = this.getView().getModel("view");
@@ -1797,7 +1815,13 @@ sap.ui.define([
             if (!oPanel || !oPanel.getContent) return;
             
             const aContent = oPanel.getContent();
-            const oTable = aContent && aContent.length > 0 ? aContent[0] : null;
+            // Handle ScrollContainer wrapper - table may be direct child or inside ScrollContainer
+            let oTable = aContent && aContent.length > 0 ? aContent[0] : null;
+            if (oTable && oTable.getContent && !oTable.getBinding("items")) {
+                // It's a ScrollContainer, get its content
+                const aScrollContent = oTable.getContent();
+                oTable = aScrollContent && aScrollContent.length > 0 ? aScrollContent[0] : null;
+            }
             if (!oTable) return;
             
             const oModel = this.getView().getModel("view");
@@ -1849,7 +1873,13 @@ sap.ui.define([
             if (!oPanel || !oPanel.getContent) return;
             
             const aContent = oPanel.getContent();
-            const oTable = aContent && aContent.length > 0 ? aContent[0] : null;
+            // Handle ScrollContainer wrapper - table may be direct child or inside ScrollContainer
+            let oTable = aContent && aContent.length > 0 ? aContent[0] : null;
+            if (oTable && oTable.getContent && !oTable.getBinding("items")) {
+                // It's a ScrollContainer, get its content
+                const aScrollContent = oTable.getContent();
+                oTable = aScrollContent && aScrollContent.length > 0 ? aScrollContent[0] : null;
+            }
             if (!oTable) return;
             
             const oModel = this.getView().getModel("view");

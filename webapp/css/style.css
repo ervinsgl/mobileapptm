@@ -1212,11 +1212,10 @@
 }
 
 /* ========================================
-   T&M CREATE DIALOG - TABLE SCROLL
+   T&M TABLES - HORIZONTAL SCROLL
    ======================================== */
 
-/* Ensure tables expand to fit content for horizontal scroll */
+/* Ensure tables have fixed minimum width for horizontal scrolling */
 .tmMTable {
-    width: auto !important;
-    min-width: 52rem !important;
+    min-width: 55rem !important;
 }
