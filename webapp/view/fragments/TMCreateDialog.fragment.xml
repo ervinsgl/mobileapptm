@@ -112,7 +112,8 @@
                                 width="auto"
                             >
                                 <columns>
-                                    <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
+                                    <Column width="2.5rem" hAlign="Center"><Text text=""/></Column>
+                                    <Column width="2.5rem" hAlign="Center"><Text text=""/></Column>
                                     <Column hAlign="Begin"><Text text="Expense Type"/></Column>
                                     <Column width="14rem" hAlign="Begin"><Text text="Technician"/></Column>
                                     <Column width="5rem" hAlign="Begin"><Text text="Ext. Amt"/></Column>
@@ -122,9 +123,10 @@
                                     <Column hAlign="Begin"><Text text="Remarks"/></Column>
                                 </columns>
                                 <items>
-                                    <ColumnListItem type="Inactive" highlight="Information">
+                                    <ColumnListItem type="Inactive" vAlign="Middle" highlight="Information">
                                         <cells>
-                                            <Button icon="sap-icon://decline" type="Transparent" tooltip="Remove" press=".onRemoveCreateExpenseRow"/>
+                                            <core:Icon src="sap-icon://decline" press=".onRemoveCreateExpenseRow" class="sapUiTinyMarginEnd" color="#bb0000" size="1.25rem"/>
+                                            <core:Icon src="sap-icon://copy" press=".onCopyCreateExpenseRow" class="sapUiTinyMarginEnd" color="#0854a0" size="1.25rem"/>
                                             <Text text="{createTM>expenseTypeDisplay}"/>
                                             <Input 
                                                 value="{createTM>technicianDisplay}" 
@@ -200,7 +202,8 @@
                                 width="auto"
                             >
                                 <columns>
-                                    <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
+                                    <Column width="2.5rem" hAlign="Center"><Text text=""/></Column>
+                                    <Column width="2.5rem" hAlign="Center"><Text text=""/></Column>
                                     <Column hAlign="Begin"><Text text="Mileage Type"/></Column>
                                     <Column width="14rem" hAlign="Begin"><Text text="Technician"/></Column>
                                     <Column width="5rem" hAlign="Begin"><Text text="Dist."/></Column>
@@ -211,9 +214,10 @@
                                     <Column hAlign="Begin"><Text text="Remarks"/></Column>
                                 </columns>
                                 <items>
-                                    <ColumnListItem type="Inactive" highlight="Information">
+                                    <ColumnListItem type="Inactive" vAlign="Middle" highlight="Information">
                                         <cells>
-                                            <Button icon="sap-icon://decline" type="Transparent" tooltip="Remove" press=".onRemoveCreateMileageRow"/>
+                                            <core:Icon src="sap-icon://decline" press=".onRemoveCreateMileageRow" class="sapUiTinyMarginEnd" color="#bb0000" size="1.25rem"/>
+                                            <core:Icon src="sap-icon://copy" press=".onCopyCreateMileageRow" class="sapUiTinyMarginEnd" color="#0854a0" size="1.25rem"/>
                                             <Text text="{createTM>mileageTypeDisplay}"/>
                                             <Input 
                                                 value="{createTM>technicianDisplay}" 
@@ -290,7 +294,8 @@
                                     width="auto"
                                 >
                                     <columns>
-                                        <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
+                                        <Column width="2.5rem" hAlign="Center"><Text text=""/></Column>
+                                        <Column width="2.5rem" hAlign="Center"><Text text=""/></Column>
                                         <Column width="11rem" hAlign="Begin"><Text text="Item"/></Column>
                                         <Column width="11rem" hAlign="Begin"><Text text="Technician"/></Column>
                                         <Column width="6.5rem" hAlign="Begin"><Text text="Qty"/></Column>
@@ -299,9 +304,10 @@
                                         <Column hAlign="Begin"><Text text="Remarks"/></Column>
                                     </columns>
                                     <items>
-                                        <ColumnListItem type="Inactive">
+                                        <ColumnListItem type="Inactive" vAlign="Middle">
                                             <cells>
-                                                <Button icon="sap-icon://decline" type="Transparent" press=".onRemoveCreateMaterialRow"/>
+                                                <core:Icon src="sap-icon://decline" press=".onRemoveCreateMaterialRow" class="sapUiTinyMarginEnd" color="#bb0000" size="1.25rem"/>
+                                                <core:Icon src="sap-icon://copy" press=".onCopyCreateMaterialRow" class="sapUiTinyMarginEnd" color="#0854a0" size="1.25rem"/>
                                                 <Text text="{createTM>itemDisplay}"/>
                                                 <Select 
                                                     selectedKey="{createTM>technicianId}" 
@@ -371,7 +377,8 @@
                                     width="auto"
                                 >
                                     <columns>
-                                        <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
+                                        <Column width="2.5rem" hAlign="Center"><Text text=""/></Column>
+                                        <Column width="2.5rem" hAlign="Center"><Text text=""/></Column>
                                         <Column width="11rem" hAlign="Begin"><Text text="Task"/></Column>
                                         <Column width="14rem" hAlign="Begin"><Text text="Technician"/></Column>
                                         <Column width="6.5rem" hAlign="Begin"><Text text="Duration"/></Column>
@@ -380,9 +387,10 @@
                                         <Column hAlign="Begin"><Text text="Remarks"/></Column>
                                     </columns>
                                     <items>
-                                        <ColumnListItem type="Inactive">
+                                        <ColumnListItem type="Inactive" vAlign="Middle">
                                             <cells>
-                                                <Button icon="sap-icon://decline" type="Transparent" press=".onRemoveCreateTimeEntryAZ"/>
+                                                <core:Icon src="sap-icon://decline" press=".onRemoveCreateTimeEntryAZ" class="sapUiTinyMarginEnd" color="#bb0000" size="1.25rem"/>
+                                                <core:Icon src="sap-icon://copy" press=".onCopyCreateTimeEntryAZ" class="sapUiTinyMarginEnd" color="#0854a0" size="1.25rem"/>
                                                 <Select 
                                                     selectedKey="{createTM>taskCode}" 
                                                     items="{path: 'createTM>/taskSuggestionsAZ', templateShareable: false}" 
@@ -463,7 +471,8 @@
                                     width="auto"
                                 >
                                     <columns>
-                                        <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
+                                        <Column width="2.5rem" hAlign="Center"><Text text=""/></Column>
+                                        <Column width="2.5rem" hAlign="Center"><Text text=""/></Column>
                                         <Column width="11rem" hAlign="Begin"><Text text="Task"/></Column>
                                         <Column width="14rem" hAlign="Begin"><Text text="Technician"/></Column>
                                         <Column width="6.5rem" hAlign="Begin"><Text text="Duration"/></Column>
@@ -472,9 +481,10 @@
                                         <Column hAlign="Begin"><Text text="Remarks"/></Column>
                                     </columns>
                                     <items>
-                                        <ColumnListItem type="Inactive">
+                                        <ColumnListItem type="Inactive" vAlign="Middle">
                                             <cells>
-                                                <Button icon="sap-icon://decline" type="Transparent" press=".onRemoveCreateTimeEntryFZ"/>
+                                                <core:Icon src="sap-icon://decline" press=".onRemoveCreateTimeEntryFZ" class="sapUiTinyMarginEnd" color="#bb0000" size="1.25rem"/>
+                                                <core:Icon src="sap-icon://copy" press=".onCopyCreateTimeEntryFZ" class="sapUiTinyMarginEnd" color="#0854a0" size="1.25rem"/>
                                                 <Select 
                                                     selectedKey="{createTM>taskCode}" 
                                                     items="{path: 'createTM>/taskSuggestionsFZ', templateShareable: false}" 
@@ -555,7 +565,8 @@
                                     width="auto"
                                 >
                                     <columns>
-                                        <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
+                                        <Column width="2.5rem" hAlign="Center"><Text text=""/></Column>
+                                        <Column width="2.5rem" hAlign="Center"><Text text=""/></Column>
                                         <Column width="11rem" hAlign="Begin"><Text text="Task"/></Column>
                                         <Column width="14rem" hAlign="Begin"><Text text="Technician"/></Column>
                                         <Column width="6.5rem" hAlign="Begin"><Text text="Duration"/></Column>
@@ -564,9 +575,10 @@
                                         <Column hAlign="Begin"><Text text="Remarks"/></Column>
                                     </columns>
                                     <items>
-                                        <ColumnListItem type="Inactive">
+                                        <ColumnListItem type="Inactive" vAlign="Middle">
                                             <cells>
-                                                <Button icon="sap-icon://decline" type="Transparent" press=".onRemoveCreateTimeEntryWZ"/>
+                                                <core:Icon src="sap-icon://decline" press=".onRemoveCreateTimeEntryWZ" class="sapUiTinyMarginEnd" color="#bb0000" size="1.25rem"/>
+                                                <core:Icon src="sap-icon://copy" press=".onCopyCreateTimeEntryWZ" class="sapUiTinyMarginEnd" color="#0854a0" size="1.25rem"/>
                                                 <Select 
                                                     selectedKey="{createTM>taskCode}" 
                                                     items="{path: 'createTM>/taskSuggestionsWZ', templateShareable: false}" 

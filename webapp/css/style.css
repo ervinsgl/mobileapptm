@@ -1219,3 +1219,17 @@
 .tmMTable {
     min-width: 55rem !important;
 }
+
+/* ========================================
+   T&M CREATE DIALOG - ICON ACTIONS
+   ======================================== */
+
+/* Make icons in table cells clickable with pointer cursor */
+.tmMTable .sapUiIcon {
+    cursor: pointer;
+}
+
+/* Hover effect for action icons */
+.tmMTable .sapUiIcon:hover {
+    opacity: 0.7;
+}

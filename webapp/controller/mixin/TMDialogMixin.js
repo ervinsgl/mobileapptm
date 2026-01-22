@@ -2251,6 +2251,37 @@ sap.ui.define([
         },
 
         /**
+         * Copy an Expense entry row
+         */
+        onCopyCreateExpenseRow(oEvent) {
+            const oButton = oEvent.getSource();
+            const oContext = oButton.getBindingContext("createTM");
+            
+            if (!oContext) {
+                MessageToast.show("Could not identify entry to copy");
+                return;
+            }
+            
+            const sPath = oContext.getPath();
+            const oModel = this._tmCreateDialog.getModel("createTM");
+            const iIndex = parseInt(sPath.split("/").pop());
+            const aEntries = oModel.getProperty("/expenseEntries") || [];
+            const oOriginal = aEntries[iIndex];
+            
+            // Deep clone the entry with a new ID
+            const oCopy = {
+                ...oOriginal,
+                id: Date.now() + '_' + Math.random().toString(36).substr(2, 9)
+            };
+            
+            // Insert copy after the original
+            aEntries.splice(iIndex + 1, 0, oCopy);
+            oModel.setProperty("/expenseEntries", aEntries);
+            oModel.refresh(true);
+            MessageToast.show("Expense entry copied");
+        },
+
+        /**
          * Save all Expense entries with confirmation
          */
         onSaveAllCreateExpense() {
@@ -2434,6 +2465,37 @@ sap.ui.define([
             aEntries.splice(iIndex, 1);
             oModel.setProperty("/mileageEntries", aEntries);
             MessageToast.show("Mileage entry removed");
+        },
+
+        /**
+         * Copy a Mileage entry row
+         */
+        onCopyCreateMileageRow(oEvent) {
+            const oButton = oEvent.getSource();
+            const oContext = oButton.getBindingContext("createTM");
+            
+            if (!oContext) {
+                MessageToast.show("Could not identify entry to copy");
+                return;
+            }
+            
+            const sPath = oContext.getPath();
+            const oModel = this._tmCreateDialog.getModel("createTM");
+            const iIndex = parseInt(sPath.split("/").pop());
+            const aEntries = oModel.getProperty("/mileageEntries") || [];
+            const oOriginal = aEntries[iIndex];
+            
+            // Deep clone the entry with a new ID
+            const oCopy = {
+                ...oOriginal,
+                id: Date.now() + '_' + Math.random().toString(36).substr(2, 9)
+            };
+            
+            // Insert copy after the original
+            aEntries.splice(iIndex + 1, 0, oCopy);
+            oModel.setProperty("/mileageEntries", aEntries);
+            oModel.refresh(true);
+            MessageToast.show("Mileage entry copied");
         },
 
         /**
@@ -2666,6 +2728,37 @@ sap.ui.define([
         },
 
         /**
+         * Copy a Material entry row
+         */
+        onCopyCreateMaterialRow(oEvent) {
+            const oButton = oEvent.getSource();
+            const oContext = oButton.getBindingContext("createTM");
+            
+            if (!oContext) {
+                MessageToast.show("Could not identify entry to copy");
+                return;
+            }
+            
+            const sPath = oContext.getPath();
+            const oModel = this._tmCreateDialog.getModel("createTM");
+            const iIndex = parseInt(sPath.split("/").pop());
+            const aEntries = oModel.getProperty("/materialEntries") || [];
+            const oOriginal = aEntries[iIndex];
+            
+            // Deep clone the entry with a new ID
+            const oCopy = {
+                ...oOriginal,
+                id: Date.now() + '_' + Math.random().toString(36).substr(2, 9)
+            };
+            
+            // Insert copy after the original
+            aEntries.splice(iIndex + 1, 0, oCopy);
+            oModel.setProperty("/materialEntries", aEntries);
+            oModel.refresh(true);
+            MessageToast.show("Material entry copied");
+        },
+
+        /**
          * Handle technician selection for Material
          */
         onCreateMaterialTechnicianSelect(oEvent) {
@@ -2812,6 +2905,64 @@ sap.ui.define([
             aEntries.splice(iIndex, 1);
             oModel.setProperty(sArrayPath, aEntries);
             MessageToast.show("Time entry removed");
+        },
+
+        /**
+         * Copy Time Entry AZ row
+         */
+        onCopyCreateTimeEntryAZ(oEvent) {
+            this._copyTimeEntry(oEvent, "/timeEntriesAZ", "Arbeitszeit");
+        },
+
+        /**
+         * Copy Time Entry FZ row
+         */
+        onCopyCreateTimeEntryFZ(oEvent) {
+            this._copyTimeEntry(oEvent, "/timeEntriesFZ", "Fahrzeit");
+        },
+
+        /**
+         * Copy Time Entry WZ row
+         */
+        onCopyCreateTimeEntryWZ(oEvent) {
+            this._copyTimeEntry(oEvent, "/timeEntriesWZ", "Wartezeit");
+        },
+
+        /**
+         * Generic time entry copy helper
+         * @private
+         */
+        _copyTimeEntry(oEvent, sArrayPath, sTypeName) {
+            const oButton = oEvent.getSource();
+            const oContext = oButton.getBindingContext("createTM");
+            
+            if (!oContext) {
+                MessageToast.show("Could not identify entry to copy");
+                return;
+            }
+            
+            const sPath = oContext.getPath();
+            const oModel = this._tmCreateDialog.getModel("createTM");
+            const iIndex = parseInt(sPath.split("/").pop());
+            const aEntries = oModel.getProperty(sArrayPath) || [];
+            const oOriginal = aEntries[iIndex];
+            
+            // Deep clone the entry with a new ID
+            // Also deep clone the selectedTechnicians array
+            const oCopy = {
+                ...oOriginal,
+                id: Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+                selectedTechnicians: oOriginal.selectedTechnicians 
+                    ? oOriginal.selectedTechnicians.map(t => ({ ...t }))
+                    : [],
+                technicianSuggestions: [] // Reset suggestions for the copy
+            };
+            
+            // Insert copy after the original
+            aEntries.splice(iIndex + 1, 0, oCopy);
+            oModel.setProperty(sArrayPath, aEntries);
+            oModel.refresh(true);
+            MessageToast.show(`${sTypeName} entry copied`);
         },
 
         /**
