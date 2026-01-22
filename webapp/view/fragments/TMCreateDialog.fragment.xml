@@ -373,7 +373,7 @@
                                     <columns>
                                         <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
                                         <Column width="11rem" hAlign="Begin"><Text text="Task"/></Column>
-                                        <Column width="11rem" hAlign="Begin"><Text text="Technician"/></Column>
+                                        <Column width="14rem" hAlign="Begin"><Text text="Technician"/></Column>
                                         <Column width="6.5rem" hAlign="Begin"><Text text="Duration"/></Column>
                                         <Column width="2.5rem" hAlign="Begin"><Text text=""/></Column>
                                         <Column width="9rem" hAlign="Begin"><Text text="Date"/></Column>
@@ -392,21 +392,26 @@
                                                 >
                                                     <core:Item key="{createTM>code}" text="{createTM>name}"/>
                                                 </Select>
-                                                <Input 
-                                                    value="{createTM>technicianDisplay}" 
-                                                    showSuggestion="true" 
+                                                <MultiInput
+                                                    tokens="{path: 'createTM>selectedTechnicians', templateShareable: false}"
+                                                    showSuggestion="true"
                                                     suggestionItems="{path: 'createTM>technicianSuggestions', templateShareable: false}"
                                                     liveChange=".onCreateTimeEntryTechnicianLiveChange"
-                                                    suggestionItemSelected=".onCreateTimeEntrySuggestionSelect"
-                                                    placeholder="Search technician..."
+                                                    suggestionItemSelected=".onCreateTimeEntryMultiTechnicianSelect"
+                                                    tokenUpdate=".onTimeEntryTechnicianTokenUpdate"
+                                                    placeholder="Add technicians..."
                                                     width="100%"
                                                     maxSuggestionWidth="400px"
                                                     startSuggestion="2"
+                                                    valueState="{= ${createTM>selectedTechnicians}.length > 0 ? 'None' : 'Error'}"
                                                 >
+                                                    <tokens>
+                                                        <Token key="{createTM>id}" text="{createTM>displayText}"/>
+                                                    </tokens>
                                                     <suggestionItems>
                                                         <core:Item key="{createTM>id}" text="{createTM>displayText}"/>
                                                     </suggestionItems>
-                                                </Input>
+                                                </MultiInput>
                                                 <StepInput value="{createTM>durationHrs}" min="0" step="0.25" displayValuePrecision="2" width="100%"/>
                                                 <Text text="hrs"/>
                                                 <DatePicker value="{createTM>entryDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="100%"/>
@@ -460,7 +465,7 @@
                                     <columns>
                                         <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
                                         <Column width="11rem" hAlign="Begin"><Text text="Task"/></Column>
-                                        <Column width="11rem" hAlign="Begin"><Text text="Technician"/></Column>
+                                        <Column width="14rem" hAlign="Begin"><Text text="Technician"/></Column>
                                         <Column width="6.5rem" hAlign="Begin"><Text text="Duration"/></Column>
                                         <Column width="2.5rem" hAlign="Begin"><Text text=""/></Column>
                                         <Column width="9rem" hAlign="Begin"><Text text="Date"/></Column>
@@ -479,21 +484,26 @@
                                                 >
                                                     <core:Item key="{createTM>code}" text="{createTM>name}"/>
                                                 </Select>
-                                                <Input 
-                                                    value="{createTM>technicianDisplay}" 
-                                                    showSuggestion="true" 
+                                                <MultiInput
+                                                    tokens="{path: 'createTM>selectedTechnicians', templateShareable: false}"
+                                                    showSuggestion="true"
                                                     suggestionItems="{path: 'createTM>technicianSuggestions', templateShareable: false}"
                                                     liveChange=".onCreateTimeEntryTechnicianLiveChange"
-                                                    suggestionItemSelected=".onCreateTimeEntrySuggestionSelect"
-                                                    placeholder="Search technician..."
+                                                    suggestionItemSelected=".onCreateTimeEntryMultiTechnicianSelect"
+                                                    tokenUpdate=".onTimeEntryTechnicianTokenUpdate"
+                                                    placeholder="Add technicians..."
                                                     width="100%"
                                                     maxSuggestionWidth="400px"
                                                     startSuggestion="2"
+                                                    valueState="{= ${createTM>selectedTechnicians}.length > 0 ? 'None' : 'Error'}"
                                                 >
+                                                    <tokens>
+                                                        <Token key="{createTM>id}" text="{createTM>displayText}"/>
+                                                    </tokens>
                                                     <suggestionItems>
                                                         <core:Item key="{createTM>id}" text="{createTM>displayText}"/>
                                                     </suggestionItems>
-                                                </Input>
+                                                </MultiInput>
                                                 <StepInput value="{createTM>durationHrs}" min="0" step="0.25" displayValuePrecision="2" width="100%"/>
                                                 <Text text="hrs"/>
                                                 <DatePicker value="{createTM>entryDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="100%"/>
@@ -547,7 +557,7 @@
                                     <columns>
                                         <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
                                         <Column width="11rem" hAlign="Begin"><Text text="Task"/></Column>
-                                        <Column width="11rem" hAlign="Begin"><Text text="Technician"/></Column>
+                                        <Column width="14rem" hAlign="Begin"><Text text="Technician"/></Column>
                                         <Column width="6.5rem" hAlign="Begin"><Text text="Duration"/></Column>
                                         <Column width="2.5rem" hAlign="Begin"><Text text=""/></Column>
                                         <Column width="9rem" hAlign="Begin"><Text text="Date"/></Column>
@@ -566,21 +576,26 @@
                                                 >
                                                     <core:Item key="{createTM>code}" text="{createTM>name}"/>
                                                 </Select>
-                                                <Input 
-                                                    value="{createTM>technicianDisplay}" 
-                                                    showSuggestion="true" 
+                                                <MultiInput
+                                                    tokens="{path: 'createTM>selectedTechnicians', templateShareable: false}"
+                                                    showSuggestion="true"
                                                     suggestionItems="{path: 'createTM>technicianSuggestions', templateShareable: false}"
                                                     liveChange=".onCreateTimeEntryTechnicianLiveChange"
-                                                    suggestionItemSelected=".onCreateTimeEntrySuggestionSelect"
-                                                    placeholder="Search technician..."
+                                                    suggestionItemSelected=".onCreateTimeEntryMultiTechnicianSelect"
+                                                    tokenUpdate=".onTimeEntryTechnicianTokenUpdate"
+                                                    placeholder="Add technicians..."
                                                     width="100%"
                                                     maxSuggestionWidth="400px"
                                                     startSuggestion="2"
+                                                    valueState="{= ${createTM>selectedTechnicians}.length > 0 ? 'None' : 'Error'}"
                                                 >
+                                                    <tokens>
+                                                        <Token key="{createTM>id}" text="{createTM>displayText}"/>
+                                                    </tokens>
                                                     <suggestionItems>
                                                         <core:Item key="{createTM>id}" text="{createTM>displayText}"/>
                                                     </suggestionItems>
-                                                </Input>
+                                                </MultiInput>
                                                 <StepInput value="{createTM>durationHrs}" min="0" step="0.25" displayValuePrecision="2" width="100%"/>
                                                 <Text text="hrs"/>
                                                 <DatePicker value="{createTM>entryDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="100%"/>

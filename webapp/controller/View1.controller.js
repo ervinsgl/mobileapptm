@@ -177,6 +177,10 @@ sap.ui.define([
                 tmMaterialCount: 0,
                 tmExpenseCount: 0,
                 tmMileageCount: 0,
+                tmMaterialQtyReported: 0,
+                tmAzHoursReported: 0,
+                tmFzHoursReported: 0,
+                tmWzHoursReported: 0,
                 tmEditMode: false,
                 expenseEditMode: false,
                 mileageEditMode: false,
@@ -290,7 +294,7 @@ sap.ui.define([
         /**
          * Extract name from display text by removing code prefix
          * e.g., "AZ - Arbeitszeit" -> "Arbeitszeit"
-         * e.g., "Z12000007 - PrÃƒÂ¼fung" -> "PrÃƒÂ¼fung"
+         * e.g., "Z12000007 - PrÃƒÆ’Ã‚Â¼fung" -> "PrÃƒÆ’Ã‚Â¼fung"
          * @private
          */
         _extractNameFromDisplayText(displayText) {

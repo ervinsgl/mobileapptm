@@ -326,26 +326,45 @@ sap.ui.define([
             const formatDateTime = (date) => date.toISOString().replace(/\.\d{3}Z$/, 'Z');
 
             // Collect all time entries with their type for sorting
-            // Type order: AZ (1) Ã¢â€ â€™ FZ (2) Ã¢â€ â€™ WZ (3)
-            const allTimeEntries = [];
-            
-            (oEntry.timeEffortsAZ || []).forEach(entry => {
-                if (entry && entry.taskCode) {
-                    allTimeEntries.push({ ...entry, typeOrder: 1, typeCode: 'AZ' });
-                }
-            });
-            
-            (oEntry.timeEffortsFZ || []).forEach(entry => {
-                if (entry && entry.taskCode) {
-                    allTimeEntries.push({ ...entry, typeOrder: 2, typeCode: 'FZ' });
-                }
-            });
-            
-            (oEntry.timeEffortsWZ || []).forEach(entry => {
-                if (entry && entry.taskCode) {
-                    allTimeEntries.push({ ...entry, typeOrder: 3, typeCode: 'WZ' });
-                }
-            });
+            // Type order: AZ (1) -> FZ (2) -> WZ (3)
+            // Helper to expand entries with multiple technicians
+            const expandMultiTechnicianEntries = (entries, typeOrder, typeCode) => {
+                const expanded = [];
+                (entries || []).forEach(entry => {
+                    if (entry && entry.taskCode) {
+                        // Check if entry has multiple technicians
+                        const selectedTechnicians = entry.selectedTechnicians || [];
+                        
+                        if (selectedTechnicians.length > 0) {
+                            // Create one entry per technician
+                            selectedTechnicians.forEach(tech => {
+                                expanded.push({ 
+                                    ...entry, 
+                                    typeOrder, 
+                                    typeCode,
+                                    // Override technician with this specific one
+                                    technicianExternalId: tech.externalId,
+                                    technicianId: tech.id,
+                                    technicianDisplay: tech.displayText
+                                });
+                            });
+                        } else if (entry.technicianExternalId) {
+                            // Legacy single technician
+                            expanded.push({ ...entry, typeOrder, typeCode });
+                        }
+                    }
+                });
+                return expanded;
+            };
+
+            // Collect all time entries with their type for sorting
+            // Type order: AZ (1) -> FZ (2) -> WZ (3)
+            // Expand multi-technician entries into separate entries
+            const allTimeEntries = [
+                ...expandMultiTechnicianEntries(oEntry.timeEffortsAZ, 1, 'AZ'),
+                ...expandMultiTechnicianEntries(oEntry.timeEffortsFZ, 2, 'FZ'),
+                ...expandMultiTechnicianEntries(oEntry.timeEffortsWZ, 3, 'WZ')
+            ];
 
             // Sort entries: first by date, then by type order (AZ Ã¢â€ â€™ FZ Ã¢â€ â€™ WZ)
             allTimeEntries.sort((a, b) => {

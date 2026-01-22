@@ -1490,11 +1490,51 @@ sap.ui.define([
                         if (activities[aIndex].id === activityId) {
                             const activityPath = `/productGroups/${gIndex}/activities/${aIndex}`;
                             
+                            // Filter by type
+                            const timeEfforts = reports.filter(r => r.type === "Time Effort");
+                            const materials = reports.filter(r => r.type === "Material");
+                            
                             // Calculate counts
-                            const timeEffortCount = reports.filter(r => r.type === "Time Effort").length;
-                            const materialCount = reports.filter(r => r.type === "Material").length;
+                            const timeEffortCount = timeEfforts.length;
+                            const materialCount = materials.length;
                             const expenseCount = reports.filter(r => r.type === "Expense").length;
                             const mileageCount = reports.filter(r => r.type === "Mileage").length;
+                            
+                            // Calculate material quantity total
+                            const materialQtyReported = materials.reduce((sum, m) => {
+                                const qty = parseFloat(m.quantity) || 0;
+                                return sum + qty;
+                            }, 0);
+                            
+                            // Calculate time totals by type (AZ/FZ/WZ)
+                            // Note: te.task is a UUID, need to get the task code from TimeTaskService
+                            const timeByType = timeEfforts.reduce((acc, te) => {
+                                // Get task code from TimeTaskService (task is UUID)
+                                const taskObj = TimeTaskService.getTaskById(te.task);
+                                const taskCode = taskObj?.code || '';
+                                
+                                // Calculate duration from start/end times
+                                let durationMins = 0;
+                                if (te.startDateTime && te.endDateTime) {
+                                    const startTime = new Date(te.startDateTime);
+                                    const endTime = new Date(te.endDateTime);
+                                    durationMins = Math.round((endTime - startTime) / (1000 * 60));
+                                }
+                                
+                                if (taskCode.startsWith('AZ')) {
+                                    acc.az += durationMins;
+                                } else if (taskCode.startsWith('FZ')) {
+                                    acc.fz += durationMins;
+                                } else if (taskCode.startsWith('WZ')) {
+                                    acc.wz += durationMins;
+                                }
+                                return acc;
+                            }, { az: 0, fz: 0, wz: 0 });
+                            
+                            // Convert minutes to hours
+                            const azHours = Math.round(timeByType.az / 60 * 100) / 100;
+                            const fzHours = Math.round(timeByType.fz / 60 * 100) / 100;
+                            const wzHours = Math.round(timeByType.wz / 60 * 100) / 100;
                             
                             // Update the view model
                             oViewModel.setProperty(activityPath + "/tmReportsCount", reports.length);
@@ -1502,6 +1542,10 @@ sap.ui.define([
                             oViewModel.setProperty(activityPath + "/tmMaterialCount", materialCount);
                             oViewModel.setProperty(activityPath + "/tmExpenseCount", expenseCount);
                             oViewModel.setProperty(activityPath + "/tmMileageCount", mileageCount);
+                            oViewModel.setProperty(activityPath + "/tmMaterialQtyReported", materialQtyReported);
+                            oViewModel.setProperty(activityPath + "/tmAzHoursReported", azHours);
+                            oViewModel.setProperty(activityPath + "/tmFzHoursReported", fzHours);
+                            oViewModel.setProperty(activityPath + "/tmWzHoursReported", wzHours);
                             oViewModel.setProperty(activityPath + "/tmReports", reports);
                             return;
                         }
@@ -2692,12 +2736,25 @@ sap.ui.define([
             const defaultTechExternalId = oModel.getProperty("/defaultTechnicianExternalId") || "";
             const defaultDate = oModel.getProperty("/defaultDate") || "";
             
+            // Initialize selectedTechnicians with default technician if available
+            const selectedTechnicians = [];
+            if (defaultTechId && defaultTechDisplay) {
+                selectedTechnicians.push({
+                    id: defaultTechId,
+                    externalId: defaultTechExternalId,
+                    displayText: defaultTechDisplay
+                });
+            }
+            
             const newEntry = {
                 id: Date.now() + '_' + Math.random().toString(36).substr(2, 9),
                 timeType: sType,
+                // Keep legacy fields for backward compatibility
                 technicianId: defaultTechId,
                 technicianExternalId: defaultTechExternalId,
                 technicianDisplay: defaultTechDisplay,
+                // New multi-technician array
+                selectedTechnicians: selectedTechnicians,
                 technicianSuggestions: [], // Local suggestions for this entry
                 taskCode: "",
                 taskDisplay: "",
@@ -2781,7 +2838,7 @@ sap.ui.define([
         },
 
         /**
-         * Handle technician suggestion select for Time Entry
+         * Handle technician suggestion select for Time Entry (legacy single select)
          */
         onCreateTimeEntrySuggestionSelect(oEvent) {
             const oItem = oEvent.getParameter("selectedItem");
@@ -2803,6 +2860,77 @@ sap.ui.define([
             oModel.setProperty(sPath + "/technicianId", sTechId);
             oModel.setProperty(sPath + "/technicianDisplay", sTechDisplay);
             oModel.setProperty(sPath + "/technicianExternalId", oTech?.externalId || "");
+        },
+
+        /**
+         * Handle multi-technician suggestion select for Time Entry (MultiInput)
+         */
+        onCreateTimeEntryMultiTechnicianSelect(oEvent) {
+            const oItem = oEvent.getParameter("selectedItem");
+            if (!oItem) return;
+            
+            const oMultiInput = oEvent.getSource();
+            const oContext = oMultiInput.getBindingContext("createTM");
+            if (!oContext) return;
+            
+            const sPath = oContext.getPath();
+            const oModel = this._tmCreateDialog.getModel("createTM");
+            
+            const sTechId = oItem.getKey();
+            const sTechDisplay = oItem.getText();
+            
+            // Get full technician data
+            const oTech = TechnicianService.getTechnicianById(sTechId);
+            
+            // Get current selected technicians
+            const aSelectedTechnicians = oModel.getProperty(sPath + "/selectedTechnicians") || [];
+            
+            // Check if already selected
+            const bAlreadySelected = aSelectedTechnicians.some(t => t.id === sTechId);
+            if (bAlreadySelected) {
+                MessageToast.show("Technician already added");
+                oMultiInput.setValue("");
+                return;
+            }
+            
+            // Add new technician
+            aSelectedTechnicians.push({
+                id: sTechId,
+                externalId: oTech?.externalId || "",
+                displayText: sTechDisplay
+            });
+            
+            oModel.setProperty(sPath + "/selectedTechnicians", aSelectedTechnicians);
+            oMultiInput.setValue("");
+            oModel.refresh(true);
+        },
+
+        /**
+         * Handle token update (removal) for Time Entry MultiInput
+         */
+        onTimeEntryTechnicianTokenUpdate(oEvent) {
+            const sType = oEvent.getParameter("type");
+            
+            if (sType === "removed") {
+                const aRemovedTokens = oEvent.getParameter("removedTokens") || [];
+                const oMultiInput = oEvent.getSource();
+                const oContext = oMultiInput.getBindingContext("createTM");
+                
+                if (!oContext) return;
+                
+                const sPath = oContext.getPath();
+                const oModel = this._tmCreateDialog.getModel("createTM");
+                
+                // Get current selected technicians
+                let aSelectedTechnicians = oModel.getProperty(sPath + "/selectedTechnicians") || [];
+                
+                // Remove the deleted tokens
+                const aRemovedIds = aRemovedTokens.map(token => token.getKey());
+                aSelectedTechnicians = aSelectedTechnicians.filter(t => !aRemovedIds.includes(t.id));
+                
+                oModel.setProperty(sPath + "/selectedTechnicians", aSelectedTechnicians);
+                oModel.refresh(true);
+            }
         },
 
         /* ========================================
@@ -2828,18 +2956,40 @@ sap.ui.define([
             
             // Validate entries
             let hasErrors = false;
+            let errorMessages = [];
             
-            // Check time entries have tasks
+            // Check time entries have tasks and technicians
             [...aTimeEntriesAZ, ...aTimeEntriesFZ, ...aTimeEntriesWZ].forEach((entry, idx) => {
                 if (!entry.taskCode) {
                     hasErrors = true;
+                    errorMessages.push("task");
+                }
+                // Check multi-technician array
+                const selectedTechs = entry.selectedTechnicians || [];
+                if (selectedTechs.length === 0) {
+                    hasErrors = true;
+                    errorMessages.push("technician");
                 }
             });
             
             if (hasErrors) {
-                MessageBox.warning("Please select a task for all time entries before saving.");
+                const uniqueErrors = [...new Set(errorMessages)];
+                MessageBox.warning(`Please select a ${uniqueErrors.join(' and ')} for all time entries before saving.`);
                 return;
             }
+            
+            // Calculate total API calls (each technician = separate entry)
+            const countEntriesWithTechnicians = (entries) => {
+                return entries.reduce((sum, e) => {
+                    const techCount = (e.selectedTechnicians || []).length || 1;
+                    return sum + techCount;
+                }, 0);
+            };
+            
+            const totalAPIEntries = aMaterialEntries.length + 
+                countEntriesWithTechnicians(aTimeEntriesAZ) + 
+                countEntriesWithTechnicians(aTimeEntriesFZ) + 
+                countEntriesWithTechnicians(aTimeEntriesWZ);
             
             // Build preview
             const lines = [];
@@ -2852,31 +3002,40 @@ sap.ui.define([
             }
             
             if (aTimeEntriesAZ.length > 0) {
-                lines.push(`\nArbeitszeit (${aTimeEntriesAZ.length}):`);
+                const azCount = countEntriesWithTechnicians(aTimeEntriesAZ);
+                lines.push(`\nArbeitszeit (${azCount} entries):`);
                 aTimeEntriesAZ.forEach((e, i) => {
                     const taskName = this._getTaskNameByCode(oModel, 'AZ', e.taskCode);
-                    lines.push(`  ${i + 1}. ${taskName} - ${e.durationHrs} hrs`);
+                    const techCount = (e.selectedTechnicians || []).length;
+                    const techNote = techCount > 1 ? ` × ${techCount} technicians` : '';
+                    lines.push(`  ${i + 1}. ${taskName} - ${e.durationHrs} hrs${techNote}`);
                 });
             }
             
             if (aTimeEntriesFZ.length > 0) {
-                lines.push(`\nFahrzeit (${aTimeEntriesFZ.length}):`);
+                const fzCount = countEntriesWithTechnicians(aTimeEntriesFZ);
+                lines.push(`\nFahrzeit (${fzCount} entries):`);
                 aTimeEntriesFZ.forEach((e, i) => {
                     const taskName = this._getTaskNameByCode(oModel, 'FZ', e.taskCode);
-                    lines.push(`  ${i + 1}. ${taskName} - ${e.durationHrs} hrs`);
+                    const techCount = (e.selectedTechnicians || []).length;
+                    const techNote = techCount > 1 ? ` × ${techCount} technicians` : '';
+                    lines.push(`  ${i + 1}. ${taskName} - ${e.durationHrs} hrs${techNote}`);
                 });
             }
             
             if (aTimeEntriesWZ.length > 0) {
-                lines.push(`\nWartezeit (${aTimeEntriesWZ.length}):`);
+                const wzCount = countEntriesWithTechnicians(aTimeEntriesWZ);
+                lines.push(`\nWartezeit (${wzCount} entries):`);
                 aTimeEntriesWZ.forEach((e, i) => {
                     const taskName = this._getTaskNameByCode(oModel, 'WZ', e.taskCode);
-                    lines.push(`  ${i + 1}. ${taskName} - ${e.durationHrs} hrs`);
+                    const techCount = (e.selectedTechnicians || []).length;
+                    const techNote = techCount > 1 ? ` × ${techCount} technicians` : '';
+                    lines.push(`  ${i + 1}. ${taskName} - ${e.durationHrs} hrs${techNote}`);
                 });
             }
             
             MessageBox.confirm(
-                `Create ${totalEntries} entries?\n\n${lines.join('\n')}`,
+                `Create ${totalAPIEntries} entries?\n\n${lines.join('\n')}`,
                 {
                     title: "Confirm Creation",
                     onClose: (sAction) => {
@@ -2916,11 +3075,37 @@ sap.ui.define([
                 let successCount = 0;
                 let errorCount = 0;
                 
-                // Combine all time entries with their type info, then sort by date and type
+                // Helper to expand entries with multiple technicians
+                const expandMultiTechnicianEntries = (entries, typeOrder, timeType) => {
+                    const expanded = [];
+                    (entries || []).forEach(entry => {
+                        const selectedTechnicians = entry.selectedTechnicians || [];
+                        
+                        if (selectedTechnicians.length > 0) {
+                            // Create one entry per technician
+                            selectedTechnicians.forEach(tech => {
+                                expanded.push({
+                                    ...entry,
+                                    typeOrder,
+                                    timeType,
+                                    technicianId: tech.id,
+                                    technicianExternalId: tech.externalId,
+                                    technicianDisplay: tech.displayText
+                                });
+                            });
+                        } else if (entry.technicianExternalId) {
+                            // Legacy single technician
+                            expanded.push({ ...entry, typeOrder, timeType });
+                        }
+                    });
+                    return expanded;
+                };
+                
+                // Combine all time entries with their type info, expanding multi-technician entries
                 const allTimeEntries = [
-                    ...aTimeEntriesAZ.map(e => ({ ...e, typeOrder: 1, timeType: 'AZ' })),
-                    ...aTimeEntriesFZ.map(e => ({ ...e, typeOrder: 2, timeType: 'FZ' })),
-                    ...aTimeEntriesWZ.map(e => ({ ...e, typeOrder: 3, timeType: 'WZ' }))
+                    ...expandMultiTechnicianEntries(aTimeEntriesAZ, 1, 'AZ'),
+                    ...expandMultiTechnicianEntries(aTimeEntriesFZ, 2, 'FZ'),
+                    ...expandMultiTechnicianEntries(aTimeEntriesWZ, 3, 'WZ')
                 ];
                 
                 // Sort by date, then type order (AZ=1, FZ=2, WZ=3)

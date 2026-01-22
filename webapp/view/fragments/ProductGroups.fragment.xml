@@ -102,11 +102,28 @@
                                                 <ObjectNumber number="{view>tmReportsCount}" unit="items" state="{= ${view>tmReportsCount} > 0 ? 'Success' : 'None'}" class="sapUiTinyMarginBegin"/>
                                             </HBox>
                                             
-                                            <HBox visible="{view>tmReportsLoaded}" class="sapUiTinyMarginBottom sapUiSmallMarginBegin">
-                                                <VBox class="sapUiSmallMarginEnd"><Label text="Time Effort"/><ObjectNumber number="{view>tmTimeEffortCount}" state="Information"/></VBox>
-                                                <VBox class="sapUiSmallMarginEnd"><Label text="Material"/><ObjectNumber number="{view>tmMaterialCount}" state="Information"/></VBox>
-                                                <VBox class="sapUiSmallMarginEnd"><Label text="Expense"/><ObjectNumber number="{view>tmExpenseCount}" state="Information"/></VBox>
-                                                <VBox><Label text="Mileage"/><ObjectNumber number="{view>tmMileageCount}" state="Information"/></VBox>
+                                            <!-- T&M Summary Stats -->
+                                            <HBox visible="{view>tmReportsLoaded}" class="sapUiTinyMarginBottom sapUiSmallMarginBegin" wrap="Wrap">
+                                                <VBox class="sapUiSmallMarginEnd">
+                                                    <Label text="Quantity"/>
+                                                    <HBox alignItems="Center">
+                                                        <ObjectNumber number="{view>tmMaterialQtyReported}" state="{= ${view>tmMaterialQtyReported} > 0 ? 'Information' : 'None'}"/>
+                                                        <Text text=" of " class="sapUiTinyMarginBeginEnd"/>
+                                                        <Text text="{view>quantity}"/>
+                                                    </HBox>
+                                                </VBox>
+                                                <VBox class="sapUiSmallMarginEnd">
+                                                    <Label text="Arbeitszeit"/>
+                                                    <ObjectNumber number="{view>tmAzHoursReported}" unit="hrs" state="{= ${view>tmAzHoursReported} > 0 ? 'Information' : 'None'}"/>
+                                                </VBox>
+                                                <VBox class="sapUiSmallMarginEnd">
+                                                    <Label text="Fahrzeit"/>
+                                                    <ObjectNumber number="{view>tmFzHoursReported}" unit="hrs" state="{= ${view>tmFzHoursReported} > 0 ? 'Information' : 'None'}"/>
+                                                </VBox>
+                                                <VBox>
+                                                    <Label text="Wartezeit"/>
+                                                    <ObjectNumber number="{view>tmWzHoursReported}" unit="hrs" state="{= ${view>tmWzHoursReported} > 0 ? 'Information' : 'None'}"/>
+                                                </VBox>
                                             </HBox>
                                             
                                             <!-- TIME & MATERIAL TABLE -->

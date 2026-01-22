@@ -19,10 +19,12 @@
  * @file TMDataService.js
  * @module mobileappsc/utils/tm/TMDataService
  * @requires mobileappsc/utils/helpers/ReportedItemsData
+ * @requires mobileappsc/utils/services/TimeTaskService
  */
 sap.ui.define([
-    "mobileappsc/utils/helpers/ReportedItemsData"
-], (ReportedItemsData) => {
+    "mobileappsc/utils/helpers/ReportedItemsData",
+    "mobileappsc/utils/services/TimeTaskService"
+], (ReportedItemsData, TimeTaskService) => {
     "use strict";
 
     return {
@@ -35,14 +37,60 @@ sap.ui.define([
             try {
                 const reports = await ReportedItemsData.getReportedItems(activityId);
 
+                // Filter by type
+                const timeEfforts = reports.filter(r => r.type === "Time Effort");
+                const materials = reports.filter(r => r.type === "Material");
+                
+                // Calculate total material quantity
+                const totalMaterialQty = materials.reduce((sum, m) => {
+                    const qty = parseFloat(m.quantity) || 0;
+                    return sum + qty;
+                }, 0);
+                
+                // Calculate time totals by type (AZ/FZ/WZ)
+                // Note: te.task is a UUID, need to get the task code from TimeTaskService
+                const timeByType = timeEfforts.reduce((acc, te) => {
+                    // Get task code from TimeTaskService (task is UUID)
+                    const taskObj = TimeTaskService.getTaskById(te.task);
+                    const taskCode = taskObj?.code || '';
+                    
+                    // Calculate duration from start/end times
+                    let durationMins = 0;
+                    if (te.startDateTime && te.endDateTime) {
+                        const startTime = new Date(te.startDateTime);
+                        const endTime = new Date(te.endDateTime);
+                        durationMins = Math.round((endTime - startTime) / (1000 * 60));
+                    }
+                    
+                    if (taskCode.startsWith('AZ')) {
+                        acc.az += durationMins;
+                    } else if (taskCode.startsWith('FZ')) {
+                        acc.fz += durationMins;
+                    } else if (taskCode.startsWith('WZ')) {
+                        acc.wz += durationMins;
+                    }
+                    return acc;
+                }, { az: 0, fz: 0, wz: 0 });
+                
+                // Convert minutes to hours
+                const azHours = Math.round(timeByType.az / 60 * 100) / 100;
+                const fzHours = Math.round(timeByType.fz / 60 * 100) / 100;
+                const wzHours = Math.round(timeByType.wz / 60 * 100) / 100;
+
                 return {
                     reports,
                     totalCount: reports.length,
                     counts: {
-                        timeEffort: reports.filter(r => r.type === "Time Effort").length,
-                        material: reports.filter(r => r.type === "Material").length,
+                        timeEffort: timeEfforts.length,
+                        material: materials.length,
                         expense: reports.filter(r => r.type === "Expense").length,
                         mileage: reports.filter(r => r.type === "Mileage").length
+                    },
+                    totals: {
+                        materialQty: totalMaterialQty,
+                        azHours: azHours,
+                        fzHours: fzHours,
+                        wzHours: wzHours
                     }
                 };
             } catch (error) {
@@ -67,7 +115,12 @@ sap.ui.define([
                 [`${activityPath}/tmTimeEffortCount`]: tmData.counts.timeEffort,
                 [`${activityPath}/tmMaterialCount`]: tmData.counts.material,
                 [`${activityPath}/tmExpenseCount`]: tmData.counts.expense,
-                [`${activityPath}/tmMileageCount`]: tmData.counts.mileage
+                [`${activityPath}/tmMileageCount`]: tmData.counts.mileage,
+                // New totals for T&M summary
+                [`${activityPath}/tmMaterialQtyReported`]: tmData.totals?.materialQty || 0,
+                [`${activityPath}/tmAzHoursReported`]: tmData.totals?.azHours || 0,
+                [`${activityPath}/tmFzHoursReported`]: tmData.totals?.fzHours || 0,
+                [`${activityPath}/tmWzHoursReported`]: tmData.totals?.wzHours || 0
             };
 
             Object.keys(updates).forEach(path => {
