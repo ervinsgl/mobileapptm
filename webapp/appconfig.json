@@ -1,0 +1,7 @@
+{
+    "name": "T&M Reporting",
+    "provider": "TUEV NORD",
+    "description": "Time & Materials Reporting Extension for Service Confirmation",
+    "version": "1.0.0",
+    "icon": "sap-icon://time-entry-request"
+}

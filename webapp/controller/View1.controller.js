@@ -85,7 +85,7 @@ sap.ui.define([
                 entryContext: {
                     objectType: null,      // 'ACTIVITY' or 'SERVICECALL'
                     objectId: null,        // The ID of the entry object
-                    source: null           // 'URL' or 'WebContainer'
+                    source: null           // 'URL' or 'WebContainer' or 'shell'
                 },
 
                 webContainerContext: {
@@ -97,7 +97,9 @@ sap.ui.define([
                     objectType: null,
                     cloudId: null,
                     orgLevelId: null,
-                    orgLevelName: "Loading..."
+                    orgLevelName: "Loading...",
+                    source: null,
+                    cloudHost: null
                 },
 
                 serviceCall: {
@@ -118,7 +120,15 @@ sap.ui.define([
 
                 productGroups: [],
                 organizationSelected: false,
-                userOrgLevelResolved: false
+                userOrgLevelResolved: false,
+                
+                // Message for when activities are filtered out
+                noActivitiesMessage: {
+                    show: false,
+                    title: "",
+                    description: "",
+                    type: "information"
+                }
             });
 
             this.getView().setModel(viewModel, "view");

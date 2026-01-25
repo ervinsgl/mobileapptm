@@ -32,10 +32,11 @@ sap.ui.define([
     "mobileappsc/utils/services/ApprovalService",
     "mobileappsc/utils/services/UdfMetaService",
     "mobileappsc/utils/services/TechnicianService",
+    "mobileappsc/utils/services/ContextService",
     "mobileappsc/utils/helpers/URLHelper",
     "mobileappsc/utils/helpers/ProductGroupService",
     "mobileappsc/utils/tm/TMDataService"
-], (MessageToast, MessageBox, OrganizationService, TimeTaskService, ItemService, ExpenseTypeService, ActivityService, ServiceOrderService, PersonService, BusinessPartnerService, ApprovalService, UdfMetaService, TechnicianService, URLHelper, ProductGroupService, TMDataService) => {
+], (MessageToast, MessageBox, OrganizationService, TimeTaskService, ItemService, ExpenseTypeService, ActivityService, ServiceOrderService, PersonService, BusinessPartnerService, ApprovalService, UdfMetaService, TechnicianService, ContextService, URLHelper, ProductGroupService, TMDataService) => {
     "use strict";
 
     return {
@@ -144,36 +145,63 @@ sap.ui.define([
          * ========================================================================= */
 
         /**
-         * Load web container context from FSM Mobile
+         * Load web container context from FSM Mobile or FSM Shell
          * @private
          */
         async _loadWebContainerContext() {
             const viewModel = this.getView().getModel("view");
             
             try {
-                const response = await fetch("/web-container-context");
+                // Get context from ContextService (handles both Mobile and Shell)
+                const context = await ContextService.getContext();
                 
-                if (response.ok) {
-                    const webContext = await response.json();
-                    
+                if (context && (context.source === 'shell' || context.source === 'mobile')) {
                     viewModel.setProperty("/webContainerContext", {
                         available: true,
-                        userName: webContext.userName || 'N/A',
-                        language: (webContext.language || 'N/A').toUpperCase(),
-                        cloudAccount: webContext.cloudAccount || 'N/A',
-                        companyName: webContext.companyName || 'N/A',
-                        objectType: webContext.objectType || 'N/A',
-                        cloudId: webContext.cloudId || 'N/A',
+                        userName: context.userName || 'N/A',
+                        language: (context.locale || 'N/A').toUpperCase(),
+                        cloudAccount: context.accountName || context.cloudAccount || 'N/A',
+                        companyName: context.companyName || 'N/A',
+                        objectType: context.objectType || 'N/A',
+                        cloudId: context.objectId || 'N/A',
                         orgLevelId: null,
-                        orgLevelName: "Loading..."
+                        orgLevelName: "Loading...",
+                        // Additional Shell context
+                        source: context.source,
+                        cloudHost: context.cloudHost
                     });
                     
-                    URLHelper.setWebContainerContext(webContext);
-                    return webContext;
-                } else {
-                    return null;
+                    URLHelper.setWebContainerContext({
+                        userName: context.userName,
+                        cloudId: context.objectId,
+                        objectType: context.objectType,
+                        companyName: context.companyName,
+                        cloudAccount: context.accountName
+                    });
+                    
+                    return context;
                 }
+                
+                // URL params or no context - set minimal context
+                if (context && context.source === 'url') {
+                    viewModel.setProperty("/webContainerContext", {
+                        available: false,
+                        userName: 'N/A',
+                        language: 'N/A',
+                        cloudAccount: 'N/A',
+                        companyName: 'N/A',
+                        objectType: context.objectType || 'N/A',
+                        cloudId: context.objectId || 'N/A',
+                        orgLevelId: null,
+                        orgLevelName: "N/A",
+                        source: 'url'
+                    });
+                    return context;
+                }
+                
+                return null;
             } catch (error) {
+                console.error("_loadWebContainerContext error:", error);
                 return null;
             }
         },
@@ -282,11 +310,14 @@ sap.ui.define([
                 const allActivities = ServiceOrderService.extractActivitiesFromCompositeTree(compositeData);
 
                 const userOrgLevelId = viewModel.getProperty("/webContainerContext/orgLevelId");
+                const userOrgLevelName = viewModel.getProperty("/webContainerContext/orgLevelName");
 
                 // Filter EXECUTION and CLOSED activities
                 let filteredActivities = allActivities.filter(activity =>
                     activity.executionStage === "EXECUTION" || activity.executionStage === "CLOSED"
                 );
+                
+                const totalExecutionClosedCount = filteredActivities.length;
 
                 // Filter by user's org level if available
                 if (userOrgLevelId) {
@@ -297,6 +328,27 @@ sap.ui.define([
                             return formattedActivityOrgLevelId === userOrgLevelId;
                         });
                     });
+                    
+                    // Show info message if activities were filtered out
+                    const filteredOutCount = totalExecutionClosedCount - filteredActivities.length;
+                    if (filteredOutCount > 0 && filteredActivities.length === 0) {
+                        // All activities filtered - show prominent message
+                        viewModel.setProperty("/noActivitiesMessage", {
+                            show: true,
+                            title: "No Activities for Your Organization",
+                            description: `${totalExecutionClosedCount} activities found, but none match your organization level (${userOrgLevelName || userOrgLevelId}).`,
+                            type: "information"
+                        });
+                    } else if (filteredOutCount > 0) {
+                        // Some activities filtered - show info toast
+                        MessageToast.show(`${filteredOutCount} activities hidden (different org level)`);
+                        viewModel.setProperty("/noActivitiesMessage", { show: false });
+                    } else {
+                        viewModel.setProperty("/noActivitiesMessage", { show: false });
+                    }
+                } else {
+                    // No org level filter - clear any message
+                    viewModel.setProperty("/noActivitiesMessage", { show: false });
                 }
 
                 // Preload activity responsible persons for display

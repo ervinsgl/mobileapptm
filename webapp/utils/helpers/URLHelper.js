@@ -1,27 +1,20 @@
 /**
  * URLHelper.js
  * 
- * Frontend utility for URL parameter handling and web container context.
- * Manages activity/service call ID resolution from multiple sources.
+ * Frontend utility for URL parameter handling and context resolution.
+ * Works together with ContextService for unified context handling.
  * 
- * Key Features:
- * - Parse URL query parameters
- * - Fetch web container context from FSM Mobile
- * - Resolve activity ID or service call ID from URL or web container
- * - Cache web container context for session
- * 
- * Object Sources (in priority order):
- * 1. URL parameter: ?activityId=xxx or ?serviceCallId=xxx
- * 2. Web container context: cloudId (when objectType=ACTIVITY or SERVICECALL)
- * 
- * Web Container Context:
- * When app is opened from FSM Mobile, context is available at /web-container-context
- * Contains: cloudId, objectType, and other FSM context data
+ * Supports three context sources:
+ * 1. URL parameters: ?activityId=xxx or ?serviceCallId=xxx
+ * 2. FSM Mobile Web Container: POST to /web-container-access-point
+ * 3. FSM Web UI Shell: fsm-shell SDK communication
  * 
  * @file URLHelper.js
  * @module mobileappsc/utils/helpers/URLHelper
  */
-sap.ui.define([], () => {
+sap.ui.define([
+    "mobileappsc/utils/services/ContextService"
+], (ContextService) => {
     "use strict";
 
     /**
@@ -135,73 +128,62 @@ sap.ui.define([], () => {
 
         /**
          * Get the context info - determines object type and ID.
-         * Checks URL params first, then web container context.
+         * Uses ContextService for unified context handling across Mobile/Shell/URL.
          * @returns {Promise<{objectType: string, objectId: string, source: string}|null>} Context info or null
          */
         async getContextInfo() {
-            // Priority 1: URL parameters
-            const urlParams = this.getUrlParameters();
-            
-            if (urlParams.activityId) {
-                return {
-                    objectType: OBJECT_TYPES.ACTIVITY,
-                    objectId: urlParams.activityId,
-                    source: 'URL'
-                };
-            }
-            
-            if (urlParams.serviceCallId) {
-                return {
-                    objectType: OBJECT_TYPES.SERVICECALL,
-                    objectId: urlParams.serviceCallId,
-                    source: 'URL'
-                };
-            }
-
-            // Priority 2: Web container context
-            const context = await this.fetchWebContainerContext();
-            if (context && context.cloudId) {
-                const objectType = (context.objectType || '').toUpperCase();
+            try {
+                // Use ContextService for unified context handling
+                const context = await ContextService.getContext();
                 
-                if (objectType === 'ACTIVITY') {
+                if (context && context.objectId) {
+                    // Also update local cache for backward compatibility
+                    if (context.source === 'mobile') {
+                        _webContainerContext = {
+                            cloudId: context.objectId,
+                            objectType: context.objectType,
+                            userName: context.userName,
+                            companyName: context.companyName
+                        };
+                        _webContainerChecked = true;
+                    }
+                    
                     return {
-                        objectType: OBJECT_TYPES.ACTIVITY,
-                        objectId: context.cloudId,
-                        source: 'WebContainer'
+                        objectType: context.objectType,
+                        objectId: context.objectId,
+                        source: context.source,
+                        // Additional context data
+                        activityId: context.activityId,
+                        serviceCallId: context.serviceCallId,
+                        userName: context.userName,
+                        companyName: context.companyName,
+                        cloudHost: context.cloudHost
                     };
                 }
                 
-                if (objectType === 'SERVICECALL') {
-                    return {
-                        objectType: OBJECT_TYPES.SERVICECALL,
-                        objectId: context.cloudId,
-                        source: 'WebContainer'
-                    };
-                }
+                return null;
+            } catch (error) {
+                console.error('URLHelper: Error getting context info:', error);
+                return null;
             }
-
-            return null;
         },
 
         /**
-         * Get activity ID from any source (URL params or web container).
-         * Checks URL params first, then web container context.
+         * Get activity ID from any source (URL params, web container, or Shell).
          * @returns {Promise<string|null>} Activity ID or null
          */
         async getActivityIdAsync() {
-            const urlActivityId = this.getActivityId();
-            if (urlActivityId) {
-                return urlActivityId;
-            }
-
-            const context = await this.fetchWebContainerContext();
-            if (context && context.cloudId) {
-                const objectType = (context.objectType || '').toUpperCase();
-                if (objectType === 'ACTIVITY') {
-                    return context.cloudId;
+            const context = await this.getContextInfo();
+            
+            if (context) {
+                if (context.objectType === OBJECT_TYPES.ACTIVITY) {
+                    return context.objectId;
+                }
+                if (context.activityId) {
+                    return context.activityId;
                 }
             }
-
+            
             return null;
         },
 
@@ -228,6 +210,23 @@ sap.ui.define([], () => {
         clearWebContainerContext() {
             _webContainerContext = null;
             _webContainerChecked = false;
+            ContextService.clearCache();
+        },
+
+        /**
+         * Check if running in FSM Shell (Web UI)
+         * @returns {boolean}
+         */
+        isInShell() {
+            return ContextService.isInShell();
+        },
+
+        /**
+         * Check if running in FSM Mobile
+         * @returns {boolean}
+         */
+        isInMobile() {
+            return ContextService.isInMobile();
         }
     };
 });
