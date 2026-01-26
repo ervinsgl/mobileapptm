@@ -9,6 +9,7 @@
  * - Handle UDF values for custom fields
  * - Extract external IDs from display text
  * - Format combined Time & Material payloads
+ * - Handle createPerson with UUID fallback when externalId is missing
  * 
  * Payload Types:
  * - Time Effort: Task-based time entries
@@ -19,7 +20,7 @@
  * 
  * Common Fields:
  * - orgLevel: Organization level ID
- * - createPerson: Technician external ID
+ * - createPerson: Technician (externalId or UUID)
  * - syncStatus: "REQUIRES_APPROVAL"
  * - object: Activity reference
  * 
@@ -35,6 +36,38 @@ sap.ui.define([
     "use strict";
 
     return {
+        /**
+         * Build createPerson field for API payload.
+         * Uses externalId if available, otherwise uses UUID directly.
+         * 
+         * FSM API accepts either:
+         * - { externalId: "EXT123" } - when person has externalId
+         * - "UUID-STRING" - when person has no externalId (direct UUID reference)
+         * 
+         * @param {string} technicianId - Technician UUID
+         * @param {string} technicianExternalId - Technician external ID (may be empty)
+         * @returns {Object|string} createPerson value for API
+         */
+        _buildCreatePerson(technicianId, technicianExternalId) {
+            // If we have a valid externalId, use the object format
+            if (technicianExternalId && technicianExternalId.trim() !== "") {
+                return {
+                    externalId: technicianExternalId
+                };
+            }
+            
+            // If no externalId but we have UUID, use UUID directly
+            if (technicianId && technicianId.trim() !== "") {
+                return technicianId;
+            }
+            
+            // Fallback - return empty object (will likely fail validation)
+            console.warn("TMPayloadService: No valid technician ID or externalId provided");
+            return {
+                externalId: ""
+            };
+        },
+
         /**
          * Build payload based on entry type.
          * @param {Object} oEntry - Entry data object
@@ -94,9 +127,7 @@ sap.ui.define([
                 internalRemarks: null,
                 breakStartDateTime: null,
                 startDateTime: oEntry.startDateTime || "",
-                createPerson: {
-                    externalId: oEntry.technicianExternalId || ""
-                },
+                createPerson: this._buildCreatePerson(oEntry.technicianId, oEntry.technicianExternalId),
                 task: TimeTaskService.getTaskIdByCode(oEntry.taskCode),
                 udfValues: [{
                     meta: {
@@ -140,9 +171,7 @@ sap.ui.define([
                 orgLevel: orgLevelId || "",
                 date: materialDate,
                 quantity: oEntry.quantity || 0,
-                createPerson: {
-                    externalId: oEntry.technicianExternalId || ""
-                },
+                createPerson: this._buildCreatePerson(oEntry.technicianId, oEntry.technicianExternalId),
                 item: itemExternalId ? { externalId: itemExternalId } : null,
                 remarks: oEntry.remarks || "",
                 syncStatus: "REQUIRES_APPROVAL",
@@ -185,9 +214,7 @@ sap.ui.define([
                     amount: oEntry.internalAmountValue || 0,
                     currency: "EUR"
                 },
-                createPerson: {
-                    externalId: oEntry.technicianExternalId || ""
-                },
+                createPerson: this._buildCreatePerson(oEntry.technicianId, oEntry.technicianExternalId),
                 type: expenseTypeId || null,
                 remarks: oEntry.remarks || "",
                 syncStatus: "REQUIRES_APPROVAL",
@@ -245,9 +272,7 @@ sap.ui.define([
                 inactive: false,
                 travelStartDateTime: formatDateTime(startDate),
                 travelStartDateTimeTimeZoneId: "Europe/Berlin",
-                createPerson: {
-                    externalId: oEntry.technicianExternalId || ""
-                },
+                createPerson: this._buildCreatePerson(oEntry.technicianId, oEntry.technicianExternalId),
                 driver: false,
                 privateCar: false,
                 udfValues: [{
@@ -403,6 +428,7 @@ sap.ui.define([
                 
                 // Use individual time entry's technician, fallback to parent entry's technician
                 const entryTechnicianExternalId = entry.technicianExternalId || technicianExternalId;
+                const entryTechnicianId = entry.technicianId || oEntry.technicianId || "";
                 
                 return {
                     chargeOption: "CHARGEABLE",
@@ -412,9 +438,7 @@ sap.ui.define([
                     startDateTime: formatDateTime(startTime),
                     endDateTime: formatDateTime(endTime),
                     remarks: entry.remarks || "",
-                    createPerson: {
-                        externalId: entryTechnicianExternalId
-                    },
+                    createPerson: this._buildCreatePerson(entryTechnicianId, entryTechnicianExternalId),
                     object: objectRef
                 };
             };
@@ -446,9 +470,7 @@ sap.ui.define([
                     orgLevel: orgLevelId || "",
                     item: itemExternalId ? { externalId: itemExternalId } : null,
                     quantity: parseFloat(oEntry.quantity) || 0,
-                    createPerson: {
-                        externalId: technicianExternalId
-                    },
+                    createPerson: this._buildCreatePerson(oEntry.technicianId, technicianExternalId),
                     date: materialDate,
                     remarks: oEntry.remarksMaterial || "",
                     syncStatus: "REQUIRES_APPROVAL",

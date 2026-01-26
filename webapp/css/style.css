@@ -1220,16 +1220,51 @@
     min-width: 55rem !important;
 }
 
+/* Compact table for time entries with repeat columns */
+.tmCompactTable {
+    min-width: 51rem !important;
+}
+
+.tmCompactTable .sapMInputBase,
+.tmCompactTable .sapMSelect,
+.tmCompactTable .sapMStepInput {
+    font-size: 0.75rem !important;
+}
+
+.tmCompactTable .sapMToken {
+    font-size: 0.7rem !important;
+    max-width: 8rem !important;
+}
+
+.tmCompactTable .sapMCb {
+    min-width: 2rem !important;
+}
+
+/* Compact panels for T&M creation - reduced margins */
+.tmCompactPanel {
+    margin-bottom: 0.25rem !important;
+}
+
+.tmCompactPanel .sapMPanelContent {
+    padding: 0.5rem !important;
+}
+
+.tmCompactPanel .sapMITBHeader {
+    height: 2rem !important;
+}
+
 /* ========================================
    T&M CREATE DIALOG - ICON ACTIONS
    ======================================== */
 
 /* Make icons in table cells clickable with pointer cursor */
-.tmMTable .sapUiIcon {
+.tmMTable .sapUiIcon,
+.tmCompactTable .sapUiIcon {
     cursor: pointer;
 }
 
 /* Hover effect for action icons */
-.tmMTable .sapUiIcon:hover {
+.tmMTable .sapUiIcon:hover,
+.tmCompactTable .sapUiIcon:hover {
     opacity: 0.7;
 }

@@ -17,8 +17,14 @@
  * 
  * Mixins:
  * - DataLoadingMixin: All data fetching and loading operations
- * - TMDialogMixin: T&M dialog handlers (view/edit/create)
- * - TechnicianMixin: Technician/item/expense search handlers
+ * - TMDialogMixin: Core T&M dialog handlers (enrichment, edit mode)
+ * - TMEditMixin: Individual entry edit/save handlers
+ * - TMTableMixin: Table filter/sort/edit selected handlers
+ * - TMExpenseMileageMixin: Expense & Mileage creation handlers
+ * - TMMaterialMixin: Material creation handlers
+ * - TMTimeEntryMixin: Time entry creation with repeat
+ * - TMSaveMixin: Save all T&M entries
+ * - TechnicianMixin: Technician/task selection handlers
  */
 sap.ui.define([
     "sap/ui/core/mvc/Controller",
@@ -32,14 +38,30 @@ sap.ui.define([
     "mobileappsc/utils/tm/TMDialogService",
     "./mixin/DataLoadingMixin",
     "./mixin/TMDialogMixin",
+    "./mixin/TMEditMixin",
+    "./mixin/TMTableMixin",
+    "./mixin/TMExpenseMileageMixin",
+    "./mixin/TMMaterialMixin",
+    "./mixin/TMTimeEntryMixin",
+    "./mixin/TMSaveMixin",
     "./mixin/TechnicianMixin"
-], (Controller, JSONModel, MessageToast, formatter, OrganizationService, PersonService, ItemService, UdfMetaService, TMDialogService, DataLoadingMixin, TMDialogMixin, TechnicianMixin) => {
+], (Controller, JSONModel, MessageToast, formatter, OrganizationService, PersonService, ItemService, UdfMetaService, TMDialogService, DataLoadingMixin, TMDialogMixin, TMEditMixin, TMTableMixin, TMExpenseMileageMixin, TMMaterialMixin, TMTimeEntryMixin, TMSaveMixin, TechnicianMixin) => {
     "use strict";
 
     /**
      * Merge all mixins with controller methods
      */
-    return Controller.extend("mobileappsc.controller.View1", Object.assign({}, DataLoadingMixin, TMDialogMixin, TechnicianMixin, {
+    return Controller.extend("mobileappsc.controller.View1", Object.assign({}, 
+        DataLoadingMixin, 
+        TMDialogMixin, 
+        TMEditMixin,
+        TMTableMixin,
+        TMExpenseMileageMixin,
+        TMMaterialMixin,
+        TMTimeEntryMixin,
+        TMSaveMixin,
+        TechnicianMixin, 
+    {
 
         formatter: formatter,
 

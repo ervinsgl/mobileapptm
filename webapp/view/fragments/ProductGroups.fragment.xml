@@ -159,14 +159,14 @@
                                                         <Button text="Edit Selected" icon="sap-icon://edit" press=".onEditSelectedTM" visible="{= ${view>tmEditMode} !== true}" class="sapUiTinyMarginBegin"/>
                                                         <Button text="Save All" icon="sap-icon://save" type="Emphasized" press=".onSaveAllTM" visible="{= ${view>tmEditMode} === true}" class="sapUiTinyMarginBegin"/>
                                                         <Button text="End Edit" icon="sap-icon://sys-cancel" press=".onEndEditTM" visible="{= ${view>tmEditMode} === true}" class="sapUiTinyMarginBegin"/>
-                                                        <Button text="Add Entry" icon="sap-icon://add" type="Emphasized" press=".onAddNewTMEntry" class="sapUiTinyMarginBegin"/>
+                                                        <Button text="Add Entry" icon="sap-icon://add" type="Emphasized" press=".onAddNewTMEntry" visible="{= ${view>status} !== 'CLOSED' &amp;&amp; ${view>status} !== 'CANCELLED'}" class="sapUiTinyMarginBegin"/>
                                                         <ObjectNumber number="{= ${view>tmTimeEffortCount} + ${view>tmMaterialCount} }" unit="entries" class="sapUiSmallMarginBegin"/>
                                                     </OverflowToolbar>
                                                 </headerToolbar>
                                                 <content>
                                                     <ScrollContainer horizontal="true" vertical="false" width="100%">
                                                         <Table
-                                                            items="{path: 'view>tmReports', filters: [{ path: 'type', operator: 'NE', value1: 'Expense' }, { path: 'type', operator: 'NE', value1: 'Mileage' }], sorter: { path: 'startDateTime', descending: true }}"
+                                                            items="{path: 'view>tmReports', templateShareable: false, filters: [{ path: 'type', operator: 'NE', value1: 'Expense' }, { path: 'type', operator: 'NE', value1: 'Mileage' }], sorter: { path: 'startDateTime', descending: true }}"
                                                             class="tmMTable"
                                                             width="auto"
                                                         >
@@ -186,7 +186,7 @@
                                                             <items>
                                                                 <ColumnListItem type="Inactive" highlight="{= ${view>decisionStatus} === 'APPROVED' ? 'Success' : (${view>decisionStatus} === 'DECLINED' || ${view>decisionStatus} === 'CANCELLED' || ${view>decisionStatus} === 'DECLINED_CLOSED') ? 'Error' : ${view>editMode} ? 'Information' : 'None'}">
                                                                     <cells>
-                                                                        <CheckBox selected="{view>selected}" visible="{= ${view>decisionStatus} === 'PENDING'}"/>
+                                                                        <CheckBox selected="{view>selected}" visible="{= ${view>decisionStatus} === 'PENDING' || ${view>decisionStatus} === 'REVIEW'}"/>
                                                                         <core:Icon src="{= ${view>type} === 'Time Effort' ? 'sap-icon://time-entry-request' : 'sap-icon://product'}" color="{= ${view>type} === 'Time Effort' ? '#0854A0' : '#107E3E'}" tooltip="{view>type}"/>
                                                                         <Text text="{= ${view>type} === 'Time Effort' ? ${view>taskDisplayText} : ${view>itemDisplayText}}"/>
                                                                         <Text text="{view>createPersonDisplayText}"/>
@@ -235,14 +235,14 @@
                                                         <Button text="Edit Selected" icon="sap-icon://edit" press=".onEditSelectedTM" visible="{= ${view>expenseEditMode} !== true}" class="sapUiTinyMarginBegin"/>
                                                         <Button text="Save All" icon="sap-icon://save" type="Emphasized" press=".onSaveAllTM" visible="{= ${view>expenseEditMode} === true}" class="sapUiTinyMarginBegin"/>
                                                         <Button text="End Edit" icon="sap-icon://sys-cancel" press=".onEndEditTM" visible="{= ${view>expenseEditMode} === true}" class="sapUiTinyMarginBegin"/>
-                                                        <Button text="Add Entry" icon="sap-icon://add" type="Emphasized" press=".onAddNewTMEntry" class="sapUiTinyMarginBegin"/>
+                                                        <Button text="Add Entry" icon="sap-icon://add" type="Emphasized" press=".onAddNewTMEntry" visible="{= ${view>status} !== 'CLOSED' &amp;&amp; ${view>status} !== 'CANCELLED'}" class="sapUiTinyMarginBegin"/>
                                                         <ObjectNumber number="{view>tmExpenseCount}" unit="entries" class="sapUiSmallMarginBegin"/>
                                                     </OverflowToolbar>
                                                 </headerToolbar>
                                                 <content>
                                                     <ScrollContainer horizontal="true" vertical="false" width="100%">
                                                         <Table
-                                                            items="{path: 'view>tmReports', filters: [{ path: 'type', operator: 'EQ', value1: 'Expense' }], sorter: { path: 'createDateTime', descending: true }}"
+                                                            items="{path: 'view>tmReports', templateShareable: false, filters: [{ path: 'type', operator: 'EQ', value1: 'Expense' }], sorter: { path: 'createDateTime', descending: true }}"
                                                             class="tmMTable"
                                                             width="auto"
                                                         >
@@ -260,7 +260,7 @@
                                                             <items>
                                                                 <ColumnListItem type="Inactive" highlight="{= ${view>decisionStatus} === 'APPROVED' ? 'Success' : (${view>decisionStatus} === 'DECLINED' || ${view>decisionStatus} === 'CANCELLED' || ${view>decisionStatus} === 'DECLINED_CLOSED') ? 'Error' : ${view>editMode} ? 'Information' : 'None'}">
                                                                     <cells>
-                                                                        <CheckBox selected="{view>selected}" visible="{= ${view>decisionStatus} === 'PENDING'}"/>
+                                                                        <CheckBox selected="{view>selected}" visible="{= ${view>decisionStatus} === 'PENDING' || ${view>decisionStatus} === 'REVIEW'}"/>
                                                                         <Text text="{view>expenseTypeDisplayText}"/>
                                                                         <Text text="{view>createPersonDisplayText}"/>
                                                                         <Input value="{view>externalAmountValue}" type="Number" width="100%" editable="{view>editMode}"/>
@@ -298,14 +298,14 @@
                                                         <Button text="Edit Selected" icon="sap-icon://edit" press=".onEditSelectedTM" visible="{= ${view>mileageEditMode} !== true}" class="sapUiTinyMarginBegin"/>
                                                         <Button text="Save All" icon="sap-icon://save" type="Emphasized" press=".onSaveAllTM" visible="{= ${view>mileageEditMode} === true}" class="sapUiTinyMarginBegin"/>
                                                         <Button text="End Edit" icon="sap-icon://sys-cancel" press=".onEndEditTM" visible="{= ${view>mileageEditMode} === true}" class="sapUiTinyMarginBegin"/>
-                                                        <Button text="Add Entry" icon="sap-icon://add" type="Emphasized" press=".onAddNewTMEntry" class="sapUiTinyMarginBegin"/>
+                                                        <Button text="Add Entry" icon="sap-icon://add" type="Emphasized" press=".onAddNewTMEntry" visible="{= ${view>status} !== 'CLOSED' &amp;&amp; ${view>status} !== 'CANCELLED'}" class="sapUiTinyMarginBegin"/>
                                                         <ObjectNumber number="{view>tmMileageCount}" unit="entries" class="sapUiSmallMarginBegin"/>
                                                     </OverflowToolbar>
                                                 </headerToolbar>
                                                 <content>
                                                     <ScrollContainer horizontal="true" vertical="false" width="100%">
                                                         <Table
-                                                            items="{path: 'view>tmReports', filters: [{ path: 'type', operator: 'EQ', value1: 'Mileage' }], sorter: { path: 'createDateTime', descending: true }}"
+                                                            items="{path: 'view>tmReports', templateShareable: false, filters: [{ path: 'type', operator: 'EQ', value1: 'Mileage' }], sorter: { path: 'createDateTime', descending: true }}"
                                                             class="tmMTable"
                                                             width="auto"
                                                         >
@@ -324,7 +324,7 @@
                                                             <items>
                                                                 <ColumnListItem type="Inactive" highlight="{= ${view>decisionStatus} === 'APPROVED' ? 'Success' : (${view>decisionStatus} === 'DECLINED' || ${view>decisionStatus} === 'CANCELLED' || ${view>decisionStatus} === 'DECLINED_CLOSED') ? 'Error' : ${view>editMode} ? 'Information' : 'None'}">
                                                                     <cells>
-                                                                        <CheckBox selected="{view>selected}" visible="{= ${view>decisionStatus} === 'PENDING'}"/>
+                                                                        <CheckBox selected="{view>selected}" visible="{= ${view>decisionStatus} === 'PENDING' || ${view>decisionStatus} === 'REVIEW'}"/>
                                                                         <Text text="{view>mileageTypeDisplayText}"/>
                                                                         <Text text="{view>createPersonDisplayText}"/>
                                                                         <Input value="{view>distanceValue}" type="Number" width="100%" editable="{view>editMode}"/>
@@ -346,7 +346,7 @@
                                             <VBox visible="{= ${view>tmReportsCount} === 0 }" alignItems="Center" class="sapUiMediumMarginTopBottom">
                                                 <core:Icon src="sap-icon://document" size="2rem" color="#888"/>
                                                 <Text text="No T&amp;M entries yet" class="sapUiTinyMarginTop"/>
-                                                <Button text="Add Entry" icon="sap-icon://add" type="Emphasized" press=".onAddNewTMEntry" class="sapUiSmallMarginTop"/>
+                                                <Button text="Add Entry" icon="sap-icon://add" type="Emphasized" press=".onAddNewTMEntry" visible="{= ${view>status} !== 'CLOSED' &amp;&amp; ${view>status} !== 'CANCELLED'}" class="sapUiSmallMarginTop"/>
                                             </VBox>
                                         </VBox>
                                     </content>

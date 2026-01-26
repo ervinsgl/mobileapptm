@@ -1,0 +1,399 @@
+/**
+ * TMSaveMixin.js
+ * 
+ * Mixin for saving all T&M entries (Material + Time).
+ * Handles multi-technician and repeat date expansion.
+ * 
+ * @file TMSaveMixin.js
+ * @module mobileappsc/controller/mixin/TMSaveMixin
+ */
+sap.ui.define([
+    "sap/m/MessageToast",
+    "sap/m/MessageBox",
+    "mobileappsc/utils/tm/TMPayloadService",
+    "mobileappsc/utils/tm/TMDataService",
+    "mobileappsc/utils/services/TimeTaskService"
+], (MessageToast, MessageBox, TMPayloadService, TMDataService, TimeTaskService) => {
+    "use strict";
+
+    return {
+
+        /* ========================================
+         * SAVE ALL TIME & MATERIAL ENTRIES
+         * ======================================== */
+
+        /**
+         * Save all Time & Material entries with confirmation
+         */
+        onSaveAllCreateTM() {
+            const oModel = this._tmCreateDialog.getModel("createTM");
+            const aMaterialEntries = oModel.getProperty("/materialEntries") || [];
+            const aTimeEntriesAZ = oModel.getProperty("/timeEntriesAZ") || [];
+            const aTimeEntriesFZ = oModel.getProperty("/timeEntriesFZ") || [];
+            const aTimeEntriesWZ = oModel.getProperty("/timeEntriesWZ") || [];
+            
+            const totalEntries = aMaterialEntries.length + aTimeEntriesAZ.length + 
+                                 aTimeEntriesFZ.length + aTimeEntriesWZ.length;
+            
+            if (totalEntries === 0) {
+                MessageToast.show("No entries to save");
+                return;
+            }
+            
+            // Validate entries
+            let hasErrors = false;
+            let errorMessages = [];
+            
+            [...aTimeEntriesAZ, ...aTimeEntriesFZ, ...aTimeEntriesWZ].forEach(entry => {
+                if (!entry.taskCode) {
+                    hasErrors = true;
+                    errorMessages.push("task");
+                }
+                const selectedTechs = entry.selectedTechnicians || [];
+                if (selectedTechs.length === 0) {
+                    hasErrors = true;
+                    errorMessages.push("technician");
+                }
+            });
+            
+            if (hasErrors) {
+                const uniqueErrors = [...new Set(errorMessages)];
+                MessageBox.warning(`Please select a ${uniqueErrors.join(' and ')} for all time entries.`);
+                return;
+            }
+            
+            // Calculate total API calls (technicians × dates)
+            const countEntriesWithTechniciansAndRepeats = (entries) => {
+                return entries.reduce((sum, e) => {
+                    const techCount = (e.selectedTechnicians || []).length || 1;
+                    let dateCount = 1;
+                    if (e.repeatEnabled && e.repeatEndDate && e.entryDate) {
+                        const dates = this._generateDateRange(e.entryDate, e.repeatEndDate);
+                        dateCount = dates.length;
+                    }
+                    return sum + (techCount * dateCount);
+                }, 0);
+            };
+            
+            const totalAPIEntries = aMaterialEntries.length + 
+                countEntriesWithTechniciansAndRepeats(aTimeEntriesAZ) + 
+                countEntriesWithTechniciansAndRepeats(aTimeEntriesFZ) + 
+                countEntriesWithTechniciansAndRepeats(aTimeEntriesWZ);
+            
+            // Build preview
+            const lines = [];
+            
+            if (aMaterialEntries.length > 0) {
+                lines.push(`Materials (${aMaterialEntries.length}):`);
+                aMaterialEntries.forEach((e, i) => {
+                    lines.push(`  ${i + 1}. ${e.itemDisplay || 'N/A'} - Qty: ${e.quantity}`);
+                });
+            }
+            
+            if (aTimeEntriesAZ.length > 0) {
+                const azCount = countEntriesWithTechniciansAndRepeats(aTimeEntriesAZ);
+                lines.push(`\nArbeitszeit (${azCount} entries):`);
+                aTimeEntriesAZ.forEach((e, i) => {
+                    const taskName = this._getTaskNameByCode(oModel, 'AZ', e.taskCode);
+                    const techCount = (e.selectedTechnicians || []).length;
+                    const techNote = techCount > 1 ? ` × ${techCount} techs` : '';
+                    let repeatNote = '';
+                    if (e.repeatEnabled && e.repeatEndDate) {
+                        const dates = this._generateDateRange(e.entryDate, e.repeatEndDate);
+                        repeatNote = ` × ${dates.length} days`;
+                    }
+                    lines.push(`  ${i + 1}. ${taskName} - ${e.durationHrs} hrs${techNote}${repeatNote}`);
+                });
+            }
+            
+            if (aTimeEntriesFZ.length > 0) {
+                const fzCount = countEntriesWithTechniciansAndRepeats(aTimeEntriesFZ);
+                lines.push(`\nFahrzeit (${fzCount} entries):`);
+                aTimeEntriesFZ.forEach((e, i) => {
+                    const taskName = this._getTaskNameByCode(oModel, 'FZ', e.taskCode);
+                    const techCount = (e.selectedTechnicians || []).length;
+                    const techNote = techCount > 1 ? ` × ${techCount} techs` : '';
+                    let repeatNote = '';
+                    if (e.repeatEnabled && e.repeatEndDate) {
+                        const dates = this._generateDateRange(e.entryDate, e.repeatEndDate);
+                        repeatNote = ` × ${dates.length} days`;
+                    }
+                    lines.push(`  ${i + 1}. ${taskName} - ${e.durationHrs} hrs${techNote}${repeatNote}`);
+                });
+            }
+            
+            if (aTimeEntriesWZ.length > 0) {
+                const wzCount = countEntriesWithTechniciansAndRepeats(aTimeEntriesWZ);
+                lines.push(`\nWartezeit (${wzCount} entries):`);
+                aTimeEntriesWZ.forEach((e, i) => {
+                    const taskName = this._getTaskNameByCode(oModel, 'WZ', e.taskCode);
+                    const techCount = (e.selectedTechnicians || []).length;
+                    const techNote = techCount > 1 ? ` × ${techCount} techs` : '';
+                    let repeatNote = '';
+                    if (e.repeatEnabled && e.repeatEndDate) {
+                        const dates = this._generateDateRange(e.entryDate, e.repeatEndDate);
+                        repeatNote = ` × ${dates.length} days`;
+                    }
+                    lines.push(`  ${i + 1}. ${taskName} - ${e.durationHrs} hrs${techNote}${repeatNote}`);
+                });
+            }
+            
+            MessageBox.confirm(
+                `Create ${totalAPIEntries} entries?\n\n${lines.join('\n')}`,
+                {
+                    title: "Confirm Creation",
+                    onClose: (sAction) => {
+                        if (sAction === MessageBox.Action.OK) {
+                            this._submitCreateTMEntries(aMaterialEntries, aTimeEntriesAZ, aTimeEntriesFZ, aTimeEntriesWZ, oModel);
+                        }
+                    }
+                }
+            );
+        },
+
+        /**
+         * Get task name by code from suggestions
+         * @private
+         */
+        _getTaskNameByCode(oModel, sType, sCode) {
+            if (!sCode) return 'N/A';
+            const aSuggestions = oModel.getProperty(`/taskSuggestions${sType}`) || [];
+            const oTask = aSuggestions.find(t => t.code === sCode);
+            return oTask ? oTask.name : sCode;
+        },
+
+        /**
+         * Submit all Time & Material entries to backend
+         * @private
+         */
+        async _submitCreateTMEntries(aMaterialEntries, aTimeEntriesAZ, aTimeEntriesFZ, aTimeEntriesWZ, oModel) {
+            try {
+                sap.ui.core.BusyIndicator.show(0);
+                
+                const activityId = oModel.getProperty("/activityId");
+                const orgLevelId = oModel.getProperty("/orgLevelId");
+                
+                let successCount = 0;
+                let errorCount = 0;
+                
+                // Helper to expand entries with multiple technicians AND repeat dates
+                const expandMultiTechnicianEntries = (entries, typeOrder, timeType) => {
+                    const expanded = [];
+                    (entries || []).forEach(entry => {
+                        const selectedTechnicians = entry.selectedTechnicians || [];
+                        
+                        // Generate date range if repeat enabled
+                        let datesToProcess = [entry.entryDate];
+                        if (entry.repeatEnabled && entry.repeatEndDate && entry.entryDate) {
+                            datesToProcess = this._generateDateRange(entry.entryDate, entry.repeatEndDate);
+                        }
+                        
+                        if (selectedTechnicians.length > 0) {
+                            // One entry per technician per date
+                            datesToProcess.forEach(dateStr => {
+                                selectedTechnicians.forEach(tech => {
+                                    expanded.push({
+                                        ...entry,
+                                        typeOrder,
+                                        timeType,
+                                        entryDate: dateStr,
+                                        technicianId: tech.id,
+                                        technicianExternalId: tech.externalId,
+                                        technicianDisplay: tech.displayText
+                                    });
+                                });
+                            });
+                        } else if (entry.technicianExternalId) {
+                            datesToProcess.forEach(dateStr => {
+                                expanded.push({ 
+                                    ...entry, 
+                                    typeOrder, 
+                                    timeType,
+                                    entryDate: dateStr
+                                });
+                            });
+                        }
+                    });
+                    return expanded;
+                };
+                
+                // Combine all time entries
+                const allTimeEntries = [
+                    ...expandMultiTechnicianEntries(aTimeEntriesAZ, 1, 'AZ'),
+                    ...expandMultiTechnicianEntries(aTimeEntriesFZ, 2, 'FZ'),
+                    ...expandMultiTechnicianEntries(aTimeEntriesWZ, 3, 'WZ')
+                ];
+                
+                // Sort by date, then type order
+                allTimeEntries.sort((a, b) => {
+                    const dateA = a.entryDate || '';
+                    const dateB = b.entryDate || '';
+                    if (dateA !== dateB) return dateA.localeCompare(dateB);
+                    return a.typeOrder - b.typeOrder;
+                });
+                
+                // Create Materials first
+                for (const entry of aMaterialEntries) {
+                    const payload = TMPayloadService.buildPayload({
+                        type: "Material",
+                        technicianId: entry.technicianId,
+                        technicianExternalId: entry.technicianExternalId,
+                        itemId: entry.itemId,
+                        itemDisplay: entry.itemDisplay,
+                        quantity: entry.quantity,
+                        remarks: entry.remarks
+                    }, activityId, orgLevelId);
+                    
+                    try {
+                        const response = await fetch('/api/create-material', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                        const result = await response.json();
+                        if (result.success) successCount++; else errorCount++;
+                    } catch (err) {
+                        errorCount++;
+                        console.error("Material creation error:", err);
+                    }
+                }
+                
+                // Create Time Efforts with sequential times per date
+                const endTimesByDate = {};
+                const activityPlannedStart = oModel.getProperty("/plannedStartDate") || new Date().toISOString();
+                const baseTimePortion = activityPlannedStart.split('T')[1] || '12:00:00Z';
+                
+                for (const entry of allTimeEntries) {
+                    const entryDateStr = entry.entryDate || activityPlannedStart.split('T')[0];
+                    
+                    // Calculate start time
+                    let startTime;
+                    if (endTimesByDate[entryDateStr]) {
+                        startTime = new Date(endTimesByDate[entryDateStr]);
+                    } else {
+                        startTime = new Date(`${entryDateStr}T${baseTimePortion}`);
+                    }
+                    
+                    const durationMinutes = Math.round((entry.durationHrs || 0) * 60);
+                    const endTime = new Date(startTime.getTime() + durationMinutes * 60 * 1000);
+                    
+                    // Store end time for next entry
+                    endTimesByDate[entryDateStr] = endTime.toISOString();
+                    
+                    const formatDateTime = (date) => date.toISOString().replace(/\.\d{3}Z$/, 'Z');
+                    
+                    const payload = TMPayloadService.buildPayload({
+                        type: "Time Effort",
+                        technicianId: entry.technicianId,
+                        technicianExternalId: entry.technicianExternalId,
+                        taskCode: entry.taskCode,
+                        startDateTime: formatDateTime(startTime),
+                        duration: durationMinutes,
+                        remarks: entry.remarks
+                    }, activityId, orgLevelId);
+                    
+                    try {
+                        const response = await fetch('/api/create-time-effort', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                        const result = await response.json();
+                        if (result.success) successCount++; else errorCount++;
+                    } catch (err) {
+                        errorCount++;
+                        console.error("Time effort creation error:", err);
+                    }
+                }
+                
+                if (errorCount === 0) {
+                    MessageToast.show(`${successCount} entries created successfully`);
+                    
+                    // Clear all arrays
+                    oModel.setProperty("/materialEntries", []);
+                    oModel.setProperty("/timeEntriesAZ", []);
+                    oModel.setProperty("/timeEntriesFZ", []);
+                    oModel.setProperty("/timeEntriesWZ", []);
+                    
+                    // Close the creation dialog
+                    if (this._tmCreateDialog) {
+                        this._tmCreateDialog.close();
+                    }
+                    
+                    // Refresh T&M reports in main view
+                    if (activityId) {
+                        await this._refreshTMReportsAfterCreate(activityId);
+                    }
+                } else {
+                    MessageBox.warning(`Created ${successCount}, failed ${errorCount}`);
+                }
+                
+            } catch (error) {
+                console.error("Error creating T&M entries:", error);
+                MessageBox.error(`Error: ${error.message}`);
+            } finally {
+                sap.ui.core.BusyIndicator.hide();
+            }
+        },
+
+        /* ========================================
+         * REFRESH T&M REPORTS AFTER CREATE
+         * ======================================== */
+
+        /**
+         * Refresh T&M reports in main view after creation
+         * @private
+         */
+        async _refreshTMReportsAfterCreate(activityId) {
+            try {
+                const oViewModel = this.getView().getModel("view");
+                if (!oViewModel) return;
+                
+                // Find the activity path in the model
+                const productGroups = oViewModel.getProperty("/productGroups") || [];
+                let activityPath = null;
+                
+                for (let gi = 0; gi < productGroups.length; gi++) {
+                    const activities = productGroups[gi].activities || [];
+                    for (let ai = 0; ai < activities.length; ai++) {
+                        if (activities[ai].id === activityId) {
+                            activityPath = `/productGroups/${gi}/activities/${ai}`;
+                            break;
+                        }
+                    }
+                    if (activityPath) break;
+                }
+                
+                if (!activityPath) {
+                    console.warn("Activity not found in model:", activityId);
+                    return;
+                }
+                
+                // Load fresh T&M data using TMDataService
+                const tmData = await TMDataService.loadTMReports(activityId);
+                
+                // Enrich reports with display names
+                if (tmData.reports && tmData.reports.length > 0) {
+                    await this._enrichTMReports(tmData.reports);
+                }
+                
+                // Update model using TMDataService method
+                TMDataService.updateActivityWithTMData(oViewModel, activityPath, tmData);
+                
+                console.log("T&M reports refreshed for activity:", activityId, "Count:", tmData.totalCount);
+            } catch (error) {
+                console.error("Error refreshing T&M reports:", error);
+            }
+        },
+
+        /**
+         * Update T&M counts in main view (kept for backward compatibility)
+         * @private
+         */
+        _updateMainViewTMCounts(activityId, reports) {
+            // This method is now replaced by _refreshTMReportsAfterCreate
+            // Keeping for backward compatibility
+        }
+
+    };
+});

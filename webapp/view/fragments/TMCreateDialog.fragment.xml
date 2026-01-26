@@ -137,7 +137,7 @@
                                                 placeholder="Search technician..."
                                                 width="100%"
                                                 maxSuggestionWidth="400px"
-                                                startSuggestion="2"
+                                                startSuggestion="0"
                                                 showTableSuggestionValueHelp="false"
                                             >
                                                 <suggestionItems>
@@ -228,7 +228,7 @@
                                                 placeholder="Search technician..."
                                                 width="100%"
                                                 maxSuggestionWidth="400px"
-                                                startSuggestion="2"
+                                                startSuggestion="0"
                                                 showTableSuggestionValueHelp="false"
                                             >
                                                 <suggestionItems>
@@ -344,14 +344,14 @@
                     </Panel>
                     
                     <!-- ===== TIME ENTRIES - ARBEITSZEIT (AZ) ===== -->
-                    <Panel expandable="false" expanded="true" class="tmTypePanel sapUiTinyMarginBottom">
+                    <Panel expandable="false" expanded="true" class="tmTypePanel tmCompactPanel">
                         <headerToolbar>
                             <OverflowToolbar design="Info">
                                 <core:Icon src="sap-icon://time-entry-request" class="sapUiTinyMarginEnd" color="#0854A0"/>
                                 <Title text="Time - Arbeitszeit (AZ)" level="H5"/>
                                 <ToolbarSpacer/>
                                 <Button 
-                                    text="Add Time Entry" 
+                                    text="Add" 
                                     icon="sap-icon://add" 
                                     type="Emphasized" 
                                     press=".onAddCreateTimeEntryAZ" 
@@ -362,10 +362,10 @@
                         </headerToolbar>
                         <content>
                             <!-- Empty state when no entries -->
-                            <VBox visible="{= ${createTM>/timeEntriesAZ}.length === 0 }" alignItems="Center" class="sapUiMediumMarginTopBottom">
-                                <core:Icon src="sap-icon://time-entry-request" size="2.5rem" color="#0854A0"/>
-                                <Text text="No Arbeitszeit entries yet" class="sapUiSmallMarginTop"/>
-                                <Text text="Click 'Add Time Entry' to create an Arbeitszeit entry" class="sapUiTinyMarginTop sapMTextGrey"/>
+                            <VBox visible="{= ${createTM>/timeEntriesAZ}.length === 0 }" alignItems="Center" class="sapUiSmallMarginTopBottom">
+                                <core:Icon src="sap-icon://time-entry-request" size="2rem" color="#0854A0"/>
+                                <Text text="No Arbeitszeit entries yet" class="sapUiTinyMarginTop"/>
+                                <Text text="Click 'Add' to create an entry" class="sapUiTinyMarginTop sapMTextGrey"/>
                             </VBox>
                             
                             <!-- Time Entries Table -->
@@ -373,24 +373,26 @@
                                 <Table
                                     items="{path: 'createTM>/timeEntriesAZ', templateShareable: false}"
                                     visible="{= ${createTM>/timeEntriesAZ}.length > 0 }"
-                                    class="tmMTable"
+                                    class="tmCompactTable"
                                     width="auto"
                                 >
                                     <columns>
-                                        <Column width="2.5rem" hAlign="Center"><Text text=""/></Column>
-                                        <Column width="2.5rem" hAlign="Center"><Text text=""/></Column>
-                                        <Column width="11rem" hAlign="Begin"><Text text="Task"/></Column>
-                                        <Column width="14rem" hAlign="Begin"><Text text="Technician"/></Column>
-                                        <Column width="6.5rem" hAlign="Begin"><Text text="Duration"/></Column>
+                                        <Column width="2rem" hAlign="Center"><Text text=""/></Column>
+                                        <Column width="2rem" hAlign="Center"><Text text=""/></Column>
+                                        <Column width="8rem" hAlign="Begin"><Text text="Task"/></Column>
+                                        <Column width="9rem" hAlign="Begin"><Text text="Technician"/></Column>
+                                        <Column width="6.5rem" hAlign="Begin"><Text text="Dur."/></Column>
                                         <Column width="2.5rem" hAlign="Begin"><Text text=""/></Column>
-                                        <Column width="9rem" hAlign="Begin"><Text text="Date"/></Column>
-                                        <Column hAlign="Begin"><Text text="Remarks"/></Column>
+                                        <Column width="7rem" hAlign="Begin"><Text text="Date"/></Column>
+                                        <Column width="2rem" hAlign="Center"><core:Icon src="sap-icon://restart" size="1rem" color="#0854a0"/></Column>
+                                        <Column width="7rem" hAlign="Begin"><Text text="End Date"/></Column>
+                                        <Column width="8rem" hAlign="Begin"><Text text="Remarks"/></Column>
                                     </columns>
                                     <items>
                                         <ColumnListItem type="Inactive" vAlign="Middle">
                                             <cells>
-                                                <core:Icon src="sap-icon://decline" press=".onRemoveCreateTimeEntryAZ" class="sapUiTinyMarginEnd" color="#bb0000" size="1.25rem"/>
-                                                <core:Icon src="sap-icon://copy" press=".onCopyCreateTimeEntryAZ" class="sapUiTinyMarginEnd" color="#0854a0" size="1.25rem"/>
+                                                <core:Icon src="sap-icon://decline" press=".onRemoveCreateTimeEntryAZ" class="sapUiTinyMarginEnd" color="#bb0000" size="1rem"/>
+                                                <core:Icon src="sap-icon://copy" press=".onCopyCreateTimeEntryAZ" class="sapUiTinyMarginEnd" color="#0854a0" size="1rem"/>
                                                 <Select 
                                                     selectedKey="{createTM>taskCode}" 
                                                     items="{path: 'createTM>/taskSuggestionsAZ', templateShareable: false}" 
@@ -407,10 +409,10 @@
                                                     liveChange=".onCreateTimeEntryTechnicianLiveChange"
                                                     suggestionItemSelected=".onCreateTimeEntryMultiTechnicianSelect"
                                                     tokenUpdate=".onTimeEntryTechnicianTokenUpdate"
-                                                    placeholder="Add technicians..."
+                                                    placeholder="Technician..."
                                                     width="100%"
-                                                    maxSuggestionWidth="400px"
-                                                    startSuggestion="2"
+                                                    maxSuggestionWidth="300px"
+                                                    startSuggestion="0"
                                                     valueState="{= ${createTM>selectedTechnicians}.length > 0 ? 'None' : 'Error'}"
                                                 >
                                                     <tokens>
@@ -422,7 +424,17 @@
                                                 </MultiInput>
                                                 <StepInput value="{createTM>durationHrs}" min="0" step="0.25" displayValuePrecision="2" width="100%"/>
                                                 <Text text="hrs"/>
-                                                <DatePicker value="{createTM>entryDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="100%"/>
+                                                <DatePicker value="{createTM>entryDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yy" width="100%" change=".onTimeEntryDateChange"/>
+                                                <CheckBox selected="{createTM>repeatEnabled}" select=".onRepeatCheckboxChange"/>
+                                                <DatePicker 
+                                                    value="{createTM>repeatEndDate}" 
+                                                    valueFormat="yyyy-MM-dd" 
+                                                    displayFormat="dd.MM.yy" 
+                                                    width="100%" 
+                                                    enabled="{createTM>repeatEnabled}"
+                                                    minDate="{path: 'createTM>entryDate', formatter: '.formatMinEndDate'}"
+                                                    placeholder="End..."
+                                                />
                                                 <Input value="{createTM>remarks}" placeholder="Remarks..." width="100%"/>
                                             </cells>
                                         </ColumnListItem>
@@ -431,21 +443,21 @@
                             </ScrollContainer>
                             
                             <!-- Add button at bottom -->
-                            <HBox justifyContent="Center" class="sapUiSmallMarginTop" visible="{= ${createTM>/timeEntriesAZ}.length > 0 }">
+                            <HBox justifyContent="Center" class="sapUiTinyMarginTop" visible="{= ${createTM>/timeEntriesAZ}.length > 0 }">
                                 <Button icon="sap-icon://add" type="Transparent" tooltip="Add Time Entry" press=".onAddCreateTimeEntryAZ"/>
                             </HBox>
                         </content>
                     </Panel>
                     
                     <!-- ===== TIME ENTRIES - FAHRZEIT (FZ) ===== -->
-                    <Panel expandable="false" expanded="true" class="tmTypePanel sapUiTinyMarginBottom">
+                    <Panel expandable="false" expanded="true" class="tmTypePanel tmCompactPanel">
                         <headerToolbar>
                             <OverflowToolbar design="Info">
                                 <core:Icon src="sap-icon://car-rental" class="sapUiTinyMarginEnd" color="#E9730C"/>
                                 <Title text="Time - Fahrzeit (FZ)" level="H5"/>
                                 <ToolbarSpacer/>
                                 <Button 
-                                    text="Add Time Entry" 
+                                    text="Add" 
                                     icon="sap-icon://add" 
                                     type="Emphasized" 
                                     press=".onAddCreateTimeEntryFZ" 
@@ -456,10 +468,10 @@
                         </headerToolbar>
                         <content>
                             <!-- Empty state when no entries -->
-                            <VBox visible="{= ${createTM>/timeEntriesFZ}.length === 0 }" alignItems="Center" class="sapUiMediumMarginTopBottom">
-                                <core:Icon src="sap-icon://car-rental" size="2.5rem" color="#E9730C"/>
-                                <Text text="No Fahrzeit entries yet" class="sapUiSmallMarginTop"/>
-                                <Text text="Click 'Add Time Entry' to create a Fahrzeit entry" class="sapUiTinyMarginTop sapMTextGrey"/>
+                            <VBox visible="{= ${createTM>/timeEntriesFZ}.length === 0 }" alignItems="Center" class="sapUiSmallMarginTopBottom">
+                                <core:Icon src="sap-icon://car-rental" size="2rem" color="#E9730C"/>
+                                <Text text="No Fahrzeit entries yet" class="sapUiTinyMarginTop"/>
+                                <Text text="Click 'Add' to create an entry" class="sapUiTinyMarginTop sapMTextGrey"/>
                             </VBox>
                             
                             <!-- Time Entries Table -->
@@ -467,24 +479,26 @@
                                 <Table
                                     items="{path: 'createTM>/timeEntriesFZ', templateShareable: false}"
                                     visible="{= ${createTM>/timeEntriesFZ}.length > 0 }"
-                                    class="tmMTable"
+                                    class="tmCompactTable"
                                     width="auto"
                                 >
                                     <columns>
-                                        <Column width="2.5rem" hAlign="Center"><Text text=""/></Column>
-                                        <Column width="2.5rem" hAlign="Center"><Text text=""/></Column>
-                                        <Column width="11rem" hAlign="Begin"><Text text="Task"/></Column>
-                                        <Column width="14rem" hAlign="Begin"><Text text="Technician"/></Column>
-                                        <Column width="6.5rem" hAlign="Begin"><Text text="Duration"/></Column>
+                                        <Column width="2rem" hAlign="Center"><Text text=""/></Column>
+                                        <Column width="2rem" hAlign="Center"><Text text=""/></Column>
+                                        <Column width="8rem" hAlign="Begin"><Text text="Task"/></Column>
+                                        <Column width="9rem" hAlign="Begin"><Text text="Technician"/></Column>
+                                        <Column width="6.5rem" hAlign="Begin"><Text text="Dur."/></Column>
                                         <Column width="2.5rem" hAlign="Begin"><Text text=""/></Column>
-                                        <Column width="9rem" hAlign="Begin"><Text text="Date"/></Column>
-                                        <Column hAlign="Begin"><Text text="Remarks"/></Column>
+                                        <Column width="7rem" hAlign="Begin"><Text text="Date"/></Column>
+                                        <Column width="2rem" hAlign="Center"><core:Icon src="sap-icon://restart" size="1rem" color="#E9730C"/></Column>
+                                        <Column width="7rem" hAlign="Begin"><Text text="End Date"/></Column>
+                                        <Column width="8rem" hAlign="Begin"><Text text="Remarks"/></Column>
                                     </columns>
                                     <items>
                                         <ColumnListItem type="Inactive" vAlign="Middle">
                                             <cells>
-                                                <core:Icon src="sap-icon://decline" press=".onRemoveCreateTimeEntryFZ" class="sapUiTinyMarginEnd" color="#bb0000" size="1.25rem"/>
-                                                <core:Icon src="sap-icon://copy" press=".onCopyCreateTimeEntryFZ" class="sapUiTinyMarginEnd" color="#0854a0" size="1.25rem"/>
+                                                <core:Icon src="sap-icon://decline" press=".onRemoveCreateTimeEntryFZ" class="sapUiTinyMarginEnd" color="#bb0000" size="1rem"/>
+                                                <core:Icon src="sap-icon://copy" press=".onCopyCreateTimeEntryFZ" class="sapUiTinyMarginEnd" color="#0854a0" size="1rem"/>
                                                 <Select 
                                                     selectedKey="{createTM>taskCode}" 
                                                     items="{path: 'createTM>/taskSuggestionsFZ', templateShareable: false}" 
@@ -501,10 +515,10 @@
                                                     liveChange=".onCreateTimeEntryTechnicianLiveChange"
                                                     suggestionItemSelected=".onCreateTimeEntryMultiTechnicianSelect"
                                                     tokenUpdate=".onTimeEntryTechnicianTokenUpdate"
-                                                    placeholder="Add technicians..."
+                                                    placeholder="Technician..."
                                                     width="100%"
-                                                    maxSuggestionWidth="400px"
-                                                    startSuggestion="2"
+                                                    maxSuggestionWidth="300px"
+                                                    startSuggestion="0"
                                                     valueState="{= ${createTM>selectedTechnicians}.length > 0 ? 'None' : 'Error'}"
                                                 >
                                                     <tokens>
@@ -516,7 +530,17 @@
                                                 </MultiInput>
                                                 <StepInput value="{createTM>durationHrs}" min="0" step="0.25" displayValuePrecision="2" width="100%"/>
                                                 <Text text="hrs"/>
-                                                <DatePicker value="{createTM>entryDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="100%"/>
+                                                <DatePicker value="{createTM>entryDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yy" width="100%" change=".onTimeEntryDateChange"/>
+                                                <CheckBox selected="{createTM>repeatEnabled}" select=".onRepeatCheckboxChange"/>
+                                                <DatePicker 
+                                                    value="{createTM>repeatEndDate}" 
+                                                    valueFormat="yyyy-MM-dd" 
+                                                    displayFormat="dd.MM.yy" 
+                                                    width="100%" 
+                                                    enabled="{createTM>repeatEnabled}"
+                                                    minDate="{path: 'createTM>entryDate', formatter: '.formatMinEndDate'}"
+                                                    placeholder="End..."
+                                                />
                                                 <Input value="{createTM>remarks}" placeholder="Remarks..." width="100%"/>
                                             </cells>
                                         </ColumnListItem>
@@ -525,21 +549,21 @@
                             </ScrollContainer>
                             
                             <!-- Add button at bottom -->
-                            <HBox justifyContent="Center" class="sapUiSmallMarginTop" visible="{= ${createTM>/timeEntriesFZ}.length > 0 }">
+                            <HBox justifyContent="Center" class="sapUiTinyMarginTop" visible="{= ${createTM>/timeEntriesFZ}.length > 0 }">
                                 <Button icon="sap-icon://add" type="Transparent" tooltip="Add Time Entry" press=".onAddCreateTimeEntryFZ"/>
                             </HBox>
                         </content>
                     </Panel>
                     
                     <!-- ===== TIME ENTRIES - WARTEZEIT (WZ) ===== -->
-                    <Panel expandable="false" expanded="true" class="tmTypePanel sapUiTinyMarginBottom">
+                    <Panel expandable="false" expanded="true" class="tmTypePanel tmCompactPanel">
                         <headerToolbar>
                             <OverflowToolbar design="Info">
                                 <core:Icon src="sap-icon://pending" class="sapUiTinyMarginEnd" color="#BB0000"/>
                                 <Title text="Time - Wartezeit (WZ)" level="H5"/>
                                 <ToolbarSpacer/>
                                 <Button 
-                                    text="Add Time Entry" 
+                                    text="Add" 
                                     icon="sap-icon://add" 
                                     type="Emphasized" 
                                     press=".onAddCreateTimeEntryWZ" 
@@ -550,10 +574,10 @@
                         </headerToolbar>
                         <content>
                             <!-- Empty state when no entries -->
-                            <VBox visible="{= ${createTM>/timeEntriesWZ}.length === 0 }" alignItems="Center" class="sapUiMediumMarginTopBottom">
-                                <core:Icon src="sap-icon://pending" size="2.5rem" color="#BB0000"/>
-                                <Text text="No Wartezeit entries yet" class="sapUiSmallMarginTop"/>
-                                <Text text="Click 'Add Time Entry' to create a Wartezeit entry" class="sapUiTinyMarginTop sapMTextGrey"/>
+                            <VBox visible="{= ${createTM>/timeEntriesWZ}.length === 0 }" alignItems="Center" class="sapUiSmallMarginTopBottom">
+                                <core:Icon src="sap-icon://pending" size="2rem" color="#BB0000"/>
+                                <Text text="No Wartezeit entries yet" class="sapUiTinyMarginTop"/>
+                                <Text text="Click 'Add' to create an entry" class="sapUiTinyMarginTop sapMTextGrey"/>
                             </VBox>
                             
                             <!-- Time Entries Table -->
@@ -561,24 +585,26 @@
                                 <Table
                                     items="{path: 'createTM>/timeEntriesWZ', templateShareable: false}"
                                     visible="{= ${createTM>/timeEntriesWZ}.length > 0 }"
-                                    class="tmMTable"
+                                    class="tmCompactTable"
                                     width="auto"
                                 >
                                     <columns>
-                                        <Column width="2.5rem" hAlign="Center"><Text text=""/></Column>
-                                        <Column width="2.5rem" hAlign="Center"><Text text=""/></Column>
-                                        <Column width="11rem" hAlign="Begin"><Text text="Task"/></Column>
-                                        <Column width="14rem" hAlign="Begin"><Text text="Technician"/></Column>
-                                        <Column width="6.5rem" hAlign="Begin"><Text text="Duration"/></Column>
+                                        <Column width="2rem" hAlign="Center"><Text text=""/></Column>
+                                        <Column width="2rem" hAlign="Center"><Text text=""/></Column>
+                                        <Column width="8rem" hAlign="Begin"><Text text="Task"/></Column>
+                                        <Column width="9rem" hAlign="Begin"><Text text="Technician"/></Column>
+                                        <Column width="6.5rem" hAlign="Begin"><Text text="Dur."/></Column>
                                         <Column width="2.5rem" hAlign="Begin"><Text text=""/></Column>
-                                        <Column width="9rem" hAlign="Begin"><Text text="Date"/></Column>
-                                        <Column hAlign="Begin"><Text text="Remarks"/></Column>
+                                        <Column width="7rem" hAlign="Begin"><Text text="Date"/></Column>
+                                        <Column width="2rem" hAlign="Center"><core:Icon src="sap-icon://restart" size="1rem" color="#BB0000"/></Column>
+                                        <Column width="7rem" hAlign="Begin"><Text text="End Date"/></Column>
+                                        <Column width="8rem" hAlign="Begin"><Text text="Remarks"/></Column>
                                     </columns>
                                     <items>
                                         <ColumnListItem type="Inactive" vAlign="Middle">
                                             <cells>
-                                                <core:Icon src="sap-icon://decline" press=".onRemoveCreateTimeEntryWZ" class="sapUiTinyMarginEnd" color="#bb0000" size="1.25rem"/>
-                                                <core:Icon src="sap-icon://copy" press=".onCopyCreateTimeEntryWZ" class="sapUiTinyMarginEnd" color="#0854a0" size="1.25rem"/>
+                                                <core:Icon src="sap-icon://decline" press=".onRemoveCreateTimeEntryWZ" class="sapUiTinyMarginEnd" color="#bb0000" size="1rem"/>
+                                                <core:Icon src="sap-icon://copy" press=".onCopyCreateTimeEntryWZ" class="sapUiTinyMarginEnd" color="#0854a0" size="1rem"/>
                                                 <Select 
                                                     selectedKey="{createTM>taskCode}" 
                                                     items="{path: 'createTM>/taskSuggestionsWZ', templateShareable: false}" 
@@ -595,10 +621,10 @@
                                                     liveChange=".onCreateTimeEntryTechnicianLiveChange"
                                                     suggestionItemSelected=".onCreateTimeEntryMultiTechnicianSelect"
                                                     tokenUpdate=".onTimeEntryTechnicianTokenUpdate"
-                                                    placeholder="Add technicians..."
+                                                    placeholder="Technician..."
                                                     width="100%"
-                                                    maxSuggestionWidth="400px"
-                                                    startSuggestion="2"
+                                                    maxSuggestionWidth="300px"
+                                                    startSuggestion="0"
                                                     valueState="{= ${createTM>selectedTechnicians}.length > 0 ? 'None' : 'Error'}"
                                                 >
                                                     <tokens>
@@ -610,7 +636,17 @@
                                                 </MultiInput>
                                                 <StepInput value="{createTM>durationHrs}" min="0" step="0.25" displayValuePrecision="2" width="100%"/>
                                                 <Text text="hrs"/>
-                                                <DatePicker value="{createTM>entryDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="100%"/>
+                                                <DatePicker value="{createTM>entryDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yy" width="100%" change=".onTimeEntryDateChange"/>
+                                                <CheckBox selected="{createTM>repeatEnabled}" select=".onRepeatCheckboxChange"/>
+                                                <DatePicker 
+                                                    value="{createTM>repeatEndDate}" 
+                                                    valueFormat="yyyy-MM-dd" 
+                                                    displayFormat="dd.MM.yy" 
+                                                    width="100%" 
+                                                    enabled="{createTM>repeatEnabled}"
+                                                    minDate="{path: 'createTM>entryDate', formatter: '.formatMinEndDate'}"
+                                                    placeholder="End..."
+                                                />
                                                 <Input value="{createTM>remarks}" placeholder="Remarks..." width="100%"/>
                                             </cells>
                                         </ColumnListItem>
@@ -619,7 +655,7 @@
                             </ScrollContainer>
                             
                             <!-- Add button at bottom -->
-                            <HBox justifyContent="Center" class="sapUiSmallMarginTop" visible="{= ${createTM>/timeEntriesWZ}.length > 0 }">
+                            <HBox justifyContent="Center" class="sapUiTinyMarginTop" visible="{= ${createTM>/timeEntriesWZ}.length > 0 }">
                                 <Button icon="sap-icon://add" type="Transparent" tooltip="Add Time Entry" press=".onAddCreateTimeEntryWZ"/>
                             </HBox>
                         </content>
