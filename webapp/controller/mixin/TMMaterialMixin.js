@@ -46,12 +46,17 @@ sap.ui.define([
                 itemId: defaultItemId,
                 itemDisplay: defaultItemDisplay,
                 quantity: 1,
+                quantityState: "None",
                 entryDate: defaultDate,
                 remarks: ""
             };
             
             aMaterialEntries.push(newEntry);
             oModel.setProperty("/materialEntries", aMaterialEntries);
+            
+            // Recalculate remaining and validate
+            this._updateMaterialQuantityStates(oModel);
+            
             oModel.refresh(true);
             console.log("Material entries now:", aMaterialEntries.length);
             MessageToast.show("Material entry added");
@@ -76,6 +81,10 @@ sap.ui.define([
             
             aMaterialEntries.splice(iIndex, 1);
             oModel.setProperty("/materialEntries", aMaterialEntries);
+            
+            // Recalculate remaining and validate
+            this._updateMaterialQuantityStates(oModel);
+            
             oModel.refresh(true);
             MessageToast.show("Material entry removed");
         },
@@ -101,12 +110,17 @@ sap.ui.define([
             // Deep clone with new ID
             const oCopy = {
                 ...oOriginal,
-                id: Date.now() + '_' + Math.random().toString(36).substr(2, 9)
+                id: Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+                quantityState: "None"
             };
             
             // Insert copy after the original
             aMaterialEntries.splice(iIndex + 1, 0, oCopy);
             oModel.setProperty("/materialEntries", aMaterialEntries);
+            
+            // Recalculate remaining and validate
+            this._updateMaterialQuantityStates(oModel);
+            
             oModel.refresh(true);
             MessageToast.show("Material entry copied");
         },
@@ -132,6 +146,45 @@ sap.ui.define([
                 oModel.setProperty(sPath + "/technicianExternalId", oTechnician.externalId);
                 oModel.setProperty(sPath + "/technicianDisplay", oTechnician.displayText);
             }
+        },
+
+        /**
+         * Handle quantity change in Material creation table
+         */
+        onMaterialQuantityChange(oEvent) {
+            const oModel = this._tmCreateDialog?.getModel("createTM");
+            if (!oModel) return;
+            
+            // Recalculate remaining and validate all entries
+            this._updateMaterialQuantityStates(oModel);
+        },
+
+        /**
+         * Update quantity states and remaining quantity for all material entries
+         * @private
+         */
+        _updateMaterialQuantityStates(oModel) {
+            const plannedQty = parseFloat(oModel.getProperty("/plannedMaterialQty")) || 0;
+            const reportedQty = parseFloat(oModel.getProperty("/reportedMaterialQty")) || 0;
+            const aMaterialEntries = oModel.getProperty("/materialEntries") || [];
+            
+            // Calculate total quantity being created
+            let totalCreatingQty = 0;
+            aMaterialEntries.forEach(entry => {
+                totalCreatingQty += parseFloat(entry.quantity) || 0;
+            });
+            
+            // Calculate remaining after all current entries
+            const remainingAfterCreation = Math.max(0, plannedQty - reportedQty - totalCreatingQty);
+            oModel.setProperty("/remainingMaterialQty", remainingAfterCreation);
+            
+            // Update each entry's state
+            // Show warning if total exceeds available
+            const availableQty = plannedQty - reportedQty;
+            aMaterialEntries.forEach((entry, index) => {
+                const state = totalCreatingQty > availableQty ? "Warning" : "None";
+                oModel.setProperty(`/materialEntries/${index}/quantityState`, state);
+            });
         }
 
     };

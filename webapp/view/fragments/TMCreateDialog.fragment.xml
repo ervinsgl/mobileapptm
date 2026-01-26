@@ -298,10 +298,10 @@
                                         <Column width="2.5rem" hAlign="Center"><Text text=""/></Column>
                                         <Column width="11rem" hAlign="Begin"><Text text="Item"/></Column>
                                         <Column width="11rem" hAlign="Begin"><Text text="Technician"/></Column>
-                                        <Column width="6.5rem" hAlign="Begin"><Text text="Qty"/></Column>
-                                        <Column width="2.5rem" hAlign="Begin"><Text text=""/></Column>
-                                        <Column width="9rem" hAlign="Begin"><Text text="Date"/></Column>
-                                        <Column hAlign="Begin"><Text text="Remarks"/></Column>
+                                        <Column width="5.5rem" hAlign="Begin"><Text text="Qty"/></Column>
+                                        <Column width="4rem" hAlign="Begin"><Text text=""/></Column>
+                                        <Column width="8rem" hAlign="Begin"><Text text="Date"/></Column>
+                                        <Column width="10rem" hAlign="Begin"><Text text="Remarks"/></Column>
                                     </columns>
                                     <items>
                                         <ColumnListItem type="Inactive" vAlign="Middle">
@@ -324,10 +324,11 @@
                                                     step="1" 
                                                     displayValuePrecision="2" 
                                                     width="100%"
-                                                    valueState="{= parseFloat(${createTM>quantity}) > parseFloat(${createTM>/maxQuantity}) ? 'Warning' : 'None'}"
-                                                    valueStateText="Quantity exceeds Activity quantity"
+                                                    change=".onMaterialQuantityChange"
+                                                    valueState="{createTM>quantityState}"
+                                                    valueStateText="Quantity exceeds available"
                                                 />
-                                                <Text text="pcs"/>
+                                                <Text text="{= 'of ' + ${createTM>/remainingMaterialQty} + ' pcs'}"/>
                                                 <DatePicker value="{createTM>entryDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="100%"/>
                                                 <Input value="{createTM>remarks}" placeholder="Remarks..." width="100%"/>
                                             </cells>
@@ -381,12 +382,12 @@
                                         <Column width="2rem" hAlign="Center"><Text text=""/></Column>
                                         <Column width="8rem" hAlign="Begin"><Text text="Task"/></Column>
                                         <Column width="9rem" hAlign="Begin"><Text text="Technician"/></Column>
-                                        <Column width="6.5rem" hAlign="Begin"><Text text="Dur."/></Column>
+                                        <Column width="5.5rem" hAlign="Begin"><Text text="Duration"/></Column>
                                         <Column width="2.5rem" hAlign="Begin"><Text text=""/></Column>
                                         <Column width="7rem" hAlign="Begin"><Text text="Date"/></Column>
                                         <Column width="2rem" hAlign="Center"><core:Icon src="sap-icon://restart" size="1rem" color="#0854a0"/></Column>
                                         <Column width="7rem" hAlign="Begin"><Text text="End Date"/></Column>
-                                        <Column width="8rem" hAlign="Begin"><Text text="Remarks"/></Column>
+                                        <Column width="9rem" hAlign="Begin"><Text text="Remarks"/></Column>
                                     </columns>
                                     <items>
                                         <ColumnListItem type="Inactive" vAlign="Middle">
@@ -487,12 +488,12 @@
                                         <Column width="2rem" hAlign="Center"><Text text=""/></Column>
                                         <Column width="8rem" hAlign="Begin"><Text text="Task"/></Column>
                                         <Column width="9rem" hAlign="Begin"><Text text="Technician"/></Column>
-                                        <Column width="6.5rem" hAlign="Begin"><Text text="Dur."/></Column>
+                                        <Column width="5.5rem" hAlign="Begin"><Text text="Duration"/></Column>
                                         <Column width="2.5rem" hAlign="Begin"><Text text=""/></Column>
                                         <Column width="7rem" hAlign="Begin"><Text text="Date"/></Column>
                                         <Column width="2rem" hAlign="Center"><core:Icon src="sap-icon://restart" size="1rem" color="#E9730C"/></Column>
                                         <Column width="7rem" hAlign="Begin"><Text text="End Date"/></Column>
-                                        <Column width="8rem" hAlign="Begin"><Text text="Remarks"/></Column>
+                                        <Column width="9rem" hAlign="Begin"><Text text="Remarks"/></Column>
                                     </columns>
                                     <items>
                                         <ColumnListItem type="Inactive" vAlign="Middle">
@@ -593,12 +594,12 @@
                                         <Column width="2rem" hAlign="Center"><Text text=""/></Column>
                                         <Column width="8rem" hAlign="Begin"><Text text="Task"/></Column>
                                         <Column width="9rem" hAlign="Begin"><Text text="Technician"/></Column>
-                                        <Column width="6.5rem" hAlign="Begin"><Text text="Dur."/></Column>
+                                        <Column width="5.5rem" hAlign="Begin"><Text text="Duration"/></Column>
                                         <Column width="2.5rem" hAlign="Begin"><Text text=""/></Column>
                                         <Column width="7rem" hAlign="Begin"><Text text="Date"/></Column>
                                         <Column width="2rem" hAlign="Center"><core:Icon src="sap-icon://restart" size="1rem" color="#BB0000"/></Column>
                                         <Column width="7rem" hAlign="Begin"><Text text="End Date"/></Column>
-                                        <Column width="8rem" hAlign="Begin"><Text text="Remarks"/></Column>
+                                        <Column width="9rem" hAlign="Begin"><Text text="Remarks"/></Column>
                                     </columns>
                                     <items>
                                         <ColumnListItem type="Inactive" vAlign="Middle">

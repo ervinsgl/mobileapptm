@@ -401,10 +401,12 @@ class FSMService {
                 const udfValuesText = udfValues.map(udf => `${udf.meta}: ${udf.value}`).join(', ') || 'N/A';
 
                 let durationMinutes = 'N/A';
+                let durationHrs = 0;
                 if (timeEffort.startDateTime && timeEffort.endDateTime) {
                     const startTime = new Date(timeEffort.startDateTime);
                     const endTime = new Date(timeEffort.endDateTime);
                     durationMinutes = Math.round((endTime - startTime) / (1000 * 60));
+                    durationHrs = Math.round((durationMinutes / 60) * 100) / 100; // Round to 2 decimal places
                 }
 
                 const remarks = timeEffort.internalRemarks || timeEffort.remarks || 'N/A';
@@ -423,6 +425,7 @@ class FSMService {
                     udfValues: udfValues,
                     udfValuesText: udfValuesText,
                     durationMinutes: durationMinutes,
+                    durationHrs: durationHrs,
                     syncStatus: timeEffort.syncStatus || 'N/A',
                     type: 'Time Effort',
                     durationText: typeof durationMinutes === 'number' ? `${durationMinutes} min` : 'N/A',
@@ -553,7 +556,7 @@ class FSMService {
                     `${mileage.distance} ${mileage.distanceUnit}` : 'N/A';
 
                 const routeText = mileage.source && mileage.destination ?
-                    `${mileage.source} â†’ ${mileage.destination}` : 'N/A';
+                    `${mileage.source} Ã¢â€ â€™ ${mileage.destination}` : 'N/A';
 
                 // Calculate travel duration in minutes
                 let travelDurationMinutes = 'N/A';

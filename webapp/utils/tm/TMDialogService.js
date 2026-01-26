@@ -86,7 +86,8 @@ sap.ui.define([
                 formattedDuration: oActivity.formattedDuration || 'N/A',
                 quantity: oActivity.quantity || 'N/A',
                 quantityUoM: oActivity.quantityUoM || 'N/A',
-                responsibleExternalId: oActivity.responsibleId || 'N/A'
+                responsibleExternalId: oActivity.responsibleId || 'N/A',
+                tmMaterialQtyReported: oActivity.tmMaterialQtyReported || 0
             });
 
             await this._openDialog("TMReportsDialog", oDialogModel, "dialog", "_tmReportsDialog");
@@ -264,14 +265,20 @@ sap.ui.define([
             // Parse quantity for max constraint and set default quantity
             let maxQuantity = 9999;
             let defaultQuantity = null;
+            let plannedMaterialQty = 0;
             if (activityData.quantity && activityData.quantity !== 'N/A') {
                 const parsed = parseFloat(activityData.quantity);
                 if (!isNaN(parsed) && parsed > 0) {
                     maxQuantity = parsed;
                     defaultQuantity = parsed;
+                    plannedMaterialQty = parsed;
                 }
             }
             TMCreationService.setDefaultQuantity(defaultQuantity);
+            
+            // Calculate remaining material quantity
+            const reportedMaterialQty = parseFloat(activityData.tmMaterialQtyReported) || 0;
+            const remainingMaterialQty = Math.max(0, plannedMaterialQty - reportedMaterialQty);
 
             // Set activity planned start date for Time Effort entries
             TMCreationService.setActivityPlannedStartDate(activityData.plannedStartDate);
@@ -295,6 +302,10 @@ sap.ui.define([
                 quantity: activityData.quantity,
                 quantityUoM: activityData.quantityUoM,
                 maxQuantity: maxQuantity,
+                // Material quantity tracking
+                plannedMaterialQty: plannedMaterialQty,
+                reportedMaterialQty: reportedMaterialQty,
+                remainingMaterialQty: remainingMaterialQty,
                 responsibleExternalId: activityData.responsibleExternalId,
                 entries: [],
                 activityTechnicians: activityTechnicians,
@@ -412,7 +423,8 @@ sap.ui.define([
                     formattedDuration: oActivity.formattedDuration || 'N/A',
                     quantity: oActivity.quantity || 'N/A',
                     quantityUoM: oActivity.quantityUoM || 'N/A',
-                    responsibleExternalId: oActivity.responsibleId || 'N/A'
+                    responsibleExternalId: oActivity.responsibleId || 'N/A',
+                    tmMaterialQtyReported: oActivity.tmMaterialQtyReported || 0
                 };
             } else if (tmReportsDialog) {
                 const oDialogModel = tmReportsDialog.getModel("dialog");
@@ -431,7 +443,8 @@ sap.ui.define([
                         formattedDuration: oDialogModel.getProperty("/formattedDuration") || 'N/A',
                         quantity: oDialogModel.getProperty("/quantity") || 'N/A',
                         quantityUoM: oDialogModel.getProperty("/quantityUoM") || 'N/A',
-                        responsibleExternalId: oDialogModel.getProperty("/responsibleExternalId") || 'N/A'
+                        responsibleExternalId: oDialogModel.getProperty("/responsibleExternalId") || 'N/A',
+                        tmMaterialQtyReported: oDialogModel.getProperty("/tmMaterialQtyReported") || 0
                     };
                 }
             }

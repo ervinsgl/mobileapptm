@@ -347,7 +347,8 @@ sap.ui.define([
                 formattedDuration: oActivity.formattedDuration || 'N/A',
                 quantity: oActivity.quantity || 'N/A',
                 quantityUoM: oActivity.quantityUoM || 'N/A',
-                responsibleExternalId: oActivity.responsibleId || 'N/A'
+                responsibleExternalId: oActivity.responsibleId || 'N/A',
+                tmMaterialQtyReported: oActivity.tmMaterialQtyReported || 0
             };
 
             if (!activityData.activityCode) {

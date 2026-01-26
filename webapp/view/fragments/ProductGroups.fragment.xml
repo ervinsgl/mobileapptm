@@ -141,18 +141,18 @@
                                                             </items>
                                                         </SegmentedButton>
                                                         <Select selectedKey="startDateTime-desc" change=".onTMSortChange" class="sapUiTinyMarginBegin" tooltip="Sort by">
-                                                            <core:Item key="startDateTime-desc" text="Date â†“"/>
-                                                            <core:Item key="startDateTime-asc" text="Date â†‘"/>
+                                                            <core:Item key="startDateTime-desc" text="Date ↓"/>
+                                                            <core:Item key="startDateTime-asc" text="Date ↑"/>
                                                             <core:Item key="type-asc" text="Type A-Z"/>
                                                             <core:Item key="type-desc" text="Type Z-A"/>
                                                             <core:Item key="taskDisplayText-asc" text="Description A-Z"/>
                                                             <core:Item key="taskDisplayText-desc" text="Description Z-A"/>
                                                             <core:Item key="createPersonDisplayText-asc" text="Technician A-Z"/>
                                                             <core:Item key="createPersonDisplayText-desc" text="Technician Z-A"/>
-                                                            <core:Item key="durationMinutes-desc" text="Time â†“"/>
-                                                            <core:Item key="durationMinutes-asc" text="Time â†‘"/>
-                                                            <core:Item key="quantity-desc" text="Qty â†“"/>
-                                                            <core:Item key="quantity-asc" text="Qty â†‘"/>
+                                                            <core:Item key="durationHrs-desc" text="Time ↓"/>
+                                                            <core:Item key="durationHrs-asc" text="Time ↑"/>
+                                                            <core:Item key="quantity-desc" text="Qty ↓"/>
+                                                            <core:Item key="quantity-asc" text="Qty ↑"/>
                                                             <core:Item key="decisionStatus-asc" text="Status A-Z"/>
                                                             <core:Item key="decisionStatus-desc" text="Status Z-A"/>
                                                         </Select>
@@ -175,11 +175,11 @@
                                                                 <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
                                                                 <Column hAlign="Begin"><Text text="Description"/></Column>
                                                                 <Column width="10rem" hAlign="Begin"><Text text="Technician"/></Column>
-                                                                <Column width="5rem" hAlign="Begin"><Text text="Time"/></Column>
+                                                                <Column width="7rem" hAlign="Begin"><Text text="Time"/></Column>
                                                                 <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
                                                                 <Column width="5rem" hAlign="Begin"><Text text="Qty"/></Column>
                                                                 <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
-                                                                <Column width="7rem" hAlign="Begin"><Text text="Date"/></Column>
+                                                                <Column width="8rem" hAlign="Begin"><Text text="Date"/></Column>
                                                                 <Column hAlign="Begin"><Text text="Remarks"/></Column>
                                                                 <Column width="6rem" hAlign="Center"><Text text="Status"/></Column>
                                                             </columns>
@@ -190,18 +190,18 @@
                                                                         <core:Icon src="{= ${view>type} === 'Time Effort' ? 'sap-icon://time-entry-request' : 'sap-icon://product'}" color="{= ${view>type} === 'Time Effort' ? '#0854A0' : '#107E3E'}" tooltip="{view>type}"/>
                                                                         <Text text="{= ${view>type} === 'Time Effort' ? ${view>taskDisplayText} : ${view>itemDisplayText}}"/>
                                                                         <Text text="{view>createPersonDisplayText}"/>
-                                                                        <!-- Time: show Input for Time Effort, N/A for Material -->
-                                                                        <HBox>
-                                                                            <Input value="{view>durationMinutes}" type="Number" width="4rem" editable="{view>editMode}" visible="{= ${view>type} === 'Time Effort'}"/>
+                                                                        <!-- Time: show StepInput for Time Effort (in hours), N/A for Material -->
+                                                                        <HBox alignItems="Center">
+                                                                            <StepInput value="{view>durationHrs}" min="0" step="0.25" displayValuePrecision="2" width="5rem" editable="{view>editMode}" visible="{= ${view>type} === 'Time Effort'}"/>
                                                                             <Text text="N/A" visible="{= ${view>type} !== 'Time Effort'}"/>
                                                                         </HBox>
-                                                                        <Text text="{= ${view>type} === 'Time Effort' ? 'min' : ''}"/>
+                                                                        <Text text="{= ${view>type} === 'Time Effort' ? 'hrs' : ''}" class="sapUiTinyMarginBegin"/>
                                                                         <!-- Qty: show Input for Material, N/A for Time Effort -->
                                                                         <HBox>
                                                                             <Input value="{view>quantity}" type="Number" width="4rem" editable="{view>editMode}" visible="{= ${view>type} === 'Material'}"/>
                                                                             <Text text="N/A" visible="{= ${view>type} !== 'Material'}"/>
                                                                         </HBox>
-                                                                        <Text text="{= ${view>type} === 'Material' ? 'pcs' : ''}"/>
+                                                                        <Text text="{= ${view>type} === 'Material' ? 'pcs' : ''}" class="sapUiTinyMarginBegin"/>
                                                                         <!-- Date: editable DatePicker in edit mode -->
                                                                         <DatePicker value="{view>entryDateFormatted}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="100%" editable="{view>editMode}"/>
                                                                         <Input value="{view>remarksText}" width="100%" editable="{view>editMode}"/>
@@ -253,7 +253,7 @@
                                                                 <Column width="5rem" hAlign="Begin"><Text text="Ext. Amt"/></Column>
                                                                 <Column width="5rem" hAlign="Begin"><Text text="Int. Amt"/></Column>
                                                                 <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
-                                                                <Column width="7rem" hAlign="Begin"><Text text="Date"/></Column>
+                                                                <Column width="8rem" hAlign="Begin"><Text text="Date"/></Column>
                                                                 <Column hAlign="Begin"><Text text="Remarks"/></Column>
                                                                 <Column width="6rem" hAlign="Center"><Text text="Status"/></Column>
                                                             </columns>
@@ -317,7 +317,7 @@
                                                                 <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
                                                                 <Column width="5rem" hAlign="Begin"><Text text="Dur."/></Column>
                                                                 <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
-                                                                <Column width="7rem" hAlign="Begin"><Text text="Date"/></Column>
+                                                                <Column width="8rem" hAlign="Begin"><Text text="Date"/></Column>
                                                                 <Column hAlign="Begin"><Text text="Remarks"/></Column>
                                                                 <Column width="6rem" hAlign="Center"><Text text="Status"/></Column>
                                                             </columns>
