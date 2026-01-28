@@ -35,8 +35,9 @@ sap.ui.define([
     "mobileappsc/utils/services/TimeTaskService",
     "mobileappsc/utils/services/ItemService",
     "mobileappsc/utils/services/ExpenseTypeService",
-    "mobileappsc/utils/services/ActivityService"
-], (Fragment, JSONModel, MessageToast, TechnicianService, TMCreationService, TimeTaskService, ItemService, ExpenseTypeService, ActivityService) => {
+    "mobileappsc/utils/services/ActivityService",
+    "mobileappsc/utils/services/TypeConfigService"
+], (Fragment, JSONModel, MessageToast, TechnicianService, TMCreationService, TimeTaskService, ItemService, ExpenseTypeService, ActivityService, TypeConfigService) => {
     "use strict";
 
     return {
@@ -287,6 +288,12 @@ sap.ui.define([
             const defaultExpenseType = TMCreationService.getDefaultExpenseType();
             const defaultItem = TMCreationService.getDefaultItem();
 
+            // Determine entry type based on service product
+            const serviceProductExtId = activityData.serviceProductExternalId;
+            const isExpenseType = TypeConfigService.isExpenseType(serviceProductExtId);
+            const isMileageType = TypeConfigService.isMileageType(serviceProductExtId);
+            const isTimeMaterialType = TypeConfigService.isTimeMaterialType(serviceProductExtId);
+
             const oCreateTMDialogModel = new JSONModel({
                 activityId: activityData.activityId,
                 activityCode: activityData.activityCode,
@@ -295,6 +302,10 @@ sap.ui.define([
                 orgLevelId: activityData.orgLevelId,
                 serviceProduct: activityData.serviceProduct,
                 serviceProductExternalId: activityData.serviceProductExternalId,
+                // Computed type flags for visibility binding
+                isExpenseType: isExpenseType,
+                isMileageType: isMileageType,
+                isTimeMaterialType: isTimeMaterialType,
                 plannedStartDate: activityData.plannedStartDate,
                 formattedStartDate: activityData.formattedStartDate,
                 formattedEndDate: activityData.formattedEndDate,

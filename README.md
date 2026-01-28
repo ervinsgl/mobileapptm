@@ -1,24 +1,193 @@
 # T&M Journal - FSM Mobile Integration App
 
-A SAP Fiori mobile application for SAP Field Service Management (FSM), designed to be opened from FSM Mobile as an External App or Workflow. Features T&M (Time & Materials) reporting with automatic organization level resolution and context-aware activity highlighting.
+A SAP Fiori mobile application for SAP Field Service Management (FSM), designed to run in FSM Mobile (Web Container), FSM Web UI (Shell Extension), or standalone browser. Features T&M (Time & Materials) reporting with automatic organization level resolution, context-aware activity highlighting, and configurable entry types.
+
+> **Version:** 0.0.1  
+> **Platform:** SAP BTP Cloud Foundry  
+> **Last Updated:** January 2026
 
 ---
 
 ## 📋 Table of Contents
 
-- [Overview](#overview)
-- [Architecture](#architecture)
-- [Features](#features)
-- [Prerequisites](#prerequisites)
-- [Setup & Deployment](#setup--deployment)
-- [How It Works](#how-it-works)
-- [Project Structure](#project-structure)
-- [API Reference](#api-reference)
-- [Development Guide](#development-guide)
-- [Troubleshooting](#troubleshooting)
-- [Application Details](#application-details)
-- [Current Status](#current-status)
-- [Security Notes](#security-notes)
+- [Screenshots](#-screenshots)
+- [Overview](#-overview)
+- [Architecture](#-architecture)
+- [Features](#-features)
+- [Prerequisites](#-prerequisites)
+- [Setup & Deployment](#-setup--deployment)
+- [FSM Mobile Integration](#-fsm-mobile-integration)
+- [FSM Web UI Integration](#-fsm-web-ui-integration)
+- [Standalone / Development Mode](#-standalone--development-mode)
+- [Expected Result](#-expected-result)
+- [How It Works](#-how-it-works)
+- [API Reference](#-api-reference)
+- [Troubleshooting](#-troubleshooting)
+- [Application Details](#-application-details)
+- [Current Status](#-current-status)
+- [Security Notes](#-security-notes)
+
+---
+
+## 📸 Screenshots
+
+### 1. Main View - Session Context & Service Order
+
+<!-- TODO: Add screenshot of main view showing Session Context panel and Service Order panel -->
+![Main View](docs/screenshots/01-main-view.png)
+
+| Element | Description | Key Files |
+|---------|-------------|-----------|
+| **Session Context Panel** | Shows User, Language, Account, Company, Organization, Object Type | `WebContainerContext_fragment.xml` |
+| **Type Config Button (⚙️)** | Opens Type Configuration dialog | `View1_controller.js` → `onOpenTypeConfig()` |
+| **Service Order Panel** | Expandable panel with Service Order details | `ServiceCall_fragment.xml` |
+
+---
+
+### 2. Product Groups & Activities
+
+<!-- TODO: Add screenshot showing Product Groups with expanded Activity panel -->
+![Product Groups](docs/screenshots/02-product-groups.png)
+
+| Element | Description | Key Files |
+|---------|-------------|-----------|
+| **Product Group Headers** | Activities grouped by Service Product description | `ProductGroups_fragment.xml`, `ProductGroupService.js` |
+| **Activity Panel** | Expandable panel with activity details | `ProductGroups_fragment.xml` |
+| **Context Highlighting** | Light blue border on entry activity | `style.css` → `.contextActivityPanel` |
+| **T&M Summary** | Count of Time, Material, Expense, Mileage entries | `ProductGroups_fragment.xml`, `TMDataService.js` |
+| **Create T&M Button** | Opens T&M Creation dialog | `TMDialogService.js` → `openTMCreationDialog()` |
+| **View T&M Button** | Opens T&M Reports dialog | `TMDialogService.js` → `openTMReportsDialog()` |
+
+---
+
+### 3. T&M Creation Dialog - Time & Material
+
+<!-- TODO: Add screenshot of T&M Creation dialog showing Time & Material form -->
+![T&M Creation - Time & Material](docs/screenshots/03-tm-creation-time-material.png)
+
+| Element | Description | Key Files |
+|---------|-------------|-----------|
+| **Activity Header** | Shows activity details (dates, duration, quantity) | `TMCreateDialog_fragment.xml` |
+| **Material Section** | Technician, Item, Quantity, Remarks | `TMCreateDialog_fragment.xml`, `TMCreationService.js` |
+| **Time Sections** | Arbeitszeit, Fahrzeit, Wartezeit with Task dropdown | `TMCreateDialog_fragment.xml` |
+| **Technician Input** | Suggestions from 4000+ technicians | `TechnicianService.js`, `TechnicianMixin.js` |
+| **Task Dropdown** | Filtered by category (AZ, FZ, WZ) | `TimeTaskService.js` |
+| **Save Buttons** | Save, Send for Approval, Done | `TMDialogMixin.js`, `TMSaveMixin.js` |
+
+**Visibility:** Shows when Service Product ID is NOT in Expense or Mileage type lists.
+
+**Type Check:** `TypeConfigService.isTimeMaterialType(serviceProductId)`
+
+---
+
+### 4. T&M Creation Dialog - Expense
+
+<!-- TODO: Add screenshot of T&M Creation dialog showing Expense form -->
+![T&M Creation - Expense](docs/screenshots/04-tm-creation-expense.png)
+
+| Element | Description | Key Files |
+|---------|-------------|-----------|
+| **Expense Form** | Technician, Item, Amount fields | `TMCreateDialog_fragment.xml` |
+| **External Amount** | Amount charged to customer | `TMExpenseMileageMixin.js` |
+| **Internal Amount** | Internal cost amount | `TMExpenseMileageMixin.js` |
+| **Charge Option** | Dropdown for billing type | `TMCreateDialog_fragment.xml` |
+
+**Visibility:** Shows when Service Product ID is in Expense type list.
+
+**Default IDs:** Z40000001, Z40000007, Z50000000
+
+**Type Check:** `TypeConfigService.isExpenseType(serviceProductId)`
+
+---
+
+### 5. T&M Creation Dialog - Mileage
+
+<!-- TODO: Add screenshot of T&M Creation dialog showing Mileage form -->
+![T&M Creation - Mileage](docs/screenshots/05-tm-creation-mileage.png)
+
+| Element | Description | Key Files |
+|---------|-------------|-----------|
+| **Mileage Form** | Distance, route, driver fields | `TMCreateDialog_fragment.xml` |
+| **Distance** | Kilometers/miles traveled | `TMExpenseMileageMixin.js` |
+| **Source / Destination** | Route start and end points | `TMCreateDialog_fragment.xml` |
+| **Driver Checkbox** | Indicates if technician was driver | `TMCreateDialog_fragment.xml` |
+| **Private Car Checkbox** | Indicates if private vehicle used | `TMCreateDialog_fragment.xml` |
+
+**Visibility:** Shows when Service Product ID is in Mileage type list.
+
+**Default IDs:** Z40000038, Z40000008
+
+**Type Check:** `TypeConfigService.isMileageType(serviceProductId)`
+
+---
+
+### 6. T&M Reports Dialog
+
+<!-- TODO: Add screenshot of T&M Reports dialog showing existing entries -->
+![T&M Reports](docs/screenshots/06-tm-reports.png)
+
+| Element | Description | Key Files |
+|---------|-------------|-----------|
+| **Entry Panels** | Expandable panels for each T&M entry | `ProductGroups_fragment.xml` |
+| **Multi-line Header** | Type, Item ID, Description | `TMDataService.js` |
+| **Entry Details** | All fields with resolved names | Lookup services (`PersonService.js`, `ItemService.js`, etc.) |
+| **Approval Status** | Shows decision status | `ApprovalService.js` |
+| **Edit Button** | Opens entry for editing | `TMEditMixin.js`, `TMEditService.js` |
+
+---
+
+### 7. Type Configuration Dialog
+
+<!-- TODO: Add screenshot of Type Configuration dialog -->
+![Type Configuration](docs/screenshots/07-type-config.png)
+
+| Element | Description | Key Files |
+|---------|-------------|-----------|
+| **Info Message** | Explains how type configuration works | `TypeConfigDialog_fragment.xml` |
+| **Expense Types List** | Service Product IDs treated as Expense | `TypeConfigDialog_fragment.xml` |
+| **Mileage Types List** | Service Product IDs treated as Mileage | `TypeConfigDialog_fragment.xml` |
+| **Add Input** | Input field to add new type ID | `View1_controller.js` → `onAddExpenseType()`, `onAddMileageType()` |
+| **Remove Button** | Delete icon to remove type ID | `View1_controller.js` → `onRemoveExpenseType()`, `onRemoveMileageType()` |
+| **Reset Button** | Resets to default configuration | `View1_controller.js` → `onResetTypeConfig()` |
+
+**Backend:** `TypeConfigStore.js` (file storage), `/api/*-type-config` endpoints
+
+**Frontend:** `TypeConfigService.js` (API client, type checking)
+
+---
+
+### 8. Mobile Responsive View
+
+<!-- TODO: Add screenshot showing app on mobile device or narrow screen -->
+![Mobile View](docs/screenshots/08-mobile-responsive.png)
+
+| Element | Description | Key Files |
+|---------|-------------|-----------|
+| **Responsive Layout** | 3→2→1 column layout based on screen width | `style.css` |
+| **Collapsed Panels** | Panels collapse to save space | All fragment XML files |
+| **Touch-friendly** | Larger touch targets for mobile | `style.css` |
+
+**Breakpoints:**
+- Desktop: 3 columns (>1200px)
+- Tablet: 2 columns (768px-1200px)
+- Mobile: 1 column (<768px)
+
+---
+
+### Screenshot Checklist
+
+| # | Screenshot | Status |
+|---|------------|--------|
+| 1 | Main View (Session Context + Service Order) | ⬜ TODO |
+| 2 | Product Groups & Activities | ⬜ TODO |
+| 3 | T&M Creation - Time & Material | ⬜ TODO |
+| 4 | T&M Creation - Expense | ⬜ TODO |
+| 5 | T&M Creation - Mileage | ⬜ TODO |
+| 6 | T&M Reports Dialog | ⬜ TODO |
+| 7 | Type Configuration Dialog | ⬜ TODO |
+| 8 | Mobile Responsive View | ⬜ TODO |
+
+**Screenshot folder:** `docs/screenshots/`
 
 ---
 
@@ -34,12 +203,22 @@ This application provides a mobile-optimized interface for viewing and managing 
 - ✅ Context activity highlighting (light blue SAP Fiori styling)
 - ✅ T&M Reports viewing and creation:
   - **Time & Material Report** - For standard service products (Material + Time entries)
-  - **Expense Report** - For expense service products (Z40000001, Z40000007, Z50000000)
-  - **Mileage Report** - For mileage service products (Z40000038, Z40000008)
+  - **Expense Report** - For expense service products
+  - **Mileage Report** - For mileage service products
+- ✅ **Configurable Entry Types** - Expense and Mileage Service Product IDs can be configured via UI
 - ✅ Session context display (User, Account, Company, Organization)
 - ✅ Mobile-first responsive design
 - ✅ Secure authentication via SAP BTP Destination Service
 - ✅ Direct FSM API integration
+
+**Default Type Configuration:**
+| Type | Default Service Product IDs |
+|------|----------------------------|
+| Expense | Z40000001, Z40000007, Z50000000 |
+| Mileage | Z40000038, Z40000008 |
+| Time & Material | All other IDs |
+
+*Note: Type configuration can be modified at runtime via the "Type Config" button.*
 
 **Technology Stack:**
 - **Frontend:** SAP UI5 (Fiori)
@@ -50,43 +229,68 @@ This application provides a mobile-optimized interface for viewing and managing 
 ---
 
 ## 🏗️ Architecture
+
+The application supports **multiple deployment contexts**:
+
+| Context | Description | How It Works |
+|---------|-------------|--------------|
+| **FSM Mobile** | Web Container in FSM Mobile app | POST context to `/web-container-access-point` |
+| **FSM Web UI** | Extension in FSM Web application | fsm-shell SDK communicates via iframe |
+| **Standalone** | Direct browser access | URL parameters (`?activityId=...` or `?serviceCallId=...`) |
 ```
-┌─────────────────┐
-│   FSM Mobile    │  (Opens Web Container with cloudId)
-└────────┬────────┘
-         │ POST: context (cloudId, userName, cloudAccount, companyName)
-         ▼
-┌─────────────────┐
-│  SAP BTP (CF)   │  (Cloud Foundry App)
-│  ┌───────────┐  │
-│  │ UI5 App   │  │  (Frontend - Progressive UI)
-│  │           │  │  1. T&M Journal Page (Service Order header)
-│  │           │  │  2. Organization Level (auto-resolved)
-│  │           │  │  3. Product Groups → Activities
-│  │           │  │  4. T&M Reports Dialog (view/edit)
-│  │           │  │  5. T&M Creation Dialog (create new)
-│  └─────┬─────┘  │
-│        │        │
-│  ┌─────▼─────┐  │
-│  │ Express   │  │  (Backend - index.js)
-│  │ Server    │  │  - Web Container Context
-│  └─────┬─────┘  │  - API Proxy
-└────────┼────────┘
-         │ OAuth Token
-         ▼
-┌─────────────────┐
-│ BTP Destination │  (FSM_S4E destination)
-│    Service      │
-└────────┬────────┘
-         │ Authenticated Request
-         ▼
-┌─────────────────┐
-│   FSM API       │  (SAP Field Service Management)
-│                 │  - User & Organization Data
-│                 │  - Activities (Composite Tree)
-│                 │  - T&M Reports (Time, Material, Expense, Mileage)
-│                 │  - Lookup Data (Tasks, Items, Persons, etc.)
-└─────────────────┘
+┌──────────────────────────────────────────────────────────────────────────┐
+│                         ENTRY POINTS                                     │
+├──────────────────┬───────────────────────┬───────────────────────────────┤
+│   FSM Mobile     │     FSM Web UI        │     Standalone/Dev            │
+│   (Web Container)│     (Shell Extension) │     (URL Parameters)          │
+│        │         │           │           │            │                  │
+│  POST context    │   fsm-shell SDK       │   ?activityId=XXX             │
+│        │         │   (iframe postMessage)│   ?serviceCallId=XXX          │
+└────────┼─────────┴───────────┼───────────┴────────────┼──────────────────┘
+         │                     │                        │
+         └─────────────────────┼────────────────────────┘
+                               ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                      SAP BTP (Cloud Foundry)                            │
+│  ┌───────────────────────────────────────────────────────────────────┐  │
+│  │                      UI5 App (Frontend)                           │  │
+│  │                                                                   │  │
+│  │  ContextService.js - Detects environment & unifies context        │  │
+│  │       ↓                                                           │  │
+│  │  1. T&M Journal Page (Service Order header)                       │  │
+│  │  2. Session Context Panel (User, Org, Account, Company)           │  │
+│  │  3. Organization Level (auto-resolved from user)                  │  │
+│  │  4. Product Groups → Activities (grouped view)                    │  │
+│  │  5. T&M Reports Dialog (view/edit existing)                       │  │
+│  │  6. T&M Creation Dialog (create new entries)                      │  │
+│  │  7. Type Config Dialog (configure entry types)                    │  │
+│  └───────────────────────────┬───────────────────────────────────────┘  │
+│                              │                                          │
+│  ┌───────────────────────────▼───────────────────────────────────────┐  │
+│  │                   Express Server (Backend)                        │  │
+│  │                                                                   │  │
+│  │  - Web Container Context Storage (for FSM Mobile)                 │  │
+│  │  - FSM API Proxy (authenticated via BTP Destination)              │  │
+│  │  - Type Config API (CRUD for entry types)                         │  │
+│  │  - Type Config Store (typeconfig.json)                            │  │
+│  └───────────────────────────┬───────────────────────────────────────┘  │
+└──────────────────────────────┼──────────────────────────────────────────┘
+                               │ OAuth Token
+                               ▼
+                      ┌─────────────────┐
+                      │ BTP Destination │  (FSM_S4E destination)
+                      │    Service      │
+                      └────────┬────────┘
+                               │ Authenticated Request
+                               ▼
+                      ┌─────────────────┐
+                      │     FSM API     │  (SAP Field Service Management)
+                      │                 │
+                      │  - User & Organization Data
+                      │  - Service Calls (Composite Tree)
+                      │  - Activities & T&M Reports
+                      │  - Lookup Data (Tasks, Items, Expense Types, etc.)
+                      └─────────────────┘
 ```
 
 ---
@@ -97,7 +301,7 @@ This application provides a mobile-optimized interface for viewing and managing 
 
 | Component | Description |
 |-----------|-------------|
-| **Session Context Panel** | Shows User, Account, Company, Organization, Object Type (visible when opened from FSM Mobile) |
+| **Session Context Panel** | Shows User, Language, Account, Company, Organization, Object Type/ID (visible in all contexts) |
 | **Service Order Panel** | Expandable panel showing Service Order details (ID, External ID, Subject, Business Partner, Responsible, Dates) |
 | **Organization Level** | Auto-resolved from logged-in user (no manual selection required) |
 | **Product Groups** | Activities grouped by Product Description with activity count |
@@ -105,6 +309,7 @@ This application provides a mobile-optimized interface for viewing and managing 
 | **T&M Summary** | Shows count of Time Effort, Material, Expense, Mileage reports per activity |
 | **T&M Reports Dialog** | Detailed view of all T&M entries with expandable panels, Edit/Approval buttons, multi-line headers |
 | **T&M Creation Dialog** | Create new T&M entries based on Activity Service Product type |
+| **Type Config Dialog** | Configure which Service Product IDs are treated as Expense, Mileage, or Time & Material |
 
 ### Lookup Services
 
@@ -121,16 +326,19 @@ The app resolves FSM IDs to human-readable names:
 | **OrganizationService** | Org Level ID → Name + User Resolution | `2B6F7485...` → `2130_MPA - Service Unit _Team1` |
 | **BusinessPartnerService** | BP ExternalId → Name | `55003748` → `Company Name (55003748)` |
 | **ApprovalService** | Object ID → Decision Status | `F1E2D3C4...` → `Approved` |
+| **TypeConfigService** | Service Product ID → Entry Type | `Z40000001` → `Expense` |
 
 ### T&M Entry Types (Creation)
 
-Entry type shown depends on Activity Service Product:
+Entry type shown depends on Activity Service Product. **Types are configurable via Type Config Dialog.**
 
-| Service Product | Entry Type | Key Fields |
-|-----------------|------------|------------|
-| Z40000001, Z40000007, Z50000000 | **Expense Report** | Technician, Item, External/Internal Amount, Charge Option, Remarks |
-| Z40000038, Z40000008 | **Mileage Report** | Technician, Item, Distance, Source, Destination, Driver, Private Car, Remarks |
-| All others | **Time & Material Report** | Material section (Technician, Item, Quantity, Remarks) + Time sections (Arbeitszeit, Fahrzeit, Wartezeit with Task, Duration, Remarks) |
+| Entry Type | Default Service Product IDs | Key Fields |
+|------------|----------------------------|------------|
+| **Expense Report** | Z40000001, Z40000007, Z50000000 | Technician, Item, External/Internal Amount, Charge Option, Remarks |
+| **Mileage Report** | Z40000038, Z40000008 | Technician, Item, Distance, Source, Destination, Driver, Private Car, Remarks |
+| **Time & Material Report** | All other IDs | Material section (Technician, Item, Quantity, Remarks) + Time sections (Arbeitszeit, Fahrzeit, Wartezeit with Task, Duration, Remarks) |
+
+*Note: Default Service Product IDs can be modified at runtime via the "Type Config" button (⚙️) in the Session Context panel or footer toolbar.*
 
 ### T&M Report Types (Viewing)
 
@@ -145,18 +353,52 @@ Entry type shown depends on Activity Service Product:
 
 ## ✅ Prerequisites
 
-### Required:
-1. **Node.js** - LTS version (v18+ recommended)
-2. **npm** - Version 8+
-3. **Cloud Foundry CLI** - `cf` command line tool
-4. **SAP BTP Account** - Cloud Foundry space with quota
-5. **FSM Instance** - Access to SAP Field Service Management
+### Required Tools:
+| Tool | Version | Purpose |
+|------|---------|---------|
+| **Node.js** | v18.0.0+ | Backend runtime |
+| **npm** | v8.0.0+ | Package management |
+| **Cloud Foundry CLI** | Latest | `cf` command for deployment |
+| **UI5 CLI** | v4.0.16+ | Build tooling (dev dependency) |
+
+### SAP BTP Account:
+- Cloud Foundry space with available quota
+- Memory: 512MB (configurable in `manifest.yaml`)
+- Disk: 512MB
 
 ### SAP BTP Services:
-- **Destination Service** - Instance named `mobileappsc-destination` bound to the application
-- **Destination Configuration** - FSM_S4E destination configured with OAuth2 credentials
+
+| Service | Instance Name | Purpose |
+|---------|---------------|---------|
+| **Destination Service** | `mobileappsc-destination` | FSM API connectivity |
+
+### Destination Configuration (FSM_S4E):
+
+The destination `FSM_S4E` must be configured in BTP Cockpit with:
+
+| Property | Description |
+|----------|-------------|
+| **URL** | FSM API base URL (e.g., `https://eu.coresystems.net`) |
+| **Authentication** | OAuth2ClientCredentials |
+| **Token Service URL** | FSM OAuth token endpoint |
+| **Client ID** | FSM OAuth client ID |
+| **Client Secret** | FSM OAuth client secret |
+
+### FSM Access:
+- SAP Field Service Management instance
+- API access credentials (OAuth client)
+- User with appropriate permissions for:
+  - Activities & Service Calls (read/write)
+  - T&M Reports (read/write/create)
+  - Organization levels (read)
+  - Lookup data (TimeTasks, Items, ExpenseTypes, Persons)
+
+### Optional (for FSM Web UI Integration):
+- FSM Shell SDK access (loaded dynamically from `https://unpkg.com/fsm-shell@1.20.0`)
+- Extension configuration in FSM Admin
 
 ---
+
 ## 🚀 Setup & Deployment
 
 ### 1. Clone & Install
@@ -166,7 +408,30 @@ cd mobileappsc
 npm install
 ```
 
-### 2. Configure BTP Destination
+### 2. Configure Application (Optional)
+
+#### 2.1 FSM Account/Company Defaults
+Edit `FSMService.js` if you need to change the default account/company:
+```javascript
+this.config = {
+    account: 'your-account',      // Default: 'tuev-nord_t1'
+    company: 'your-company'       // Default: 'TUEV-NORD_S4E'
+};
+```
+
+#### 2.2 Type Configuration Defaults
+Edit `typeconfig.json` to set default Service Product IDs:
+```json
+{
+  "expenseTypes": ["Z40000001", "Z40000007", "Z50000000"],
+  "mileageTypes": ["Z40000038", "Z40000008"],
+  "lastModified": null,
+  "modifiedBy": null
+}
+```
+*Note: These can also be changed at runtime via the Type Config dialog.*
+
+### 3. Configure BTP Destination
 
 Create a destination named **FSM_S4E** in SAP BTP Cockpit:
 ```
@@ -187,95 +452,210 @@ Additional Properties:
   URL.headers.X-Client-Version: 0.0.1
 ```
 
-### 3. Create Destination Service Instance
+### 4. Create Destination Service Instance
 ```bash
 cf create-service destination lite mobileappsc-destination
 ```
 
-### 4. Deploy to Cloud Foundry
+### 5. Deploy to Cloud Foundry
 ```bash
 cf push
 ```
 
-### 5. Get Application URL
+### 6. Get Application URL
 ```bash
 cf app mobileappsc
 ```
 
 Copy the URL (e.g., `https://mobileappsc-xxx.cfapps.eu10.hana.ondemand.com`)
 
-### 6. Configure FSM Web Container
+---
+
+## 📱 FSM Mobile Integration
+
+### Configure FSM Web Container
 
 Navigate to: **FSM Admin → Company → Web Containers**
 
-#### 6.1 Create Web Container
-1. **Click "Create" and configure:**
-   - **Name:** `T&M Journal`
-   - **External ID:** `Z_TMJournal`
-   - **URL:** `https://mobileappsc-xxx.cfapps.eu10.hana.ondemand.com`
-   - **Object Types:** `Activity` (select the object types this app handles)
-   - **Active:** ✓ Checked
+#### 1. Create Web Container
+| Field | Value |
+|-------|-------|
+| **Name** | `T&M Journal` |
+| **External ID** | `Z_TMJournal` |
+| **URL** | `https://mobileappsc-xxx.cfapps.eu10.hana.ondemand.com` |
+| **Object Types** | `Activity` |
+| **Active** | ✓ Checked |
 
-2. **Click "Save"**
-
-#### 6.2 Web Container Context
+#### 2. Web Container Context
 When opened from FSM Mobile, the web container automatically POSTs context data:
-- `cloudId` - The Activity ID (used to load the correct activity and auto-expand it)
-- `objectType` - The object type (e.g., "ACTIVITY")
-- `userName` - Current user's name (used for organization level auto-resolution)
-- `cloudAccount` - FSM account name
-- `companyName` - FSM company name
-- `language` - User's language preference
 
-#### 6.3 Add to Mobile Screen Configuration
+| Field | Description |
+|-------|-------------|
+| `cloudId` | Activity/ServiceCall ID (used to load and highlight the entry) |
+| `objectType` | Object type (`ACTIVITY` or `SERVICECALL`) |
+| `userName` | Current user's name (for organization level auto-resolution) |
+| `cloudAccount` | FSM account name |
+| `companyName` | FSM company name |
+| `language` | User's language preference |
+
+#### 3. Add to Mobile Screen Configuration
 Navigate to: **FSM Admin → Companies → [Your Company] → Screen Configurations**
 
-1. **Select:** `Activity Mobile` (or your custom activity screen)
-2. **Click the pencil icon** to edit
-3. **Add Web Container button** to the activity screen
-4. **Configure button settings:**
+1. Select `Activity Mobile` (or your custom activity screen)
+2. Click the pencil icon to edit
+3. Add Web Container button to the activity screen
+4. Configure button:
    - **Label:** `T&M Journal`
    - **Web Container:** Select `Z_TMJournal`
-5. **Click "Save"**
+5. Click **Save**
 
 ---
 
-### 7. Expected Result
+## 🖥️ FSM Web UI Integration
 
-**On FSM Mobile:**
-- Technician opens an Activity
-- Sees "T&M Journal" button
-- Taps the button → Web Container opens the app
-- App displays "T&M Journal for Service Order: {ID}" as page title
-- Session Context panel shows User, Account, Company, Organization
-- Organization level auto-resolved from logged-in user
-- Context activity highlighted with light blue SAP Fiori styling and auto-expanded
-- Product Groups show activities filtered by user's organization level
+The app can also run as an extension in FSM Web UI using the fsm-shell SDK.
+
+### Configure FSM Extension
+
+Navigate to: **FSM Admin → Company → Extensions**
+
+#### 1. Create Extension
+| Field | Value |
+|-------|-------|
+| **Name** | `T&M Journal` |
+| **External ID** | `Z_TMJournal_Web` |
+| **URL** | `https://mobileappsc-xxx.cfapps.eu10.hana.ondemand.com` |
+| **Context** | `Activity` or `ServiceCall` |
+| **Active** | ✓ Checked |
+
+#### 2. Shell Context
+When running in FSM Web UI, the app uses the fsm-shell SDK (loaded dynamically) to receive context via iframe postMessage:
+
+| Field | Description |
+|-------|-------------|
+| `userId` | Current user ID |
+| `user` | Current user name |
+| `companyId` | Company ID |
+| `accountId` | Account ID |
+| `cloudHost` | FSM cloud host URL |
+| `viewState.activity` | Activity object with ID |
+| `viewState.serviceCall` | ServiceCall object with ID |
+
+---
+
+## 🧪 Standalone / Development Mode
+
+For testing without FSM Mobile or Web UI, use URL parameters:
+```
+# Open with specific Activity
+https://mobileappsc-xxx.cfapps.eu10.hana.ondemand.com?activityId=ABC123
+
+# Open with specific Service Call
+https://mobileappsc-xxx.cfapps.eu10.hana.ondemand.com?serviceCallId=XYZ789
+```
+
+### Local Development
+```bash
+npm run start          # Start Express server on port 3000
+npm run start:dev      # Start with Fiori tools (hot reload)
+```
+
+---
+
+## ✅ Expected Result
+
+### On FSM Mobile:
+1. Technician opens an Activity
+2. Sees **"T&M Journal"** button
+3. Taps the button → Web Container opens the app
+4. App displays **"T&M Journal for Service Order: {ID}"** as page title
+5. **Session Context Panel** shows:
+   - User, Language, Account, Company
+   - Organization (auto-resolved from user)
+   - Object Type & ID
+6. Organization level auto-resolved (no manual selection)
+7. Context activity highlighted with **light blue SAP Fiori border** and auto-expanded
+8. Product Groups show activities grouped by Service Product
+9. **Type Config** button (⚙️) available in header for configuring entry types
+
+### On FSM Web UI:
+1. User opens an Activity or Service Call
+2. Clicks **"T&M Journal"** extension button
+3. App opens in iframe within FSM Web UI
+4. Same functionality as Mobile:
+   - Session Context from fsm-shell SDK
+   - Auto-resolved organization level
+   - Context highlighting
+   - Full T&M viewing and creation
+
+### In Standalone Mode:
+1. Open app URL with parameter: `?activityId=XXX` or `?serviceCallId=XXX`
+2. App loads the specified Activity/Service Call
+3. Full functionality available (requires valid FSM destination)
+
+### T&M Creation Flow:
+1. Click **"Create T&M"** button on an Activity panel
+2. Dialog opens based on Activity's Service Product type:
+   - **Expense form** → for configured Expense type IDs
+   - **Mileage form** → for configured Mileage type IDs
+   - **Time & Material form** → for all other IDs
+3. Fill required fields and click **Save**
+4. Entry created in FSM and list refreshes
 
 ---
 
 ## 🔄 How It Works
 
 ### User Flow:
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           USER ENTRY                                    │
+├─────────────────┬───────────────────────┬───────────────────────────────┤
+│   FSM Mobile    │     FSM Web UI        │     Standalone/Dev            │
+│   Tap button    │   Click extension     │   Open URL with params        │
+│        │        │          │            │            │                  │
+│  POST context   │   Shell SDK context   │   URL parameters              │
+└────────┼────────┴──────────┼────────────┴────────────┼──────────────────┘
+         │                   │                         │
+         └───────────────────┼─────────────────────────┘
+                             ▼
+              ┌──────────────────────────────┐
+              │   ContextService.js          │
+              │   (Detects source, unifies)  │
+              └──────────────┬───────────────┘
+                             ▼
+              ┌──────────────────────────────┐
+              │   App Initialization         │
+              │   1. Resolve user org level  │
+              │   2. Load Service Call       │
+              │   3. Load Activities         │
+              │   4. Load T&M Reports        │
+              │   5. Highlight context entry │
+              └──────────────────────────────┘
+```
 
-1. **Technician opens FSM Mobile** → Navigates to an Activity
-2. **Taps "T&M Journal" button** → FSM Mobile opens web container
-3. **Web container POSTs context** → App receives cloudId, userName, account, company
-4. **App resolves user's organization** → Fetches user data and org level assignment from FSM
-5. **Session Context panel appears** → Shows User, Account, Company, Organization
-6. **Service Order panel loads** → Shows service call details (collapsed by default)
-7. **Product Groups load automatically** → Activities filtered by user's organization level
-8. **Context activity highlighted** → Light blue SAP Fiori styling, auto-expanded
-9. **User views activity details** → Address, Responsible, Org Level, Service Product, T&M Summary
-10. **User views/creates T&M** → Opens T&M Reports or Creation dialog (entry type based on Service Product)
+### Detailed Steps:
 
-### Web Container Context:
+| Step | Action | Result |
+|------|--------|--------|
+| 1 | User opens Activity in FSM | Activity screen displayed |
+| 2 | User taps/clicks "T&M Journal" | App opens (web container/iframe/browser) |
+| 3 | Context received | `ContextService` detects source and extracts Activity/ServiceCall ID |
+| 4 | User org resolved | `userName` → User API → Person Query → Org Level assignment |
+| 5 | Session Context displayed | Shows User, Language, Account, Company, Organization |
+| 6 | Service Order loaded | Composite-tree API fetches Service Call + Activities |
+| 7 | Product Groups rendered | Activities grouped by Service Product description |
+| 8 | Context entry highlighted | Light blue border, auto-expanded |
+| 9 | T&M Reports loaded | Time, Material, Expense, Mileage entries per activity |
+| 10 | User views/creates T&M | Entry type determined by Service Product (configurable) |
 
-The app receives context from FSM Mobile via POST request:
+### Context Sources:
+
+#### FSM Mobile (Web Container)
 ```
 POST /web-container-access-point
 {
-  "cloudId": "9D92E0B18FDC4A27A213401FEEA89FDA",  // Activity UUID
+  "cloudId": "9D92E0B18FDC4A27A213401FEEA89FDA",
   "objectType": "ACTIVITY",
   "userName": "Max Mustermann",
   "cloudAccount": "company_account",
@@ -284,17 +664,82 @@ POST /web-container-access-point
 }
 ```
 
+#### FSM Web UI (Shell SDK)
+```javascript
+// fsm-shell SDK provides context via postMessage
+{
+  "userId": "USER-UUID",
+  "user": "Max Mustermann",
+  "companyId": "COMPANY-UUID",
+  "accountId": "ACCOUNT-UUID",
+  "cloudHost": "https://eu.coresystems.net",
+  "viewState": {
+    "activity": { "id": "ACTIVITY-UUID" },
+    "serviceCall": { "id": "SERVICECALL-UUID" }
+  }
+}
+```
+
+#### Standalone (URL Parameters)
+```
+?activityId=9D92E0B18FDC4A27A213401FEEA89FDA
+# or
+?serviceCallId=ABC123DEF456...
+```
+
 ### Authentication Flow:
 ```
-1. FSM Mobile opens web container → POSTs context to app
-2. App stores context → For Session panel display and cloudId
-3. App starts API calls → Reads VCAP_SERVICES for Destination credentials
-4. Gets OAuth token → Calls BTP Destination Service
-5. Retrieves FSM destination → Gets FSM API URL + headers
-6. Gets FSM OAuth token → Authenticates with FSM
-7. Resolves user org level → userName → User API → Person Query → orgLevel
-8. Makes API calls → Fetches service call, activities, T&M data
-9. Token cached → Reused for 55 minutes (with 5min buffer)
+┌─────────────────────────────────────────────────────────────────┐
+│  1. App receives context (Mobile POST / Shell SDK / URL)        │
+└──────────────────────────┬──────────────────────────────────────┘
+                           ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  2. Read VCAP_SERVICES → Get Destination Service credentials    │
+└──────────────────────────┬──────────────────────────────────────┘
+                           ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  3. Call BTP Destination Service → Get OAuth token              │
+└──────────────────────────┬──────────────────────────────────────┘
+                           ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  4. Fetch FSM_S4E destination → Get FSM URL + OAuth config      │
+└──────────────────────────┬──────────────────────────────────────┘
+                           ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  5. Get FSM OAuth token → Authenticate with FSM API             │
+└──────────────────────────┬──────────────────────────────────────┘
+                           ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  6. Token cached (TokenCache.js) → Reused for 55 min            │
+└──────────────────────────┬──────────────────────────────────────┘
+                           ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  7. Make FSM API calls → Activities, T&M, Lookups, etc.         │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Type Configuration Flow:
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  User clicks "Create T&M" on Activity                           │
+└──────────────────────────┬──────────────────────────────────────┘
+                           ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  Get Activity's Service Product External ID                     │
+└──────────────────────────┬──────────────────────────────────────┘
+                           ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  TypeConfigService.isExpenseType(id) ?                          │
+│  TypeConfigService.isMileageType(id) ?                          │
+│  Otherwise → Time & Material                                    │
+└──────────────────────────┬──────────────────────────────────────┘
+                           ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  Open appropriate creation dialog:                              │
+│  • Expense form (amount, expense type, charge option)           │
+│  • Mileage form (distance, source, destination, driver)         │
+│  • T&M form (material + time entries)                           │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -304,7 +749,7 @@ POST /web-container-access-point
 mobileappsc/
 │
 ├── # ─────────── ROOT LEVEL ───────────
-├── index.js                             # Express server (~760 lines)
+├── index.js                             # Express server (~960 lines)
 ├── package.json                         # Node.js dependencies
 ├── package-lock.json                    # Dependency lock file
 ├── manifest.yaml                        # Cloud Foundry deployment
@@ -314,6 +759,8 @@ mobileappsc/
 ├── ui5.yaml                             # UI5 tooling configuration
 ├── ui5-local.yaml                       # UI5 local development config
 ├── ui5-deploy.yaml                      # UI5 deployment config
+├── typeconfig.json                      # Expense/Mileage type configuration
+├── TypeConfigStore.js                   # Backend type config storage (~250 lines)
 ├── .gitignore                           # Git ignore rules
 ├── README.md                            # This file
 │
@@ -342,12 +789,13 @@ webapp/
 │       ├── WebContainerContext.fragment.xml  # Session Context panel
 │       ├── ServiceCall.fragment.xml          # Service Order header panel
 │       ├── ProductGroups.fragment.xml        # Activity panels with T&M tables (~360 lines)
-│       └── TMCreateDialog.fragment.xml       # T&M Creation dialog (~700 lines)
+│       ├── TMCreateDialog.fragment.xml       # T&M Creation dialog (~700 lines)
+│       └── TypeConfigDialog.fragment.xml     # Type Configuration dialog (~120 lines)
 │
 ├── # ─────────── CONTROLLERS & MIXINS ───────────
 ├── controller/
 │   ├── App.controller.js            # Root controller
-│   ├── View1.controller.js          # Main controller (~425 lines)
+│   ├── View1.controller.js          # Main controller (~600 lines)
 │   └── mixin/
 │       ├── DataLoadingMixin.js      # Data loading, batch T&M loading (~525 lines)
 │       ├── TechnicianMixin.js       # Technician/task selection (~160 lines)
@@ -380,18 +828,19 @@ webapp/
 │   │   ├── ServiceOrderService.js   # Service order/composite tree
 │   │   ├── TechnicianService.js     # Technician suggestions
 │   │   ├── TimeTaskService.js       # Time task ID lookup
+│   │   ├── TypeConfigService.js     # Expense/Mileage type config (~320 lines)
 │   │   └── UdfMetaService.js        # UDF Meta ID lookup
 │   │
 │   └── tm/
 │       ├── TMCreationService.js     # T&M entry creation (~19KB)
 │       ├── TMDataService.js         # T&M data management
-│       ├── TMDialogService.js       # T&M dialog management (~22KB)
+│       ├── TMDialogService.js       # T&M dialog management (~23KB)
 │       ├── TMEditService.js         # T&M entry editing
 │       └── TMPayloadService.js      # T&M API payload building (~21KB)
 │
 ├── # ─────────── MODEL ───────────
 ├── model/
-│   ├── formatter.js                 # Date/number formatting
+│   ├── formatter.js                 # Date/number/type formatting (~170 lines)
 │   └── models.js                    # Device model
 │
 ├── # ─────────── STYLES ───────────
@@ -455,6 +904,17 @@ i18n/
 | GET | `/api/get-expense-types` | Fetch expense types for lookup |
 | POST | `/api/get-udf-meta` | Resolve UDF Meta ID to externalId |
 
+#### Type Configuration
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/get-type-config` | Get current type configuration |
+| POST | `/api/save-type-config` | Save full type configuration |
+| POST | `/api/add-expense-type` | Add expense type ID |
+| POST | `/api/remove-expense-type` | Remove expense type ID |
+| POST | `/api/add-mileage-type` | Add mileage type ID |
+| POST | `/api/remove-mileage-type` | Remove mileage type ID |
+| POST | `/api/reset-type-config` | Reset to default configuration |
+
 ### FSM APIs Used
 
 | API | Endpoint | Purpose |
@@ -467,63 +927,54 @@ i18n/
 | **User API** | `/api/user` | User data lookup (for org level resolution) |
 | **Org Level Service v1** | `/cloud-org-level-service/api/v1/levels` | Organization hierarchy |
 
-### Key Files Explained:
+### Key Files
 
-#### **Backend:**
+#### Backend (Node.js/Express)
 
-- **`index.js`** - Express server (~520 lines) that:
-  - Handles web container context (POST/GET)
-  - Serves static UI5 files from project root
-  - Provides REST API endpoints for all data operations
-  - Proxies requests to FSM API via BTP Destination Service
+| File | Lines | Purpose |
+|------|-------|---------|
+| `index.js` | ~990 | Express server: web container context, REST API endpoints, static file serving |
+| `FSMService.js` | ~1050 | FSM API integration: Data API, Query API, Service Management, token caching |
+| `DestinationService.js` | ~90 | BTP Destination Service: reads VCAP_SERVICES, fetches destination config |
+| `TokenCache.js` | ~100 | OAuth token caching (55 min TTL with 5 min buffer) |
+| `TypeConfigStore.js` | ~285 | Type configuration storage: file-based CRUD for expense/mileage type IDs |
 
-- **`FSMService.js`** - FSM API integration (~880 lines):
-  - All FSM API calls (Data API, Query API, Service Management, Org Levels)
-  - User organization level resolution flow
-  - Authentication via Destination Service
-  - Token caching for performance
+#### Frontend (SAP UI5)
 
-- **`DestinationService.js`** - BTP Destination handling:
-  - Reads VCAP_SERVICES for credentials
-  - Fetches destination configuration from BTP
+| File | Lines | Purpose |
+|------|-------|---------|
+| `View1_controller.js` | ~650 | Main controller: initialization, lifecycle, mixin coordination |
+| `ContextService.js` | ~540 | Universal context provider: Mobile, Shell SDK, URL params detection |
+| `DataLoadingMixin.js` | ~525 | Data loading: service call, activities, user org resolution |
+| `TMDialogMixin.js` | ~400 | T&M dialog event handlers: add/remove entries, validation |
+| `TMDialogService.js` | ~465 | T&M dialog management: open/close dialogs, model binding |
+| `TMCreationService.js` | ~475 | T&M entry creation: templates, type-specific field initialization |
+| `TMPayloadService.js` | ~495 | FSM API payloads: request building, UDF field mapping |
+| `TypeConfigService.js` | ~325 | Frontend type config: API client, type checking (isExpenseType, etc.) |
 
-#### **Frontend:**
+#### Lookup Services (Frontend)
 
-- **`View1_controller.js`** - Main controller (~400 lines):
-  - Web container context handling
-  - Initialization and lifecycle management
-  - Mixin coordination
+| File | Lines | Purpose |
+|------|-------|---------|
+| `PersonService.js` | ~300 | Person ID → Name resolution |
+| `TechnicianService.js` | ~240 | Technician suggestions for Input fields |
+| `TimeTaskService.js` | ~160 | Task ID → Name resolution |
+| `ItemService.js` | ~230 | Item ID/ExternalId → Name resolution |
+| `ExpenseTypeService.js` | ~150 | Expense Type ID → Name resolution |
+| `UdfMetaService.js` | ~175 | UDF Meta ID → ExternalId resolution |
+| `OrganizationService.js` | ~295 | Org Level ID → Name, user org resolution |
+| `BusinessPartnerService.js` | ~135 | BP ExternalId → Name resolution |
+| `ApprovalService.js` | ~220 | Object ID → Approval decision status |
 
-- **`DataLoadingMixin.js`** - Data loading logic (~530 lines):
-  - Service call and activity fetching
-  - User organization level resolution
-  - Product group population
-  - Lookup service coordination
+#### UI Fragments (XML)
 
-- **`TMDialogMixin.js`** - T&M dialog handlers (~615 lines):
-  - T&M Reports and Creation dialog event handling
-  - Entry add/remove operations
-  - Save and validation logic
-
-- **`TMDialogService.js`** - T&M dialog management (~410 lines):
-  - Opens/closes T&M Reports and Creation dialogs
-  - Manages dialog models and data binding
-
-- **`TMCreationService.js`** - T&M entry creation (~470 lines):
-  - Entry templates for all T&M types
-  - Type-specific field initialization
-
-- **`TMPayloadService.js`** - T&M API payloads (~390 lines):
-  - Builds FSM API request payloads
-  - Handles UDF field mapping
-
-#### **UI Fragments:**
-
-- `WebContainerContext_fragment.xml` - Session info panel with organization display
-- `ServiceCall_fragment.xml` - Service Order details panel
-- `ProductGroups_fragment.xml` - Activity panels with T&M summary (~11KB)
-- `TMReportsDialog_fragment.xml` - View existing T&M entries (~30KB)
-- `TMCreateDialog_fragment.xml` - Create new T&M entries (~32KB)
+| File | Size | Purpose |
+|------|------|---------|
+| `WebContainerContext_fragment.xml` | ~4KB | Session context panel with user/org info |
+| `ServiceCall_fragment.xml` | ~3KB | Service Order details panel |
+| `ProductGroups_fragment.xml` | ~38KB | Activity panels grouped by product, T&M summary |
+| `TMCreateDialog_fragment.xml` | ~51KB | T&M creation dialog (Expense/Mileage/T&M forms) |
+| `TypeConfigDialog_fragment.xml` | ~6KB | Type configuration dialog (add/remove type IDs) |
 
 ---
 
@@ -538,13 +989,34 @@ npm start
 
 **Note:** Local development requires BTP Destination Service binding. For rapid UI iteration, use SAP Business Application Studio with port forwarding on port 3003.
 
+### Testing Without FSM
+
+Use URL parameters to test with specific Activity or Service Call:
+```bash
+# Test with Activity
+http://localhost:3000?activityId=YOUR-ACTIVITY-UUID
+
+# Test with Service Call  
+http://localhost:3000?serviceCallId=YOUR-SERVICECALL-UUID
+```
+
+### Context Sources
+
+The app supports 3 context sources (detected automatically by `ContextService.js`):
+
+| Source | Detection | How to Test |
+|--------|-----------|-------------|
+| **FSM Mobile** | POST to `/web-container-access-point` | Deploy and open from FSM Mobile app |
+| **FSM Web UI** | Running in iframe + fsm-shell SDK available | Configure as FSM Extension |
+| **URL Parameters** | `?activityId=` or `?serviceCallId=` in URL | Direct browser access |
+
 ### Web Container Context
 
 The app receives context from FSM Mobile via POST request:
 ```javascript
 // POST to /web-container-access-point
 {
-  "cloudId": "9D92E0B18FDC4A27A213401FEEA89FDA",  // Activity UUID
+  "cloudId": "9D92E0B18FDC4A27A213401FEEA89FDA",
   "objectType": "ACTIVITY",
   "userName": "Max Mustermann",
   "cloudAccount": "company_account",
@@ -602,6 +1074,93 @@ app.get("/api/your-endpoint", async (req, res) => {
 await YourService.fetchData();
 ```
 
+### Modifying Type Configuration
+
+#### At Runtime (UI)
+1. Click **Type Config** button (⚙️) in Session Context panel or footer
+2. Add/remove Service Product IDs for Expense or Mileage types
+3. Changes take effect immediately
+
+#### At Development Time (Code)
+
+**Default values** in `TypeConfigStore.js`:
+```javascript
+const DEFAULT_CONFIG = {
+    expenseTypes: ["Z40000001", "Z40000007", "Z50000000"],
+    mileageTypes: ["Z40000038", "Z40000008"],
+    lastModified: null,
+    modifiedBy: null
+};
+```
+
+**Initial config file** `typeconfig.json`:
+```json
+{
+  "expenseTypes": ["Z40000001", "Z40000007", "Z50000000"],
+  "mileageTypes": ["Z40000038", "Z40000008"],
+  "lastModified": null,
+  "modifiedBy": null
+}
+```
+
+#### Type Configuration API
+```javascript
+// Get current config
+GET /api/get-type-config
+// Response: { success: true, data: { expenseTypes: [...], mileageTypes: [...] } }
+
+// Add expense type
+POST /api/add-expense-type
+Body: { "typeId": "Z40000099", "modifiedBy": "username" }
+
+// Add mileage type
+POST /api/add-mileage-type
+Body: { "typeId": "Z40000099", "modifiedBy": "username" }
+
+// Remove types
+POST /api/remove-expense-type
+POST /api/remove-mileage-type
+Body: { "typeId": "Z40000099", "modifiedBy": "username" }
+
+// Reset to defaults
+POST /api/reset-type-config
+Body: { "modifiedBy": "username" }
+```
+
+### Adding a New T&M Entry Type
+
+To add a new entry type (e.g., "Travel"):
+
+1. **Update TypeConfigStore.js** - Add new type array:
+```javascript
+const DEFAULT_CONFIG = {
+    expenseTypes: [...],
+    mileageTypes: [...],
+    travelTypes: ["Z40000099"],  // New type
+};
+```
+
+2. **Update TypeConfigService.js** - Add type checking:
+```javascript
+isTravelType(serviceProductId) {
+    return _config?.travelTypes?.includes(serviceProductId) || false;
+}
+```
+
+3. **Update TMDialogService.js** - Add type flag:
+```javascript
+const isTravelType = TypeConfigService.isTravelType(serviceProductExtId);
+```
+
+4. **Update TMCreateDialog_fragment.xml** - Add form section:
+```xml
+<Panel visible="{createTM>/isTravelType}" headerText="Travel Entry">
+    <!-- Travel-specific fields -->
+</Panel>
+```
+
+5. **Update TypeConfigDialog_fragment.xml** - Add UI section for configuring travel type IDs
+
 ---
 
 ## 🐛 Troubleshooting
@@ -616,18 +1175,34 @@ cf logs mobileappsc --recent
 | Issue | Cause | Solution |
 |-------|-------|----------|
 | 404 on app load | Static file path wrong | Verify `express.static` points to correct folder |
-| Session Context not showing | Not opened from FSM Mobile | Open via web container, not direct URL |
+| Session Context not showing | Context not detected | Ensure opened from FSM Mobile/Web UI or use URL params (`?activityId=...`) |
 | Organization not resolved | User not assigned to org level in FSM | Verify user's Person record has orgLevelIds assigned |
 | No activities shown | No EXECUTION/CLOSED activities or wrong org level | Check activity execution stages and org level assignments in FSM |
 | T&M shows IDs instead of names | Lookup service not loaded | Check console for fetch errors |
 | Dialog shows "No data" | API timeout | Refresh and try again |
-| "Context not available" message | Web container context lost | Re-open app from FSM Mobile |
-| Entry type buttons not showing | Service Product not matching filter rules | Verify Activity's Service Product externalId |
-| Activity not highlighted | cloudId doesn't match any activity | Verify web container passes correct Activity ID |
+| "Context not available" message | Context lost or not provided | Re-open app from FSM Mobile/Web UI or add URL params |
+| Entry type buttons not showing | Service Product not matching configured types | Check Type Config dialog for configured IDs |
+| Activity not highlighted | cloudId doesn't match any activity | Verify context passes correct Activity ID |
+| Type Config changes not persisting | File storage on Cloud Foundry is ephemeral | Changes persist during runtime but reset on app restart/redeploy |
+| Type Config shows wrong defaults after reset | Cache issue | Refresh the page after reset |
+| Wrong T&M form showing | Service Product ID not in correct type list | Use Type Config dialog to add/remove IDs |
+| "class" assertion error in console | UI5 debug mode warning | Can be ignored - cosmetic only, doesn't affect functionality |
 
 ### Debug Console Logs
 
 The app logs detailed information to browser console:
+
+**Context Detection:**
+- `ContextService: Checking for mobile context...` - Mobile context check
+- `ContextService: FSM Shell SDK loaded` - Web UI shell loaded
+- `ContextService: Raw shell context received:` - Web UI context data
+- `ContextService: ViewState 'activity' received:` - Activity from shell
+- `ContextService: Returning cached context from mobile` - Using cached mobile context
+
+**Type Configuration:**
+- `TypeConfigService: Loaded config from server` - Config fetched successfully
+- `TypeConfigService: Using fallback defaults` - Server unavailable, using defaults
+- `TypeConfigStore: Error loading config:` - Backend config load failed
 
 **Data Loading:**
 - `View1: Attempting to auto-resolve org level for user:` - Org level resolution start
@@ -641,7 +1216,6 @@ The app logs detailed information to browser console:
 - `OrganizationService:` - Organization level lookups
 - `TMDialogService:` - T&M dialog operations
 - `TMCreationService:` - T&M entry creation
-- `URLHelper:` - Web container context parsing
 
 **Technician Selection:**
 - `TechnicianSearch:` / `TechnicianLiveChange:` - Search input
@@ -656,6 +1230,7 @@ FSM WEB CONTAINER: Context requested        - Frontend fetching context
 Backend: Sending enhanced T&M data          - T&M reports response
 Backend: Loaded X persons                   - Person data loaded
 Backend: Sending full organization levels   - Org hierarchy response
+TypeConfigStore: Using file storage         - Type config mode
 ```
 
 **Error patterns to watch for:**
@@ -663,6 +1238,16 @@ Backend: Sending full organization levels   - Org hierarchy response
 - `Error fetching reported items:` - T&M data fetch failed
 - `FSMService: Error fetching...` - FSM API call failed
 - `Error fetching activities by service call:` - Composite tree failed
+- `TypeConfigStore: Error saving config:` - Type config save failed
+
+### Type Configuration Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| Can't add type ID | Ensure ID is not empty; IDs are auto-uppercased |
+| Type ID appears in wrong list | Moving ID between Expense↔Mileage auto-removes from other list |
+| Reset doesn't restore all defaults | Refresh page after reset to reload from server |
+| Changes lost after redeploy | Expected behavior - file storage is ephemeral on Cloud Foundry |
 
 ---
 
@@ -670,7 +1255,7 @@ Backend: Sending full organization levels   - Org hierarchy response
 
 |                                    |                                                          |
 |------------------------------------|----------------------------------------------------------|
-| **App Name**                       | T&M Journal (FSM Mobile Integration)                     |
+| **App Name**                       | T&M Journal                                              |
 | **Module Name**                    | mobileappsc                                              |
 | **Framework**                      | SAP UI5 (Fiori) + Node.js Express                        |
 | **UI5 Theme**                      | sap_horizon                                              |
@@ -678,56 +1263,85 @@ Backend: Sending full organization levels   - Org hierarchy response
 | **Deployment Platform**            | SAP Business Technology Platform (Cloud Foundry)         |
 | **Node.js Version**                | 18+                                                      |
 | **npm Version**                    | 8+                                                       |
+| **Supported Contexts**             | FSM Mobile, FSM Web UI, Standalone (URL params)          |
 
 ---
 
 ## 🚀 Current Status
 
 ### ✅ Implemented:
+
+**Context & Integration:**
+- Multi-context support (FSM Mobile, FSM Web UI, Standalone via URL params)
 - Web container integration (receives context from FSM Mobile)
-- Session Context panel (User, Account, Company, Organization)
-- Service Order panel (expandable, collapsed by default)
+- FSM Shell SDK integration (receives context from FSM Web UI)
+- URL parameter support (`?activityId=` or `?serviceCallId=`)
+- Session Context panel (User, Language, Account, Company, Organization)
+
+**Organization & Navigation:**
 - Organization level auto-resolution from logged-in user (userName → User API → Person → orgLevel)
+- Service Order panel (expandable, collapsed by default)
 - Activities grouped by Product Description
 - Context activity highlighting (light blue SAP Fiori styling, auto-expanded)
+
+**Activity Display:**
 - Activity panels with key fields (Address, Responsible, Org Level, Service Product)
-- T&M Summary with type breakdown per activity
-- T&M Reports Dialog with:
-  - Activity details header (Planned Start/End, Duration, Quantity, UoM)
-  - Expandable T&M Entry panels with multi-line headers
-  - Human-readable headers (e.g., "T&M Entry - Mileage - Z40000008 - gefahrene Kilometer")
-  - All T&M fields with resolved names (Technician, Task, Item, etc.)
-  - Approval status display
-  - Edit T&M Entry button
-- T&M Creation Dialog with:
-  - Entry type based on Service Product:
-    - **Expense Report** - Z40000001, Z40000007, Z50000000
-    - **Mileage Report** - Z40000038, Z40000008
-    - **Time & Material Report** - All other Service Products
-  - Dynamic entry panels with type-specific fields
-  - Technician search with Input suggestions (4000+ records)
-  - Task dropdown with category filtering (AZ, FZ, WZ)
-  - Multi-step save workflow (Save → Send for Approval → Done)
-- Lookup services for ID resolution (Person, Technician, Task, Item, ExpenseType, UdfMeta, Approval, Organization)
+- T&M Summary with type breakdown per activity (Time, Material, Expense, Mileage counts)
+
+**T&M Reports Dialog:**
+- Activity details header (Planned Start/End, Duration, Quantity, UoM)
+- Expandable T&M Entry panels with multi-line headers
+- Human-readable headers (e.g., "T&M Entry - Mileage - Z40000008 - gefahrene Kilometer")
+- All T&M fields with resolved names (Technician, Task, Item, etc.)
+- Approval status display
+- Edit T&M Entry button
+
+**T&M Creation Dialog:**
+- Entry type based on Activity Service Product (configurable)
+- Three form types:
+  - **Expense Report** - Amount, Expense Type, Charge Option
+  - **Mileage Report** - Distance, Source, Destination, Driver, Private Car
+  - **Time & Material Report** - Material section + Time sections (Arbeitszeit, Fahrzeit, Wartezeit)
+- Dynamic entry panels with type-specific fields
+- Technician search with Input suggestions (4000+ records)
+- Task dropdown with category filtering (AZ, FZ, WZ)
+- Multi-step save workflow (Save → Send for Approval → Done)
+
+**Type Configuration:**
+- Configurable Expense/Mileage Service Product IDs
+- Type Config Dialog (add/remove/reset type IDs)
+- REST API for type configuration CRUD
+- File-based storage (`typeconfig.json`)
+- Default types:
+  - Expense: Z40000001, Z40000007, Z50000000
+  - Mileage: Z40000038, Z40000008
+  - Time & Material: All others
+
+**Services & Infrastructure:**
+- Lookup services for ID resolution (Person, Technician, Task, Item, ExpenseType, UdfMeta, Approval, Organization, BusinessPartner)
 - Authentication via BTP Destination Service
+- Token caching (55 min TTL)
 - Responsive CSS with mobile-first design (3→2→1 column layout)
 
 ### 🔄 In Progress:
 - T&M entry submission to FSM API (currently shows JSON preview)
 
 ### 📋 Planned:
-- T&M entry editing (update existing entries)
+- German translations (i18n)
+- Persistent type configuration (database storage)
 - Offline support
 
 ---
 
 ## 🔐 Security Notes
 
-- OAuth tokens cached in memory (not persisted)
-- Destination credentials in VCAP_SERVICES (secure)
+- OAuth tokens cached in memory (not persisted to disk)
+- Destination credentials stored securely in VCAP_SERVICES
 - Web container context stored in memory (cleared on restart)
-- HTTPS only (enforced by Cloud Foundry)
-- No sensitive data logged (auth tokens excluded from logs)
+- Type configuration stored in file (no sensitive data)
+- HTTPS enforced by Cloud Foundry
+- No sensitive data logged (auth tokens excluded)
+- fsm-shell SDK loaded from trusted CDN (unpkg.com)
 
 ---
 
@@ -737,4 +1351,4 @@ Internal use only - Company proprietary.
 
 ---
 
-**Last Updated:** December 2025
+**Last Updated:** January 2026

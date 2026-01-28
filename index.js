@@ -8,6 +8,7 @@
  * 1. Web Container Entry Point - Receives POST from FSM Mobile with context
  * 2. Static File Serving - Serves the UI5 frontend from /webapp
  * 3. REST API Proxy - Authenticated requests to FSM APIs
+ * 4. Type Configuration - Manage expense/mileage type IDs
  * 
  * API Routes:
  * - POST /web-container-access-point - FSM Mobile entry point
@@ -20,15 +21,24 @@
  * - GET  /api/get-time-tasks         - Task lookup data
  * - GET  /api/get-items              - Item lookup data
  * - GET  /api/get-expense-types      - Expense type lookup data
+ * - GET  /api/get-type-config        - Get type configuration
+ * - POST /api/save-type-config       - Save type configuration
+ * - POST /api/add-expense-type       - Add expense type ID
+ * - POST /api/remove-expense-type    - Remove expense type ID
+ * - POST /api/add-mileage-type       - Add mileage type ID
+ * - POST /api/remove-mileage-type    - Remove mileage type ID
+ * - POST /api/reset-type-config      - Reset to defaults
  * 
  * @file index.js
  * @requires express
  * @requires ./utils/FSMService
+ * @requires ./TypeConfigStore
  */
 
 const express = require('express');
 const path = require('path');
 const FSMService = require('./utils/FSMService');
+const TypeConfigStore = require('./TypeConfigStore');
 
 const app = express();
 
@@ -746,6 +756,227 @@ app.post("/api/get-user-org-level", async (req, res) => {
         res.status(error.response?.status || 500).json({
             message: error.response?.data?.message || 'Failed to fetch user organization level',
             error: error.response?.data || error.message
+        });
+    }
+});
+
+// ===========================
+// TYPE CONFIGURATION ENDPOINTS
+// ===========================
+
+/**
+ * GET /api/get-type-config
+ * Returns current type configuration (expense and mileage types)
+ */
+app.get("/api/get-type-config", (req, res) => {
+    try {
+        const config = TypeConfigStore.getConfig();
+        res.json({
+            success: true,
+            data: config
+        });
+    } catch (error) {
+        console.error("Error getting type config:", error.message);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to get type configuration',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * POST /api/save-type-config
+ * Save full type configuration
+ * Body: { expenseTypes: [...], mileageTypes: [...], modifiedBy: "username" }
+ */
+app.post("/api/save-type-config", (req, res) => {
+    try {
+        const { expenseTypes, mileageTypes, modifiedBy } = req.body;
+        
+        const result = TypeConfigStore.updateConfig(
+            { expenseTypes, mileageTypes },
+            modifiedBy
+        );
+        
+        if (result.success) {
+            res.json({
+                success: true,
+                data: result.config,
+                message: 'Configuration saved successfully'
+            });
+        } else {
+            res.status(400).json({
+                success: false,
+                message: 'Failed to save configuration'
+            });
+        }
+    } catch (error) {
+        console.error("Error saving type config:", error.message);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to save type configuration',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * POST /api/add-expense-type
+ * Add a single expense type ID
+ * Body: { typeId: "Z...", modifiedBy: "username" }
+ */
+app.post("/api/add-expense-type", (req, res) => {
+    try {
+        const { typeId, modifiedBy } = req.body;
+        const result = TypeConfigStore.addExpenseType(typeId, modifiedBy);
+        
+        if (result.success) {
+            res.json({
+                success: true,
+                data: result.config,
+                message: `Added expense type: ${typeId}`
+            });
+        } else {
+            res.status(400).json({
+                success: false,
+                message: result.message
+            });
+        }
+    } catch (error) {
+        console.error("Error adding expense type:", error.message);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to add expense type',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * POST /api/remove-expense-type
+ * Remove a single expense type ID
+ * Body: { typeId: "Z...", modifiedBy: "username" }
+ */
+app.post("/api/remove-expense-type", (req, res) => {
+    try {
+        const { typeId, modifiedBy } = req.body;
+        const result = TypeConfigStore.removeExpenseType(typeId, modifiedBy);
+        
+        if (result.success) {
+            res.json({
+                success: true,
+                data: result.config,
+                message: `Removed expense type: ${typeId}`
+            });
+        } else {
+            res.status(400).json({
+                success: false,
+                message: result.message
+            });
+        }
+    } catch (error) {
+        console.error("Error removing expense type:", error.message);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to remove expense type',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * POST /api/add-mileage-type
+ * Add a single mileage type ID
+ * Body: { typeId: "Z...", modifiedBy: "username" }
+ */
+app.post("/api/add-mileage-type", (req, res) => {
+    try {
+        const { typeId, modifiedBy } = req.body;
+        const result = TypeConfigStore.addMileageType(typeId, modifiedBy);
+        
+        if (result.success) {
+            res.json({
+                success: true,
+                data: result.config,
+                message: `Added mileage type: ${typeId}`
+            });
+        } else {
+            res.status(400).json({
+                success: false,
+                message: result.message
+            });
+        }
+    } catch (error) {
+        console.error("Error adding mileage type:", error.message);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to add mileage type',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * POST /api/remove-mileage-type
+ * Remove a single mileage type ID
+ * Body: { typeId: "Z...", modifiedBy: "username" }
+ */
+app.post("/api/remove-mileage-type", (req, res) => {
+    try {
+        const { typeId, modifiedBy } = req.body;
+        const result = TypeConfigStore.removeMileageType(typeId, modifiedBy);
+        
+        if (result.success) {
+            res.json({
+                success: true,
+                data: result.config,
+                message: `Removed mileage type: ${typeId}`
+            });
+        } else {
+            res.status(400).json({
+                success: false,
+                message: result.message
+            });
+        }
+    } catch (error) {
+        console.error("Error removing mileage type:", error.message);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to remove mileage type',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * POST /api/reset-type-config
+ * Reset type configuration to defaults
+ * Body: { modifiedBy: "username" }
+ */
+app.post("/api/reset-type-config", (req, res) => {
+    try {
+        const { modifiedBy } = req.body;
+        const result = TypeConfigStore.resetToDefaults(modifiedBy);
+        
+        if (result.success) {
+            res.json({
+                success: true,
+                data: result.config,
+                message: 'Configuration reset to defaults'
+            });
+        } else {
+            res.status(400).json({
+                success: false,
+                message: 'Failed to reset configuration'
+            });
+        }
+    } catch (error) {
+        console.error("Error resetting type config:", error.message);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to reset type configuration',
+            error: error.message
         });
     }
 });

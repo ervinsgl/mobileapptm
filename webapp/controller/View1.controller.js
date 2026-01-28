@@ -29,12 +29,15 @@
 sap.ui.define([
     "sap/ui/core/mvc/Controller",
     "sap/ui/model/json/JSONModel",
+    "sap/ui/core/Fragment",
     "sap/m/MessageToast",
+    "sap/m/MessageBox",
     "mobileappsc/model/formatter",
     "mobileappsc/utils/services/OrganizationService",
     "mobileappsc/utils/services/PersonService",
     "mobileappsc/utils/services/ItemService",
     "mobileappsc/utils/services/UdfMetaService",
+    "mobileappsc/utils/services/TypeConfigService",
     "mobileappsc/utils/tm/TMDialogService",
     "./mixin/DataLoadingMixin",
     "./mixin/TMDialogMixin",
@@ -45,7 +48,7 @@ sap.ui.define([
     "./mixin/TMTimeEntryMixin",
     "./mixin/TMSaveMixin",
     "./mixin/TechnicianMixin"
-], (Controller, JSONModel, MessageToast, formatter, OrganizationService, PersonService, ItemService, UdfMetaService, TMDialogService, DataLoadingMixin, TMDialogMixin, TMEditMixin, TMTableMixin, TMExpenseMileageMixin, TMMaterialMixin, TMTimeEntryMixin, TMSaveMixin, TechnicianMixin) => {
+], (Controller, JSONModel, Fragment, MessageToast, MessageBox, formatter, OrganizationService, PersonService, ItemService, UdfMetaService, TypeConfigService, TMDialogService, DataLoadingMixin, TMDialogMixin, TMEditMixin, TMTableMixin, TMExpenseMileageMixin, TMMaterialMixin, TMTimeEntryMixin, TMSaveMixin, TechnicianMixin) => {
     "use strict";
 
     /**
@@ -74,6 +77,7 @@ sap.ui.define([
          */
         onInit() {
             TMDialogService.init(this);
+            TypeConfigService.init(); // Async but non-blocking
             this._initializeModel();
             
             // Load web container context first (needed for user org level resolution)
@@ -187,6 +191,12 @@ sap.ui.define([
                 ? `${quantity} ${quantityUoM}`
                 : quantity;
 
+            // Determine service product type using TypeConfigService
+            const serviceProductId = fullActivity.serviceProduct?.externalId || 'N/A';
+            const isExpenseType = TypeConfigService.isExpenseType(serviceProductId);
+            const isMileageType = TypeConfigService.isMileageType(serviceProductId);
+            const isTimeMaterialType = TypeConfigService.isTimeMaterialType(serviceProductId);
+
             return {
                 id: activity.id,
                 code: activity.code,
@@ -201,6 +211,11 @@ sap.ui.define([
                 isReadOnly: isClosed,
                 isEntryActivity: isEntryActivity,
                 entryActivityFlag: entryActivityFlag,
+
+                // Service Product type flags
+                isExpenseType: isExpenseType,
+                isMileageType: isMileageType,
+                isTimeMaterialType: isTimeMaterialType,
 
                 tmReportsLoaded: false,
                 tmReportsLoading: false,
@@ -232,9 +247,9 @@ sap.ui.define([
                 responsibleDisplayText: fullActivity.responsibles?.[0]?.externalId 
                     ? PersonService.getPersonDisplayTextByExternalId(fullActivity.responsibles[0].externalId)
                     : 'N/A',
-                serviceProductId: fullActivity.serviceProduct?.externalId || 'N/A',
-                serviceProductDisplayText: fullActivity.serviceProduct?.externalId 
-                    ? ItemService.getItemDisplayTextByExternalId(fullActivity.serviceProduct.externalId)
+                serviceProductId: serviceProductId,
+                serviceProductDisplayText: serviceProductId !== 'N/A'
+                    ? ItemService.getItemDisplayTextByExternalId(serviceProductId)
                     : 'N/A',
                 plannedDuration: fullActivity.plannedDurationInMinutes || 0,
 
@@ -326,7 +341,7 @@ sap.ui.define([
         /**
          * Extract name from display text by removing code prefix
          * e.g., "AZ - Arbeitszeit" -> "Arbeitszeit"
-         * e.g., "Z12000007 - PrÃƒÆ’Ã‚Â¼fung" -> "PrÃƒÆ’Ã‚Â¼fung"
+         * e.g., "Z12000007 - PrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¼fung" -> "PrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¼fung"
          * @private
          */
         _extractNameFromDisplayText(displayText) {
@@ -419,6 +434,212 @@ sap.ui.define([
                 const productPath = bindingContext.getPath();
                 const model = this.getView().getModel("view");
                 model.setProperty(productPath + "/expanded", expanded);
+            }
+        },
+
+        /* =========================================================================
+         * TYPE CONFIGURATION DIALOG HANDLERS
+         * ========================================================================= */
+
+        /**
+         * Open Type Configuration Dialog
+         */
+        async onOpenTypeConfig() {
+            if (!this._typeConfigDialog) {
+                this._typeConfigDialog = await Fragment.load({
+                    name: "mobileappsc.view.fragments.TypeConfigDialog",
+                    controller: this
+                });
+                this.getView().addDependent(this._typeConfigDialog);
+            }
+
+            // Refresh config from server before opening
+            await TypeConfigService.refreshConfig();
+
+            // Create model with current config
+            const typeConfigModel = new JSONModel({
+                expenseTypes: [...TypeConfigService.getExpenseTypes()],
+                mileageTypes: [...TypeConfigService.getMileageTypes()],
+                busy: false
+            });
+            this._typeConfigDialog.setModel(typeConfigModel, "typeConfig");
+            this._typeConfigDialog.open();
+        },
+
+        /**
+         * Close Type Configuration Dialog
+         */
+        onCloseTypeConfig() {
+            if (this._typeConfigDialog) {
+                this._typeConfigDialog.close();
+            }
+        },
+
+        /**
+         * Add Expense Type
+         */
+        async onAddExpenseType() {
+            const dialog = this._typeConfigDialog;
+            if (!dialog) return;
+
+            // Find the expense input field
+            const inputCtrl = dialog.getContent()[0]?.getItems()[1]?.getContent()[0]?.getItems()[0];
+            if (!inputCtrl || !inputCtrl.getValue) return;
+
+            const value = inputCtrl.getValue().trim().toUpperCase();
+            if (!value) {
+                MessageToast.show("Please enter a Service Product ID");
+                return;
+            }
+
+            // Get current user for audit
+            const viewModel = this.getView().getModel("view");
+            const modifiedBy = viewModel?.getProperty("/webContainerContext/userName") || "unknown";
+
+            this._setTypeConfigBusy(true);
+            const result = await TypeConfigService.addExpenseType(value, modifiedBy);
+            this._setTypeConfigBusy(false);
+
+            if (result.success) {
+                this._refreshTypeConfigModel();
+                inputCtrl.setValue("");
+                MessageToast.show(`Added expense type: ${value}`);
+            } else {
+                MessageToast.show(result.message || "Failed to add type");
+            }
+        },
+
+        /**
+         * Remove Expense Type
+         */
+        async onRemoveExpenseType(oEvent) {
+            const context = oEvent.getSource().getBindingContext("typeConfig");
+            if (!context) return;
+
+            const typeId = context.getObject();
+            const viewModel = this.getView().getModel("view");
+            const modifiedBy = viewModel?.getProperty("/webContainerContext/userName") || "unknown";
+
+            this._setTypeConfigBusy(true);
+            const result = await TypeConfigService.removeExpenseType(typeId, modifiedBy);
+            this._setTypeConfigBusy(false);
+
+            if (result.success) {
+                this._refreshTypeConfigModel();
+                MessageToast.show(`Removed expense type: ${typeId}`);
+            } else {
+                MessageToast.show(result.message || "Failed to remove type");
+            }
+        },
+
+        /**
+         * Add Mileage Type
+         */
+        async onAddMileageType() {
+            const dialog = this._typeConfigDialog;
+            if (!dialog) return;
+
+            // Find the mileage input field
+            const inputCtrl = dialog.getContent()[0]?.getItems()[2]?.getContent()[0]?.getItems()[0];
+            if (!inputCtrl || !inputCtrl.getValue) return;
+
+            const value = inputCtrl.getValue().trim().toUpperCase();
+            if (!value) {
+                MessageToast.show("Please enter a Service Product ID");
+                return;
+            }
+
+            const viewModel = this.getView().getModel("view");
+            const modifiedBy = viewModel?.getProperty("/webContainerContext/userName") || "unknown";
+
+            this._setTypeConfigBusy(true);
+            const result = await TypeConfigService.addMileageType(value, modifiedBy);
+            this._setTypeConfigBusy(false);
+
+            if (result.success) {
+                this._refreshTypeConfigModel();
+                inputCtrl.setValue("");
+                MessageToast.show(`Added mileage type: ${value}`);
+            } else {
+                MessageToast.show(result.message || "Failed to add type");
+            }
+        },
+
+        /**
+         * Remove Mileage Type
+         */
+        async onRemoveMileageType(oEvent) {
+            const context = oEvent.getSource().getBindingContext("typeConfig");
+            if (!context) return;
+
+            const typeId = context.getObject();
+            const viewModel = this.getView().getModel("view");
+            const modifiedBy = viewModel?.getProperty("/webContainerContext/userName") || "unknown";
+
+            this._setTypeConfigBusy(true);
+            const result = await TypeConfigService.removeMileageType(typeId, modifiedBy);
+            this._setTypeConfigBusy(false);
+
+            if (result.success) {
+                this._refreshTypeConfigModel();
+                MessageToast.show(`Removed mileage type: ${typeId}`);
+            } else {
+                MessageToast.show(result.message || "Failed to remove type");
+            }
+        },
+
+        /**
+         * Reset Type Configuration to Defaults
+         */
+        onResetTypeConfig() {
+            MessageBox.confirm("Reset all type configurations to defaults?", {
+                title: "Reset Configuration",
+                onClose: async (action) => {
+                    if (action === MessageBox.Action.OK) {
+                        const viewModel = this.getView().getModel("view");
+                        const modifiedBy = viewModel?.getProperty("/webContainerContext/userName") || "unknown";
+
+                        this._setTypeConfigBusy(true);
+                        const result = await TypeConfigService.resetToDefaults(modifiedBy);
+                        this._setTypeConfigBusy(false);
+
+                        if (result.success) {
+                            this._refreshTypeConfigModel();
+                            MessageToast.show("Configuration reset to defaults");
+                        } else {
+                            MessageToast.show("Failed to reset configuration");
+                        }
+                    }
+                }
+            });
+        },
+
+        /**
+         * Set Type Config Dialog busy state
+         * @param {boolean} busy - Busy state
+         * @private
+         */
+        _setTypeConfigBusy(busy) {
+            if (this._typeConfigDialog) {
+                const model = this._typeConfigDialog.getModel("typeConfig");
+                if (model) {
+                    model.setProperty("/busy", busy);
+                }
+                this._typeConfigDialog.setBusy(busy);
+            }
+        },
+
+        /**
+         * Refresh Type Config Model
+         * @private
+         */
+        _refreshTypeConfigModel() {
+            if (this._typeConfigDialog) {
+                const model = this._typeConfigDialog.getModel("typeConfig");
+                if (model) {
+                    model.setProperty("/expenseTypes", [...TypeConfigService.getExpenseTypes()]);
+                    model.setProperty("/mileageTypes", [...TypeConfigService.getMileageTypes()]);
+                }
             }
         }
 

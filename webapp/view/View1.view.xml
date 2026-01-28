@@ -58,6 +58,13 @@
         <!-- Footer -->
         <footer>
             <OverflowToolbar id="mobileAppFooterToolbar">
+                <Button 
+                    id="mobileAppTypeConfigButton" 
+                    icon="sap-icon://action-settings" 
+                    text="Type Config" 
+                    press=".onOpenTypeConfig"
+                    tooltip="Configure Expense/Mileage Service Product Types"
+                />
                 <ToolbarSpacer id="mobileAppFooterSpacer"/>
                 <Button id="mobileAppRefreshButton" icon="sap-icon://refresh" text="Refresh" press=".onRefresh"/>
             </OverflowToolbar>

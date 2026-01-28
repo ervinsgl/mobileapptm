@@ -102,8 +102,8 @@
                                                 <ObjectNumber number="{view>tmReportsCount}" unit="items" state="{= ${view>tmReportsCount} > 0 ? 'Success' : 'None'}" class="sapUiTinyMarginBegin"/>
                                             </HBox>
                                             
-                                            <!-- T&M Summary Stats - Only show for regular activities (not expense/mileage) -->
-                                            <HBox visible="{= ${view>tmReportsLoaded} &amp;&amp; ${view>serviceProductId} !== 'Z40000001' &amp;&amp; ${view>serviceProductId} !== 'Z40000007' &amp;&amp; ${view>serviceProductId} !== 'Z50000000' &amp;&amp; ${view>serviceProductId} !== 'Z40000038' &amp;&amp; ${view>serviceProductId} !== 'Z40000008' }" class="sapUiTinyMarginBottom sapUiSmallMarginBegin" wrap="Wrap">
+                                            <!-- T&M Summary Stats - Only show for Time & Material activities (not expense/mileage) -->
+                                            <HBox visible="{= ${view>tmReportsLoaded} &amp;&amp; ${view>isTimeMaterialType} }" class="sapUiTinyMarginBottom sapUiSmallMarginBegin" wrap="Wrap">
                                                 <VBox class="sapUiSmallMarginEnd">
                                                     <Label text="Quantity"/>
                                                     <HBox alignItems="Center">

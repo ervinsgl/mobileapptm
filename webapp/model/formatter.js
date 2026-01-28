@@ -9,6 +9,7 @@
  * - Numeric value formatting (quantity, amount, distance)
  * - Activity ID formatting for FSM API
  * - JSON formatting for debugging
+ * - Service Product type checking (Expense, Mileage, Time & Material)
  * 
  * Usage in XML Views:
  *   text="{path: 'view>startDateTime', formatter: '.formatter.formatDateTime'}"
@@ -16,7 +17,9 @@
  * @file formatter.js
  * @module mobileappsc/model/formatter
  */
-sap.ui.define([], () => {
+sap.ui.define([
+    "mobileappsc/utils/services/TypeConfigService"
+], (TypeConfigService) => {
     "use strict";
 
     return {
@@ -137,6 +140,37 @@ sap.ui.define([], () => {
         formatActivityIdForFSM(activityId) {
             if (!activityId) return "";
             return activityId.replace(/-/g, '').toUpperCase();
+        },
+
+        /* =========================================================================
+         * SERVICE PRODUCT TYPE FORMATTERS
+         * ========================================================================= */
+
+        /**
+         * Check if Service Product ID is an Expense type.
+         * @param {string} serviceProductId - Service Product external ID
+         * @returns {boolean} True if expense type
+         */
+        isExpenseType(serviceProductId) {
+            return TypeConfigService.isExpenseType(serviceProductId);
+        },
+
+        /**
+         * Check if Service Product ID is a Mileage type.
+         * @param {string} serviceProductId - Service Product external ID
+         * @returns {boolean} True if mileage type
+         */
+        isMileageType(serviceProductId) {
+            return TypeConfigService.isMileageType(serviceProductId);
+        },
+
+        /**
+         * Check if Service Product ID is a Time & Material type.
+         * @param {string} serviceProductId - Service Product external ID
+         * @returns {boolean} True if time & material type
+         */
+        isTimeMaterialType(serviceProductId) {
+            return TypeConfigService.isTimeMaterialType(serviceProductId);
         }
     };
 });

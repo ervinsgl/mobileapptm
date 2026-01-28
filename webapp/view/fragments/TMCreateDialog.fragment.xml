@@ -6,9 +6,9 @@
     <!-- 
         TMCreateDialog Fragment: Dialog for creating T&M (Time & Materials) entries.
         
-        Entry Types:
-        - Expense Report: Table-based (Service Products Z40000001, Z40000007, Z50000000)
-        - Mileage Report: Table-based (Service Products Z40000038, Z40000008)
+        Entry Types (configurable via Type Config dialog):
+        - Expense Report: Table-based (default: Z40000001, Z40000007, Z50000000)
+        - Mileage Report: Table-based (default: Z40000038, Z40000008)
         - Time & Material Report: Panel-based (All other Service Products)
         
         Model: createTM
@@ -73,11 +73,11 @@
                 </VBox>
                 
                 <!-- ========== EXPENSE REPORT TABLE ========== -->
-                <!-- Visible only for Service Products: Z40000001, Z40000007, Z50000000 -->
+                <!-- Visible only for Expense Service Products (configured in Type Config) -->
                 <Panel 
                     expandable="false" 
                     expanded="true" 
-                    visible="{= ${createTM>/serviceProductExternalId} === 'Z40000001' || ${createTM>/serviceProductExternalId} === 'Z40000007' || ${createTM>/serviceProductExternalId} === 'Z50000000' }" 
+                    visible="{createTM>/isExpenseType}" 
                     class="tmTypePanel sapUiSmallMarginTop"
                 >
                     <headerToolbar>
@@ -163,11 +163,11 @@
                 </Panel>
                 
                 <!-- ========== MILEAGE REPORT TABLE ========== -->
-                <!-- Visible only for Service Products: Z40000038, Z40000008 -->
+                <!-- Visible only for Mileage Service Products (configured in Type Config) -->
                 <Panel 
                     expandable="false" 
                     expanded="true" 
-                    visible="{= ${createTM>/serviceProductExternalId} === 'Z40000038' || ${createTM>/serviceProductExternalId} === 'Z40000008' }" 
+                    visible="{createTM>/isMileageType}" 
                     class="tmTypePanel sapUiSmallMarginTop"
                 >
                     <headerToolbar>
@@ -255,9 +255,9 @@
                 </Panel>
                 
                 <!-- ========== TIME & MATERIAL - TABLE BASED ========== -->
-                <!-- Visible for all other Service Products -->
+                <!-- Visible for Time & Material Service Products (configured in Type Config) -->
                 <VBox 
-                    visible="{= ${createTM>/serviceProductExternalId} !== 'Z40000001' &amp;&amp; ${createTM>/serviceProductExternalId} !== 'Z40000007' &amp;&amp; ${createTM>/serviceProductExternalId} !== 'Z50000000' &amp;&amp; ${createTM>/serviceProductExternalId} !== 'Z40000038' &amp;&amp; ${createTM>/serviceProductExternalId} !== 'Z40000008' }"
+                    visible="{createTM>/isTimeMaterialType}"
                     class="sapUiSmallMarginTop"
                 >
                     <!-- ===== MATERIAL TABLE ===== -->
@@ -674,7 +674,7 @@
                 icon="sap-icon://paper-plane" 
                 type="Emphasized" 
                 press=".onSaveAllCreateExpense"
-                visible="{= (${createTM>/serviceProductExternalId} === 'Z40000001' || ${createTM>/serviceProductExternalId} === 'Z40000007' || ${createTM>/serviceProductExternalId} === 'Z50000000') &amp;&amp; ${createTM>/expenseEntries}.length > 0 }"
+                visible="{= ${createTM>/isExpenseType} &amp;&amp; ${createTM>/expenseEntries}.length > 0 }"
             />
             <!-- Send for Approval - Mileage Report -->
             <Button 
@@ -682,7 +682,7 @@
                 icon="sap-icon://paper-plane" 
                 type="Emphasized" 
                 press=".onSaveAllCreateMileage"
-                visible="{= (${createTM>/serviceProductExternalId} === 'Z40000038' || ${createTM>/serviceProductExternalId} === 'Z40000008') &amp;&amp; ${createTM>/mileageEntries}.length > 0 }"
+                visible="{= ${createTM>/isMileageType} &amp;&amp; ${createTM>/mileageEntries}.length > 0 }"
             />
             <!-- Send for Approval - Time & Material -->
             <Button 
@@ -690,7 +690,7 @@
                 icon="sap-icon://paper-plane" 
                 type="Emphasized" 
                 press=".onSaveAllCreateTM"
-                visible="{= ${createTM>/serviceProductExternalId} !== 'Z40000001' &amp;&amp; ${createTM>/serviceProductExternalId} !== 'Z40000007' &amp;&amp; ${createTM>/serviceProductExternalId} !== 'Z50000000' &amp;&amp; ${createTM>/serviceProductExternalId} !== 'Z40000038' &amp;&amp; ${createTM>/serviceProductExternalId} !== 'Z40000008' &amp;&amp; (${createTM>/materialEntries}.length + ${createTM>/timeEntriesAZ}.length + ${createTM>/timeEntriesFZ}.length + ${createTM>/timeEntriesWZ}.length) > 0 }"
+                visible="{= ${createTM>/isTimeMaterialType} &amp;&amp; (${createTM>/materialEntries}.length + ${createTM>/timeEntriesAZ}.length + ${createTM>/timeEntriesFZ}.length + ${createTM>/timeEntriesWZ}.length) > 0 }"
             />
             <Button text="Close" press=".onCancelCreateTM"/>
         </buttons>
