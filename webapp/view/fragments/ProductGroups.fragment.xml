@@ -222,14 +222,14 @@
                                                         <Title text="Expenses" level="H5"/>
                                                         <ToolbarSpacer/>
                                                         <Select selectedKey="createDateTime-desc" change=".onTMSortChange" class="sapUiTinyMarginBegin" tooltip="Sort by">
-                                                            <core:Item key="createDateTime-desc" text="Date â†“"/>
-                                                            <core:Item key="createDateTime-asc" text="Date â†‘"/>
+                                                            <core:Item key="createDateTime-desc" text="Date ↓"/>
+                                                            <core:Item key="createDateTime-asc" text="Date ↑"/>
                                                             <core:Item key="expenseTypeDisplayText-asc" text="Type A-Z"/>
                                                             <core:Item key="expenseTypeDisplayText-desc" text="Type Z-A"/>
                                                             <core:Item key="createPersonDisplayText-asc" text="Technician A-Z"/>
                                                             <core:Item key="createPersonDisplayText-desc" text="Technician Z-A"/>
-                                                            <core:Item key="externalAmountValue-desc" text="Amount â†“"/>
-                                                            <core:Item key="externalAmountValue-asc" text="Amount â†‘"/>
+                                                            <core:Item key="externalAmountValue-desc" text="Amount ↓"/>
+                                                            <core:Item key="externalAmountValue-asc" text="Amount ↑"/>
                                                             <core:Item key="decisionStatus-asc" text="Status A-Z"/>
                                                         </Select>
                                                         <Button text="Edit Selected" icon="sap-icon://edit" press=".onEditSelectedTM" visible="{= ${view>expenseEditMode} !== true}" class="sapUiTinyMarginBegin"/>
@@ -285,14 +285,14 @@
                                                         <Title text="Mileage" level="H5"/>
                                                         <ToolbarSpacer/>
                                                         <Select selectedKey="createDateTime-desc" change=".onTMSortChange" class="sapUiTinyMarginBegin" tooltip="Sort by">
-                                                            <core:Item key="createDateTime-desc" text="Date â†“"/>
-                                                            <core:Item key="createDateTime-asc" text="Date â†‘"/>
+                                                            <core:Item key="createDateTime-desc" text="Date ↓"/>
+                                                            <core:Item key="createDateTime-asc" text="Date ↑"/>
                                                             <core:Item key="mileageTypeDisplayText-asc" text="Type A-Z"/>
                                                             <core:Item key="mileageTypeDisplayText-desc" text="Type Z-A"/>
                                                             <core:Item key="createPersonDisplayText-asc" text="Technician A-Z"/>
                                                             <core:Item key="createPersonDisplayText-desc" text="Technician Z-A"/>
-                                                            <core:Item key="distanceValue-desc" text="Distance â†“"/>
-                                                            <core:Item key="distanceValue-asc" text="Distance â†‘"/>
+                                                            <core:Item key="distanceValue-desc" text="Distance ↓"/>
+                                                            <core:Item key="distanceValue-asc" text="Distance ↑"/>
                                                             <core:Item key="decisionStatus-asc" text="Status A-Z"/>
                                                         </Select>
                                                         <Button text="Edit Selected" icon="sap-icon://edit" press=".onEditSelectedTM" visible="{= ${view>mileageEditMode} !== true}" class="sapUiTinyMarginBegin"/>

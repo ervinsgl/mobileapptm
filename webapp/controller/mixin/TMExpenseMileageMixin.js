@@ -285,6 +285,9 @@ sap.ui.define([
             const defaultDate = oModel.getProperty("/defaultDate") || "";
             const defaultItemId = oModel.getProperty("/defaultItemId") || "";
             const defaultItemDisplay = oModel.getProperty("/defaultItemDisplay") || "";
+            const defaultMileageTypeDisplay = oModel.getProperty("/defaultMileageTypeDisplay") || "";
+            // Get activity quantity for default distance
+            const activityQuantity = parseFloat(oModel.getProperty("/quantity")) || 0;
             
             aMileageEntries.push({
                 id: Date.now() + '_' + Math.random().toString(36).substr(2, 9),
@@ -293,7 +296,8 @@ sap.ui.define([
                 technicianDisplay: defaultTechDisplay,
                 itemId: defaultItemId,
                 itemDisplay: defaultItemDisplay,
-                distance: 0,
+                mileageTypeDisplay: defaultMileageTypeDisplay,
+                distance: activityQuantity,
                 travelDuration: 30,
                 entryDate: defaultDate,
                 remarks: ""

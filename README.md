@@ -304,7 +304,7 @@ POST /web-container-access-point
 mobileappsc/
 │
 ├── # ─────────── ROOT LEVEL ───────────
-├── index.js                             # Express server (~800 lines)
+├── index.js                             # Express server (~760 lines)
 ├── package.json                         # Node.js dependencies
 ├── package-lock.json                    # Dependency lock file
 ├── manifest.yaml                        # Cloud Foundry deployment
@@ -320,81 +320,94 @@ mobileappsc/
 ├── # ─────────── BACKEND SERVICES ───────────
 ├── utils/
 │   ├── DestinationService.js            # BTP Destination handling
-│   ├── FSMService.js                    # FSM API integration (~1050 lines)
+│   ├── FSMService.js                    # FSM API integration (~1045 lines)
 │   └── TokenCache.js                    # OAuth token caching
 │
 └── # ─────────── FRONTEND (SAP UI5) ───────────
-    webapp/
-    │
-    ├── # ─────────── ENTRY POINTS ───────────
-    ├── index.html                       # App entry point
-    ├── manifest.json                    # UI5 app descriptor
-    ├── Component.js                     # UI5 Component
-    │
-    ├── # ─────────── VIEWS & FRAGMENTS ───────────
-    ├── view/
-    │   ├── App.view.xml                 # Root view
-    │   ├── View1.view.xml               # Main view (T&M Journal page)
-    │   └── fragments/
-    │       ├── WebContainerContext.fragment.xml  # Session Context panel
-    │       ├── ServiceCall.fragment.xml          # Service Order panel
-    │       ├── ProductGroups.fragment.xml        # Activity panels (~11KB)
-    │       ├── TMReportsDialog.fragment.xml      # T&M Reports dialog (~30KB)
-    │       └── TMCreateDialog.fragment.xml       # T&M Creation dialog (~32KB)
-    │
-    ├── # ─────────── CONTROLLERS & MIXINS ───────────
-    ├── controller/
-    │   ├── App.controller.js            # Root controller
-    │   ├── View1.controller.js          # Main controller (~400 lines)
-    │   └── mixin/
-    │       ├── DataLoadingMixin.js      # Data loading logic (~530 lines)
-    │       ├── TechnicianMixin.js       # Technician suggestion handling
-    │       └── TMDialogMixin.js         # T&M dialog handlers (~1200 lines)
-    │
-    ├── # ─────────── FRONTEND SERVICES ───────────
-    ├── utils/
-    │   ├── helpers/
-    │   │   ├── DateTimeService.js       # Date/time utilities
-    │   │   ├── ProductGroupService.js   # Activity grouping by product
-    │   │   ├── ReportedItemsData.js     # T&M data fetching
-    │   │   └── URLHelper.js             # Web container context handling
-    │   │
-    │   ├── services/
-    │   │   ├── ActivityService.js       # Activity data management
-    │   │   ├── ApprovalService.js       # Approval status lookup
-    │   │   ├── BusinessPartnerService.js# Business partner lookup
-    │   │   ├── ExpenseTypeService.js    # Expense type ID lookup
-    │   │   ├── ItemService.js           # Item ID/ExternalId lookup
-    │   │   ├── OrganizationService.js   # Organization level + user resolution
-    │   │   ├── PersonService.js         # Person ID/name lookup
-    │   │   ├── ServiceOrderService.js   # Service order/composite tree
-    │   │   ├── TechnicianService.js     # Technician suggestions (large dataset)
-    │   │   ├── TimeTaskService.js       # Time task ID lookup
-    │   │   └── UdfMetaService.js        # UDF Meta ID lookup
-    │   │
-    │   └── tm/
-    │       ├── TMCreationService.js     # T&M entry creation (~18KB)
-    │       ├── TMDataService.js         # T&M data management
-    │       ├── TMDialogService.js       # T&M dialog management (~20KB)
-    │       ├── TMEditService.js         # T&M entry editing
-    │       └── TMPayloadService.js      # T&M API payload building (~16KB)
-    │
-    ├── # ─────────── MODEL ───────────
-    ├── model/
-    │   ├── formatter.js                 # Date/number formatting
-    │   └── models.js                    # Device model
-    │
-    ├── # ─────────── STYLES ───────────
-    ├── css/
-    │   └── style.css                    # Custom styles (~1000 lines)
-    │
-    ├── # ─────────── IMAGES ───────────
-    ├── images/
-    │   └── TUEV-NORD_Logo_Electric-Blue.png  # Customer logo
-    │
-    └── # ─────────── I18N ───────────
-        i18n/
-        └── i18n.properties              # Internationalization
+webapp/
+│
+├── # ─────────── ENTRY POINTS ───────────
+├── index.html                       # App entry point
+├── simple.html                      # Simple test page
+├── manifest.json                    # UI5 app descriptor
+├── Component.js                     # UI5 Component
+├── appconfig.json                   # App configuration
+├── _appGenInfo.json                 # Generator info
+│
+├── # ─────────── VIEWS & FRAGMENTS ───────────
+├── view/
+│   ├── App.view.xml                 # Root view
+│   ├── View1.view.xml               # Main view (T&M Journal page)
+│   └── fragments/
+│       ├── WebContainerContext.fragment.xml  # Session Context panel
+│       ├── ServiceCall.fragment.xml          # Service Order header panel
+│       ├── ProductGroups.fragment.xml        # Activity panels with T&M tables (~360 lines)
+│       └── TMCreateDialog.fragment.xml       # T&M Creation dialog (~700 lines)
+│
+├── # ─────────── CONTROLLERS & MIXINS ───────────
+├── controller/
+│   ├── App.controller.js            # Root controller
+│   ├── View1.controller.js          # Main controller (~425 lines)
+│   └── mixin/
+│       ├── DataLoadingMixin.js      # Data loading, batch T&M loading (~525 lines)
+│       ├── TechnicianMixin.js       # Technician/task selection (~160 lines)
+│       ├── TMDialogMixin.js         # T&M dialog open/enrichment (~490 lines)
+│       ├── TMEditMixin.js           # Individual entry edit handlers (~730 lines)
+│       ├── TMExpenseMileageMixin.js # Expense & Mileage creation (~520 lines)
+│       ├── TMGridTableMixin.js      # Grid table utilities (~170 lines)
+│       ├── TMMaterialMixin.js       # Material entry creation (~200 lines)
+│       ├── TMSaveMixin.js           # Batch save operations (~470 lines)
+│       ├── TMTableMixin.js          # Table filter/sort/selection (~590 lines)
+│       └── TMTimeEntryMixin.js      # Time entry creation with repeat (~390 lines)
+│
+├── # ─────────── FRONTEND SERVICES ───────────
+├── utils/
+│   ├── helpers/
+│   │   ├── DateTimeService.js       # Date/time utilities
+│   │   ├── ProductGroupService.js   # Activity grouping by product
+│   │   ├── ReportedItemsData.js     # T&M data fetching
+│   │   └── URLHelper.js             # Web container context handling
+│   │
+│   ├── services/
+│   │   ├── ActivityService.js       # Activity data management
+│   │   ├── ApprovalService.js       # Approval status lookup
+│   │   ├── BusinessPartnerService.js# Business partner lookup
+│   │   ├── ContextService.js        # Web container & shell context handling
+│   │   ├── ExpenseTypeService.js    # Expense type ID lookup
+│   │   ├── ItemService.js           # Item ID/ExternalId lookup
+│   │   ├── OrganizationService.js   # Organization level + user resolution
+│   │   ├── PersonService.js         # Person ID/name lookup
+│   │   ├── ServiceOrderService.js   # Service order/composite tree
+│   │   ├── TechnicianService.js     # Technician suggestions
+│   │   ├── TimeTaskService.js       # Time task ID lookup
+│   │   └── UdfMetaService.js        # UDF Meta ID lookup
+│   │
+│   └── tm/
+│       ├── TMCreationService.js     # T&M entry creation (~19KB)
+│       ├── TMDataService.js         # T&M data management
+│       ├── TMDialogService.js       # T&M dialog management (~22KB)
+│       ├── TMEditService.js         # T&M entry editing
+│       └── TMPayloadService.js      # T&M API payload building (~21KB)
+│
+├── # ─────────── MODEL ───────────
+├── model/
+│   ├── formatter.js                 # Date/number formatting
+│   └── models.js                    # Device model
+│
+├── # ─────────── STYLES ───────────
+├── css/
+│   └── style.css                    # Custom styles (~1000 lines)
+│
+├── # ─────────── IMAGES ───────────
+├── images/
+│   └── TUEV-NORD_Logo.png           # Customer logo
+│
+├── # ─────────── TEST ───────────
+├── test/                            # Test files
+│
+└── # ─────────── I18N ───────────
+i18n/
+└── i18n.properties              # Internationalization
 ```
 
 ---

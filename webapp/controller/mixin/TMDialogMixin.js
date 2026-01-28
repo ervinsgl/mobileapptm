@@ -113,15 +113,19 @@ sap.ui.define([
                 
                 // Mileage: item name and distance for table display
                 if (report.type === "Mileage") {
-                    // Extract item from UDF value
-                    const matIdUdf = report.fullData?.udfValues?.find(u => 
-                        u.meta?.externalId === 'Z_Mileage_MatID' || 
-                        u.meta?.id === 'Z_Mileage_MatID'
-                    );
+                    // Extract item from UDF value - find Z_Mileage_MatID UDF
+                    // Note: u.meta is a string ID, need to lookup externalId via UdfMetaService
+                    const matIdUdf = report.fullData?.udfValues?.find(u => {
+                        if (!u.meta) return false;
+                        // u.meta can be either a string ID or an object with id/externalId
+                        const metaId = typeof u.meta === 'string' ? u.meta : (u.meta.id || u.meta.externalId);
+                        const externalId = UdfMetaService.getExternalIdById(metaId);
+                        return externalId === 'Z_Mileage_MatID' || externalId === 'Z_Mileage_Type';
+                    });
                     if (matIdUdf?.value) {
-                        const item = ItemService.getItemByExternalId(matIdUdf.value);
-                        report.itemDisplayText = item ? `${item.externalId} - ${item.name}` : matIdUdf.value;
-                        report.mileageTypeDisplayText = item ? item.name : matIdUdf.value;
+                        // Use correct ItemService functions
+                        report.itemDisplayText = ItemService.getItemDisplayTextByExternalId(matIdUdf.value);
+                        report.mileageTypeDisplayText = ItemService.getItemNameByExternalId(matIdUdf.value);
                     } else {
                         report.itemDisplayText = 'N/A';
                         report.mileageTypeDisplayText = 'Mileage';
@@ -154,18 +158,16 @@ sap.ui.define([
                 
                 // UDF Z_TimeEffort_MatID display
                 if (report.fullData?.udfValues) {
-                    const matIdUdf = report.fullData.udfValues.find(u => 
-                        u.meta?.externalId === 'Z_TimeEffort_MatID' || 
-                        u.meta?.id === 'Z_TimeEffort_MatID'
-                    );
+                    const matIdUdf = report.fullData.udfValues.find(u => {
+                        if (!u.meta) return false;
+                        // u.meta can be either a string ID or an object with id/externalId
+                        const metaId = typeof u.meta === 'string' ? u.meta : (u.meta.id || u.meta.externalId);
+                        const externalId = UdfMetaService.getExternalIdById(metaId);
+                        return externalId === 'Z_TimeEffort_MatID';
+                    });
                     if (matIdUdf?.value) {
-                        const udfMeta = UdfMetaService.getUdfMetaById(matIdUdf.meta?.id || matIdUdf.meta?.externalId);
-                        if (udfMeta) {
-                            const valueOption = udfMeta.values?.find(v => v.externalId === matIdUdf.value);
-                            report.udfMatIdDisplay = valueOption ? `${valueOption.externalId} - ${valueOption.name}` : matIdUdf.value;
-                        } else {
-                            report.udfMatIdDisplay = matIdUdf.value;
-                        }
+                        // Just display the value - UdfMetaService doesn't store value options
+                        report.udfMatIdDisplay = matIdUdf.value;
                     }
                 }
                 
