@@ -30,6 +30,22 @@ sap.ui.define([
 
     return {
         /**
+         * Get i18n text with optional parameters
+         * @param {string} key - i18n key
+         * @param {Array} [args] - Optional arguments for placeholders
+         * @returns {string} Translated text
+         * @private
+         */
+        _getText(key, args) {
+            const oComponent = sap.ui.getCore().getComponent("container-mobileappsc");
+            if (oComponent) {
+                const oBundle = oComponent.getModel("i18n").getResourceBundle();
+                return oBundle.getText(key, args);
+            }
+            return key; // Fallback to key if component not available
+        },
+
+        /**
          * Default technician data (set from activity responsible).
          * @type {Object|null}
          * @private
@@ -396,7 +412,7 @@ sap.ui.define([
             const aEntries = oModel.getProperty("/entries");
             aEntries.push(entry);
             oModel.setProperty("/entries", aEntries);
-            MessageToast.show(`${entryType} entry added`);
+            MessageToast.show(this._getText("msgEntryAdded", [entryType]));
         },
 
         /**

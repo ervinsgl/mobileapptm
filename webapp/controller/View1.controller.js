@@ -68,6 +68,18 @@ sap.ui.define([
 
         formatter: formatter,
 
+        /**
+         * Get i18n text with optional parameters
+         * @param {string} key - i18n key
+         * @param {Array} [args] - Optional arguments for placeholders
+         * @returns {string} Translated text
+         * @private
+         */
+        _getText(key, args) {
+            const oBundle = this.getOwnerComponent().getModel("i18n").getResourceBundle();
+            return oBundle.getText(key, args);
+        },
+
         /* =========================================================================
          * LIFECYCLE METHODS
          * ========================================================================= */
@@ -419,7 +431,7 @@ sap.ui.define([
                 });
             });
 
-            MessageToast.show("View refreshed");
+            MessageToast.show(this._getText("msgViewRefreshed"));
         },
 
         /**
@@ -488,7 +500,7 @@ sap.ui.define([
 
             const value = inputCtrl.getValue().trim().toUpperCase();
             if (!value) {
-                MessageToast.show("Please enter a Service Product ID");
+                MessageToast.show(this._getText("msgEnterServiceProductId"));
                 return;
             }
 
@@ -503,9 +515,9 @@ sap.ui.define([
             if (result.success) {
                 this._refreshTypeConfigModel();
                 inputCtrl.setValue("");
-                MessageToast.show(`Added expense type: ${value}`);
+                MessageToast.show(this._getText("msgAddedExpenseType", [value]));
             } else {
-                MessageToast.show(result.message || "Failed to add type");
+                MessageToast.show(result.message || this._getText("msgFailedAddType"));
             }
         },
 
@@ -526,9 +538,9 @@ sap.ui.define([
 
             if (result.success) {
                 this._refreshTypeConfigModel();
-                MessageToast.show(`Removed expense type: ${typeId}`);
+                MessageToast.show(this._getText("msgRemovedExpenseType", [typeId]));
             } else {
-                MessageToast.show(result.message || "Failed to remove type");
+                MessageToast.show(result.message || this._getText("msgFailedRemoveType"));
             }
         },
 
@@ -545,7 +557,7 @@ sap.ui.define([
 
             const value = inputCtrl.getValue().trim().toUpperCase();
             if (!value) {
-                MessageToast.show("Please enter a Service Product ID");
+                MessageToast.show(this._getText("msgEnterServiceProductId"));
                 return;
             }
 
@@ -559,9 +571,9 @@ sap.ui.define([
             if (result.success) {
                 this._refreshTypeConfigModel();
                 inputCtrl.setValue("");
-                MessageToast.show(`Added mileage type: ${value}`);
+                MessageToast.show(this._getText("msgAddedMileageType", [value]));
             } else {
-                MessageToast.show(result.message || "Failed to add type");
+                MessageToast.show(result.message || this._getText("msgFailedAddType"));
             }
         },
 
@@ -582,9 +594,9 @@ sap.ui.define([
 
             if (result.success) {
                 this._refreshTypeConfigModel();
-                MessageToast.show(`Removed mileage type: ${typeId}`);
+                MessageToast.show(this._getText("msgRemovedMileageType", [typeId]));
             } else {
-                MessageToast.show(result.message || "Failed to remove type");
+                MessageToast.show(result.message || this._getText("msgFailedRemoveType"));
             }
         },
 
@@ -592,8 +604,8 @@ sap.ui.define([
          * Reset Type Configuration to Defaults
          */
         onResetTypeConfig() {
-            MessageBox.confirm("Reset all type configurations to defaults?", {
-                title: "Reset Configuration",
+            MessageBox.confirm(this._getText("msgResetConfigConfirm"), {
+                title: this._getText("msgResetConfigTitle"),
                 onClose: async (action) => {
                     if (action === MessageBox.Action.OK) {
                         const viewModel = this.getView().getModel("view");
@@ -605,9 +617,9 @@ sap.ui.define([
 
                         if (result.success) {
                             this._refreshTypeConfigModel();
-                            MessageToast.show("Configuration reset to defaults");
+                            MessageToast.show(this._getText("msgConfigResetSuccess"));
                         } else {
-                            MessageToast.show("Failed to reset configuration");
+                            MessageToast.show(this._getText("msgConfigResetFailed"));
                         }
                     }
                 }

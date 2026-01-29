@@ -171,6 +171,77 @@ sap.ui.define([
          */
         isTimeMaterialType(serviceProductId) {
             return TypeConfigService.isTimeMaterialType(serviceProductId);
+        },
+
+        /**
+         * Get resource bundle for i18n (standalone helper).
+         * @private
+         * @returns {sap.base.i18n.ResourceBundle|null}
+         */
+        _getResourceBundle: function() {
+            try {
+                const oComponent = sap.ui.getCore().getComponent("container-mobileappsc");
+                if (oComponent) {
+                    return oComponent.getModel("i18n").getResourceBundle();
+                }
+            } catch (e) {
+                // Silently fail - will use fallback values
+            }
+            return null;
+        },
+
+        /**
+         * Format hours unit based on entry type.
+         * @param {string} type - Entry type (Time Effort, Material, etc.)
+         * @returns {string} Hours unit label or empty string
+         */
+        formatHoursUnit: function(type) {
+            if (type === 'Time Effort') {
+                try {
+                    const oComponent = sap.ui.getCore().getComponent("container-mobileappsc");
+                    if (oComponent) {
+                        const oBundle = oComponent.getModel("i18n").getResourceBundle();
+                        return oBundle.getText("unitHours");
+                    }
+                } catch (e) { /* fallback */ }
+                return "hrs";
+            }
+            return "";
+        },
+
+        /**
+         * Format pieces unit based on entry type.
+         * @param {string} type - Entry type (Time Effort, Material, etc.)
+         * @returns {string} Pieces unit label or empty string
+         */
+        formatPiecesUnit: function(type) {
+            if (type === 'Material') {
+                try {
+                    const oComponent = sap.ui.getCore().getComponent("container-mobileappsc");
+                    if (oComponent) {
+                        const oBundle = oComponent.getModel("i18n").getResourceBundle();
+                        return oBundle.getText("unitPieces");
+                    }
+                } catch (e) { /* fallback */ }
+                return "pcs";
+            }
+            return "";
+        },
+
+        /**
+         * Format remaining material quantity text.
+         * @param {number} qty - Remaining quantity
+         * @returns {string} Formatted text "of X pcs"
+         */
+        formatRemainingQty: function(qty) {
+            try {
+                const oComponent = sap.ui.getCore().getComponent("container-mobileappsc");
+                if (oComponent) {
+                    const oBundle = oComponent.getModel("i18n").getResourceBundle();
+                    return oBundle.getText("remainingMaterialQty", [qty || 0]);
+                }
+            } catch (e) { /* fallback */ }
+            return `of ${qty || 0} pcs`;
         }
     };
 });

@@ -36,7 +36,7 @@ sap.ui.define([
                                  aTimeEntriesFZ.length + aTimeEntriesWZ.length;
             
             if (totalEntries === 0) {
-                MessageToast.show("No entries to save");
+                MessageToast.show(this._getText("msgNoEntriesToSave"));
                 return;
             }
             
@@ -58,7 +58,7 @@ sap.ui.define([
             
             if (hasErrors) {
                 const uniqueErrors = [...new Set(errorMessages)];
-                MessageBox.warning(`Please select a ${uniqueErrors.join(' and ')} for all time entries.`);
+                MessageBox.warning(this._getText("msgSelectTaskAndTechnician", [uniqueErrors.join(' and ')]));
                 return;
             }
             
@@ -84,64 +84,64 @@ sap.ui.define([
             const lines = [];
             
             if (aMaterialEntries.length > 0) {
-                lines.push(`Materials (${aMaterialEntries.length}):`);
+                lines.push(this._getText("previewMaterials", [aMaterialEntries.length]));
                 aMaterialEntries.forEach((e, i) => {
-                    lines.push(`  ${i + 1}. ${e.itemDisplay || 'N/A'} - Qty: ${e.quantity}`);
+                    lines.push(`  ${i + 1}. ${e.itemDisplay || 'N/A'} - ${this._getText("previewQty")} ${e.quantity}`);
                 });
             }
             
             if (aTimeEntriesAZ.length > 0) {
                 const azCount = countEntriesWithTechniciansAndRepeats(aTimeEntriesAZ);
-                lines.push(`\nArbeitszeit (${azCount} entries):`);
+                lines.push(`\n${this._getText("previewArbeitszeitSection", [azCount])}`);
                 aTimeEntriesAZ.forEach((e, i) => {
                     const taskName = this._getTaskNameByCode(oModel, 'AZ', e.taskCode);
                     const techCount = (e.selectedTechnicians || []).length;
-                    const techNote = techCount > 1 ? ` × ${techCount} techs` : '';
+                    const techNote = techCount > 1 ? ` ${this._getText("previewTechsMultiplier", [techCount])}` : '';
                     let repeatNote = '';
                     if (e.repeatEnabled && e.repeatEndDate) {
                         const dates = this._generateDateRange(e.entryDate, e.repeatEndDate);
-                        repeatNote = ` × ${dates.length} days`;
+                        repeatNote = ` ${this._getText("previewDaysMultiplier", [dates.length])}`;
                     }
-                    lines.push(`  ${i + 1}. ${taskName} - ${e.durationHrs} hrs${techNote}${repeatNote}`);
+                    lines.push(`  ${i + 1}. ${taskName} - ${e.durationHrs} ${this._getText("unitHours")}${techNote}${repeatNote}`);
                 });
             }
             
             if (aTimeEntriesFZ.length > 0) {
                 const fzCount = countEntriesWithTechniciansAndRepeats(aTimeEntriesFZ);
-                lines.push(`\nFahrzeit (${fzCount} entries):`);
+                lines.push(`\n${this._getText("previewFahrzeitSection", [fzCount])}`);
                 aTimeEntriesFZ.forEach((e, i) => {
                     const taskName = this._getTaskNameByCode(oModel, 'FZ', e.taskCode);
                     const techCount = (e.selectedTechnicians || []).length;
-                    const techNote = techCount > 1 ? ` × ${techCount} techs` : '';
+                    const techNote = techCount > 1 ? ` ${this._getText("previewTechsMultiplier", [techCount])}` : '';
                     let repeatNote = '';
                     if (e.repeatEnabled && e.repeatEndDate) {
                         const dates = this._generateDateRange(e.entryDate, e.repeatEndDate);
-                        repeatNote = ` × ${dates.length} days`;
+                        repeatNote = ` ${this._getText("previewDaysMultiplier", [dates.length])}`;
                     }
-                    lines.push(`  ${i + 1}. ${taskName} - ${e.durationHrs} hrs${techNote}${repeatNote}`);
+                    lines.push(`  ${i + 1}. ${taskName} - ${e.durationHrs} ${this._getText("unitHours")}${techNote}${repeatNote}`);
                 });
             }
             
             if (aTimeEntriesWZ.length > 0) {
                 const wzCount = countEntriesWithTechniciansAndRepeats(aTimeEntriesWZ);
-                lines.push(`\nWartezeit (${wzCount} entries):`);
+                lines.push(`\n${this._getText("previewWartezeitSection", [wzCount])}`);
                 aTimeEntriesWZ.forEach((e, i) => {
                     const taskName = this._getTaskNameByCode(oModel, 'WZ', e.taskCode);
                     const techCount = (e.selectedTechnicians || []).length;
-                    const techNote = techCount > 1 ? ` × ${techCount} techs` : '';
+                    const techNote = techCount > 1 ? ` ${this._getText("previewTechsMultiplier", [techCount])}` : '';
                     let repeatNote = '';
                     if (e.repeatEnabled && e.repeatEndDate) {
                         const dates = this._generateDateRange(e.entryDate, e.repeatEndDate);
-                        repeatNote = ` × ${dates.length} days`;
+                        repeatNote = ` ${this._getText("previewDaysMultiplier", [dates.length])}`;
                     }
-                    lines.push(`  ${i + 1}. ${taskName} - ${e.durationHrs} hrs${techNote}${repeatNote}`);
+                    lines.push(`  ${i + 1}. ${taskName} - ${e.durationHrs} ${this._getText("unitHours")}${techNote}${repeatNote}`);
                 });
             }
             
             MessageBox.confirm(
-                `Create ${totalAPIEntries} entries?\n\n${lines.join('\n')}`,
+                this._getText("msgConfirmCreateTM", [totalAPIEntries, lines.join('\n')]),
                 {
-                    title: "Confirm Creation",
+                    title: this._getText("msgConfirmCreateTMTitle"),
                     onClose: (sAction) => {
                         if (sAction === MessageBox.Action.OK) {
                             this._submitCreateTMEntries(aMaterialEntries, aTimeEntriesAZ, aTimeEntriesFZ, aTimeEntriesWZ, oModel);
@@ -307,7 +307,7 @@ sap.ui.define([
                 }
                 
                 if (errorCount === 0) {
-                    MessageToast.show(`${successCount} entries created successfully`);
+                    MessageToast.show(this._getText("msgEntriesCreated", [successCount]));
                     
                     // Clear all arrays
                     oModel.setProperty("/materialEntries", []);
@@ -325,12 +325,12 @@ sap.ui.define([
                         await this._refreshTMReportsAfterCreate(activityId);
                     }
                 } else {
-                    MessageBox.warning(`Created ${successCount}, failed ${errorCount}`);
+                    MessageBox.warning(this._getText("msgPartialSuccess", [successCount, errorCount]));
                 }
                 
             } catch (error) {
                 console.error("Error creating T&M entries:", error);
-                MessageBox.error(`Error: ${error.message}`);
+                MessageBox.error(this._getText("msgError", [error.message]));
             } finally {
                 sap.ui.core.BusyIndicator.hide();
             }

@@ -10,7 +10,7 @@
     -->
     <Panel
         id="webContainerContextPanel"
-        headerText="Session Context"
+        headerText="{i18n>sessionContextTitle}"
         expandable="true"
         expanded="false"
         class="sapUiResponsiveMargin sapUiSmallMarginBottom sessionContextPanel"
@@ -33,11 +33,11 @@
                 <!-- Col 1: User, Language -->
                 <VBox class="serviceOrderColumn">
                     <HBox class="serviceOrderFieldRow">
-                        <Label text="User:" design="Bold" class="serviceOrderFieldLabel"/>
+                        <Label text="{i18n>sessionContextUser}" design="Bold" class="serviceOrderFieldLabel"/>
                         <Text text="{view>/webContainerContext/userName}" class="serviceOrderFieldValue"/>
                     </HBox>
                     <HBox class="serviceOrderFieldRow">
-                        <Label text="Language:" design="Bold" class="serviceOrderFieldLabel"/>
+                        <Label text="{i18n>sessionContextLanguage}" design="Bold" class="serviceOrderFieldLabel"/>
                         <Text text="{view>/webContainerContext/language}" class="serviceOrderFieldValue"/>
                     </HBox>
                 </VBox>
@@ -45,11 +45,11 @@
                 <!-- Col 2: Account, Company -->
                 <VBox class="serviceOrderColumn">
                     <HBox class="serviceOrderFieldRow">
-                        <Label text="Account:" design="Bold" class="serviceOrderFieldLabel"/>
+                        <Label text="{i18n>sessionContextAccount}" design="Bold" class="serviceOrderFieldLabel"/>
                         <Text text="{view>/webContainerContext/cloudAccount}" class="serviceOrderFieldValue"/>
                     </HBox>
                     <HBox class="serviceOrderFieldRow">
-                        <Label text="Company:" design="Bold" class="serviceOrderFieldLabel"/>
+                        <Label text="{i18n>sessionContextCompany}" design="Bold" class="serviceOrderFieldLabel"/>
                         <Text text="{view>/webContainerContext/companyName}" class="serviceOrderFieldValue"/>
                     </HBox>
                 </VBox>
@@ -57,7 +57,7 @@
                 <!-- Col 3: Organization, Object -->
                 <VBox class="serviceOrderColumn">
                     <HBox class="serviceOrderFieldRow">
-                        <Label text="Organization:" design="Bold" class="serviceOrderFieldLabel"/>
+                        <Label text="{i18n>sessionContextOrganization}" design="Bold" class="serviceOrderFieldLabel"/>
                         <Text text="{view>/webContainerContext/orgLevelName}" class="serviceOrderFieldValue"/>
                     </HBox>
                     <HBox class="serviceOrderFieldRow">

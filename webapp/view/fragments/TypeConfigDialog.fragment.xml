@@ -8,7 +8,7 @@
     -->
     <Dialog
         id="typeConfigDialog"
-        title="Configure Entry Types"
+        title="{i18n>typeConfigTitle}"
         contentWidth="500px"
         draggable="true"
         resizable="true"
@@ -17,9 +17,9 @@
             <OverflowToolbar>
                 <core:Icon src="sap-icon://action-settings"/>
                 <ToolbarSpacer width="0.5rem"/>
-                <Title text="Configure Entry Types" level="H4"/>
+                <Title text="{i18n>typeConfigTitle}" level="H4"/>
                 <ToolbarSpacer/>
-                <Button icon="sap-icon://reset" tooltip="Reset to Defaults" press=".onResetTypeConfig" type="Transparent"/>
+                <Button icon="sap-icon://reset" tooltip="{i18n>typeConfigResetTooltip}" press=".onResetTypeConfig" type="Transparent"/>
             </OverflowToolbar>
         </customHeader>
         
@@ -27,7 +27,7 @@
             <VBox class="sapUiSmallMargin">
                 <VBox class="sapUiSmallMarginBottom">
                     <MessageStrip
-                        text="Service Products assigned here determine which T&amp;M creation form is shown. IDs not listed are treated as Time &amp; Material."
+                        text="{i18n>typeConfigInfoMessage}"
                         type="Information"
                         showIcon="true"
                     />
@@ -39,25 +39,25 @@
                         <OverflowToolbar design="Info">
                             <core:Icon src="sap-icon://money-bills" color="#E9730C"/>
                             <ToolbarSpacer width="0.5rem"/>
-                            <Title text="Expense Types" level="H5"/>
+                            <Title text="{i18n>typeConfigExpenseTypes}" level="H5"/>
                             <ToolbarSpacer/>
-                            <ObjectNumber number="{= ${typeConfig>/expenseTypes}.length }" unit="IDs"/>
+                            <ObjectNumber number="{= ${typeConfig>/expenseTypes}.length }" unit="{i18n>typeConfigIdsUnit}"/>
                         </OverflowToolbar>
                     </headerToolbar>
                     <content>
                         <HBox alignItems="Center" class="sapUiTinyMarginBottom">
                             <Input
                                 id="newExpenseTypeInput"
-                                placeholder="Enter Service Product ID (e.g., Z40000001)"
+                                placeholder="{i18n>typeConfigExpensePlaceholder}"
                                 width="100%"
                                 submit=".onAddExpenseType"
                             />
                             <ToolbarSpacer width="0.5rem"/>
-                            <Button icon="sap-icon://add" type="Emphasized" press=".onAddExpenseType" tooltip="Add"/>
+                            <Button icon="sap-icon://add" type="Emphasized" press=".onAddExpenseType" tooltip="{i18n>typeConfigAddTooltip}"/>
                         </HBox>
                         <List
                             items="{typeConfig>/expenseTypes}"
-                            noDataText="No expense types configured"
+                            noDataText="{i18n>typeConfigNoExpenseTypes}"
                             mode="None"
                         >
                             <CustomListItem>
@@ -67,7 +67,7 @@
                                         <ToolbarSpacer width="0.5rem"/>
                                         <Text text="{typeConfig>}"/>
                                     </HBox>
-                                    <Button icon="sap-icon://delete" type="Transparent" press=".onRemoveExpenseType" tooltip="Remove"/>
+                                    <Button icon="sap-icon://delete" type="Transparent" press=".onRemoveExpenseType" tooltip="{i18n>typeConfigRemoveTooltip}"/>
                                 </HBox>
                             </CustomListItem>
                         </List>
@@ -80,25 +80,25 @@
                         <OverflowToolbar design="Info">
                             <core:Icon src="sap-icon://car-rental" color="#6C32A9"/>
                             <ToolbarSpacer width="0.5rem"/>
-                            <Title text="Mileage Types" level="H5"/>
+                            <Title text="{i18n>typeConfigMileageTypes}" level="H5"/>
                             <ToolbarSpacer/>
-                            <ObjectNumber number="{= ${typeConfig>/mileageTypes}.length }" unit="IDs"/>
+                            <ObjectNumber number="{= ${typeConfig>/mileageTypes}.length }" unit="{i18n>typeConfigIdsUnit}"/>
                         </OverflowToolbar>
                     </headerToolbar>
                     <content>
                         <HBox alignItems="Center" class="sapUiTinyMarginBottom">
                             <Input
                                 id="newMileageTypeInput"
-                                placeholder="Enter Service Product ID (e.g., Z40000038)"
+                                placeholder="{i18n>typeConfigMileagePlaceholder}"
                                 width="100%"
                                 submit=".onAddMileageType"
                             />
                             <ToolbarSpacer width="0.5rem"/>
-                            <Button icon="sap-icon://add" type="Emphasized" press=".onAddMileageType" tooltip="Add"/>
+                            <Button icon="sap-icon://add" type="Emphasized" press=".onAddMileageType" tooltip="{i18n>typeConfigAddTooltip}"/>
                         </HBox>
                         <List
                             items="{typeConfig>/mileageTypes}"
-                            noDataText="No mileage types configured"
+                            noDataText="{i18n>typeConfigNoMileageTypes}"
                             mode="None"
                         >
                             <CustomListItem>
@@ -108,7 +108,7 @@
                                         <ToolbarSpacer width="0.5rem"/>
                                         <Text text="{typeConfig>}"/>
                                     </HBox>
-                                    <Button icon="sap-icon://delete" type="Transparent" press=".onRemoveMileageType" tooltip="Remove"/>
+                                    <Button icon="sap-icon://delete" type="Transparent" press=".onRemoveMileageType" tooltip="{i18n>typeConfigRemoveTooltip}"/>
                                 </HBox>
                             </CustomListItem>
                         </List>
@@ -118,7 +118,7 @@
         </content>
         
         <beginButton>
-            <Button text="Close" press=".onCloseTypeConfig"/>
+            <Button text="{i18n>typeConfigClose}" press=".onCloseTypeConfig"/>
         </beginButton>
     </Dialog>
 </core:FragmentDefinition>

@@ -51,7 +51,7 @@ sap.ui.define([
             const oContext = oButton.getBindingContext("createTM");
             
             if (!oContext) {
-                MessageToast.show("Entry context not available");
+                MessageToast.show(this._getText("msgEntryContextNotAvailable"));
                 return;
             }
             
@@ -76,7 +76,7 @@ sap.ui.define([
             aTimeEfforts.push(newTimeEffort);
             oModel.setProperty(sPath + "/" + sArrayProperty, aTimeEfforts);
             
-            MessageToast.show(`${sType} time effort added`);
+            MessageToast.show(this._getText("msgTimeEffortAdded", [sType]));
         },
 
         _removeTimeEffort(oEvent, sArrayProperty) {
@@ -84,7 +84,7 @@ sap.ui.define([
             const oContext = oButton.getBindingContext("createTM");
             
             if (!oContext) {
-                MessageToast.show("Entry context not available");
+                MessageToast.show(this._getText("msgEntryContextNotAvailable"));
                 return;
             }
             
@@ -101,7 +101,7 @@ sap.ui.define([
                 aTimeEfforts.splice(iIndex, 1);
                 oModel.setProperty(sEntryPath + "/" + sProperty, aTimeEfforts);
                 
-                MessageToast.show("Time effort removed");
+                MessageToast.show(this._getText("msgTimeEffortRemoved"));
             }
         },
 
@@ -111,7 +111,7 @@ sap.ui.define([
 
         /**
          * Get the Table from a toolbar control (handles ScrollContainer wrapper)
-         * Navigation: Control → Toolbar → Panel → Content → [ScrollContainer →] Table
+         * Navigation: Control â†’ Toolbar â†’ Panel â†’ Content â†’ [ScrollContainer â†’] Table
          * @private
          */
         _getTableFromToolbarControl(oControl) {
@@ -282,7 +282,7 @@ sap.ui.define([
             });
             
             if (editCount === 0) {
-                MessageToast.show("Please select entries to edit (checkbox)");
+                MessageToast.show(this._getText("msgSelectEntriesToEdit"));
                 return;
             }
             
@@ -293,7 +293,7 @@ sap.ui.define([
                 oModel.setProperty(sActivityPath + "/" + sEditModeProp, true);
             }
             
-            MessageToast.show(`${editCount} entries in edit mode`);
+            MessageToast.show(this._getText("msgEntriesInEditMode", [editCount]));
         },
 
         /* ========================================
@@ -352,7 +352,7 @@ sap.ui.define([
             }
             
             if (cancelCount > 0) {
-                MessageToast.show(`${cancelCount} edits cancelled`);
+                MessageToast.show(this._getText("msgEditsCancelled", [cancelCount]));
             }
         },
 
@@ -387,7 +387,7 @@ sap.ui.define([
             });
             
             if (aEditedReports.length === 0) {
-                MessageToast.show("No entries in edit mode");
+                MessageToast.show(this._getText("msgNoEntriesInEditMode"));
                 return;
             }
             
@@ -420,9 +420,9 @@ sap.ui.define([
             });
             
             MessageBox.confirm(
-                `Save ${aEditedReports.length} edited entries?\n\n${lines.join('\n')}`,
+                this._getText("msgConfirmSaveEntries", [aEditedReports.length, lines.join('\n')]),
                 {
-                    title: "Confirm Save All",
+                    title: this._getText("msgConfirmSaveEntriesTitle"),
                     onClose: (sAction) => {
                         if (sAction === MessageBox.Action.OK) {
                             this._executeSaveAllTM(oModel, aEditedReports, sActivityPath, sEditModeProp);
@@ -524,18 +524,18 @@ sap.ui.define([
                 }
                 
                 if (errorCount === 0) {
-                    MessageToast.show(`${successCount} entries saved successfully`);
+                    MessageToast.show(this._getText("msgEntriesSaved", [successCount]));
                     // Clear activity-level edit mode based on table type
                     if (sActivityPath && sEditModeProp) {
                         oModel.setProperty(sActivityPath + "/" + sEditModeProp, false);
                     }
                 } else {
-                    MessageBox.warning(`Saved ${successCount}, failed ${errorCount}`);
+                    MessageBox.warning(this._getText("msgPartialSaveSuccess", [successCount, errorCount]));
                 }
                 
             } catch (error) {
                 console.error("Error in save all:", error);
-                MessageBox.error(`Error: ${error.message}`);
+                MessageBox.error(this._getText("msgError", [error.message]));
             } finally {
                 sap.ui.core.BusyIndicator.hide();
             }

@@ -24,7 +24,7 @@ sap.ui.define([
         onAddCreateMaterialRow() {
             const oModel = this._tmCreateDialog?.getModel("createTM");
             if (!oModel) {
-                MessageToast.show("Model not initialized");
+                MessageToast.show(this._getText("msgModelNotInitialized"));
                 return;
             }
             
@@ -59,7 +59,7 @@ sap.ui.define([
             
             oModel.refresh(true);
             console.log("Material entries now:", aMaterialEntries.length);
-            MessageToast.show("Material entry added");
+            MessageToast.show(this._getText("msgMaterialEntryAdded"));
         },
 
         /**
@@ -70,7 +70,7 @@ sap.ui.define([
             const oContext = oButton.getBindingContext("createTM");
             
             if (!oContext) {
-                MessageToast.show("Could not identify entry to remove");
+                MessageToast.show(this._getText("msgCouldNotIdentifyEntryToRemove"));
                 return;
             }
             
@@ -86,7 +86,7 @@ sap.ui.define([
             this._updateMaterialQuantityStates(oModel);
             
             oModel.refresh(true);
-            MessageToast.show("Material entry removed");
+            MessageToast.show(this._getText("msgMaterialEntryRemoved"));
         },
 
         /**
@@ -97,7 +97,7 @@ sap.ui.define([
             const oContext = oButton.getBindingContext("createTM");
             
             if (!oContext) {
-                MessageToast.show("Could not identify entry to copy");
+                MessageToast.show(this._getText("msgCouldNotIdentifyEntryToCopy"));
                 return;
             }
             
@@ -122,7 +122,7 @@ sap.ui.define([
             this._updateMaterialQuantityStates(oModel);
             
             oModel.refresh(true);
-            MessageToast.show("Material entry copied");
+            MessageToast.show(this._getText("msgMaterialEntryCopied"));
         },
 
         /**

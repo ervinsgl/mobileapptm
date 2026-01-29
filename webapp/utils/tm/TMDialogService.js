@@ -49,6 +49,21 @@ sap.ui.define([
         _controller: null,
 
         /**
+         * Get i18n text with optional parameters
+         * @param {string} key - i18n key
+         * @param {Array} [args] - Optional arguments for placeholders
+         * @returns {string} Translated text
+         * @private
+         */
+        _getText(key, args) {
+            if (this._controller) {
+                const oBundle = this._controller.getOwnerComponent().getModel("i18n").getResourceBundle();
+                return oBundle.getText(key, args);
+            }
+            return key; // Fallback to key if controller not available
+        },
+
+        /**
          * Initialize service with controller reference.
          * @param {sap.ui.core.mvc.Controller} controller - View controller
          */
@@ -186,7 +201,7 @@ sap.ui.define([
                 
             } catch (error) {
                 console.error('TMDialogService: Failed to initialize TechnicianService:', error);
-                MessageToast.show("Warning: Technician data may not be available");
+                MessageToast.show(this._getText("msgWarningTechnicianData"));
             }
 
             // Parallel loading of lookup data (Time Tasks, Items, Expense Types)
@@ -213,7 +228,7 @@ sap.ui.define([
                 taskSuggestionsWZ = taskSuggestions.filter(task => task.code && task.code.startsWith('WZ'));
             } else {
                 console.error('TMDialogService: Failed to load time tasks:', timeTasksResult.reason);
-                MessageToast.show("Warning: Time tasks may not be available");
+                MessageToast.show(this._getText("msgWarningTimeTasks"));
             }
 
             // Process Items result
@@ -235,7 +250,7 @@ sap.ui.define([
                 });
             } else {
                 console.error('TMDialogService: Failed to load items:', itemsResult.reason);
-                MessageToast.show("Warning: Item search may not be available");
+                MessageToast.show(this._getText("msgWarningItemSearch"));
             }
 
             // Process Expense Types result
@@ -260,7 +275,7 @@ sap.ui.define([
                 }
             } else {
                 console.error('TMDialogService: Failed to load expense types:', expenseTypesResult.reason);
-                MessageToast.show("Warning: Expense types may not be available");
+                MessageToast.show(this._getText("msgWarningExpenseTypes"));
             }
 
             // Parse quantity for max constraint and set default quantity

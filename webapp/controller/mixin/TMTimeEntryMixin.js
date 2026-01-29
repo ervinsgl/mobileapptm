@@ -38,7 +38,7 @@ sap.ui.define([
         _addTimeEntry(sType, sArrayPath) {
             const oModel = this._tmCreateDialog?.getModel("createTM");
             if (!oModel) {
-                MessageToast.show("Model not initialized");
+                MessageToast.show(this._getText("msgModelNotInitialized"));
                 return;
             }
             
@@ -85,7 +85,8 @@ sap.ui.define([
             aEntries.push(newEntry);
             oModel.setProperty(sArrayPath, aEntries);
             oModel.refresh(true);
-            MessageToast.show(`${sType === 'AZ' ? 'Arbeitszeit' : sType === 'FZ' ? 'Fahrzeit' : 'Wartezeit'} entry added`);
+            const msgKey = sType === 'AZ' ? 'msgArbeitszeitEntryAdded' : sType === 'FZ' ? 'msgFahrzeitEntryAdded' : 'msgWartezeitEntryAdded';
+            MessageToast.show(this._getText(msgKey));
         },
 
         /* ========================================
@@ -111,7 +112,7 @@ sap.ui.define([
         _removeTimeEntry(oEvent, sArrayPath) {
             const oContext = oEvent.getSource().getBindingContext("createTM");
             if (!oContext) {
-                MessageToast.show("Could not identify entry to remove");
+                MessageToast.show(this._getText("msgCouldNotIdentifyEntryToRemove"));
                 return;
             }
             
@@ -123,7 +124,7 @@ sap.ui.define([
             aEntries.splice(iIndex, 1);
             oModel.setProperty(sArrayPath, aEntries);
             oModel.refresh(true);
-            MessageToast.show("Time entry removed");
+            MessageToast.show(this._getText("msgTimeEntryRemoved"));
         },
 
         /* ========================================
@@ -149,7 +150,7 @@ sap.ui.define([
         _copyTimeEntry(oEvent, sArrayPath, sTypeName) {
             const oContext = oEvent.getSource().getBindingContext("createTM");
             if (!oContext) {
-                MessageToast.show("Could not identify entry to copy");
+                MessageToast.show(this._getText("msgCouldNotIdentifyEntryToCopy"));
                 return;
             }
             
@@ -181,7 +182,7 @@ sap.ui.define([
             aEntries.splice(iIndex + 1, 0, oCopy);
             oModel.setProperty(sArrayPath, aEntries);
             oModel.refresh(true);
-            MessageToast.show(`${sTypeName} entry copied`);
+            MessageToast.show(this._getText("msgTimeEntryCopied", [sTypeName]));
         },
 
         /* ========================================
@@ -251,7 +252,7 @@ sap.ui.define([
             
             // Check if already selected
             if (aSelectedTechnicians.some(t => t.id === sTechId)) {
-                MessageToast.show("Technician already added");
+                MessageToast.show(this._getText("msgTechnicianAlreadyAdded"));
                 oMultiInput.setValue("");
                 return;
             }

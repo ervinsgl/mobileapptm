@@ -219,7 +219,7 @@ sap.ui.define([
             }
 
             if (!oContext || !oModel) {
-                MessageToast.show("Context not available");
+                MessageToast.show(this._getText("msgContextNotAvailable"));
                 return;
             }
 
@@ -329,7 +329,7 @@ sap.ui.define([
             }
 
             if (!oContext) {
-                MessageToast.show("Activity context not available");
+                MessageToast.show(this._getText("msgActivityContextNotAvailable"));
                 return;
             }
 
@@ -354,7 +354,7 @@ sap.ui.define([
             };
 
             if (!activityData.activityCode) {
-                MessageToast.show("Activity information not available");
+                MessageToast.show(this._getText("msgActivityInfoNotAvailable"));
                 return;
             }
 
@@ -371,7 +371,7 @@ sap.ui.define([
             const activityData = TMDialogService.extractActivityData(oContext, this._tmReportsDialog);
 
             if (!activityData.activityCode) {
-                MessageToast.show("Activity information not available");
+                MessageToast.show(this._getText("msgActivityInfoNotAvailable"));
                 return;
             }
 

@@ -26,7 +26,7 @@
         <customHeader>
             <OverflowToolbar design="Info">
                 <Image src="./images/TUEV-NORD_Logo.png" height="2rem" class="sapUiTinyMarginEnd customerLogo"/>
-                <Title text="T&amp;M Journal for Service Order: {view>/serviceCall/externalId}" level="H4"/>
+                <Title text="{i18n>view1PageTitle} {view>/serviceCall/externalId}" level="H4"/>
             </OverflowToolbar>
         </customHeader>
         <content>
@@ -43,7 +43,7 @@
                     <!-- Loading State -->
                     <VBox visible="{view>/activitiesLoading}" alignItems="Center" justifyContent="Center" class="sapUiLargeMargin">
                         <BusyIndicator size="2rem" class="sapUiSmallMarginBottom"/>
-                        <Text text="Loading activities..." class="sapUiTinyMarginTop"/>
+                        <Text text="{i18n>view1LoadingActivities}" class="sapUiTinyMarginTop"/>
                     </VBox>
                     
                     <!-- Content -->
@@ -61,12 +61,12 @@
                 <Button 
                     id="mobileAppTypeConfigButton" 
                     icon="sap-icon://action-settings" 
-                    text="Type Config" 
+                    text="{i18n>view1TypeConfig}" 
                     press=".onOpenTypeConfig"
-                    tooltip="Configure Expense/Mileage Service Product Types"
+                    tooltip="{i18n>view1TypeConfigTooltip}"
                 />
                 <ToolbarSpacer id="mobileAppFooterSpacer"/>
-                <Button id="mobileAppRefreshButton" icon="sap-icon://refresh" text="Refresh" press=".onRefresh"/>
+                <Button id="mobileAppRefreshButton" icon="sap-icon://refresh" text="{i18n>view1Refresh}" press=".onRefresh"/>
             </OverflowToolbar>
         </footer>
     </Page>

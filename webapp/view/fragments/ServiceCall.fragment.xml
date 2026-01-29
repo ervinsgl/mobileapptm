@@ -11,7 +11,7 @@
     -->
     <Panel
         id="serviceCallPanel"
-        headerText="Service Order"
+        headerText="{i18n>serviceOrderTitle}"
         expandable="true"
         expanded="false"
         class="sapUiResponsiveMargin sapUiSmallMarginBottom serviceOrderPanel"
@@ -20,9 +20,9 @@
         <headerToolbar>
             <OverflowToolbar design="Info">
                 <core:Icon src="sap-icon://sales-order" class="sapUiSmallMarginEnd"/>
-                <Title text="Service Order" level="H4" titleStyle="H4"/>
+                <Title text="{i18n>serviceOrderTitle}" level="H4" titleStyle="H4"/>
                 <ToolbarSpacer/>
-                <Title text="ID: {view>/serviceCall/externalId}" level="H5"/>
+                <Title text="{i18n>serviceOrderId} {view>/serviceCall/externalId}" level="H5"/>
             </OverflowToolbar>
         </headerToolbar>
         
@@ -33,11 +33,11 @@
                 <!-- Col 1: ID, Subject -->
                 <VBox class="serviceOrderColumn">
                     <HBox class="serviceOrderFieldRow">
-                        <Label text="ID:" design="Bold" class="serviceOrderFieldLabel"/>
+                        <Label text="{i18n>serviceOrderId}" design="Bold" class="serviceOrderFieldLabel"/>
                         <Text text="{view>/serviceCall/id}" class="serviceOrderFieldValue"/>
                     </HBox>
                     <HBox class="serviceOrderFieldRow">
-                        <Label text="Subject:" design="Bold" class="serviceOrderFieldLabel"/>
+                        <Label text="{i18n>serviceOrderSubject}" design="Bold" class="serviceOrderFieldLabel"/>
                         <Text text="{view>/serviceCall/subject}" class="serviceOrderFieldValue" wrapping="true"/>
                     </HBox>
                 </VBox>
@@ -45,11 +45,11 @@
                 <!-- Col 2: Business Partner, Responsible -->
                 <VBox class="serviceOrderColumn">
                     <HBox class="serviceOrderFieldRow">
-                        <Label text="Business Partner:" design="Bold" class="serviceOrderFieldLabel"/>
+                        <Label text="{i18n>serviceOrderBusinessPartner}" design="Bold" class="serviceOrderFieldLabel"/>
                         <Text text="{view>/serviceCall/businessPartnerDisplayText}" class="serviceOrderFieldValue"/>
                     </HBox>
                     <HBox class="serviceOrderFieldRow">
-                        <Label text="Responsible:" design="Bold" class="serviceOrderFieldLabel"/>
+                        <Label text="{i18n>serviceOrderResponsible}" design="Bold" class="serviceOrderFieldLabel"/>
                         <Text text="{view>/serviceCall/responsibleDisplayText}" class="serviceOrderFieldValue"/>
                     </HBox>
                 </VBox>
@@ -57,11 +57,11 @@
                 <!-- Col 3: Dates -->
                 <VBox class="serviceOrderColumn">
                     <HBox class="serviceOrderFieldRow">
-                        <Label text="Earliest Start:" design="Bold" class="serviceOrderFieldLabel"/>
+                        <Label text="{i18n>serviceOrderEarliestStart}" design="Bold" class="serviceOrderFieldLabel"/>
                         <Text text="{path: 'view>/serviceCall/earliestStartDateTime', formatter: '.formatter.formatDateTime'}" class="serviceOrderFieldValue"/>
                     </HBox>
                     <HBox class="serviceOrderFieldRow">
-                        <Label text="Due Date:" design="Bold" class="serviceOrderFieldLabel"/>
+                        <Label text="{i18n>serviceOrderDueDate}" design="Bold" class="serviceOrderFieldLabel"/>
                         <Text text="{path: 'view>/serviceCall/dueDateTime', formatter: '.formatter.formatDateTime'}" class="serviceOrderFieldValue"/>
                     </HBox>
                 </VBox>

@@ -156,10 +156,16 @@ sap.ui.define([
                 const context = await ContextService.getContext();
                 
                 if (context && (context.source === 'shell' || context.source === 'mobile')) {
+                    // Set UI5 language from context (de, en, etc.)
+                    const contextLanguage = context.locale || context.language;
+                    if (contextLanguage) {
+                        this._setAppLanguage(contextLanguage);
+                    }
+                    
                     viewModel.setProperty("/webContainerContext", {
                         available: true,
                         userName: context.userName || 'N/A',
-                        language: (context.locale || 'N/A').toUpperCase(),
+                        language: (contextLanguage || 'N/A').toUpperCase(),
                         cloudAccount: context.accountName || context.cloudAccount || 'N/A',
                         companyName: context.companyName || 'N/A',
                         objectType: context.objectType || 'N/A',
@@ -203,6 +209,28 @@ sap.ui.define([
             } catch (error) {
                 console.error("_loadWebContainerContext error:", error);
                 return null;
+            }
+        },
+
+        /**
+         * Set application language based on FSM context
+         * @param {string} language - Language code (e.g., 'de', 'en')
+         * @private
+         */
+        _setAppLanguage(language) {
+            if (!language) return;
+            
+            // Normalize language code (e.g., 'de-DE' -> 'de')
+            const langCode = language.toLowerCase().split('-')[0].split('_')[0];
+            
+            // Get current UI5 language
+            const currentLang = sap.ui.getCore().getConfiguration().getLanguage();
+            const currentLangCode = currentLang.toLowerCase().split('-')[0].split('_')[0];
+            
+            // Only change if different
+            if (langCode !== currentLangCode) {
+                console.log(`DataLoadingMixin: Setting language to '${langCode}' (from FSM context)`);
+                sap.ui.getCore().getConfiguration().setLanguage(langCode);
             }
         },
 
@@ -265,11 +293,11 @@ sap.ui.define([
                     await this._loadServiceCallActivities(serviceCall.id);
                 }
 
-                MessageToast.show("Activity loaded: " + activity.subject);
+                MessageToast.show(this._getText("msgActivityLoaded", [activity.subject]));
 
             } catch (error) {
                 console.error("Load activity error:", error);
-                MessageBox.error("Failed to load activity: " + error.message);
+                MessageBox.error(this._getText("msgFailedLoadActivity", [error.message]));
             } finally {
                 viewModel.setProperty("/busy", false);
             }
@@ -286,11 +314,11 @@ sap.ui.define([
 
             try {
                 await this._loadServiceCallActivities(serviceCallId);
-                MessageToast.show("Service Call loaded");
+                MessageToast.show(this._getText("msgServiceCallLoaded"));
 
             } catch (error) {
                 console.error("Load service call error:", error);
-                MessageBox.error("Failed to load service call: " + error.message);
+                MessageBox.error(this._getText("msgFailedLoadServiceCall", [error.message]));
             } finally {
                 viewModel.setProperty("/busy", false);
             }
@@ -335,13 +363,13 @@ sap.ui.define([
                         // All activities filtered - show prominent message
                         viewModel.setProperty("/noActivitiesMessage", {
                             show: true,
-                            title: "No Activities for Your Organization",
-                            description: `${totalExecutionClosedCount} activities found, but none match your organization level (${userOrgLevelName || userOrgLevelId}).`,
+                            title: this._getText("msgNoActivitiesOrgTitle"),
+                            description: this._getText("msgNoActivitiesOrgDesc", [totalExecutionClosedCount, userOrgLevelName || userOrgLevelId]),
                             type: "information"
                         });
                     } else if (filteredOutCount > 0) {
                         // Some activities filtered - show info toast
-                        MessageToast.show(`${filteredOutCount} activities hidden (different org level)`);
+                        MessageToast.show(this._getText("msgActivitiesHidden", [filteredOutCount]));
                         viewModel.setProperty("/noActivitiesMessage", { show: false });
                     } else {
                         viewModel.setProperty("/noActivitiesMessage", { show: false });

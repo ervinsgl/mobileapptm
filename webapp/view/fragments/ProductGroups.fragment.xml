@@ -7,12 +7,12 @@
         <!-- Empty State - No Activities for User's Org Level -->
         <IllustratedMessage
             illustrationType="sapIllus-NoEntries"
-            title="{= ${view>/noActivitiesMessage/show} ? ${view>/noActivitiesMessage/title} : 'No Activities Found'}"
-            description="{= ${view>/noActivitiesMessage/show} ? ${view>/noActivitiesMessage/description} : 'There are no activities assigned to your organization level.'}"
+            title="{= ${view>/noActivitiesMessage/show} ? ${view>/noActivitiesMessage/title} : ${i18n>productGroupsNoActivitiesTitle}}"
+            description="{= ${view>/noActivitiesMessage/show} ? ${view>/noActivitiesMessage/description} : ${i18n>productGroupsNoActivitiesDesc}}"
             visible="{= ${view>/productGroups}.length === 0 }"
         >
             <additionalContent>
-                <Button text="Refresh" type="Emphasized" icon="sap-icon://refresh" press=".onRefresh"/>
+                <Button text="{i18n>productGroupsRefresh}" type="Emphasized" icon="sap-icon://refresh" press=".onRefresh"/>
             </additionalContent>
         </IllustratedMessage>
         
@@ -23,16 +23,16 @@
                     <headerToolbar>
                         <OverflowToolbar design="Info">
                             <core:Icon src="sap-icon://product" class="sapUiSmallMarginEnd"/>
-                            <Title text="Product: {view>productDescription}" wrapping="true"/>
+                            <Title text="{i18n>productGroupsProduct} {view>productDescription}" wrapping="true"/>
                             <ToolbarSpacer/>
-                            <Text text="ID: {view>soItemId}" class="sapUiTinyMarginEnd"/>
+                            <Text text="{i18n>serviceOrderId} {view>soItemId}" class="sapUiTinyMarginEnd"/>
                         </OverflowToolbar>
                     </headerToolbar>
                     <content>
                         <Toolbar design="Transparent" height="2rem">
-                            <Label text="{view>activityCount} Activities" design="Bold"/>
+                            <Label text="{view>activityCount} {i18n>productGroupsActivities}" design="Bold"/>
                             <ToolbarSpacer/>
-                            <ObjectNumber number="{view>tmTotalCount}" unit="T&amp;M Entries" state="Information"/>
+                            <ObjectNumber number="{view>tmTotalCount}" unit="{i18n>productGroupsTMEntries}" state="Information"/>
                         </Toolbar>
                         
                         <List items="{path: 'view>activities', templateShareable: false}" mode="None" showSeparators="None" growing="true" growingThreshold="20">
@@ -60,35 +60,35 @@
                                         <HBox class="activityEntryContent">
                                             <VBox class="activityColumn">
                                                 <HBox class="activityFieldRow">
-                                                    <Label text="Service Product:" design="Bold" class="activityFieldLabel"/>
+                                                    <Label text="{i18n>activityServiceProduct}" design="Bold" class="activityFieldLabel"/>
                                                     <Text text="{view>serviceProductDisplayText}" class="activityFieldValue"/>
                                                 </HBox>
                                                 <HBox class="activityFieldRow">
-                                                    <Label text="Responsible:" design="Bold" class="activityFieldLabel"/>
+                                                    <Label text="{i18n>activityResponsible}" design="Bold" class="activityFieldLabel"/>
                                                     <Text text="{view>responsibleDisplayText}" class="activityFieldValue"/>
                                                 </HBox>
                                             </VBox>
                                             <VBox class="activityColumn">
                                                 <HBox class="activityFieldRow">
-                                                    <Label text="Address:" design="Bold" class="activityFieldLabel"/>
+                                                    <Label text="{i18n>activityAddress}" design="Bold" class="activityFieldLabel"/>
                                                     <Text text="{view>addressFull}" class="activityFieldValue" wrapping="true"/>
                                                 </HBox>
                                                 <HBox class="activityFieldRow">
-                                                    <Label text="Org Level:" design="Bold" class="activityFieldLabel"/>
+                                                    <Label text="{i18n>activityOrgLevel}" design="Bold" class="activityFieldLabel"/>
                                                     <Text text="{view>orgLevelDisplayText}" class="activityFieldValue"/>
                                                 </HBox>
                                             </VBox>
                                             <VBox class="activityColumn">
                                                 <HBox class="activityFieldRow">
-                                                    <Label text="Planned Start:" design="Bold" class="activityFieldLabel"/>
+                                                    <Label text="{i18n>activityPlannedStart}" design="Bold" class="activityFieldLabel"/>
                                                     <Text text="{view>formattedStartDate}" class="activityFieldValue"/>
                                                 </HBox>
                                                 <HBox class="activityFieldRow">
-                                                    <Label text="Planned End:" design="Bold" class="activityFieldLabel"/>
+                                                    <Label text="{i18n>activityPlannedEnd}" design="Bold" class="activityFieldLabel"/>
                                                     <Text text="{view>formattedEndDate}" class="activityFieldValue"/>
                                                 </HBox>
                                                 <HBox class="activityFieldRow">
-                                                    <Label text="Duration:" design="Bold" class="activityFieldLabel"/>
+                                                    <Label text="{i18n>activityDuration}" design="Bold" class="activityFieldLabel"/>
                                                     <Text text="{view>formattedDuration}" class="activityFieldValue"/>
                                                 </HBox>
                                             </VBox>
@@ -98,31 +98,31 @@
                                         <VBox class="tmTablesSection sapUiSmallMarginTop">
                                             <HBox alignItems="Center" class="sapUiTinyMarginBottom sapUiSmallMarginBegin">
                                                 <core:Icon src="sap-icon://timesheet" class="sapUiTinyMarginEnd"/>
-                                                <Label text="T&amp;M Reports:" design="Bold"/>
-                                                <ObjectNumber number="{view>tmReportsCount}" unit="items" state="{= ${view>tmReportsCount} > 0 ? 'Success' : 'None'}" class="sapUiTinyMarginBegin"/>
+                                                <Label text="{i18n>activityTMReports}" design="Bold"/>
+                                                <ObjectNumber number="{view>tmReportsCount}" unit="{i18n>activityItemsUnit}" state="{= ${view>tmReportsCount} > 0 ? 'Success' : 'None'}" class="sapUiTinyMarginBegin"/>
                                             </HBox>
                                             
                                             <!-- T&M Summary Stats - Only show for Time & Material activities (not expense/mileage) -->
                                             <HBox visible="{= ${view>tmReportsLoaded} &amp;&amp; ${view>isTimeMaterialType} }" class="sapUiTinyMarginBottom sapUiSmallMarginBegin" wrap="Wrap">
                                                 <VBox class="sapUiSmallMarginEnd">
-                                                    <Label text="Quantity"/>
+                                                    <Label text="{i18n>activityQuantity}"/>
                                                     <HBox alignItems="Center">
                                                         <ObjectNumber number="{view>tmMaterialQtyReported}" state="{= ${view>tmMaterialQtyReported} > 0 ? 'Information' : 'None'}"/>
-                                                        <Text text=" of " class="sapUiTinyMarginBeginEnd"/>
+                                                        <Text text=" {i18n>activityOfText} " class="sapUiTinyMarginBeginEnd"/>
                                                         <Text text="{view>quantity}"/>
                                                     </HBox>
                                                 </VBox>
                                                 <VBox class="sapUiSmallMarginEnd">
-                                                    <Label text="Arbeitszeit"/>
-                                                    <ObjectNumber number="{view>tmAzHoursReported}" unit="hrs" state="{= ${view>tmAzHoursReported} > 0 ? 'Information' : 'None'}"/>
+                                                    <Label text="{i18n>activityArbeitszeit}"/>
+                                                    <ObjectNumber number="{view>tmAzHoursReported}" unit="{i18n>activityHoursUnit}" state="{= ${view>tmAzHoursReported} > 0 ? 'Information' : 'None'}"/>
                                                 </VBox>
                                                 <VBox class="sapUiSmallMarginEnd">
-                                                    <Label text="Fahrzeit"/>
-                                                    <ObjectNumber number="{view>tmFzHoursReported}" unit="hrs" state="{= ${view>tmFzHoursReported} > 0 ? 'Information' : 'None'}"/>
+                                                    <Label text="{i18n>activityFahrzeit}"/>
+                                                    <ObjectNumber number="{view>tmFzHoursReported}" unit="{i18n>activityHoursUnit}" state="{= ${view>tmFzHoursReported} > 0 ? 'Information' : 'None'}"/>
                                                 </VBox>
                                                 <VBox>
-                                                    <Label text="Wartezeit"/>
-                                                    <ObjectNumber number="{view>tmWzHoursReported}" unit="hrs" state="{= ${view>tmWzHoursReported} > 0 ? 'Information' : 'None'}"/>
+                                                    <Label text="{i18n>activityWartezeit}"/>
+                                                    <ObjectNumber number="{view>tmWzHoursReported}" unit="{i18n>activityHoursUnit}" state="{= ${view>tmWzHoursReported} > 0 ? 'Information' : 'None'}"/>
                                                 </VBox>
                                             </HBox>
                                             
@@ -131,36 +131,36 @@
                                                 <headerToolbar>
                                                     <OverflowToolbar design="Info">
                                                         <core:Icon src="sap-icon://time-entry-request" class="sapUiTinyMarginEnd"/>
-                                                        <Title text="Time Effort &amp; Material" level="H5"/>
+                                                        <Title text="{i18n>tmTimeEffortMaterial}" level="H5"/>
                                                         <ToolbarSpacer/>
                                                         <SegmentedButton selectedKey="ALL" selectionChange=".onTMTypeFilterChange">
                                                             <items>
-                                                                <SegmentedButtonItem key="ALL" text="All"/>
-                                                                <SegmentedButtonItem key="Time Effort" icon="sap-icon://time-entry-request" tooltip="Time Effort"/>
-                                                                <SegmentedButtonItem key="Material" icon="sap-icon://product" tooltip="Material"/>
+                                                                <SegmentedButtonItem key="ALL" text="{i18n>tmFilterAll}"/>
+                                                                <SegmentedButtonItem key="Time Effort" icon="sap-icon://time-entry-request" tooltip="{i18n>tooltipTimeEffort}"/>
+                                                                <SegmentedButtonItem key="Material" icon="sap-icon://product" tooltip="{i18n>tooltipMaterial}"/>
                                                             </items>
                                                         </SegmentedButton>
-                                                        <Select selectedKey="startDateTime-desc" change=".onTMSortChange" class="sapUiTinyMarginBegin" tooltip="Sort by">
-                                                            <core:Item key="startDateTime-desc" text="Date ↓"/>
-                                                            <core:Item key="startDateTime-asc" text="Date ↑"/>
-                                                            <core:Item key="type-asc" text="Type A-Z"/>
-                                                            <core:Item key="type-desc" text="Type Z-A"/>
-                                                            <core:Item key="taskDisplayText-asc" text="Description A-Z"/>
-                                                            <core:Item key="taskDisplayText-desc" text="Description Z-A"/>
-                                                            <core:Item key="createPersonDisplayText-asc" text="Technician A-Z"/>
-                                                            <core:Item key="createPersonDisplayText-desc" text="Technician Z-A"/>
-                                                            <core:Item key="durationHrs-desc" text="Time ↓"/>
-                                                            <core:Item key="durationHrs-asc" text="Time ↑"/>
-                                                            <core:Item key="quantity-desc" text="Qty ↓"/>
-                                                            <core:Item key="quantity-asc" text="Qty ↑"/>
-                                                            <core:Item key="decisionStatus-asc" text="Status A-Z"/>
-                                                            <core:Item key="decisionStatus-desc" text="Status Z-A"/>
+                                                        <Select selectedKey="startDateTime-desc" change=".onTMSortChange" class="sapUiTinyMarginBegin" tooltip="{i18n>tmSortByTooltip}">
+                                                            <core:Item key="startDateTime-desc" text="{i18n>sortDateDesc}"/>
+                                                            <core:Item key="startDateTime-asc" text="{i18n>sortDateAsc}"/>
+                                                            <core:Item key="type-asc" text="{i18n>sortTypeAsc}"/>
+                                                            <core:Item key="type-desc" text="{i18n>sortTypeDesc}"/>
+                                                            <core:Item key="taskDisplayText-asc" text="{i18n>sortDescAsc}"/>
+                                                            <core:Item key="taskDisplayText-desc" text="{i18n>sortDescDesc}"/>
+                                                            <core:Item key="createPersonDisplayText-asc" text="{i18n>sortTechAsc}"/>
+                                                            <core:Item key="createPersonDisplayText-desc" text="{i18n>sortTechDesc}"/>
+                                                            <core:Item key="durationHrs-desc" text="{i18n>sortTimeDesc}"/>
+                                                            <core:Item key="durationHrs-asc" text="{i18n>sortTimeAsc}"/>
+                                                            <core:Item key="quantity-desc" text="{i18n>sortQtyDesc}"/>
+                                                            <core:Item key="quantity-asc" text="{i18n>sortQtyAsc}"/>
+                                                            <core:Item key="decisionStatus-asc" text="{i18n>sortStatusAsc}"/>
+                                                            <core:Item key="decisionStatus-desc" text="{i18n>sortStatusDesc}"/>
                                                         </Select>
-                                                        <Button text="Edit Selected" icon="sap-icon://edit" press=".onEditSelectedTM" visible="{= ${view>tmEditMode} !== true}" class="sapUiTinyMarginBegin"/>
-                                                        <Button text="Save All" icon="sap-icon://save" type="Emphasized" press=".onSaveAllTM" visible="{= ${view>tmEditMode} === true}" class="sapUiTinyMarginBegin"/>
-                                                        <Button text="End Edit" icon="sap-icon://sys-cancel" press=".onEndEditTM" visible="{= ${view>tmEditMode} === true}" class="sapUiTinyMarginBegin"/>
-                                                        <Button text="Add Entry" icon="sap-icon://add" type="Emphasized" press=".onAddNewTMEntry" visible="{= ${view>status} !== 'CLOSED' &amp;&amp; ${view>status} !== 'CANCELLED'}" class="sapUiTinyMarginBegin"/>
-                                                        <ObjectNumber number="{= ${view>tmTimeEffortCount} + ${view>tmMaterialCount} }" unit="entries" class="sapUiSmallMarginBegin"/>
+                                                        <Button text="{i18n>tmEditSelected}" icon="sap-icon://edit" press=".onEditSelectedTM" visible="{= ${view>tmEditMode} !== true}" class="sapUiTinyMarginBegin"/>
+                                                        <Button text="{i18n>tmSaveAll}" icon="sap-icon://save" type="Emphasized" press=".onSaveAllTM" visible="{= ${view>tmEditMode} === true}" class="sapUiTinyMarginBegin"/>
+                                                        <Button text="{i18n>tmEndEdit}" icon="sap-icon://sys-cancel" press=".onEndEditTM" visible="{= ${view>tmEditMode} === true}" class="sapUiTinyMarginBegin"/>
+                                                        <Button text="{i18n>tmAddEntry}" icon="sap-icon://add" type="Emphasized" press=".onAddNewTMEntry" visible="{= ${view>status} !== 'CLOSED' &amp;&amp; ${view>status} !== 'CANCELLED'}" class="sapUiTinyMarginBegin"/>
+                                                        <ObjectNumber number="{= ${view>tmTimeEffortCount} + ${view>tmMaterialCount} }" unit="{i18n>tmEntriesUnit}" class="sapUiSmallMarginBegin"/>
                                                     </OverflowToolbar>
                                                 </headerToolbar>
                                                 <content>
@@ -173,15 +173,15 @@
                                                             <columns>
                                                                 <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
                                                                 <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
-                                                                <Column hAlign="Begin"><Text text="Description"/></Column>
-                                                                <Column width="10rem" hAlign="Begin"><Text text="Technician"/></Column>
-                                                                <Column width="7rem" hAlign="Begin"><Text text="Time"/></Column>
+                                                                <Column hAlign="Begin"><Text text="{i18n>tmColDescription}"/></Column>
+                                                                <Column width="10rem" hAlign="Begin"><Text text="{i18n>tmColTechnician}"/></Column>
+                                                                <Column width="7rem" hAlign="Begin"><Text text="{i18n>tmColTime}"/></Column>
                                                                 <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
-                                                                <Column width="5rem" hAlign="Begin"><Text text="Qty"/></Column>
+                                                                <Column width="5rem" hAlign="Begin"><Text text="{i18n>tmColQty}"/></Column>
                                                                 <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
-                                                                <Column width="8rem" hAlign="Begin"><Text text="Date"/></Column>
-                                                                <Column hAlign="Begin"><Text text="Remarks"/></Column>
-                                                                <Column width="6rem" hAlign="Center"><Text text="Status"/></Column>
+                                                                <Column width="8rem" hAlign="Begin"><Text text="{i18n>tmColDate}"/></Column>
+                                                                <Column hAlign="Begin"><Text text="{i18n>tmColRemarks}"/></Column>
+                                                                <Column width="6rem" hAlign="Center"><Text text="{i18n>tmColStatus}"/></Column>
                                                             </columns>
                                                             <items>
                                                                 <ColumnListItem type="Inactive" highlight="{= ${view>decisionStatus} === 'APPROVED' ? 'Success' : (${view>decisionStatus} === 'DECLINED' || ${view>decisionStatus} === 'CANCELLED' || ${view>decisionStatus} === 'DECLINED_CLOSED') ? 'Error' : ${view>editMode} ? 'Information' : 'None'}">
@@ -195,13 +195,13 @@
                                                                             <StepInput value="{view>durationHrs}" min="0" step="0.25" displayValuePrecision="2" width="5rem" editable="{view>editMode}" visible="{= ${view>type} === 'Time Effort'}"/>
                                                                             <Text text="N/A" visible="{= ${view>type} !== 'Time Effort'}"/>
                                                                         </HBox>
-                                                                        <Text text="{= ${view>type} === 'Time Effort' ? 'hrs' : ''}" class="sapUiTinyMarginBegin"/>
+                                                                        <Text text="{path: 'view>type', formatter: '.formatter.formatHoursUnit'}" class="sapUiTinyMarginBegin"/>
                                                                         <!-- Qty: show Input for Material, N/A for Time Effort -->
                                                                         <HBox>
                                                                             <Input value="{view>quantity}" type="Number" width="4rem" editable="{view>editMode}" visible="{= ${view>type} === 'Material'}"/>
                                                                             <Text text="N/A" visible="{= ${view>type} !== 'Material'}"/>
                                                                         </HBox>
-                                                                        <Text text="{= ${view>type} === 'Material' ? 'pcs' : ''}" class="sapUiTinyMarginBegin"/>
+                                                                        <Text text="{path: 'view>type', formatter: '.formatter.formatPiecesUnit'}" class="sapUiTinyMarginBegin"/>
                                                                         <!-- Date: editable DatePicker in edit mode -->
                                                                         <DatePicker value="{view>entryDateFormatted}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="100%" editable="{view>editMode}"/>
                                                                         <Input value="{view>remarksText}" width="100%" editable="{view>editMode}"/>
@@ -219,24 +219,24 @@
                                                 <headerToolbar>
                                                     <OverflowToolbar design="Info">
                                                         <core:Icon src="sap-icon://money-bills" class="sapUiTinyMarginEnd" color="#E9730C"/>
-                                                        <Title text="Expenses" level="H5"/>
+                                                        <Title text="{i18n>tmExpenses}" level="H5"/>
                                                         <ToolbarSpacer/>
-                                                        <Select selectedKey="createDateTime-desc" change=".onTMSortChange" class="sapUiTinyMarginBegin" tooltip="Sort by">
-                                                            <core:Item key="createDateTime-desc" text="Date ↓"/>
-                                                            <core:Item key="createDateTime-asc" text="Date ↑"/>
-                                                            <core:Item key="expenseTypeDisplayText-asc" text="Type A-Z"/>
-                                                            <core:Item key="expenseTypeDisplayText-desc" text="Type Z-A"/>
-                                                            <core:Item key="createPersonDisplayText-asc" text="Technician A-Z"/>
-                                                            <core:Item key="createPersonDisplayText-desc" text="Technician Z-A"/>
-                                                            <core:Item key="externalAmountValue-desc" text="Amount ↓"/>
-                                                            <core:Item key="externalAmountValue-asc" text="Amount ↑"/>
-                                                            <core:Item key="decisionStatus-asc" text="Status A-Z"/>
+                                                        <Select selectedKey="createDateTime-desc" change=".onTMSortChange" class="sapUiTinyMarginBegin" tooltip="{i18n>tmSortByTooltip}">
+                                                            <core:Item key="createDateTime-desc" text="{i18n>sortDateDesc}"/>
+                                                            <core:Item key="createDateTime-asc" text="{i18n>sortDateAsc}"/>
+                                                            <core:Item key="expenseTypeDisplayText-asc" text="{i18n>sortTypeAsc}"/>
+                                                            <core:Item key="expenseTypeDisplayText-desc" text="{i18n>sortTypeDesc}"/>
+                                                            <core:Item key="createPersonDisplayText-asc" text="{i18n>sortTechAsc}"/>
+                                                            <core:Item key="createPersonDisplayText-desc" text="{i18n>sortTechDesc}"/>
+                                                            <core:Item key="externalAmountValue-desc" text="{i18n>sortAmountDesc}"/>
+                                                            <core:Item key="externalAmountValue-asc" text="{i18n>sortAmountAsc}"/>
+                                                            <core:Item key="decisionStatus-asc" text="{i18n>sortStatusAsc}"/>
                                                         </Select>
-                                                        <Button text="Edit Selected" icon="sap-icon://edit" press=".onEditSelectedTM" visible="{= ${view>expenseEditMode} !== true}" class="sapUiTinyMarginBegin"/>
-                                                        <Button text="Save All" icon="sap-icon://save" type="Emphasized" press=".onSaveAllTM" visible="{= ${view>expenseEditMode} === true}" class="sapUiTinyMarginBegin"/>
-                                                        <Button text="End Edit" icon="sap-icon://sys-cancel" press=".onEndEditTM" visible="{= ${view>expenseEditMode} === true}" class="sapUiTinyMarginBegin"/>
-                                                        <Button text="Add Entry" icon="sap-icon://add" type="Emphasized" press=".onAddNewTMEntry" visible="{= ${view>status} !== 'CLOSED' &amp;&amp; ${view>status} !== 'CANCELLED'}" class="sapUiTinyMarginBegin"/>
-                                                        <ObjectNumber number="{view>tmExpenseCount}" unit="entries" class="sapUiSmallMarginBegin"/>
+                                                        <Button text="{i18n>tmEditSelected}" icon="sap-icon://edit" press=".onEditSelectedTM" visible="{= ${view>expenseEditMode} !== true}" class="sapUiTinyMarginBegin"/>
+                                                        <Button text="{i18n>tmSaveAll}" icon="sap-icon://save" type="Emphasized" press=".onSaveAllTM" visible="{= ${view>expenseEditMode} === true}" class="sapUiTinyMarginBegin"/>
+                                                        <Button text="{i18n>tmEndEdit}" icon="sap-icon://sys-cancel" press=".onEndEditTM" visible="{= ${view>expenseEditMode} === true}" class="sapUiTinyMarginBegin"/>
+                                                        <Button text="{i18n>tmAddEntry}" icon="sap-icon://add" type="Emphasized" press=".onAddNewTMEntry" visible="{= ${view>status} !== 'CLOSED' &amp;&amp; ${view>status} !== 'CANCELLED'}" class="sapUiTinyMarginBegin"/>
+                                                        <ObjectNumber number="{view>tmExpenseCount}" unit="{i18n>tmEntriesUnit}" class="sapUiSmallMarginBegin"/>
                                                     </OverflowToolbar>
                                                 </headerToolbar>
                                                 <content>
@@ -248,14 +248,14 @@
                                                         >
                                                             <columns>
                                                                 <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
-                                                                <Column hAlign="Begin"><Text text="Expense Type"/></Column>
-                                                                <Column width="10rem" hAlign="Begin"><Text text="Technician"/></Column>
-                                                                <Column width="5rem" hAlign="Begin"><Text text="Ext. Amt"/></Column>
-                                                                <Column width="5rem" hAlign="Begin"><Text text="Int. Amt"/></Column>
+                                                                <Column hAlign="Begin"><Text text="{i18n>tmColExpenseType}"/></Column>
+                                                                <Column width="10rem" hAlign="Begin"><Text text="{i18n>tmColTechnician}"/></Column>
+                                                                <Column width="5rem" hAlign="Begin"><Text text="{i18n>tmColExtAmt}"/></Column>
+                                                                <Column width="5rem" hAlign="Begin"><Text text="{i18n>tmColIntAmt}"/></Column>
                                                                 <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
-                                                                <Column width="8rem" hAlign="Begin"><Text text="Date"/></Column>
-                                                                <Column hAlign="Begin"><Text text="Remarks"/></Column>
-                                                                <Column width="6rem" hAlign="Center"><Text text="Status"/></Column>
+                                                                <Column width="8rem" hAlign="Begin"><Text text="{i18n>tmColDate}"/></Column>
+                                                                <Column hAlign="Begin"><Text text="{i18n>tmColRemarks}"/></Column>
+                                                                <Column width="6rem" hAlign="Center"><Text text="{i18n>tmColStatus}"/></Column>
                                                             </columns>
                                                             <items>
                                                                 <ColumnListItem type="Inactive" highlight="{= ${view>decisionStatus} === 'APPROVED' ? 'Success' : (${view>decisionStatus} === 'DECLINED' || ${view>decisionStatus} === 'CANCELLED' || ${view>decisionStatus} === 'DECLINED_CLOSED') ? 'Error' : ${view>editMode} ? 'Information' : 'None'}">
@@ -265,7 +265,7 @@
                                                                         <Text text="{view>createPersonDisplayText}"/>
                                                                         <Input value="{view>externalAmountValue}" type="Number" width="100%" editable="{view>editMode}"/>
                                                                         <Input value="{view>internalAmountValue}" type="Number" width="100%" editable="{view>editMode}"/>
-                                                                        <Text text="EUR"/>
+                                                                        <Text text="{i18n>unitEuro}"/>
                                                                         <DatePicker value="{view>entryDateFormatted}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="100%" editable="{view>editMode}"/>
                                                                         <Input value="{view>remarksText}" width="100%" editable="{view>editMode}"/>
                                                                         <ObjectStatus text="{= ${view>decisionStatus} === 'DECLINED_CLOSED' ? 'DECLINED' : ${view>decisionStatus}}" state="{view>decisionStatusState}" icon="{= ${view>decisionStatus} === 'APPROVED' ? 'sap-icon://accept' : (${view>decisionStatus} === 'DECLINED' || ${view>decisionStatus} === 'CANCELLED' || ${view>decisionStatus} === 'DECLINED_CLOSED') ? 'sap-icon://decline' : ''}"/>
@@ -282,24 +282,24 @@
                                                 <headerToolbar>
                                                     <OverflowToolbar design="Info">
                                                         <core:Icon src="sap-icon://car-rental" class="sapUiTinyMarginEnd" color="#6C32A9"/>
-                                                        <Title text="Mileage" level="H5"/>
+                                                        <Title text="{i18n>tmMileage}" level="H5"/>
                                                         <ToolbarSpacer/>
-                                                        <Select selectedKey="createDateTime-desc" change=".onTMSortChange" class="sapUiTinyMarginBegin" tooltip="Sort by">
-                                                            <core:Item key="createDateTime-desc" text="Date ↓"/>
-                                                            <core:Item key="createDateTime-asc" text="Date ↑"/>
-                                                            <core:Item key="mileageTypeDisplayText-asc" text="Type A-Z"/>
-                                                            <core:Item key="mileageTypeDisplayText-desc" text="Type Z-A"/>
-                                                            <core:Item key="createPersonDisplayText-asc" text="Technician A-Z"/>
-                                                            <core:Item key="createPersonDisplayText-desc" text="Technician Z-A"/>
-                                                            <core:Item key="distanceValue-desc" text="Distance ↓"/>
-                                                            <core:Item key="distanceValue-asc" text="Distance ↑"/>
-                                                            <core:Item key="decisionStatus-asc" text="Status A-Z"/>
+                                                        <Select selectedKey="createDateTime-desc" change=".onTMSortChange" class="sapUiTinyMarginBegin" tooltip="{i18n>tmSortByTooltip}">
+                                                            <core:Item key="createDateTime-desc" text="{i18n>sortDateDesc}"/>
+                                                            <core:Item key="createDateTime-asc" text="{i18n>sortDateAsc}"/>
+                                                            <core:Item key="mileageTypeDisplayText-asc" text="{i18n>sortTypeAsc}"/>
+                                                            <core:Item key="mileageTypeDisplayText-desc" text="{i18n>sortTypeDesc}"/>
+                                                            <core:Item key="createPersonDisplayText-asc" text="{i18n>sortTechAsc}"/>
+                                                            <core:Item key="createPersonDisplayText-desc" text="{i18n>sortTechDesc}"/>
+                                                            <core:Item key="distanceValue-desc" text="{i18n>sortDistanceDesc}"/>
+                                                            <core:Item key="distanceValue-asc" text="{i18n>sortDistanceAsc}"/>
+                                                            <core:Item key="decisionStatus-asc" text="{i18n>sortStatusAsc}"/>
                                                         </Select>
-                                                        <Button text="Edit Selected" icon="sap-icon://edit" press=".onEditSelectedTM" visible="{= ${view>mileageEditMode} !== true}" class="sapUiTinyMarginBegin"/>
-                                                        <Button text="Save All" icon="sap-icon://save" type="Emphasized" press=".onSaveAllTM" visible="{= ${view>mileageEditMode} === true}" class="sapUiTinyMarginBegin"/>
-                                                        <Button text="End Edit" icon="sap-icon://sys-cancel" press=".onEndEditTM" visible="{= ${view>mileageEditMode} === true}" class="sapUiTinyMarginBegin"/>
-                                                        <Button text="Add Entry" icon="sap-icon://add" type="Emphasized" press=".onAddNewTMEntry" visible="{= ${view>status} !== 'CLOSED' &amp;&amp; ${view>status} !== 'CANCELLED'}" class="sapUiTinyMarginBegin"/>
-                                                        <ObjectNumber number="{view>tmMileageCount}" unit="entries" class="sapUiSmallMarginBegin"/>
+                                                        <Button text="{i18n>tmEditSelected}" icon="sap-icon://edit" press=".onEditSelectedTM" visible="{= ${view>mileageEditMode} !== true}" class="sapUiTinyMarginBegin"/>
+                                                        <Button text="{i18n>tmSaveAll}" icon="sap-icon://save" type="Emphasized" press=".onSaveAllTM" visible="{= ${view>mileageEditMode} === true}" class="sapUiTinyMarginBegin"/>
+                                                        <Button text="{i18n>tmEndEdit}" icon="sap-icon://sys-cancel" press=".onEndEditTM" visible="{= ${view>mileageEditMode} === true}" class="sapUiTinyMarginBegin"/>
+                                                        <Button text="{i18n>tmAddEntry}" icon="sap-icon://add" type="Emphasized" press=".onAddNewTMEntry" visible="{= ${view>status} !== 'CLOSED' &amp;&amp; ${view>status} !== 'CANCELLED'}" class="sapUiTinyMarginBegin"/>
+                                                        <ObjectNumber number="{view>tmMileageCount}" unit="{i18n>tmEntriesUnit}" class="sapUiSmallMarginBegin"/>
                                                     </OverflowToolbar>
                                                 </headerToolbar>
                                                 <content>
@@ -311,15 +311,15 @@
                                                         >
                                                             <columns>
                                                                 <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
-                                                                <Column hAlign="Begin"><Text text="Mileage Type"/></Column>
-                                                                <Column width="10rem" hAlign="Begin"><Text text="Technician"/></Column>
-                                                                <Column width="5rem" hAlign="Begin"><Text text="Dist."/></Column>
+                                                                <Column hAlign="Begin"><Text text="{i18n>tmColMileageType}"/></Column>
+                                                                <Column width="10rem" hAlign="Begin"><Text text="{i18n>tmColTechnician}"/></Column>
+                                                                <Column width="5rem" hAlign="Begin"><Text text="{i18n>tmColDistance}"/></Column>
                                                                 <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
-                                                                <Column width="5rem" hAlign="Begin"><Text text="Dur."/></Column>
+                                                                <Column width="5rem" hAlign="Begin"><Text text="{i18n>tmColDuration}"/></Column>
                                                                 <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
-                                                                <Column width="8rem" hAlign="Begin"><Text text="Date"/></Column>
-                                                                <Column hAlign="Begin"><Text text="Remarks"/></Column>
-                                                                <Column width="6rem" hAlign="Center"><Text text="Status"/></Column>
+                                                                <Column width="8rem" hAlign="Begin"><Text text="{i18n>tmColDate}"/></Column>
+                                                                <Column hAlign="Begin"><Text text="{i18n>tmColRemarks}"/></Column>
+                                                                <Column width="6rem" hAlign="Center"><Text text="{i18n>tmColStatus}"/></Column>
                                                             </columns>
                                                             <items>
                                                                 <ColumnListItem type="Inactive" highlight="{= ${view>decisionStatus} === 'APPROVED' ? 'Success' : (${view>decisionStatus} === 'DECLINED' || ${view>decisionStatus} === 'CANCELLED' || ${view>decisionStatus} === 'DECLINED_CLOSED') ? 'Error' : ${view>editMode} ? 'Information' : 'None'}">
@@ -328,9 +328,9 @@
                                                                         <Text text="{view>mileageTypeDisplayText}"/>
                                                                         <Text text="{view>createPersonDisplayText}"/>
                                                                         <Input value="{view>distanceValue}" type="Number" width="100%" editable="{view>editMode}"/>
-                                                                        <Text text="KM"/>
+                                                                        <Text text="{i18n>unitKilometersUC}"/>
                                                                         <Input value="{view>travelDurationMinutes}" type="Number" width="100%" editable="{view>editMode}"/>
-                                                                        <Text text="min"/>
+                                                                        <Text text="{i18n>unitMinutes}"/>
                                                                         <DatePicker value="{view>entryDateFormatted}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="100%" editable="{view>editMode}"/>
                                                                         <Input value="{view>remarksText}" width="100%" editable="{view>editMode}"/>
                                                                         <ObjectStatus text="{= ${view>decisionStatus} === 'DECLINED_CLOSED' ? 'DECLINED' : ${view>decisionStatus}}" state="{view>decisionStatusState}" icon="{= ${view>decisionStatus} === 'APPROVED' ? 'sap-icon://accept' : (${view>decisionStatus} === 'DECLINED' || ${view>decisionStatus} === 'CANCELLED' || ${view>decisionStatus} === 'DECLINED_CLOSED') ? 'sap-icon://decline' : ''}"/>
@@ -345,8 +345,8 @@
                                             <!-- Empty State -->
                                             <VBox visible="{= ${view>tmReportsCount} === 0 }" alignItems="Center" class="sapUiMediumMarginTopBottom">
                                                 <core:Icon src="sap-icon://document" size="2rem" color="#888"/>
-                                                <Text text="No T&amp;M entries yet" class="sapUiTinyMarginTop"/>
-                                                <Button text="Add Entry" icon="sap-icon://add" type="Emphasized" press=".onAddNewTMEntry" visible="{= ${view>status} !== 'CLOSED' &amp;&amp; ${view>status} !== 'CANCELLED'}" class="sapUiSmallMarginTop"/>
+                                                <Text text="{i18n>tmNoEntries}" class="sapUiTinyMarginTop"/>
+                                                <Button text="{i18n>tmAddEntry}" icon="sap-icon://add" type="Emphasized" press=".onAddNewTMEntry" visible="{= ${view>status} !== 'CLOSED' &amp;&amp; ${view>status} !== 'CANCELLED'}" class="sapUiSmallMarginTop"/>
                                             </VBox>
                                         </VBox>
                                     </content>

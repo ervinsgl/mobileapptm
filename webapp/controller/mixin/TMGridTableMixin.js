@@ -77,7 +77,7 @@ sap.ui.define([
                 oBinding.filter([new Filter("type", FilterOperator.EQ, selectedKey)]);
             }
             
-            MessageToast.show(selectedKey === "ALL" ? "Showing all" : `Filtered: ${selectedKey}`);
+            MessageToast.show(selectedKey === "ALL" ? this._getText("msgShowingAll") : this._getText("msgFiltered", [selectedKey]));
         },
 
         /**
@@ -87,7 +87,7 @@ sap.ui.define([
             const oContext = oEvent.getSource().getBindingContext("view");
             
             if (!oContext) {
-                MessageToast.show("Cannot determine data source");
+                MessageToast.show(this._getText("msgCannotDetermineDataSource"));
                 return;
             }
             
@@ -96,7 +96,7 @@ sap.ui.define([
             const data = model.getProperty(path + "/tmReports") || [];
             
             if (data.length === 0) {
-                MessageToast.show("No data to export");
+                MessageToast.show(this._getText("msgNoDataToExport"));
                 return;
             }
 
@@ -144,11 +144,11 @@ sap.ui.define([
             sap.ui.require(["sap/ui/export/Spreadsheet"], (Spreadsheet) => {
                 const sheet = new Spreadsheet(settings);
                 sheet.build()
-                    .then(() => MessageToast.show("Export complete"))
-                    .catch((error) => MessageBox.error("Export failed: " + error.message))
+                    .then(() => MessageToast.show(this._getText("msgExportComplete")))
+                    .catch((error) => MessageBox.error(this._getText("msgExportFailed", [error.message])))
                     .finally(() => sheet.destroy());
             }, (error) => {
-                MessageBox.error("Export library not available");
+                MessageBox.error(this._getText("msgExportLibraryNotAvailable"));
             });
         }
     };

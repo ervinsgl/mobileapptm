@@ -24,13 +24,13 @@ sap.ui.define([
 
         onAddExpenseEntry() {
             if (!this._tmCreateDialog) {
-                MessageToast.show("Dialog not initialized");
+                MessageToast.show(this._getText("msgDialogNotInitialized"));
                 return;
             }
             
             const oModel = this._tmCreateDialog.getModel("createTM");
             if (!oModel) {
-                MessageToast.show("Model not initialized");
+                MessageToast.show(this._getText("msgModelNotInitialized"));
                 return;
             }
             
@@ -46,18 +46,18 @@ sap.ui.define([
             
             aEntries.push(newEntry);
             oModel.setProperty("/entries", aEntries);
-            MessageToast.show("Expense entry added");
+            MessageToast.show(this._getText("msgExpenseEntryAdded"));
         },
 
         onAddMileageEntry() {
             if (!this._tmCreateDialog) {
-                MessageToast.show("Dialog not initialized");
+                MessageToast.show(this._getText("msgDialogNotInitialized"));
                 return;
             }
             
             const oModel = this._tmCreateDialog.getModel("createTM");
             if (!oModel) {
-                MessageToast.show("Model not initialized");
+                MessageToast.show(this._getText("msgModelNotInitialized"));
                 return;
             }
             
@@ -73,18 +73,18 @@ sap.ui.define([
             
             aEntries.push(newEntry);
             oModel.setProperty("/entries", aEntries);
-            MessageToast.show("Mileage entry added");
+            MessageToast.show(this._getText("msgMileageEntryAdded"));
         },
 
         onAddTimeAndMaterialEntry() {
             if (!this._tmCreateDialog) {
-                MessageToast.show("Dialog not initialized");
+                MessageToast.show(this._getText("msgDialogNotInitialized"));
                 return;
             }
             
             const oModel = this._tmCreateDialog.getModel("createTM");
             if (!oModel) {
-                MessageToast.show("Model not initialized");
+                MessageToast.show(this._getText("msgModelNotInitialized"));
                 return;
             }
             
@@ -105,7 +105,7 @@ sap.ui.define([
             
             aEntries.push(newEntry);
             oModel.setProperty("/entries", aEntries);
-            MessageToast.show("Time & Material entry added");
+            MessageToast.show(this._getText("msgTMEntryAdded"));
         },
 
         /* ========================================
@@ -115,7 +115,7 @@ sap.ui.define([
         onAddCreateExpenseRow() {
             const oModel = this._tmCreateDialog?.getModel("createTM");
             if (!oModel) {
-                MessageToast.show("Model not initialized");
+                MessageToast.show(this._getText("msgModelNotInitialized"));
                 return;
             }
             
@@ -143,13 +143,13 @@ sap.ui.define([
             
             oModel.setProperty("/expenseEntries", aExpenseEntries);
             oModel.refresh(true);
-            MessageToast.show("Expense entry added");
+            MessageToast.show(this._getText("msgExpenseEntryAdded"));
         },
 
         onRemoveCreateExpenseRow(oEvent) {
             const oContext = oEvent.getSource().getBindingContext("createTM");
             if (!oContext) {
-                MessageToast.show("Could not identify entry");
+                MessageToast.show(this._getText("msgCouldNotIdentifyEntry"));
                 return;
             }
             
@@ -160,13 +160,13 @@ sap.ui.define([
             aExpenseEntries.splice(iIndex, 1);
             oModel.setProperty("/expenseEntries", aExpenseEntries);
             oModel.refresh(true);
-            MessageToast.show("Expense entry removed");
+            MessageToast.show(this._getText("msgExpenseEntryRemoved"));
         },
 
         onCopyCreateExpenseRow(oEvent) {
             const oContext = oEvent.getSource().getBindingContext("createTM");
             if (!oContext) {
-                MessageToast.show("Could not identify entry");
+                MessageToast.show(this._getText("msgCouldNotIdentifyEntry"));
                 return;
             }
             
@@ -183,7 +183,7 @@ sap.ui.define([
             aExpenseEntries.splice(iIndex + 1, 0, oCopy);
             oModel.setProperty("/expenseEntries", aExpenseEntries);
             oModel.refresh(true);
-            MessageToast.show("Expense entry copied");
+            MessageToast.show(this._getText("msgExpenseEntryCopied"));
         },
 
         onSaveAllCreateExpense() {
@@ -191,13 +191,13 @@ sap.ui.define([
             const aExpenseEntries = oModel.getProperty("/expenseEntries") || [];
             
             if (aExpenseEntries.length === 0) {
-                MessageToast.show("No expense entries to save");
+                MessageToast.show(this._getText("msgNoExpenseEntriesToSave"));
                 return;
             }
             
             const invalidEntries = aExpenseEntries.filter(e => !e.expenseTypeId || !e.technicianExternalId);
             if (invalidEntries.length > 0) {
-                MessageBox.warning("Please select expense type and technician for all entries");
+                MessageBox.warning(this._getText("msgSelectExpenseTypeAndTechnician"));
                 return;
             }
             
@@ -206,9 +206,9 @@ sap.ui.define([
             );
             
             MessageBox.confirm(
-                `Create ${aExpenseEntries.length} expense entries?\n\n${lines.join('\n')}`,
+                this._getText("msgConfirmExpenseCreation", [aExpenseEntries.length, lines.join('\n')]),
                 {
-                    title: "Confirm Expense Creation",
+                    title: this._getText("msgConfirmExpenseCreationTitle"),
                     onClose: (sAction) => {
                         if (sAction === MessageBox.Action.OK) {
                             this._submitCreateExpenseEntries(aExpenseEntries, oModel);
@@ -248,7 +248,7 @@ sap.ui.define([
                 }
                 
                 if (errorCount === 0) {
-                    MessageToast.show(`${successCount} expense entries created`);
+                    MessageToast.show(this._getText("msgExpenseEntriesCreated", [successCount]));
                     oModel.setProperty("/expenseEntries", []);
                     
                     // Close the creation dialog
@@ -258,10 +258,10 @@ sap.ui.define([
                     
                     if (activityId) await this._refreshTMReportsAfterCreate(activityId);
                 } else {
-                    MessageBox.warning(`Created ${successCount}, failed ${errorCount}`);
+                    MessageBox.warning(this._getText("msgPartialSuccess", [successCount, errorCount]));
                 }
             } catch (error) {
-                MessageBox.error(`Error: ${error.message}`);
+                MessageBox.error(this._getText("msgError", [error.message]));
             } finally {
                 sap.ui.core.BusyIndicator.hide();
             }
@@ -274,7 +274,7 @@ sap.ui.define([
         onAddCreateMileageRow() {
             const oModel = this._tmCreateDialog?.getModel("createTM");
             if (!oModel) {
-                MessageToast.show("Model not initialized");
+                MessageToast.show(this._getText("msgModelNotInitialized"));
                 return;
             }
             
@@ -305,13 +305,13 @@ sap.ui.define([
             
             oModel.setProperty("/mileageEntries", aMileageEntries);
             oModel.refresh(true);
-            MessageToast.show("Mileage entry added");
+            MessageToast.show(this._getText("msgMileageEntryAdded"));
         },
 
         onRemoveCreateMileageRow(oEvent) {
             const oContext = oEvent.getSource().getBindingContext("createTM");
             if (!oContext) {
-                MessageToast.show("Could not identify entry");
+                MessageToast.show(this._getText("msgCouldNotIdentifyEntry"));
                 return;
             }
             
@@ -322,13 +322,13 @@ sap.ui.define([
             aMileageEntries.splice(iIndex, 1);
             oModel.setProperty("/mileageEntries", aMileageEntries);
             oModel.refresh(true);
-            MessageToast.show("Mileage entry removed");
+            MessageToast.show(this._getText("msgMileageEntryRemoved"));
         },
 
         onCopyCreateMileageRow(oEvent) {
             const oContext = oEvent.getSource().getBindingContext("createTM");
             if (!oContext) {
-                MessageToast.show("Could not identify entry");
+                MessageToast.show(this._getText("msgCouldNotIdentifyEntry"));
                 return;
             }
             
@@ -345,7 +345,7 @@ sap.ui.define([
             aMileageEntries.splice(iIndex + 1, 0, oCopy);
             oModel.setProperty("/mileageEntries", aMileageEntries);
             oModel.refresh(true);
-            MessageToast.show("Mileage entry copied");
+            MessageToast.show(this._getText("msgMileageEntryCopied"));
         },
 
         onSaveAllCreateMileage() {
@@ -353,13 +353,13 @@ sap.ui.define([
             const aMileageEntries = oModel.getProperty("/mileageEntries") || [];
             
             if (aMileageEntries.length === 0) {
-                MessageToast.show("No mileage entries to save");
+                MessageToast.show(this._getText("msgNoMileageEntriesToSave"));
                 return;
             }
             
             const invalidEntries = aMileageEntries.filter(e => !e.itemId || !e.technicianExternalId);
             if (invalidEntries.length > 0) {
-                MessageBox.warning("Please select item and technician for all entries");
+                MessageBox.warning(this._getText("msgSelectItemAndTechnician"));
                 return;
             }
             
@@ -368,9 +368,9 @@ sap.ui.define([
             );
             
             MessageBox.confirm(
-                `Create ${aMileageEntries.length} mileage entries?\n\n${lines.join('\n')}`,
+                this._getText("msgConfirmMileageCreation", [aMileageEntries.length, lines.join('\n')]),
                 {
-                    title: "Confirm Mileage Creation",
+                    title: this._getText("msgConfirmMileageCreationTitle"),
                     onClose: (sAction) => {
                         if (sAction === MessageBox.Action.OK) {
                             this._submitCreateMileageEntries(aMileageEntries, oModel);
@@ -410,7 +410,7 @@ sap.ui.define([
                 }
                 
                 if (errorCount === 0) {
-                    MessageToast.show(`${successCount} mileage entries created`);
+                    MessageToast.show(this._getText("msgMileageEntriesCreated", [successCount]));
                     oModel.setProperty("/mileageEntries", []);
                     
                     // Close the creation dialog
@@ -420,10 +420,10 @@ sap.ui.define([
                     
                     if (activityId) await this._refreshTMReportsAfterCreate(activityId);
                 } else {
-                    MessageBox.warning(`Created ${successCount}, failed ${errorCount}`);
+                    MessageBox.warning(this._getText("msgPartialSuccess", [successCount, errorCount]));
                 }
             } catch (error) {
-                MessageBox.error(`Error: ${error.message}`);
+                MessageBox.error(this._getText("msgError", [error.message]));
             } finally {
                 sap.ui.core.BusyIndicator.hide();
             }

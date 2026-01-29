@@ -35,7 +35,7 @@ sap.ui.define([
             const oContext = oButton.getBindingContext("createTM");
             
             if (!oContext) {
-                MessageToast.show("Entry context not available");
+                MessageToast.show(this._getText("msgEntryContextNotAvailable"));
                 return;
             }
             
@@ -49,7 +49,7 @@ sap.ui.define([
                 const iIndex = parseInt(match[1]);
                 aEntries.splice(iIndex, 1);
                 oModel.setProperty("/entries", aEntries);
-                MessageToast.show("Entry removed");
+                MessageToast.show(this._getText("msgEntryRemoved"));
             }
         },
 
@@ -61,7 +61,7 @@ sap.ui.define([
             const oContext = oButton.getBindingContext("createTM");
             
             if (!oContext) {
-                MessageToast.show("Entry context not available");
+                MessageToast.show(this._getText("msgEntryContextNotAvailable"));
                 return;
             }
             
@@ -91,21 +91,21 @@ sap.ui.define([
                     if (oEntry.id && oEntry.id.startsWith && !oEntry.id.startsWith("temp_")) {
                         this._showMaterialUpdateConfirmation(oEntry, sPath, oModel);
                     } else {
-                        MessageToast.show("Material creation - use Save All");
+                        MessageToast.show(this._getText("msgMaterialCreationHint"));
                     }
                     break;
                 case "Time Effort":
                     if (oEntry.id && oEntry.id.startsWith && !oEntry.id.startsWith("temp_")) {
                         this._showTimeEffortUpdateConfirmation(oEntry, sPath, oModel);
                     } else {
-                        MessageToast.show("Time Effort creation - use Time & Material");
+                        MessageToast.show(this._getText("msgTimeEffortCreationHint"));
                     }
                     break;
                 case "Time & Material":
                     this._showTimeAndMaterialConfirmation(oEntry, sPath, oModel);
                     break;
                 default:
-                    MessageToast.show(`Save not implemented for type: ${oEntry.type}`);
+                    MessageToast.show(this._getText("msgSaveNotImplemented", [oEntry.type]));
             }
         },
 
@@ -122,9 +122,13 @@ sap.ui.define([
             const previewText = this._formatExpensePreview(oEntry, payload);
             
             MessageBox.confirm(
-                `Create Expense Entry?\n\n${previewText}`,
+                this._getText("msgConfirmCreateExpense", [
+                    oEntry.expenseTypeDisplay || 'N/A',
+                    oEntry.externalAmountValue || 0,
+                    oEntry.technicianDisplay || 'N/A'
+                ]) + "\n\n" + previewText,
                 {
-                    title: "Confirm Expense Creation",
+                    title: this._getText("msgConfirmCreateExpenseTitle"),
                     onClose: (sAction) => {
                         if (sAction === MessageBox.Action.OK) {
                             this._submitExpenseToFSM(payload, oEntry, sPath, oModel, activityCode);
@@ -136,13 +140,13 @@ sap.ui.define([
 
         _formatExpensePreview(oEntry, payload) {
             const lines = [];
-            lines.push(`Type: ${oEntry.expenseTypeDisplay || 'N/A'}`);
-            lines.push(`External Amount: ${oEntry.externalAmountValue || 0} EUR`);
-            lines.push(`Internal Amount: ${oEntry.internalAmountValue || 0} EUR`);
-            lines.push(`Technician: ${oEntry.technicianDisplay || 'N/A'}`);
-            lines.push(`Date: ${payload.date || 'N/A'}`);
+            lines.push(`${this._getText("previewType")} ${oEntry.expenseTypeDisplay || 'N/A'}`);
+            lines.push(`${this._getText("previewExternalAmount")} ${oEntry.externalAmountValue || 0} EUR`);
+            lines.push(`${this._getText("previewInternalAmount")} ${oEntry.internalAmountValue || 0} EUR`);
+            lines.push(`${this._getText("previewTechnician")} ${oEntry.technicianDisplay || 'N/A'}`);
+            lines.push(`${this._getText("previewDate")} ${payload.date || 'N/A'}`);
             if (oEntry.remarks) {
-                lines.push(`Remarks: ${oEntry.remarks}`);
+                lines.push(`${this._getText("previewRemarks")} ${oEntry.remarks}`);
             }
             return lines.join('\n');
         },
@@ -160,7 +164,7 @@ sap.ui.define([
                 const result = await response.json();
                 
                 if (result.success) {
-                    MessageToast.show("Expense entry created successfully");
+                    MessageToast.show(this._getText("msgExpenseCreated"));
                     
                     // Remove entry from dialog
                     const aEntries = oModel.getProperty("/entries") || [];
@@ -177,11 +181,11 @@ sap.ui.define([
                         await this._refreshTMReportsAfterCreate(activityId);
                     }
                 } else {
-                    MessageBox.error(`Failed to create expense: ${result.message || 'Unknown error'}`);
+                    MessageBox.error(this._getText("msgFailedCreateExpense", [result.message || this._getText("msgUnknownError")]));
                 }
             } catch (error) {
                 console.error("Error creating expense:", error);
-                MessageBox.error(`Error: ${error.message}`);
+                MessageBox.error(this._getText("msgError", [error.message]));
             } finally {
                 sap.ui.core.BusyIndicator.hide();
             }
@@ -195,9 +199,12 @@ sap.ui.define([
             const previewText = this._formatExpenseUpdatePreview(oEntry, payload);
             
             MessageBox.confirm(
-                `Update Expense Entry?\n\n${previewText}`,
+                this._getText("msgConfirmUpdateExpense", [
+                    oEntry.expenseTypeDisplay || 'N/A',
+                    oEntry.externalAmountValue || 0
+                ]) + "\n\n" + previewText,
                 {
-                    title: "Confirm Expense Update",
+                    title: this._getText("msgConfirmUpdateExpenseTitle"),
                     onClose: (sAction) => {
                         if (sAction === MessageBox.Action.OK) {
                             this._submitExpenseUpdate(oEntry.id, payload, sPath, oModel);
@@ -209,12 +216,12 @@ sap.ui.define([
 
         _formatExpenseUpdatePreview(oEntry, payload) {
             const lines = [];
-            lines.push(`ID: ${oEntry.id}`);
-            lines.push(`Type: ${oEntry.expenseTypeDisplay || 'N/A'}`);
-            lines.push(`External Amount: ${oEntry.externalAmountValue || 0} EUR`);
-            lines.push(`Internal Amount: ${oEntry.internalAmountValue || 0} EUR`);
+            lines.push(`${this._getText("previewId")} ${oEntry.id}`);
+            lines.push(`${this._getText("previewType")} ${oEntry.expenseTypeDisplay || 'N/A'}`);
+            lines.push(`${this._getText("previewExternalAmount")} ${oEntry.externalAmountValue || 0} EUR`);
+            lines.push(`${this._getText("previewInternalAmount")} ${oEntry.internalAmountValue || 0} EUR`);
             if (oEntry.remarks) {
-                lines.push(`Remarks: ${oEntry.remarks}`);
+                lines.push(`${this._getText("previewRemarks")} ${oEntry.remarks}`);
             }
             return lines.join('\n');
         },
@@ -232,7 +239,7 @@ sap.ui.define([
                 const result = await response.json();
                 
                 if (result.success) {
-                    MessageToast.show("Expense updated successfully");
+                    MessageToast.show(this._getText("msgExpenseUpdated"));
                     oModel.setProperty(sPath + "/editMode", false);
                     
                     const activityId = oModel.getProperty("/activityId");
@@ -240,11 +247,11 @@ sap.ui.define([
                         await this._refreshTMReportsAfterCreate(activityId);
                     }
                 } else {
-                    MessageBox.error(`Failed to update expense: ${result.message || 'Unknown error'}`);
+                    MessageBox.error(this._getText("msgFailedUpdateExpense", [result.message || this._getText("msgUnknownError")]));
                 }
             } catch (error) {
                 console.error("Error updating expense:", error);
-                MessageBox.error(`Error: ${error.message}`);
+                MessageBox.error(this._getText("msgError", [error.message]));
             } finally {
                 sap.ui.core.BusyIndicator.hide();
             }
@@ -278,9 +285,9 @@ sap.ui.define([
             const previewText = this._formatMileageUpdatePreview(oEntry, payload, durationMinutes);
             
             MessageBox.confirm(
-                `Update Mileage Entry?\n\n${previewText}`,
+                this._getText("msgConfirmUpdateMileage", [oEntry.distance || 0, durationMinutes]) + "\n\n" + previewText,
                 {
-                    title: "Confirm Mileage Update",
+                    title: this._getText("msgConfirmUpdateMileageTitle"),
                     onClose: (sAction) => {
                         if (sAction === MessageBox.Action.OK) {
                             this._submitMileageUpdate(oEntry.id, payload, sPath, oModel);
@@ -292,11 +299,11 @@ sap.ui.define([
 
         _formatMileageUpdatePreview(oEntry, payload, durationMinutes) {
             const lines = [];
-            lines.push(`ID: ${oEntry.id}`);
-            lines.push(`Distance: ${oEntry.distance || 0} KM`);
-            lines.push(`Duration: ${durationMinutes} min`);
+            lines.push(`${this._getText("previewId")} ${oEntry.id}`);
+            lines.push(`${this._getText("previewDistance")} ${oEntry.distance || 0} KM`);
+            lines.push(`${this._getText("previewDuration")} ${durationMinutes} min`);
             if (oEntry.remarks) {
-                lines.push(`Remarks: ${oEntry.remarks}`);
+                lines.push(`${this._getText("previewRemarks")} ${oEntry.remarks}`);
             }
             return lines.join('\n');
         },
@@ -314,7 +321,7 @@ sap.ui.define([
                 const result = await response.json();
                 
                 if (result.success) {
-                    MessageToast.show("Mileage updated successfully");
+                    MessageToast.show(this._getText("msgMileageUpdated"));
                     oModel.setProperty(sPath + "/editMode", false);
                     
                     const activityId = oModel.getProperty("/activityId");
@@ -322,11 +329,11 @@ sap.ui.define([
                         await this._refreshTMReportsAfterCreate(activityId);
                     }
                 } else {
-                    MessageBox.error(`Failed to update mileage: ${result.message || 'Unknown error'}`);
+                    MessageBox.error(this._getText("msgFailedUpdateMileage", [result.message || this._getText("msgUnknownError")]));
                 }
             } catch (error) {
                 console.error("Error updating mileage:", error);
-                MessageBox.error(`Error: ${error.message}`);
+                MessageBox.error(this._getText("msgError", [error.message]));
             } finally {
                 sap.ui.core.BusyIndicator.hide();
             }
@@ -351,9 +358,9 @@ sap.ui.define([
             const previewText = this._formatMaterialUpdatePreview(oEntry, payload);
             
             MessageBox.confirm(
-                `Update Material Entry?\n\n${previewText}`,
+                this._getText("msgConfirmUpdateMaterial", [oEntry.itemDisplayText || 'N/A', oEntry.quantity || 0]) + "\n\n" + previewText,
                 {
-                    title: "Confirm Material Update",
+                    title: this._getText("msgConfirmUpdateMaterialTitle"),
                     onClose: (sAction) => {
                         if (sAction === MessageBox.Action.OK) {
                             this._submitMaterialUpdate(oEntry.id, payload, sPath, oModel);
@@ -365,12 +372,12 @@ sap.ui.define([
 
         _formatMaterialUpdatePreview(oEntry, payload) {
             const lines = [];
-            lines.push(`ID: ${oEntry.id}`);
-            lines.push(`Item: ${oEntry.itemDisplayText || 'N/A'}`);
-            lines.push(`Quantity: ${oEntry.quantity || 0}`);
-            lines.push(`Date: ${oEntry.entryDateFormatted || 'N/A'}`);
+            lines.push(`${this._getText("previewId")} ${oEntry.id}`);
+            lines.push(`${this._getText("previewItem")} ${oEntry.itemDisplayText || 'N/A'}`);
+            lines.push(`${this._getText("previewQuantity")} ${oEntry.quantity || 0}`);
+            lines.push(`${this._getText("previewDate")} ${oEntry.entryDateFormatted || 'N/A'}`);
             if (oEntry.remarks) {
-                lines.push(`Remarks: ${oEntry.remarks}`);
+                lines.push(`${this._getText("previewRemarks")} ${oEntry.remarks}`);
             }
             return lines.join('\n');
         },
@@ -388,7 +395,7 @@ sap.ui.define([
                 const result = await response.json();
                 
                 if (result.success) {
-                    MessageToast.show("Material updated successfully");
+                    MessageToast.show(this._getText("msgMaterialUpdated"));
                     oModel.setProperty(sPath + "/editMode", false);
                     
                     const activityId = oModel.getProperty("/activityId");
@@ -396,11 +403,11 @@ sap.ui.define([
                         await this._refreshTMReportsAfterCreate(activityId);
                     }
                 } else {
-                    MessageBox.error(`Failed to update material: ${result.message || 'Unknown error'}`);
+                    MessageBox.error(this._getText("msgFailedUpdateMaterial", [result.message || this._getText("msgUnknownError")]));
                 }
             } catch (error) {
                 console.error("Error updating material:", error);
-                MessageBox.error(`Error: ${error.message}`);
+                MessageBox.error(this._getText("msgError", [error.message]));
             } finally {
                 sap.ui.core.BusyIndicator.hide();
             }
@@ -439,9 +446,9 @@ sap.ui.define([
             const previewText = this._formatTimeEffortUpdatePreview(oEntry, payload, durationMinutes);
             
             MessageBox.confirm(
-                `Update Time Effort Entry?\n\n${previewText}`,
+                this._getText("msgConfirmUpdateTimeEffort", [oEntry.taskDisplayText || 'N/A', durationMinutes]) + "\n\n" + previewText,
                 {
-                    title: "Confirm Time Effort Update",
+                    title: this._getText("msgConfirmUpdateTimeEffortTitle"),
                     onClose: (sAction) => {
                         if (sAction === MessageBox.Action.OK) {
                             this._submitTimeEffortUpdate(oEntry.id, payload, sPath, oModel);
@@ -453,12 +460,12 @@ sap.ui.define([
 
         _formatTimeEffortUpdatePreview(oEntry, payload, durationMinutes) {
             const lines = [];
-            lines.push(`ID: ${oEntry.id}`);
-            lines.push(`Task: ${oEntry.taskDisplayText || 'N/A'}`);
-            lines.push(`Duration: ${durationMinutes} min (${(durationMinutes / 60).toFixed(2)} hrs)`);
-            lines.push(`Date: ${oEntry.entryDateFormatted || 'N/A'}`);
+            lines.push(`${this._getText("previewId")} ${oEntry.id}`);
+            lines.push(`${this._getText("previewTask")} ${oEntry.taskDisplayText || 'N/A'}`);
+            lines.push(`${this._getText("previewDuration")} ${durationMinutes} min (${(durationMinutes / 60).toFixed(2)} ${this._getText("unitHours")})`);
+            lines.push(`${this._getText("previewDate")} ${oEntry.entryDateFormatted || 'N/A'}`);
             if (oEntry.remarks) {
-                lines.push(`Remarks: ${oEntry.remarks}`);
+                lines.push(`${this._getText("previewRemarks")} ${oEntry.remarks}`);
             }
             return lines.join('\n');
         },
@@ -476,7 +483,7 @@ sap.ui.define([
                 const result = await response.json();
                 
                 if (result.success) {
-                    MessageToast.show("Time Effort updated successfully");
+                    MessageToast.show(this._getText("msgTimeEffortUpdated"));
                     oModel.setProperty(sPath + "/editMode", false);
                     
                     const activityId = oModel.getProperty("/activityId");
@@ -484,11 +491,11 @@ sap.ui.define([
                         await this._refreshTMReportsAfterCreate(activityId);
                     }
                 } else {
-                    MessageBox.error(`Failed to update time effort: ${result.message || 'Unknown error'}`);
+                    MessageBox.error(this._getText("msgFailedUpdateTimeEffort", [result.message || this._getText("msgUnknownError")]));
                 }
             } catch (error) {
                 console.error("Error updating time effort:", error);
-                MessageBox.error(`Error: ${error.message}`);
+                MessageBox.error(this._getText("msgError", [error.message]));
             } finally {
                 sap.ui.core.BusyIndicator.hide();
             }
@@ -507,9 +514,9 @@ sap.ui.define([
             const previewText = this._formatMileagePreview(oEntry, payload);
             
             MessageBox.confirm(
-                `Create Mileage Entry?\n\n${previewText}`,
+                this._getText("msgConfirmCreateMileage", [oEntry.itemDisplay || 'N/A', oEntry.distance || 0, oEntry.technicianDisplay || 'N/A']) + "\n\n" + previewText,
                 {
-                    title: "Confirm Mileage Creation",
+                    title: this._getText("msgConfirmCreateMileageTitle"),
                     onClose: (sAction) => {
                         if (sAction === MessageBox.Action.OK) {
                             this._submitMileageToFSM(payload, oEntry, sPath, oModel, activityCode);
@@ -521,12 +528,12 @@ sap.ui.define([
 
         _formatMileagePreview(oEntry, payload) {
             const lines = [];
-            lines.push(`Type: ${oEntry.itemDisplay || 'N/A'}`);
-            lines.push(`Distance: ${oEntry.distance || 0} KM`);
-            lines.push(`Duration: ${oEntry.travelDuration || 0} min`);
-            lines.push(`Technician: ${oEntry.technicianDisplay || 'N/A'}`);
+            lines.push(`${this._getText("previewType")} ${oEntry.itemDisplay || 'N/A'}`);
+            lines.push(`${this._getText("previewDistance")} ${oEntry.distance || 0} KM`);
+            lines.push(`${this._getText("previewDuration")} ${oEntry.travelDuration || 0} min`);
+            lines.push(`${this._getText("previewTechnician")} ${oEntry.technicianDisplay || 'N/A'}`);
             if (oEntry.remarks) {
-                lines.push(`Remarks: ${oEntry.remarks}`);
+                lines.push(`${this._getText("previewRemarks")} ${oEntry.remarks}`);
             }
             return lines.join('\n');
         },
@@ -544,7 +551,7 @@ sap.ui.define([
                 const result = await response.json();
                 
                 if (result.success) {
-                    MessageToast.show("Mileage entry created successfully");
+                    MessageToast.show(this._getText("msgMileageCreated"));
                     
                     // Remove entry from dialog
                     const aEntries = oModel.getProperty("/entries") || [];
@@ -561,11 +568,11 @@ sap.ui.define([
                         await this._refreshTMReportsAfterCreate(activityId);
                     }
                 } else {
-                    MessageBox.error(`Failed to create mileage: ${result.message || 'Unknown error'}`);
+                    MessageBox.error(this._getText("msgFailedCreateMileage", [result.message || this._getText("msgUnknownError")]));
                 }
             } catch (error) {
                 console.error("Error creating mileage:", error);
-                MessageBox.error(`Error: ${error.message}`);
+                MessageBox.error(this._getText("msgError", [error.message]));
             } finally {
                 sap.ui.core.BusyIndicator.hide();
             }
@@ -591,9 +598,9 @@ sap.ui.define([
             const previewText = this._formatTimeAndMaterialPreview(oEntry, payload);
             
             MessageBox.confirm(
-                `Create Time & Material Entries?\n\n${previewText}`,
+                this._getText("msgConfirmCreateTMEntries") + "\n\n" + previewText,
                 {
-                    title: "Confirm T&M Creation",
+                    title: this._getText("msgConfirmTMCreationTitle"),
                     onClose: (sAction) => {
                         if (sAction === MessageBox.Action.OK) {
                             this._submitTimeAndMaterialToFSM(payload, oEntry, sPath, oModel, activityCode);
@@ -608,17 +615,17 @@ sap.ui.define([
             
             if (oEntry.timeEffortsFZ?.length > 0) {
                 const missingFZ = oEntry.timeEffortsFZ.some(te => !te.taskCode);
-                if (missingFZ) errors.push("Fahrzeit (FZ) entries need a task");
+                if (missingFZ) errors.push(this._getText("msgFahrzeitNeedsTask"));
             }
             
             if (oEntry.timeEffortsWZ?.length > 0) {
                 const missingWZ = oEntry.timeEffortsWZ.some(te => !te.taskCode);
-                if (missingWZ) errors.push("Wartezeit (WZ) entries need a task");
+                if (missingWZ) errors.push(this._getText("msgWartezeitNeedsTask"));
             }
             
             if (oEntry.timeEffortsAZ?.length > 0) {
                 const missingAZ = oEntry.timeEffortsAZ.some(te => !te.taskCode);
-                if (missingAZ) errors.push("Arbeitszeit (AZ) entries need a task");
+                if (missingAZ) errors.push(this._getText("msgArbeitszeitNeedsTask"));
             }
             
             if (errors.length > 0) {
@@ -632,19 +639,19 @@ sap.ui.define([
             const lines = [];
             
             // Material
-            lines.push(`Material: ${oEntry.itemDisplay || 'N/A'}`);
-            lines.push(`  Qty: ${oEntry.quantity || 0}`);
+            lines.push(`${this._getText("previewMaterial")} ${oEntry.itemDisplay || 'N/A'}`);
+            lines.push(`  ${this._getText("previewQty")} ${oEntry.quantity || 0}`);
             
             // Time efforts
             const fzCount = payload.timeEffortsFZ?.length || 0;
             const wzCount = payload.timeEffortsWZ?.length || 0;
             const azCount = payload.timeEffortsAZ?.length || 0;
             
-            if (fzCount > 0) lines.push(`Fahrzeit (FZ): ${fzCount} entries`);
-            if (wzCount > 0) lines.push(`Wartezeit (WZ): ${wzCount} entries`);
-            if (azCount > 0) lines.push(`Arbeitszeit (AZ): ${azCount} entries`);
+            if (fzCount > 0) lines.push(this._getText("previewFahrzeitEntries", [fzCount]));
+            if (wzCount > 0) lines.push(this._getText("previewWartezeitEntries", [wzCount]));
+            if (azCount > 0) lines.push(this._getText("previewArbeitszeitEntries", [azCount]));
             
-            lines.push(`\nTechnician: ${oEntry.technicianDisplay || 'N/A'}`);
+            lines.push(`\n${this._getText("previewTechnician")} ${oEntry.technicianDisplay || 'N/A'}`);
             
             return lines.join('\n');
         },
@@ -701,7 +708,7 @@ sap.ui.define([
                 }
                 
                 if (errorCount === 0) {
-                    MessageToast.show(`${successCount} entries created successfully`);
+                    MessageToast.show(this._getText("msgEntriesCreated", [successCount]));
                     
                     // Remove entry from dialog
                     const aEntries = oModel.getProperty("/entries") || [];
@@ -712,7 +719,7 @@ sap.ui.define([
                         oModel.setProperty("/entries", aEntries);
                     }
                 } else {
-                    MessageBox.warning(`Created ${successCount} entries, ${errorCount} failed`);
+                    MessageBox.warning(this._getText("msgPartialSuccess", [successCount, errorCount]));
                 }
                 
                 // Refresh T&M reports
@@ -723,7 +730,7 @@ sap.ui.define([
                 
             } catch (error) {
                 console.error("Error creating T&M:", error);
-                MessageBox.error(`Error: ${error.message}`);
+                MessageBox.error(this._getText("msgError", [error.message]));
             } finally {
                 sap.ui.core.BusyIndicator.hide();
             }
