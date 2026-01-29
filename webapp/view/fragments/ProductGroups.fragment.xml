@@ -173,14 +173,14 @@
                                                             <columns>
                                                                 <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
                                                                 <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
-                                                                <Column hAlign="Begin"><Text text="{i18n>tmColDescription}"/></Column>
+                                                                <Column width="12rem" hAlign="Begin"><Text text="{i18n>tmColDescription}"/></Column>
                                                                 <Column width="10rem" hAlign="Begin"><Text text="{i18n>tmColTechnician}"/></Column>
-                                                                <Column width="7rem" hAlign="Begin"><Text text="{i18n>tmColTime}"/></Column>
+                                                                <Column width="5rem" hAlign="Begin"><Text text="{i18n>tmColTime}"/></Column>
                                                                 <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
                                                                 <Column width="5rem" hAlign="Begin"><Text text="{i18n>tmColQty}"/></Column>
                                                                 <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
                                                                 <Column width="8rem" hAlign="Begin"><Text text="{i18n>tmColDate}"/></Column>
-                                                                <Column hAlign="Begin"><Text text="{i18n>tmColRemarks}"/></Column>
+                                                                <Column width="10rem" hAlign="Begin"><Text text="{i18n>tmColRemarks}"/></Column>
                                                                 <Column width="6rem" hAlign="Center"><Text text="{i18n>tmColStatus}"/></Column>
                                                             </columns>
                                                             <items>
@@ -188,23 +188,17 @@
                                                                     <cells>
                                                                         <CheckBox selected="{view>selected}" visible="{= ${view>decisionStatus} === 'PENDING' || ${view>decisionStatus} === 'REVIEW'}"/>
                                                                         <core:Icon src="{= ${view>type} === 'Time Effort' ? 'sap-icon://time-entry-request' : 'sap-icon://product'}" color="{= ${view>type} === 'Time Effort' ? '#0854A0' : '#107E3E'}" tooltip="{view>type}"/>
-                                                                        <Text text="{= ${view>type} === 'Time Effort' ? ${view>taskDisplayText} : ${view>itemDisplayText}}"/>
-                                                                        <Text text="{view>createPersonDisplayText}"/>
+                                                                        <Text text="{= ${view>type} === 'Time Effort' ? ${view>taskDisplayText} : ${view>itemDisplayText}}" wrapping="false"/>
+                                                                        <Text text="{view>createPersonDisplayText}" wrapping="false"/>
                                                                         <!-- Time: show StepInput for Time Effort (in hours), N/A for Material -->
-                                                                        <HBox alignItems="Center">
-                                                                            <StepInput value="{view>durationHrs}" min="0" step="0.25" displayValuePrecision="2" width="5rem" editable="{view>editMode}" visible="{= ${view>type} === 'Time Effort'}"/>
-                                                                            <Text text="N/A" visible="{= ${view>type} !== 'Time Effort'}"/>
-                                                                        </HBox>
-                                                                        <Text text="{path: 'view>type', formatter: '.formatter.formatHoursUnit'}" class="sapUiTinyMarginBegin"/>
+                                                                        <StepInput value="{view>durationHrs}" min="0" step="0.25" displayValuePrecision="2" width="5rem" editable="{view>editMode}" visible="{= ${view>type} === 'Time Effort'}"/>
+                                                                        <Text text="{path: 'view>type', formatter: '.formatter.formatHoursUnit'}"/>
                                                                         <!-- Qty: show Input for Material, N/A for Time Effort -->
-                                                                        <HBox>
-                                                                            <Input value="{view>quantity}" type="Number" width="4rem" editable="{view>editMode}" visible="{= ${view>type} === 'Material'}"/>
-                                                                            <Text text="N/A" visible="{= ${view>type} !== 'Material'}"/>
-                                                                        </HBox>
-                                                                        <Text text="{path: 'view>type', formatter: '.formatter.formatPiecesUnit'}" class="sapUiTinyMarginBegin"/>
+                                                                        <Input value="{view>quantity}" type="Number" width="4rem" editable="{view>editMode}" visible="{= ${view>type} === 'Material'}"/>
+                                                                        <Text text="{path: 'view>type', formatter: '.formatter.formatPiecesUnit'}"/>
                                                                         <!-- Date: editable DatePicker in edit mode -->
-                                                                        <DatePicker value="{view>entryDateFormatted}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="100%" editable="{view>editMode}"/>
-                                                                        <Input value="{view>remarksText}" width="100%" editable="{view>editMode}"/>
+                                                                        <DatePicker value="{view>entryDateFormatted}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="8rem" editable="{view>editMode}"/>
+                                                                        <Input value="{view>remarksText}" width="10rem" editable="{view>editMode}"/>
                                                                         <ObjectStatus text="{= ${view>decisionStatus} === 'DECLINED_CLOSED' ? 'DECLINED' : ${view>decisionStatus}}" state="{view>decisionStatusState}" icon="{= ${view>decisionStatus} === 'APPROVED' ? 'sap-icon://accept' : (${view>decisionStatus} === 'DECLINED' || ${view>decisionStatus} === 'CANCELLED' || ${view>decisionStatus} === 'DECLINED_CLOSED') ? 'sap-icon://decline' : ''}"/>
                                                                     </cells>
                                                                 </ColumnListItem>
@@ -245,29 +239,30 @@
                                                             items="{path: 'view>tmReports', templateShareable: false, filters: [{ path: 'type', operator: 'EQ', value1: 'Expense' }], sorter: { path: 'createDateTime', descending: true }}"
                                                             class="tmMTable"
                                                             width="auto"
+                                                            fixedLayout="false"
                                                         >
                                                             <columns>
                                                                 <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
-                                                                <Column hAlign="Begin"><Text text="{i18n>tmColExpenseType}"/></Column>
+                                                                <Column width="12rem" hAlign="Begin"><Text text="{i18n>tmColExpenseType}"/></Column>
                                                                 <Column width="10rem" hAlign="Begin"><Text text="{i18n>tmColTechnician}"/></Column>
                                                                 <Column width="5rem" hAlign="Begin"><Text text="{i18n>tmColExtAmt}"/></Column>
                                                                 <Column width="5rem" hAlign="Begin"><Text text="{i18n>tmColIntAmt}"/></Column>
                                                                 <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
                                                                 <Column width="8rem" hAlign="Begin"><Text text="{i18n>tmColDate}"/></Column>
-                                                                <Column hAlign="Begin"><Text text="{i18n>tmColRemarks}"/></Column>
+                                                                <Column width="10rem" hAlign="Begin"><Text text="{i18n>tmColRemarks}"/></Column>
                                                                 <Column width="6rem" hAlign="Center"><Text text="{i18n>tmColStatus}"/></Column>
                                                             </columns>
                                                             <items>
                                                                 <ColumnListItem type="Inactive" highlight="{= ${view>decisionStatus} === 'APPROVED' ? 'Success' : (${view>decisionStatus} === 'DECLINED' || ${view>decisionStatus} === 'CANCELLED' || ${view>decisionStatus} === 'DECLINED_CLOSED') ? 'Error' : ${view>editMode} ? 'Information' : 'None'}">
                                                                     <cells>
                                                                         <CheckBox selected="{view>selected}" visible="{= ${view>decisionStatus} === 'PENDING' || ${view>decisionStatus} === 'REVIEW'}"/>
-                                                                        <Text text="{view>expenseTypeDisplayText}"/>
-                                                                        <Text text="{view>createPersonDisplayText}"/>
-                                                                        <Input value="{view>externalAmountValue}" type="Number" width="100%" editable="{view>editMode}"/>
-                                                                        <Input value="{view>internalAmountValue}" type="Number" width="100%" editable="{view>editMode}"/>
+                                                                        <Text text="{view>expenseTypeDisplayText}" wrapping="false"/>
+                                                                        <Text text="{view>createPersonDisplayText}" wrapping="false"/>
+                                                                        <Input value="{view>externalAmountValue}" type="Number" width="5rem" editable="{view>editMode}"/>
+                                                                        <Input value="{view>internalAmountValue}" type="Number" width="5rem" editable="{view>editMode}"/>
                                                                         <Text text="{i18n>unitEuro}"/>
-                                                                        <DatePicker value="{view>entryDateFormatted}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="100%" editable="{view>editMode}"/>
-                                                                        <Input value="{view>remarksText}" width="100%" editable="{view>editMode}"/>
+                                                                        <DatePicker value="{view>entryDateFormatted}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="8rem" editable="{view>editMode}"/>
+                                                                        <Input value="{view>remarksText}" width="10rem" editable="{view>editMode}"/>
                                                                         <ObjectStatus text="{= ${view>decisionStatus} === 'DECLINED_CLOSED' ? 'DECLINED' : ${view>decisionStatus}}" state="{view>decisionStatusState}" icon="{= ${view>decisionStatus} === 'APPROVED' ? 'sap-icon://accept' : (${view>decisionStatus} === 'DECLINED' || ${view>decisionStatus} === 'CANCELLED' || ${view>decisionStatus} === 'DECLINED_CLOSED') ? 'sap-icon://decline' : ''}"/>
                                                                     </cells>
                                                                 </ColumnListItem>
