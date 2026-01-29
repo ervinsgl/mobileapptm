@@ -186,6 +186,29 @@ sap.ui.define([
             MessageToast.show(this._getText("msgExpenseEntryCopied"));
         },
 
+        /**
+         * Handle technician selection in Expense creation table
+         */
+        onCreateExpenseTechnicianSelect(oEvent) {
+            const oSelect = oEvent.getSource();
+            const oSelectedItem = oEvent.getParameter("selectedItem");
+            const oContext = oSelect.getBindingContext("createTM");
+            
+            if (!oContext || !oSelectedItem) return;
+            
+            const sPath = oContext.getPath();
+            const oModel = this._tmCreateDialog.getModel("createTM");
+            
+            // Get selected technician data from the item's binding context
+            const oItemContext = oSelectedItem.getBindingContext("createTM");
+            if (oItemContext) {
+                const oTechnician = oItemContext.getObject();
+                oModel.setProperty(sPath + "/technicianId", oTechnician.id);
+                oModel.setProperty(sPath + "/technicianExternalId", oTechnician.externalId);
+                oModel.setProperty(sPath + "/technicianDisplay", oTechnician.displayText);
+            }
+        },
+
         onSaveAllCreateExpense() {
             const oModel = this._tmCreateDialog.getModel("createTM");
             const aExpenseEntries = oModel.getProperty("/expenseEntries") || [];
@@ -346,6 +369,29 @@ sap.ui.define([
             oModel.setProperty("/mileageEntries", aMileageEntries);
             oModel.refresh(true);
             MessageToast.show(this._getText("msgMileageEntryCopied"));
+        },
+
+        /**
+         * Handle technician selection in Mileage creation table
+         */
+        onCreateMileageTechnicianSelect(oEvent) {
+            const oSelect = oEvent.getSource();
+            const oSelectedItem = oEvent.getParameter("selectedItem");
+            const oContext = oSelect.getBindingContext("createTM");
+            
+            if (!oContext || !oSelectedItem) return;
+            
+            const sPath = oContext.getPath();
+            const oModel = this._tmCreateDialog.getModel("createTM");
+            
+            // Get selected technician data from the item's binding context
+            const oItemContext = oSelectedItem.getBindingContext("createTM");
+            if (oItemContext) {
+                const oTechnician = oItemContext.getObject();
+                oModel.setProperty(sPath + "/technicianId", oTechnician.id);
+                oModel.setProperty(sPath + "/technicianExternalId", oTechnician.externalId);
+                oModel.setProperty(sPath + "/technicianDisplay", oTechnician.displayText);
+            }
         },
 
         onSaveAllCreateMileage() {

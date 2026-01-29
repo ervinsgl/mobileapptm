@@ -128,22 +128,15 @@
                                             <core:Icon src="sap-icon://decline" press=".onRemoveCreateExpenseRow" class="sapUiTinyMarginEnd" color="#bb0000" size="1.25rem"/>
                                             <core:Icon src="sap-icon://copy" press=".onCopyCreateExpenseRow" class="sapUiTinyMarginEnd" color="#0854a0" size="1.25rem"/>
                                             <Text text="{createTM>expenseTypeDisplay}"/>
-                                            <Input 
-                                                value="{createTM>technicianDisplay}" 
-                                                showSuggestion="true" 
-                                                suggestionItems="{path: 'createTM>/technicianSuggestions', templateShareable: false}"
-                                                liveChange=".onCreateTechnicianLiveChange"
-                                                suggestionItemSelected=".onCreateTechnicianSuggestionSelect"
-                                                placeholder="{i18n>createTMSearchTechnician}"
+                                            <Select 
+                                                selectedKey="{createTM>technicianId}" 
+                                                items="{path: 'createTM>/activityTechnicians', templateShareable: false}" 
+                                                change=".onCreateExpenseTechnicianSelect"
+                                                forceSelection="false"
                                                 width="100%"
-                                                maxSuggestionWidth="400px"
-                                                startSuggestion="0"
-                                                showTableSuggestionValueHelp="false"
                                             >
-                                                <suggestionItems>
-                                                    <core:Item key="{createTM>id}" text="{createTM>displayText}"/>
-                                                </suggestionItems>
-                                            </Input>
+                                                <core:Item key="{createTM>id}" text="{createTM>displayText}"/>
+                                            </Select>
                                             <Input value="{createTM>externalAmountValue}" type="Number" width="100%"/>
                                             <Input value="{createTM>internalAmountValue}" type="Number" width="100%"/>
                                             <Text text="{i18n>tmEurCurrency}"/>
@@ -219,22 +212,15 @@
                                             <core:Icon src="sap-icon://decline" press=".onRemoveCreateMileageRow" class="sapUiTinyMarginEnd" color="#bb0000" size="1.25rem"/>
                                             <core:Icon src="sap-icon://copy" press=".onCopyCreateMileageRow" class="sapUiTinyMarginEnd" color="#0854a0" size="1.25rem"/>
                                             <Text text="{createTM>mileageTypeDisplay}"/>
-                                            <Input 
-                                                value="{createTM>technicianDisplay}" 
-                                                showSuggestion="true" 
-                                                suggestionItems="{path: 'createTM>/technicianSuggestions', templateShareable: false}"
-                                                liveChange=".onCreateTechnicianLiveChange"
-                                                suggestionItemSelected=".onCreateTechnicianSuggestionSelect"
-                                                placeholder="{i18n>createTMSearchTechnician}"
+                                            <Select 
+                                                selectedKey="{createTM>technicianId}" 
+                                                items="{path: 'createTM>/activityTechnicians', templateShareable: false}" 
+                                                change=".onCreateMileageTechnicianSelect"
+                                                forceSelection="false"
                                                 width="100%"
-                                                maxSuggestionWidth="400px"
-                                                startSuggestion="0"
-                                                showTableSuggestionValueHelp="false"
                                             >
-                                                <suggestionItems>
-                                                    <core:Item key="{createTM>id}" text="{createTM>displayText}"/>
-                                                </suggestionItems>
-                                            </Input>
+                                                <core:Item key="{createTM>id}" text="{createTM>displayText}"/>
+                                            </Select>
                                             <Input value="{createTM>distance}" type="Number" width="100%"/>
                                             <Text text="{i18n>tmKmUnit}"/>
                                             <Input value="{createTM>travelDuration}" type="Number" width="100%"/>
