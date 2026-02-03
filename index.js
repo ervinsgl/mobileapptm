@@ -232,6 +232,140 @@ app.post("/api/get-reported-items", async (req, res) => {
     }
 });
 
+// ===========================
+// BATCH CREATE ENTRIES
+// ===========================
+
+/**
+ * POST /api/batch-create
+ * Create multiple entries in a single batch request.
+ * Body: {
+ *   entries: [
+ *     { type: 'Expense'|'Mileage'|'Material'|'TimeEffort', payload: {...} },
+ *     ...
+ *   ],
+ *   transactional: false (optional, default false - partial success allowed)
+ * }
+ * 
+ * Response: {
+ *   success: boolean,
+ *   successCount: number,
+ *   errorCount: number,
+ *   totalCount: number,
+ *   results: [{ success, status, data }...]
+ * }
+ */
+app.post("/api/batch-create", async (req, res) => {
+    const { entries, transactional = false } = req.body;
+
+    if (!entries || !Array.isArray(entries) || entries.length === 0) {
+        return res.status(400).json({ 
+            success: false,
+            message: 'Entries array is required and must not be empty' 
+        });
+    }
+
+    // Validate entries
+    const validTypes = ['Expense', 'Mileage', 'Material', 'TimeEffort'];
+    const invalidEntries = entries.filter(e => !validTypes.includes(e.type) || !e.payload);
+    if (invalidEntries.length > 0) {
+        return res.status(400).json({ 
+            success: false,
+            message: 'All entries must have valid type (Expense, Mileage, Material, TimeEffort) and payload' 
+        });
+    }
+
+    try {
+        console.log(`Batch create: ${entries.length} entries (transactional: ${transactional})`);
+        
+        const result = await FSMService.batchCreateEntries(entries, transactional);
+        
+        res.json({
+            success: result.success,
+            successCount: result.successCount,
+            errorCount: result.errorCount,
+            totalCount: result.totalCount,
+            results: result.results,
+            message: result.success 
+                ? `Successfully created ${result.successCount} entries`
+                : `Created ${result.successCount} of ${result.totalCount} entries (${result.errorCount} failed)`
+        });
+
+    } catch (error) {
+        console.error("Error in batch create:", error.response?.data || error.message);
+        res.status(error.response?.status || 500).json({
+            success: false,
+            message: error.response?.data?.message || 'Batch create failed',
+            error: error.response?.data || error.message
+        });
+    }
+});
+
+/**
+ * PATCH /api/batch-update
+ * Update multiple entries in a single batch request.
+ * Body: {
+ *   entries: [
+ *     { type: 'Expense'|'Mileage'|'Material'|'TimeEffort', id: '...', payload: {...} },
+ *     ...
+ *   ],
+ *   transactional: false (optional, default false - partial success allowed)
+ * }
+ * 
+ * Response: {
+ *   success: boolean,
+ *   successCount: number,
+ *   errorCount: number,
+ *   totalCount: number,
+ *   results: [{ success, status, data }...]
+ * }
+ */
+app.patch("/api/batch-update", async (req, res) => {
+    const { entries, transactional = false } = req.body;
+
+    if (!entries || !Array.isArray(entries) || entries.length === 0) {
+        return res.status(400).json({ 
+            success: false,
+            message: 'Entries array is required and must not be empty' 
+        });
+    }
+
+    // Validate entries
+    const validTypes = ['Expense', 'Mileage', 'Material', 'TimeEffort'];
+    const invalidEntries = entries.filter(e => !validTypes.includes(e.type) || !e.id || !e.payload);
+    if (invalidEntries.length > 0) {
+        return res.status(400).json({ 
+            success: false,
+            message: 'All entries must have valid type (Expense, Mileage, Material, TimeEffort), id, and payload' 
+        });
+    }
+
+    try {
+        console.log(`Batch update: ${entries.length} entries (transactional: ${transactional})`);
+        
+        const result = await FSMService.batchUpdateEntries(entries, transactional);
+        
+        res.json({
+            success: result.success,
+            successCount: result.successCount,
+            errorCount: result.errorCount,
+            totalCount: result.totalCount,
+            results: result.results,
+            message: result.success 
+                ? `Successfully updated ${result.successCount} entries`
+                : `Updated ${result.successCount} of ${result.totalCount} entries (${result.errorCount} failed)`
+        });
+
+    } catch (error) {
+        console.error("Error in batch update:", error.response?.data || error.message);
+        res.status(error.response?.status || 500).json({
+            success: false,
+            message: error.response?.data?.message || 'Batch update failed',
+            error: error.response?.data || error.message
+        });
+    }
+});
+
 // Create Expense Report
 app.post("/api/create-expense", async (req, res) => {
     const expenseData = req.body;

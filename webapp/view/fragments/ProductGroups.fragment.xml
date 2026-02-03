@@ -173,15 +173,15 @@
                                                             <columns>
                                                                 <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
                                                                 <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
-                                                                <Column width="12rem" hAlign="Begin"><Text text="{i18n>tmColDescription}"/></Column>
+                                                                <Column width="10rem" hAlign="Begin"><Text text="{i18n>tmColDescription}"/></Column>
                                                                 <Column width="10rem" hAlign="Begin"><Text text="{i18n>tmColTechnician}"/></Column>
-                                                                <Column width="5rem" hAlign="Begin"><Text text="{i18n>tmColTime}"/></Column>
+                                                                <Column width="6.5rem" hAlign="Begin"><Text text="{i18n>tmColTime}"/></Column>
                                                                 <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
                                                                 <Column width="5rem" hAlign="Begin"><Text text="{i18n>tmColQty}"/></Column>
                                                                 <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
                                                                 <Column width="8rem" hAlign="Begin"><Text text="{i18n>tmColDate}"/></Column>
                                                                 <Column width="9rem" hAlign="Begin"><Text text="{i18n>tmColRemarks}"/></Column>
-                                                                <Column width="6rem" hAlign="Center"><Text text="{i18n>tmColStatus}"/></Column>
+                                                                <Column width="5rem" hAlign="Center"><Text text="{i18n>tmColStatus}"/></Column>
                                                             </columns>
                                                             <items>
                                                                 <ColumnListItem type="Inactive" highlight="{= ${view>decisionStatus} === 'APPROVED' ? 'Success' : (${view>decisionStatus} === 'DECLINED' || ${view>decisionStatus} === 'CANCELLED' || ${view>decisionStatus} === 'DECLINED_CLOSED') ? 'Error' : ${view>editMode} ? 'Information' : 'None'}">
@@ -242,14 +242,14 @@
                                                         >
                                                             <columns>
                                                                 <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
-                                                                <Column width="12rem" hAlign="Begin"><Text text="{i18n>tmColExpenseType}"/></Column>
+                                                                <Column hAlign="Begin"><Text text="{i18n>tmColExpenseType}"/></Column>
                                                                 <Column width="10rem" hAlign="Begin"><Text text="{i18n>tmColTechnician}"/></Column>
-                                                                <Column width="5rem" hAlign="Begin"><Text text="{i18n>tmColExtAmt}"/></Column>
-                                                                <Column width="5rem" hAlign="Begin"><Text text="{i18n>tmColIntAmt}"/></Column>
+                                                                <Column width="6rem" hAlign="Begin"><Text text="{i18n>tmColExtAmt}"/></Column>
+                                                                <Column width="6rem" hAlign="Begin"><Text text="{i18n>tmColIntAmt}"/></Column>
                                                                 <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
-                                                                <Column width="8rem" hAlign="Begin"><Text text="{i18n>tmColDate}"/></Column>
+                                                                <Column width="9rem" hAlign="Begin"><Text text="{i18n>tmColDate}"/></Column>
                                                                 <Column width="9rem" hAlign="Begin"><Text text="{i18n>tmColRemarks}"/></Column>
-                                                                <Column width="6rem" hAlign="Center"><Text text="{i18n>tmColStatus}"/></Column>
+                                                                <Column width="5rem" hAlign="Center"><Text text="{i18n>tmColStatus}"/></Column>
                                                             </columns>
                                                             <items>
                                                                 <ColumnListItem type="Inactive" highlight="{= ${view>decisionStatus} === 'APPROVED' ? 'Success' : (${view>decisionStatus} === 'DECLINED' || ${view>decisionStatus} === 'CANCELLED' || ${view>decisionStatus} === 'DECLINED_CLOSED') ? 'Error' : ${view>editMode} ? 'Information' : 'None'}">
@@ -311,9 +311,9 @@
                                                                 <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
                                                                 <Column width="5rem" hAlign="Begin"><Text text="{i18n>tmColDuration}"/></Column>
                                                                 <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
-                                                                <Column width="8rem" hAlign="Begin"><Text text="{i18n>tmColDate}"/></Column>
+                                                                <Column width="9rem" hAlign="Begin"><Text text="{i18n>tmColDate}"/></Column>
                                                                 <Column hAlign="Begin"><Text text="{i18n>tmColRemarks}"/></Column>
-                                                                <Column width="6rem" hAlign="Center"><Text text="{i18n>tmColStatus}"/></Column>
+                                                                <Column width="5rem" hAlign="Center"><Text text="{i18n>tmColStatus}"/></Column>
                                                             </columns>
                                                             <items>
                                                                 <ColumnListItem type="Inactive" highlight="{= ${view>decisionStatus} === 'APPROVED' ? 'Success' : (${view>decisionStatus} === 'DECLINED' || ${view>decisionStatus} === 'CANCELLED' || ${view>decisionStatus} === 'DECLINED_CLOSED') ? 'Error' : ${view>editMode} ? 'Information' : 'None'}">

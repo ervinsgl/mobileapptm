@@ -440,97 +440,109 @@ sap.ui.define([
             try {
                 sap.ui.core.BusyIndicator.show(0);
                 
-                let successCount = 0;
-                let errorCount = 0;
+                // Build batch entries array
+                const batchEntries = [];
                 
                 for (const report of aEditedReports) {
-                    try {
-                        let endpoint, payload;
-                        
-                        switch (report.type) {
-                            case "Time Effort":
-                                endpoint = `/api/update-time-effort/${report.id}`;
-                                const durationMinutes = report.durationMinutes || Math.round((report.durationHrs || 0) * 60);
-                                payload = { ...report.fullData, remarks: report.remarksText || report.remarks };
-                                if (payload.startDateTime) {
-                                    const startDate = new Date(payload.startDateTime);
-                                    const endDate = new Date(startDate.getTime() + durationMinutes * 60 * 1000);
-                                    payload.endDateTime = endDate.toISOString().replace(/\.\d{3}Z$/, 'Z');
-                                }
-                                if (report.entryDateFormatted && payload.startDateTime) {
-                                    const originalTime = payload.startDateTime.split('T')[1];
-                                    payload.startDateTime = `${report.entryDateFormatted}T${originalTime}`;
-                                    const startDate = new Date(payload.startDateTime);
-                                    const endDate = new Date(startDate.getTime() + durationMinutes * 60 * 1000);
-                                    payload.endDateTime = endDate.toISOString().replace(/\.\d{3}Z$/, 'Z');
-                                }
-                                break;
-                                
-                            case "Material":
-                                endpoint = `/api/update-material/${report.id}`;
-                                payload = { ...report.fullData, quantity: report.quantity, remarks: report.remarksText || report.remarks };
-                                if (report.entryDateFormatted) {
-                                    payload.date = report.entryDateFormatted;
-                                }
-                                break;
-                                
-                            case "Expense":
-                            case "Expense Report":
-                                endpoint = `/api/update-expense/${report.id}`;
-                                payload = {
-                                    ...report.fullData,
-                                    externalAmount: { amount: report.externalAmountValue, currency: report.currency || 'EUR' },
-                                    internalAmount: { amount: report.internalAmountValue, currency: report.currency || 'EUR' },
-                                    remarks: report.remarksText || report.remarks
-                                };
-                                break;
-                                
-                            case "Mileage":
-                                endpoint = `/api/update-mileage/${report.id}`;
-                                payload = { ...report.fullData, distance: report.distanceValue, remarks: report.remarksText || report.remarks };
-                                if (payload.travelStartDateTime) {
-                                    const startDate = new Date(payload.travelStartDateTime);
-                                    const endDate = new Date(startDate.getTime() + (report.travelDurationMinutes || 0) * 60 * 1000);
-                                    payload.travelEndDateTime = endDate.toISOString().replace(/\.\d{3}Z$/, 'Z');
-                                }
-                                break;
-                                
-                            default:
-                                console.warn(`Unknown type: ${report.type}`);
-                                errorCount++;
-                                continue;
-                        }
-                        
-                        const response = await fetch(endpoint, {
-                            method: 'PATCH',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(payload)
-                        });
-                        
-                        const result = await response.json();
-                        
-                        if (result.success) {
-                            successCount++;
-                            // Clear edit mode
-                            oModel.setProperty(report._path + "/editMode", false);
-                        } else {
-                            errorCount++;
-                            console.error(`Failed to update ${report.type}:`, result.message);
-                        }
-                    } catch (err) {
-                        errorCount++;
-                        console.error(`Error updating ${report.type}:`, err);
+                    let type, payload;
+                    
+                    switch (report.type) {
+                        case "Time Effort":
+                            type = 'TimeEffort';
+                            const durationMinutes = report.durationMinutes || Math.round((report.durationHrs || 0) * 60);
+                            payload = { ...report.fullData, remarks: report.remarksText || report.remarks };
+                            if (payload.startDateTime) {
+                                const startDate = new Date(payload.startDateTime);
+                                const endDate = new Date(startDate.getTime() + durationMinutes * 60 * 1000);
+                                payload.endDateTime = endDate.toISOString().replace(/\.\d{3}Z$/, 'Z');
+                            }
+                            if (report.entryDateFormatted && payload.startDateTime) {
+                                const originalTime = payload.startDateTime.split('T')[1];
+                                payload.startDateTime = `${report.entryDateFormatted}T${originalTime}`;
+                                const startDate = new Date(payload.startDateTime);
+                                const endDate = new Date(startDate.getTime() + durationMinutes * 60 * 1000);
+                                payload.endDateTime = endDate.toISOString().replace(/\.\d{3}Z$/, 'Z');
+                            }
+                            break;
+                            
+                        case "Material":
+                            type = 'Material';
+                            payload = { ...report.fullData, quantity: report.quantity, remarks: report.remarksText || report.remarks };
+                            if (report.entryDateFormatted) {
+                                payload.date = report.entryDateFormatted;
+                            }
+                            break;
+                            
+                        case "Expense":
+                        case "Expense Report":
+                            type = 'Expense';
+                            payload = {
+                                ...report.fullData,
+                                externalAmount: { amount: report.externalAmountValue, currency: report.currency || 'EUR' },
+                                internalAmount: { amount: report.internalAmountValue, currency: report.currency || 'EUR' },
+                                remarks: report.remarksText || report.remarks
+                            };
+                            break;
+                            
+                        case "Mileage":
+                            type = 'Mileage';
+                            payload = { ...report.fullData, distance: report.distanceValue, remarks: report.remarksText || report.remarks };
+                            if (payload.travelStartDateTime) {
+                                const startDate = new Date(payload.travelStartDateTime);
+                                const endDate = new Date(startDate.getTime() + (report.travelDurationMinutes || 0) * 60 * 1000);
+                                payload.travelEndDateTime = endDate.toISOString().replace(/\.\d{3}Z$/, 'Z');
+                            }
+                            break;
+                            
+                        default:
+                            console.warn(`Unknown type: ${report.type}`);
+                            continue;
                     }
+                    
+                    batchEntries.push({
+                        type,
+                        id: report.id,
+                        payload,
+                        _path: report._path // Keep path for UI update
+                    });
                 }
                 
-                if (errorCount === 0) {
-                    MessageToast.show(this._getText("msgEntriesSaved", [successCount]));
+                if (batchEntries.length === 0) {
+                    MessageToast.show(this._getText("msgNoEntriesToUpdate"));
+                    return;
+                }
+                
+                // Single batch request for all updates
+                const response = await fetch('/api/batch-update', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        entries: batchEntries.map(e => ({ type: e.type, id: e.id, payload: e.payload })),
+                        transactional: false 
+                    })
+                });
+                
+                const result = await response.json();
+                
+                // Update UI based on results
+                if (result.results) {
+                    result.results.forEach((res, index) => {
+                        if (res.success && batchEntries[index]) {
+                            oModel.setProperty(batchEntries[index]._path + "/editMode", false);
+                        }
+                    });
+                }
+                
+                if (result.success) {
+                    MessageToast.show(this._getText("msgEntriesSaved", [result.successCount]));
                     // Clear activity-level edit mode based on table type
                     if (sActivityPath && sEditModeProp) {
                         oModel.setProperty(sActivityPath + "/" + sEditModeProp, false);
                     }
+                } else if (result.successCount > 0) {
+                    MessageBox.warning(this._getText("msgPartialSaveSuccess", [result.successCount, result.errorCount]));
                 } else {
-                    MessageBox.warning(this._getText("msgPartialSaveSuccess", [successCount, errorCount]));
+                    MessageBox.error(this._getText("msgBatchUpdateFailed"));
                 }
                 
             } catch (error) {

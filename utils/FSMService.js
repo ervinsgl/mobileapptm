@@ -173,6 +173,239 @@ class FSMService {
     }
 
     /**
+     * Make batch request to FSM Batch API.
+     * Combines multiple API calls into a single HTTP request.
+     * @param {Array} requests - Array of request objects with structure:
+     *   { method: 'POST', path: '/Expense', data: {...}, params: { dtos: '...' } }
+     * @param {boolean} transactional - If true, all requests succeed or all rollback (default: true)
+     * @returns {Promise<Array>} Array of response objects matching request order
+     */
+    async makeBatchRequest(requests, transactional = true) {
+        try {
+            if (!requests || requests.length === 0) {
+                return [];
+            }
+
+            const destination = await DestinationService.getDestination('FSM_S4E');
+            const token = await TokenCache.getToken(destination);
+
+            const baseUrl = destination.destinationConfiguration.URL;
+            const account = destination.destinationConfiguration.account || this.config.account;
+            const company = destination.destinationConfiguration.company || this.config.company;
+
+            // Create unique boundary
+            const boundary = `======batch_${Date.now()}======`;
+
+            // Build multipart body
+            let batchBody = '';
+            requests.forEach((req, index) => {
+                const contentId = `req${index + 1}`;
+                
+                // Build query string for this request
+                const queryParams = new URLSearchParams({
+                    ...req.params,
+                    account,
+                    company
+                }).toString();
+
+                const requestPath = `/api/data/v4${req.path}?${queryParams}`;
+
+                batchBody += `--${boundary}\r\n`;
+                batchBody += `Content-Type: application/http\r\n`;
+                batchBody += `Content-ID: ${contentId}\r\n`;
+                batchBody += `\r\n`;
+                batchBody += `${req.method} ${requestPath} HTTP/1.1\r\n`;
+                batchBody += `Content-Type: application/json\r\n`;
+                batchBody += `\r\n`;
+                
+                if (req.data) {
+                    batchBody += JSON.stringify(req.data);
+                }
+                batchBody += `\r\n`;
+            });
+            batchBody += `--${boundary}--\r\n`;
+
+            // Make batch request
+            const batchUrl = `${baseUrl}/api/data/batch/v1?account=${account}&company=${company}&transactional=${transactional}`;
+
+            const headers = {
+                'Content-Type': `multipart/mixed; boundary="${boundary}"`,
+                'Authorization': `Bearer ${token}`,
+                'X-Account-ID': destination.destinationConfiguration['URL.headers.X-Account-ID'],
+                'X-Company-ID': destination.destinationConfiguration['URL.headers.X-Company-ID'],
+                'X-Client-ID': destination.destinationConfiguration['URL.headers.X-Client-ID'],
+                'X-Client-Version': destination.destinationConfiguration['URL.headers.X-Client-Version']
+            };
+
+            const response = await axios.post(batchUrl, batchBody, { headers });
+
+            // Parse multipart response
+            return this._parseBatchResponse(response.data, response.headers['content-type']);
+
+        } catch (error) {
+            console.error('FSMService: Batch Error:', error.response?.data || error.message);
+            throw error;
+        }
+    }
+
+    /**
+     * Parse multipart batch response.
+     * @private
+     * @param {string} responseBody - Raw multipart response body
+     * @param {string} contentType - Content-Type header with boundary
+     * @returns {Array} Array of parsed response objects
+     */
+    _parseBatchResponse(responseBody, contentType) {
+        const results = [];
+
+        try {
+            // Extract boundary from content-type
+            const boundaryMatch = contentType.match(/boundary=([^;]+)/);
+            if (!boundaryMatch) {
+                console.error('Could not extract boundary from response');
+                return results;
+            }
+            
+            const boundary = boundaryMatch[1].replace(/"/g, '');
+            const parts = responseBody.split(`--${boundary}`);
+
+            for (const part of parts) {
+                // Skip empty parts and closing boundary
+                if (!part.trim() || part.trim() === '--') continue;
+
+                // Find the JSON body in the response part
+                const jsonMatch = part.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                    try {
+                        const jsonData = JSON.parse(jsonMatch[0]);
+                        
+                        // Extract HTTP status from the part
+                        const statusMatch = part.match(/HTTP\/1\.1 (\d+)/);
+                        const status = statusMatch ? parseInt(statusMatch[1]) : 200;
+                        
+                        // Extract Content-ID
+                        const contentIdMatch = part.match(/Content-ID:\s*(\w+)/i);
+                        const contentId = contentIdMatch ? contentIdMatch[1] : null;
+
+                        results.push({
+                            success: status >= 200 && status < 300,
+                            status,
+                            contentId,
+                            data: jsonData
+                        });
+                    } catch (parseError) {
+                        console.error('Error parsing batch response part:', parseError);
+                        results.push({
+                            success: false,
+                            status: 500,
+                            error: 'Failed to parse response'
+                        });
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error parsing batch response:', error);
+        }
+
+        return results;
+    }
+
+    /**
+     * Batch create multiple entries of different types.
+     * @param {Array} entries - Array of entry objects with structure:
+     *   { type: 'Expense'|'Mileage'|'Material'|'TimeEffort', payload: {...} }
+     * @param {boolean} transactional - If true, all succeed or all rollback
+     * @returns {Promise<Object>} Results object with successCount, errorCount, results
+     */
+    async batchCreateEntries(entries, transactional = false) {
+        // Map entry types to API paths and DTOs
+        const typeConfig = {
+            'Expense': { path: '/Expense', dtos: 'Expense.17' },
+            'Mileage': { path: '/Mileage', dtos: 'Mileage.19' },
+            'Material': { path: '/Material', dtos: 'Material.22' },
+            'TimeEffort': { path: '/TimeEffort', dtos: 'TimeEffort.17' }
+        };
+
+        // Build batch requests array
+        const requests = entries.map(entry => {
+            const config = typeConfig[entry.type];
+            if (!config) {
+                throw new Error(`Unknown entry type: ${entry.type}`);
+            }
+            return {
+                method: 'POST',
+                path: config.path,
+                params: { dtos: config.dtos },
+                data: entry.payload
+            };
+        });
+
+        // Execute batch request
+        const results = await this.makeBatchRequest(requests, transactional);
+
+        // Summarize results
+        const successCount = results.filter(r => r.success).length;
+        const errorCount = results.filter(r => !r.success).length;
+
+        return {
+            success: errorCount === 0,
+            successCount,
+            errorCount,
+            totalCount: entries.length,
+            results
+        };
+    }
+
+    /**
+     * Batch update multiple entries of different types.
+     * @param {Array} entries - Array of entry objects with structure:
+     *   { type: 'Expense'|'Mileage'|'Material'|'TimeEffort', id: '...', payload: {...} }
+     * @param {boolean} transactional - If true, all succeed or all rollback
+     * @returns {Promise<Object>} Results object with successCount, errorCount, results
+     */
+    async batchUpdateEntries(entries, transactional = false) {
+        // Map entry types to API paths and DTOs
+        const typeConfig = {
+            'Expense': { path: '/Expense', dtos: 'Expense.17' },
+            'Mileage': { path: '/Mileage', dtos: 'Mileage.19' },
+            'Material': { path: '/Material', dtos: 'Material.22' },
+            'TimeEffort': { path: '/TimeEffort', dtos: 'TimeEffort.17' }
+        };
+
+        // Build batch requests array
+        const requests = entries.map(entry => {
+            const config = typeConfig[entry.type];
+            if (!config) {
+                throw new Error(`Unknown entry type: ${entry.type}`);
+            }
+            if (!entry.id) {
+                throw new Error(`Entry ID is required for update`);
+            }
+            return {
+                method: 'PATCH',
+                path: `${config.path}/${entry.id}`,
+                params: { dtos: config.dtos, forceUpdate: true },
+                data: entry.payload
+            };
+        });
+
+        // Execute batch request
+        const results = await this.makeBatchRequest(requests, transactional);
+
+        // Summarize results
+        const successCount = results.filter(r => r.success).length;
+        const errorCount = results.filter(r => !r.success).length;
+
+        return {
+            success: errorCount === 0,
+            successCount,
+            errorCount,
+            totalCount: entries.length,
+            results
+        };
+    }
+
+    /**
      * Update Expense in FSM.
      * @param {string} expenseId - Expense ID
      * @param {Object} expenseData - Expense update payload

@@ -247,10 +247,11 @@ sap.ui.define([
                 
                 const activityId = oModel.getProperty("/activityId");
                 const orgLevelId = oModel.getProperty("/orgLevelId");
-                let successCount = 0, errorCount = 0;
                 
-                for (const entry of aEntries) {
-                    const payload = TMPayloadService.buildPayload({
+                // Build batch entries array
+                const batchEntries = aEntries.map(entry => ({
+                    type: 'Expense',
+                    payload: TMPayloadService.buildPayload({
                         type: "Expense",
                         technicianId: entry.technicianId,
                         technicianExternalId: entry.technicianExternalId,
@@ -258,30 +259,32 @@ sap.ui.define([
                         externalAmountValue: entry.externalAmountValue,
                         internalAmountValue: entry.internalAmountValue,
                         remarks: entry.remarks
-                    }, activityId, orgLevelId);
-                    
-                    const response = await fetch('/api/create-expense', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-                    
-                    const result = await response.json();
-                    if (result.success) successCount++; else errorCount++;
-                }
+                    }, activityId, orgLevelId)
+                }));
                 
-                if (errorCount === 0) {
-                    MessageToast.show(this._getText("msgExpenseEntriesCreated", [successCount]));
+                // Single batch request
+                const response = await fetch('/api/batch-create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ entries: batchEntries, transactional: false })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    MessageToast.show(this._getText("msgExpenseEntriesCreated", [result.successCount]));
                     oModel.setProperty("/expenseEntries", []);
                     
-                    // Close the creation dialog
                     if (this._tmCreateDialog) {
                         this._tmCreateDialog.close();
                     }
                     
                     if (activityId) await this._refreshTMReportsAfterCreate(activityId);
+                } else if (result.successCount > 0) {
+                    MessageBox.warning(this._getText("msgPartialSuccess", [result.successCount, result.errorCount]));
+                    if (activityId) await this._refreshTMReportsAfterCreate(activityId);
                 } else {
-                    MessageBox.warning(this._getText("msgPartialSuccess", [successCount, errorCount]));
+                    MessageBox.error(this._getText("msgBatchCreateFailed"));
                 }
             } catch (error) {
                 MessageBox.error(this._getText("msgError", [error.message]));
@@ -432,10 +435,11 @@ sap.ui.define([
                 
                 const activityId = oModel.getProperty("/activityId");
                 const orgLevelId = oModel.getProperty("/orgLevelId");
-                let successCount = 0, errorCount = 0;
                 
-                for (const entry of aEntries) {
-                    const payload = TMPayloadService.buildPayload({
+                // Build batch entries array
+                const batchEntries = aEntries.map(entry => ({
+                    type: 'Mileage',
+                    payload: TMPayloadService.buildPayload({
                         type: "Mileage",
                         technicianId: entry.technicianId,
                         technicianExternalId: entry.technicianExternalId,
@@ -443,30 +447,32 @@ sap.ui.define([
                         distance: entry.distance,
                         travelDuration: entry.travelDuration,
                         remarks: entry.remarks
-                    }, activityId, orgLevelId);
-                    
-                    const response = await fetch('/api/create-mileage', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-                    
-                    const result = await response.json();
-                    if (result.success) successCount++; else errorCount++;
-                }
+                    }, activityId, orgLevelId)
+                }));
                 
-                if (errorCount === 0) {
-                    MessageToast.show(this._getText("msgMileageEntriesCreated", [successCount]));
+                // Single batch request
+                const response = await fetch('/api/batch-create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ entries: batchEntries, transactional: false })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    MessageToast.show(this._getText("msgMileageEntriesCreated", [result.successCount]));
                     oModel.setProperty("/mileageEntries", []);
                     
-                    // Close the creation dialog
                     if (this._tmCreateDialog) {
                         this._tmCreateDialog.close();
                     }
                     
                     if (activityId) await this._refreshTMReportsAfterCreate(activityId);
+                } else if (result.successCount > 0) {
+                    MessageBox.warning(this._getText("msgPartialSuccess", [result.successCount, result.errorCount]));
+                    if (activityId) await this._refreshTMReportsAfterCreate(activityId);
                 } else {
-                    MessageBox.warning(this._getText("msgPartialSuccess", [successCount, errorCount]));
+                    MessageBox.error(this._getText("msgBatchCreateFailed"));
                 }
             } catch (error) {
                 MessageBox.error(this._getText("msgError", [error.message]));

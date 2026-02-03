@@ -173,9 +173,6 @@ sap.ui.define([
                 const activityId = oModel.getProperty("/activityId");
                 const orgLevelId = oModel.getProperty("/orgLevelId");
                 
-                let successCount = 0;
-                let errorCount = 0;
-                
                 // Helper to expand entries with multiple technicians AND repeat dates
                 const expandMultiTechnicianEntries = (entries, typeOrder, timeType) => {
                     const expanded = [];
@@ -232,33 +229,26 @@ sap.ui.define([
                     return a.typeOrder - b.typeOrder;
                 });
                 
-                // Create Materials first
+                // Build batch entries array
+                const batchEntries = [];
+                
+                // Add Material entries
                 for (const entry of aMaterialEntries) {
-                    const payload = TMPayloadService.buildPayload({
-                        type: "Material",
-                        technicianId: entry.technicianId,
-                        technicianExternalId: entry.technicianExternalId,
-                        itemId: entry.itemId,
-                        itemDisplay: entry.itemDisplay,
-                        quantity: entry.quantity,
-                        remarks: entry.remarks
-                    }, activityId, orgLevelId);
-                    
-                    try {
-                        const response = await fetch('/api/create-material', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(payload)
-                        });
-                        const result = await response.json();
-                        if (result.success) successCount++; else errorCount++;
-                    } catch (err) {
-                        errorCount++;
-                        console.error("Material creation error:", err);
-                    }
+                    batchEntries.push({
+                        type: 'Material',
+                        payload: TMPayloadService.buildPayload({
+                            type: "Material",
+                            technicianId: entry.technicianId,
+                            technicianExternalId: entry.technicianExternalId,
+                            itemId: entry.itemId,
+                            itemDisplay: entry.itemDisplay,
+                            quantity: entry.quantity,
+                            remarks: entry.remarks
+                        }, activityId, orgLevelId)
+                    });
                 }
                 
-                // Create Time Efforts with sequential times per date
+                // Build Time Effort entries with sequential times per date
                 const endTimesByDate = {};
                 const activityPlannedStart = oModel.getProperty("/plannedStartDate") || new Date().toISOString();
                 const baseTimePortion = activityPlannedStart.split('T')[1] || '12:00:00Z';
@@ -282,32 +272,37 @@ sap.ui.define([
                     
                     const formatDateTime = (date) => date.toISOString().replace(/\.\d{3}Z$/, 'Z');
                     
-                    const payload = TMPayloadService.buildPayload({
-                        type: "Time Effort",
-                        technicianId: entry.technicianId,
-                        technicianExternalId: entry.technicianExternalId,
-                        taskCode: entry.taskCode,
-                        startDateTime: formatDateTime(startTime),
-                        duration: durationMinutes,
-                        remarks: entry.remarks
-                    }, activityId, orgLevelId);
-                    
-                    try {
-                        const response = await fetch('/api/create-time-effort', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(payload)
-                        });
-                        const result = await response.json();
-                        if (result.success) successCount++; else errorCount++;
-                    } catch (err) {
-                        errorCount++;
-                        console.error("Time effort creation error:", err);
-                    }
+                    batchEntries.push({
+                        type: 'TimeEffort',
+                        payload: TMPayloadService.buildPayload({
+                            type: "Time Effort",
+                            technicianId: entry.technicianId,
+                            technicianExternalId: entry.technicianExternalId,
+                            taskCode: entry.taskCode,
+                            startDateTime: formatDateTime(startTime),
+                            duration: durationMinutes,
+                            remarks: entry.remarks
+                        }, activityId, orgLevelId)
+                    });
                 }
                 
-                if (errorCount === 0) {
-                    MessageToast.show(this._getText("msgEntriesCreated", [successCount]));
+                // Skip if no entries to create
+                if (batchEntries.length === 0) {
+                    MessageToast.show(this._getText("msgNoEntriesToCreate"));
+                    return;
+                }
+                
+                // Single batch request for all entries
+                const response = await fetch('/api/batch-create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ entries: batchEntries, transactional: false })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    MessageToast.show(this._getText("msgEntriesCreated", [result.successCount]));
                     
                     // Clear all arrays
                     oModel.setProperty("/materialEntries", []);
@@ -324,8 +319,13 @@ sap.ui.define([
                     if (activityId) {
                         await this._refreshTMReportsAfterCreate(activityId);
                     }
+                } else if (result.successCount > 0) {
+                    MessageBox.warning(this._getText("msgPartialSuccess", [result.successCount, result.errorCount]));
+                    if (activityId) {
+                        await this._refreshTMReportsAfterCreate(activityId);
+                    }
                 } else {
-                    MessageBox.warning(this._getText("msgPartialSuccess", [successCount, errorCount]));
+                    MessageBox.error(this._getText("msgBatchCreateFailed"));
                 }
                 
             } catch (error) {
