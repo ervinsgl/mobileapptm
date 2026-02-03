@@ -12,8 +12,10 @@ sap.ui.define([
     "sap/m/MessageBox",
     "sap/ui/model/Filter",
     "sap/ui/model/FilterOperator",
-    "sap/ui/model/Sorter"
-], (MessageToast, MessageBox, Filter, FilterOperator, Sorter) => {
+    "sap/ui/model/Sorter",
+    "sap/m/ViewSettingsDialog",
+    "sap/m/ViewSettingsItem"
+], (MessageToast, MessageBox, Filter, FilterOperator, Sorter, ViewSettingsDialog, ViewSettingsItem) => {
     "use strict";
 
     return {
@@ -207,11 +209,175 @@ sap.ui.define([
         },
 
         /* ========================================
-         * TABLE SORT HANDLER
+         * TABLE SORT DIALOG
          * ======================================== */
 
         /**
-         * Handle T&M sort change
+         * Sort configuration for each table type
+         * @private
+         */
+        _getSortConfig() {
+            return {
+                // Time & Material table sort fields
+                "TM": [
+                    { key: "sortDate", text: "sortByDate" },
+                    { key: "type", text: "sortByType" },
+                    { key: "taskDisplayText", text: "sortByDescription" },
+                    { key: "createPersonDisplayText", text: "sortByTechnician" },
+                    { key: "durationHrs", text: "sortByTime" },
+                    { key: "quantity", text: "sortByQuantity" },
+                    { key: "decisionStatus", text: "sortByStatus" }
+                ],
+                // Expense table sort fields
+                "Expense": [
+                    { key: "sortDate", text: "sortByDate" },
+                    { key: "expenseTypeDisplayText", text: "sortByType" },
+                    { key: "createPersonDisplayText", text: "sortByTechnician" },
+                    { key: "externalAmountValue", text: "sortByAmount" },
+                    { key: "decisionStatus", text: "sortByStatus" }
+                ],
+                // Mileage table sort fields
+                "Mileage": [
+                    { key: "sortDate", text: "sortByDate" },
+                    { key: "mileageTypeDisplayText", text: "sortByType" },
+                    { key: "createPersonDisplayText", text: "sortByTechnician" },
+                    { key: "distanceValue", text: "sortByDistance" },
+                    { key: "decisionStatus", text: "sortByStatus" }
+                ]
+            };
+        },
+
+        /**
+         * Open sort dialog for table
+         * @param {sap.ui.base.Event} oEvent - Button press event
+         */
+        onOpenSortDialog(oEvent) {
+            const oButton = oEvent.getSource();
+            const oTable = this._getTableFromToolbarControl(oButton);
+            
+            if (!oTable) {
+                MessageToast.show(this._getText("msgTableNotFound"));
+                return;
+            }
+            
+            // Determine table type from custom data or parent context
+            const sTableType = oButton.data("tableType") || "TM";
+            
+            // Create or get existing dialog
+            if (!this._oSortDialog) {
+                this._oSortDialog = new ViewSettingsDialog({
+                    title: this._getText("sortDialogTitle"),
+                    confirm: this.onTMSortDialogConfirm.bind(this),
+                    cancel: this.onTMSortDialogCancel.bind(this),
+                    resetFilters: this.onTMSortDialogReset.bind(this)
+                });
+                this.getView().addDependent(this._oSortDialog);
+            }
+            
+            // Store reference to current table
+            this._oSortDialog.data("currentTable", oTable);
+            this._oSortDialog.data("tableType", sTableType);
+            
+            // Clear existing sort items
+            this._oSortDialog.removeAllSortItems();
+            
+            // Add sort items based on table type
+            const aSortConfig = this._getSortConfig()[sTableType] || this._getSortConfig()["TM"];
+            
+            // Get current sort state from binding
+            const oBinding = oTable.getBinding("rows") || oTable.getBinding("items");
+            let sCurrentSortKey = null;
+            let bCurrentDescending = true;
+            
+            if (oBinding && oBinding.aSorters && oBinding.aSorters.length > 0) {
+                sCurrentSortKey = oBinding.aSorters[0].sPath;
+                bCurrentDescending = oBinding.aSorters[0].bDescending;
+            }
+            
+            // Add sort items
+            aSortConfig.forEach((oConfig, index) => {
+                const oItem = new ViewSettingsItem({
+                    key: oConfig.key,
+                    text: this._getText(oConfig.text),
+                    selected: oConfig.key === sCurrentSortKey || (index === 0 && !sCurrentSortKey)
+                });
+                this._oSortDialog.addSortItem(oItem);
+            });
+            
+            // Set sort order
+            this._oSortDialog.setSortDescending(sCurrentSortKey ? bCurrentDescending : true);
+            
+            // Open dialog
+            this._oSortDialog.open();
+        },
+
+        /**
+         * Handle sort dialog confirm
+         * @param {sap.ui.base.Event} oEvent - Confirm event
+         */
+        onTMSortDialogConfirm(oEvent) {
+            const oSortItem = oEvent.getParameter("sortItem");
+            const bDescending = oEvent.getParameter("sortDescending");
+            
+            if (!oSortItem) return;
+            
+            const sPath = oSortItem.getKey();
+            const oTable = this._oSortDialog.data("currentTable");
+            
+            if (!oTable) return;
+            
+            const oBinding = oTable.getBinding("rows") || oTable.getBinding("items");
+            if (!oBinding) return;
+            
+            // Apply sort
+            const oSorter = new Sorter(sPath, bDescending);
+            oBinding.sort(oSorter);
+            
+            // Show confirmation
+            const sDirection = bDescending ? this._getText("sortDescending") : this._getText("sortAscending");
+            MessageToast.show(this._getText("msgSortApplied", [oSortItem.getText(), sDirection]));
+        },
+
+        /**
+         * Handle sort dialog cancel
+         */
+        onTMSortDialogCancel() {
+            // Dialog closes automatically, no action needed
+        },
+
+        /**
+         * Handle sort dialog reset
+         * @param {sap.ui.base.Event} oEvent - Reset event
+         */
+        onTMSortDialogReset(oEvent) {
+            const oTable = this._oSortDialog.data("currentTable");
+            const sTableType = this._oSortDialog.data("tableType");
+            
+            if (!oTable) return;
+            
+            const oBinding = oTable.getBinding("rows") || oTable.getBinding("items");
+            if (!oBinding) return;
+            
+            // Reset to default sort (first field, descending)
+            const aSortConfig = this._getSortConfig()[sTableType] || this._getSortConfig()["TM"];
+            const sDefaultPath = aSortConfig[0].key;
+            
+            const oSorter = new Sorter(sDefaultPath, true);
+            oBinding.sort(oSorter);
+            
+            // Update dialog selection
+            const aSortItems = this._oSortDialog.getSortItems();
+            aSortItems.forEach((oItem, index) => {
+                oItem.setSelected(index === 0);
+            });
+            this._oSortDialog.setSortDescending(true);
+            
+            MessageToast.show(this._getText("msgSortReset"));
+        },
+
+        /**
+         * Legacy handler for Select-based sort (kept for backward compatibility)
+         * @deprecated Use onOpenSortDialog instead
          */
         onTMSortChange(oEvent) {
             const sKey = oEvent.getParameter("selectedItem").getKey();

@@ -1,0 +1,21 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core">
+    
+    <!-- 
+    ViewSettingsDialog for T&M Table Sorting
+    This dialog provides a standard SAP UI5 sort interface with:
+    - Sort Order: Ascending / Descending
+    - Sort By: Various fields depending on table type
+    
+    The dialog is configured dynamically based on the table being sorted.
+    -->
+    <ViewSettingsDialog
+        id="tmSortDialog"
+        confirm=".onTMSortDialogConfirm"
+        cancel=".onTMSortDialogCancel"
+        resetFilters=".onTMSortDialogReset"
+        title="{i18n>sortDialogTitle}">
+    </ViewSettingsDialog>
+    
+</core:FragmentDefinition>

@@ -140,22 +140,11 @@
                                                                 <SegmentedButtonItem key="Material" icon="sap-icon://product" tooltip="{i18n>tooltipMaterial}"/>
                                                             </items>
                                                         </SegmentedButton>
-                                                        <Select selectedKey="startDateTime-desc" change=".onTMSortChange" class="sapUiTinyMarginBegin" tooltip="{i18n>tmSortByTooltip}">
-                                                            <core:Item key="startDateTime-desc" text="{i18n>sortDateDesc}"/>
-                                                            <core:Item key="startDateTime-asc" text="{i18n>sortDateAsc}"/>
-                                                            <core:Item key="type-asc" text="{i18n>sortTypeAsc}"/>
-                                                            <core:Item key="type-desc" text="{i18n>sortTypeDesc}"/>
-                                                            <core:Item key="taskDisplayText-asc" text="{i18n>sortDescAsc}"/>
-                                                            <core:Item key="taskDisplayText-desc" text="{i18n>sortDescDesc}"/>
-                                                            <core:Item key="createPersonDisplayText-asc" text="{i18n>sortTechAsc}"/>
-                                                            <core:Item key="createPersonDisplayText-desc" text="{i18n>sortTechDesc}"/>
-                                                            <core:Item key="durationHrs-desc" text="{i18n>sortTimeDesc}"/>
-                                                            <core:Item key="durationHrs-asc" text="{i18n>sortTimeAsc}"/>
-                                                            <core:Item key="quantity-desc" text="{i18n>sortQtyDesc}"/>
-                                                            <core:Item key="quantity-asc" text="{i18n>sortQtyAsc}"/>
-                                                            <core:Item key="decisionStatus-asc" text="{i18n>sortStatusAsc}"/>
-                                                            <core:Item key="decisionStatus-desc" text="{i18n>sortStatusDesc}"/>
-                                                        </Select>
+                                                        <Button icon="sap-icon://sort" press=".onOpenSortDialog" tooltip="{i18n>tmSortByTooltip}" class="sapUiTinyMarginBegin">
+                                                            <customData>
+                                                                <core:CustomData key="tableType" value="TM"/>
+                                                            </customData>
+                                                        </Button>
                                                         <Button text="{i18n>tmEditSelected}" icon="sap-icon://edit" press=".onEditSelectedTM" visible="{= ${view>tmEditMode} !== true}" class="sapUiTinyMarginBegin"/>
                                                         <Button text="{i18n>tmSaveAll}" icon="sap-icon://save" type="Emphasized" press=".onSaveAllTM" visible="{= ${view>tmEditMode} === true}" class="sapUiTinyMarginBegin"/>
                                                         <Button text="{i18n>tmEndEdit}" icon="sap-icon://sys-cancel" press=".onEndEditTM" visible="{= ${view>tmEditMode} === true}" class="sapUiTinyMarginBegin"/>
@@ -166,7 +155,7 @@
                                                 <content>
                                                     <ScrollContainer horizontal="true" vertical="false" width="100%">
                                                         <Table
-                                                            items="{path: 'view>tmReports', templateShareable: false, filters: [{ path: 'type', operator: 'NE', value1: 'Expense' }, { path: 'type', operator: 'NE', value1: 'Mileage' }], sorter: { path: 'startDateTime', descending: true }}"
+                                                            items="{path: 'view>tmReports', templateShareable: false, filters: [{ path: 'type', operator: 'NE', value1: 'Expense' }, { path: 'type', operator: 'NE', value1: 'Mileage' }], sorter: { path: 'sortDate', descending: true }}"
                                                             class="tmMTable"
                                                             width="auto"
                                                         >
@@ -215,17 +204,11 @@
                                                         <core:Icon src="sap-icon://money-bills" class="sapUiTinyMarginEnd" color="#E9730C"/>
                                                         <Title text="{i18n>tmExpenses}" level="H5"/>
                                                         <ToolbarSpacer/>
-                                                        <Select selectedKey="createDateTime-desc" change=".onTMSortChange" class="sapUiTinyMarginBegin" tooltip="{i18n>tmSortByTooltip}">
-                                                            <core:Item key="createDateTime-desc" text="{i18n>sortDateDesc}"/>
-                                                            <core:Item key="createDateTime-asc" text="{i18n>sortDateAsc}"/>
-                                                            <core:Item key="expenseTypeDisplayText-asc" text="{i18n>sortTypeAsc}"/>
-                                                            <core:Item key="expenseTypeDisplayText-desc" text="{i18n>sortTypeDesc}"/>
-                                                            <core:Item key="createPersonDisplayText-asc" text="{i18n>sortTechAsc}"/>
-                                                            <core:Item key="createPersonDisplayText-desc" text="{i18n>sortTechDesc}"/>
-                                                            <core:Item key="externalAmountValue-desc" text="{i18n>sortAmountDesc}"/>
-                                                            <core:Item key="externalAmountValue-asc" text="{i18n>sortAmountAsc}"/>
-                                                            <core:Item key="decisionStatus-asc" text="{i18n>sortStatusAsc}"/>
-                                                        </Select>
+                                                        <Button icon="sap-icon://sort" press=".onOpenSortDialog" tooltip="{i18n>tmSortByTooltip}" class="sapUiTinyMarginBegin">
+                                                            <customData>
+                                                                <core:CustomData key="tableType" value="Expense"/>
+                                                            </customData>
+                                                        </Button>
                                                         <Button text="{i18n>tmEditSelected}" icon="sap-icon://edit" press=".onEditSelectedTM" visible="{= ${view>expenseEditMode} !== true}" class="sapUiTinyMarginBegin"/>
                                                         <Button text="{i18n>tmSaveAll}" icon="sap-icon://save" type="Emphasized" press=".onSaveAllTM" visible="{= ${view>expenseEditMode} === true}" class="sapUiTinyMarginBegin"/>
                                                         <Button text="{i18n>tmEndEdit}" icon="sap-icon://sys-cancel" press=".onEndEditTM" visible="{= ${view>expenseEditMode} === true}" class="sapUiTinyMarginBegin"/>
@@ -236,7 +219,7 @@
                                                 <content>
                                                     <ScrollContainer horizontal="true" vertical="false" width="100%">
                                                         <Table
-                                                            items="{path: 'view>tmReports', templateShareable: false, filters: [{ path: 'type', operator: 'EQ', value1: 'Expense' }], sorter: { path: 'createDateTime', descending: true }}"
+                                                            items="{path: 'view>tmReports', templateShareable: false, filters: [{ path: 'type', operator: 'EQ', value1: 'Expense' }], sorter: { path: 'sortDate', descending: true }}"
                                                             class="tmMTable"
                                                             width="auto"
                                                         >
@@ -278,17 +261,11 @@
                                                         <core:Icon src="sap-icon://car-rental" class="sapUiTinyMarginEnd" color="#6C32A9"/>
                                                         <Title text="{i18n>tmMileage}" level="H5"/>
                                                         <ToolbarSpacer/>
-                                                        <Select selectedKey="createDateTime-desc" change=".onTMSortChange" class="sapUiTinyMarginBegin" tooltip="{i18n>tmSortByTooltip}">
-                                                            <core:Item key="createDateTime-desc" text="{i18n>sortDateDesc}"/>
-                                                            <core:Item key="createDateTime-asc" text="{i18n>sortDateAsc}"/>
-                                                            <core:Item key="mileageTypeDisplayText-asc" text="{i18n>sortTypeAsc}"/>
-                                                            <core:Item key="mileageTypeDisplayText-desc" text="{i18n>sortTypeDesc}"/>
-                                                            <core:Item key="createPersonDisplayText-asc" text="{i18n>sortTechAsc}"/>
-                                                            <core:Item key="createPersonDisplayText-desc" text="{i18n>sortTechDesc}"/>
-                                                            <core:Item key="distanceValue-desc" text="{i18n>sortDistanceDesc}"/>
-                                                            <core:Item key="distanceValue-asc" text="{i18n>sortDistanceAsc}"/>
-                                                            <core:Item key="decisionStatus-asc" text="{i18n>sortStatusAsc}"/>
-                                                        </Select>
+                                                        <Button icon="sap-icon://sort" press=".onOpenSortDialog" tooltip="{i18n>tmSortByTooltip}" class="sapUiTinyMarginBegin">
+                                                            <customData>
+                                                                <core:CustomData key="tableType" value="Mileage"/>
+                                                            </customData>
+                                                        </Button>
                                                         <Button text="{i18n>tmEditSelected}" icon="sap-icon://edit" press=".onEditSelectedTM" visible="{= ${view>mileageEditMode} !== true}" class="sapUiTinyMarginBegin"/>
                                                         <Button text="{i18n>tmSaveAll}" icon="sap-icon://save" type="Emphasized" press=".onSaveAllTM" visible="{= ${view>mileageEditMode} === true}" class="sapUiTinyMarginBegin"/>
                                                         <Button text="{i18n>tmEndEdit}" icon="sap-icon://sys-cancel" press=".onEndEditTM" visible="{= ${view>mileageEditMode} === true}" class="sapUiTinyMarginBegin"/>
@@ -299,7 +276,7 @@
                                                 <content>
                                                     <ScrollContainer horizontal="true" vertical="false" width="100%">
                                                         <Table
-                                                            items="{path: 'view>tmReports', templateShareable: false, filters: [{ path: 'type', operator: 'EQ', value1: 'Mileage' }], sorter: { path: 'createDateTime', descending: true }}"
+                                                            items="{path: 'view>tmReports', templateShareable: false, filters: [{ path: 'type', operator: 'EQ', value1: 'Mileage' }], sorter: { path: 'sortDate', descending: true }}"
                                                             class="tmMTable"
                                                             width="auto"
                                                         >

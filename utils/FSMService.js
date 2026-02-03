@@ -655,6 +655,8 @@ class FSMService {
                     task: timeEffort.task || 'N/A',
                     startDateTime: timeEffort.startDateTime || null,
                     endDateTime: timeEffort.endDateTime || null,
+                    // Unified sort date field (use startDateTime for Time Effort)
+                    sortDate: timeEffort.startDateTime || timeEffort.createDateTime || null,
                     udfValues: udfValues,
                     udfValuesText: udfValuesText,
                     durationMinutes: durationMinutes,
@@ -696,6 +698,8 @@ class FSMService {
                     chargeOption: material.chargeOption || 'N/A',
                     syncStatus: material.syncStatus || 'N/A',
                     date: material.date || null,
+                    // Unified sort date field (use date for Material, fallback to createDateTime)
+                    sortDate: material.date ? `${material.date}T00:00:00Z` : (material.createDateTime || null),
                     quantity: material.quantity || 0,
                     remarks: material.remarks || null,
                     itemDisplayText: material.item || 'N/A',
@@ -745,6 +749,8 @@ class FSMService {
                     chargeOption: expense.chargeOption || 'N/A',
                     syncStatus: expense.syncStatus || 'N/A',
                     date: expense.date || null,
+                    // Unified sort date field
+                    sortDate: expense.date ? `${expense.date}T00:00:00Z` : (expense.createDateTime || null),
                     externalAmount: expense.externalAmount,
                     internalAmount: expense.internalAmount,
                     remarks: expense.remarks || null,
@@ -807,6 +813,8 @@ class FSMService {
                     chargeOption: mileage.chargeOption || 'N/A',
                     syncStatus: mileage.syncStatus || 'N/A',
                     date: mileage.date || null,
+                    // Unified sort date field
+                    sortDate: mileage.date ? `${mileage.date}T00:00:00Z` : (mileage.createDateTime || null),
                     source: mileage.source || 'N/A',
                     destination: mileage.destination || 'N/A',
                     distance: mileage.distance || 0,
