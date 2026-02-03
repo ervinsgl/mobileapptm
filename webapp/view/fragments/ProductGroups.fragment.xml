@@ -180,7 +180,7 @@
                                                                 <Column width="5rem" hAlign="Begin"><Text text="{i18n>tmColQty}"/></Column>
                                                                 <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
                                                                 <Column width="8rem" hAlign="Begin"><Text text="{i18n>tmColDate}"/></Column>
-                                                                <Column width="10rem" hAlign="Begin"><Text text="{i18n>tmColRemarks}"/></Column>
+                                                                <Column width="9rem" hAlign="Begin"><Text text="{i18n>tmColRemarks}"/></Column>
                                                                 <Column width="6rem" hAlign="Center"><Text text="{i18n>tmColStatus}"/></Column>
                                                             </columns>
                                                             <items>
@@ -239,7 +239,6 @@
                                                             items="{path: 'view>tmReports', templateShareable: false, filters: [{ path: 'type', operator: 'EQ', value1: 'Expense' }], sorter: { path: 'createDateTime', descending: true }}"
                                                             class="tmMTable"
                                                             width="auto"
-                                                            fixedLayout="false"
                                                         >
                                                             <columns>
                                                                 <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
@@ -249,7 +248,7 @@
                                                                 <Column width="5rem" hAlign="Begin"><Text text="{i18n>tmColIntAmt}"/></Column>
                                                                 <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
                                                                 <Column width="8rem" hAlign="Begin"><Text text="{i18n>tmColDate}"/></Column>
-                                                                <Column width="10rem" hAlign="Begin"><Text text="{i18n>tmColRemarks}"/></Column>
+                                                                <Column width="9rem" hAlign="Begin"><Text text="{i18n>tmColRemarks}"/></Column>
                                                                 <Column width="6rem" hAlign="Center"><Text text="{i18n>tmColStatus}"/></Column>
                                                             </columns>
                                                             <items>
