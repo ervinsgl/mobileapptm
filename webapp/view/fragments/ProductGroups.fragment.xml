@@ -145,10 +145,16 @@
                                                                 <core:CustomData key="tableType" value="TM"/>
                                                             </customData>
                                                         </Button>
-                                                        <Button text="{i18n>tmEditSelected}" icon="sap-icon://edit" press=".onEditSelectedTM" visible="{= ${view>tmEditMode} !== true}" class="sapUiTinyMarginBegin"/>
+                                                        <Button text="{i18n>tmEditSelected}" icon="sap-icon://edit" press=".onEditSelectedTM" visible="{= ${view>tmEditMode} !== true &amp;&amp; ${view>isReadOnly} !== true}" class="sapUiTinyMarginBegin"/>
                                                         <Button text="{i18n>tmSaveAll}" icon="sap-icon://save" type="Emphasized" press=".onSaveAllTM" visible="{= ${view>tmEditMode} === true}" class="sapUiTinyMarginBegin"/>
                                                         <Button text="{i18n>tmEndEdit}" icon="sap-icon://sys-cancel" press=".onEndEditTM" visible="{= ${view>tmEditMode} === true}" class="sapUiTinyMarginBegin"/>
-                                                        <Button text="{i18n>tmAddEntry}" icon="sap-icon://add" type="Emphasized" press=".onAddNewTMEntry" visible="{= ${view>status} !== 'CLOSED' &amp;&amp; ${view>status} !== 'CANCELLED'}" class="sapUiTinyMarginBegin"/>
+                                                        <Button text="{i18n>tmAddEntry}" icon="sap-icon://add" type="Emphasized" press=".onAddNewTMEntry" visible="{= ${view>isReadOnly} !== true}" class="sapUiTinyMarginBegin"/>
+                                                        <ObjectStatus 
+                                                            text="{= ${view>isCancelled} ? ${i18n>activityCancelled} : ${i18n>activityClosed}}" 
+                                                            state="{= ${view>isCancelled} ? 'Error' : 'None'}" 
+                                                            icon="{= ${view>isCancelled} ? 'sap-icon://decline' : 'sap-icon://locked'}"
+                                                            visible="{= ${view>isReadOnly} === true}"
+                                                            class="sapUiTinyMarginBegin"/>
                                                         <ObjectNumber number="{= ${view>tmTimeEffortCount} + ${view>tmMaterialCount} }" unit="{i18n>tmEntriesUnit}" class="sapUiSmallMarginBegin"/>
                                                     </OverflowToolbar>
                                                 </headerToolbar>
@@ -173,7 +179,7 @@
                                                                 <Column width="5rem" hAlign="Center"><Text text="{i18n>tmColStatus}"/></Column>
                                                             </columns>
                                                             <items>
-                                                                <ColumnListItem type="Inactive" highlight="{= ${view>decisionStatus} === 'APPROVED' ? 'Success' : (${view>decisionStatus} === 'DECLINED' || ${view>decisionStatus} === 'CANCELLED' || ${view>decisionStatus} === 'DECLINED_CLOSED') ? 'Error' : ${view>editMode} ? 'Information' : 'None'}">
+                                                                <ColumnListItem type="Inactive" highlight="{= ${view>decisionStatus} === 'APPROVED' ? 'Success' : (${view>decisionStatus} === 'DECLINED' || ${view>decisionStatus} === 'CANCELLED') ? 'Error' : ${view>decisionStatus} === 'DECLINED_CLOSED' ? 'Warning' : ${view>editMode} ? 'Information' : 'None'}">
                                                                     <cells>
                                                                         <CheckBox selected="{view>selected}" visible="{= ${view>decisionStatus} === 'PENDING' || ${view>decisionStatus} === 'REVIEW'}"/>
                                                                         <core:Icon src="{= ${view>type} === 'Time Effort' ? 'sap-icon://time-entry-request' : 'sap-icon://product'}" color="{= ${view>type} === 'Time Effort' ? '#0854A0' : '#107E3E'}" tooltip="{view>type}"/>
@@ -188,7 +194,7 @@
                                                                         <!-- Date: editable DatePicker in edit mode -->
                                                                         <DatePicker value="{view>entryDateFormatted}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="8rem" editable="{view>editMode}"/>
                                                                         <Input value="{view>remarksText}" width="10rem" editable="{view>editMode}"/>
-                                                                        <ObjectStatus text="{= ${view>decisionStatus} === 'DECLINED_CLOSED' ? 'DECLINED' : ${view>decisionStatus}}" state="{view>decisionStatusState}" icon="{= ${view>decisionStatus} === 'APPROVED' ? 'sap-icon://accept' : (${view>decisionStatus} === 'DECLINED' || ${view>decisionStatus} === 'CANCELLED' || ${view>decisionStatus} === 'DECLINED_CLOSED') ? 'sap-icon://decline' : ''}"/>
+                                                                        <ObjectStatus text="{= ${view>decisionStatus} === 'DECLINED_CLOSED' ? 'CHANGE' : ${view>decisionStatus}}" state="{view>decisionStatusState}"/>
                                                                     </cells>
                                                                 </ColumnListItem>
                                                             </items>
@@ -209,10 +215,16 @@
                                                                 <core:CustomData key="tableType" value="Expense"/>
                                                             </customData>
                                                         </Button>
-                                                        <Button text="{i18n>tmEditSelected}" icon="sap-icon://edit" press=".onEditSelectedTM" visible="{= ${view>expenseEditMode} !== true}" class="sapUiTinyMarginBegin"/>
+                                                        <Button text="{i18n>tmEditSelected}" icon="sap-icon://edit" press=".onEditSelectedTM" visible="{= ${view>expenseEditMode} !== true &amp;&amp; ${view>isReadOnly} !== true}" class="sapUiTinyMarginBegin"/>
                                                         <Button text="{i18n>tmSaveAll}" icon="sap-icon://save" type="Emphasized" press=".onSaveAllTM" visible="{= ${view>expenseEditMode} === true}" class="sapUiTinyMarginBegin"/>
                                                         <Button text="{i18n>tmEndEdit}" icon="sap-icon://sys-cancel" press=".onEndEditTM" visible="{= ${view>expenseEditMode} === true}" class="sapUiTinyMarginBegin"/>
-                                                        <Button text="{i18n>tmAddEntry}" icon="sap-icon://add" type="Emphasized" press=".onAddNewTMEntry" visible="{= ${view>status} !== 'CLOSED' &amp;&amp; ${view>status} !== 'CANCELLED'}" class="sapUiTinyMarginBegin"/>
+                                                        <Button text="{i18n>tmAddEntry}" icon="sap-icon://add" type="Emphasized" press=".onAddNewTMEntry" visible="{= ${view>isReadOnly} !== true}" class="sapUiTinyMarginBegin"/>
+                                                        <ObjectStatus 
+                                                            text="{= ${view>isCancelled} ? ${i18n>activityCancelled} : ${i18n>activityClosed}}" 
+                                                            state="{= ${view>isCancelled} ? 'Error' : 'None'}" 
+                                                            icon="{= ${view>isCancelled} ? 'sap-icon://decline' : 'sap-icon://locked'}"
+                                                            visible="{= ${view>isReadOnly} === true}"
+                                                            class="sapUiTinyMarginBegin"/>
                                                         <ObjectNumber number="{view>tmExpenseCount}" unit="{i18n>tmEntriesUnit}" class="sapUiSmallMarginBegin"/>
                                                     </OverflowToolbar>
                                                 </headerToolbar>
@@ -235,7 +247,7 @@
                                                                 <Column width="5rem" hAlign="Center"><Text text="{i18n>tmColStatus}"/></Column>
                                                             </columns>
                                                             <items>
-                                                                <ColumnListItem type="Inactive" highlight="{= ${view>decisionStatus} === 'APPROVED' ? 'Success' : (${view>decisionStatus} === 'DECLINED' || ${view>decisionStatus} === 'CANCELLED' || ${view>decisionStatus} === 'DECLINED_CLOSED') ? 'Error' : ${view>editMode} ? 'Information' : 'None'}">
+                                                                <ColumnListItem type="Inactive" highlight="{= ${view>decisionStatus} === 'APPROVED' ? 'Success' : (${view>decisionStatus} === 'DECLINED' || ${view>decisionStatus} === 'CANCELLED') ? 'Error' : ${view>decisionStatus} === 'DECLINED_CLOSED' ? 'Warning' : ${view>editMode} ? 'Information' : 'None'}">
                                                                     <cells>
                                                                         <CheckBox selected="{view>selected}" visible="{= ${view>decisionStatus} === 'PENDING' || ${view>decisionStatus} === 'REVIEW'}"/>
                                                                         <Text text="{view>expenseTypeDisplayText}" wrapping="false"/>
@@ -245,7 +257,7 @@
                                                                         <Text text="{i18n>unitEuro}"/>
                                                                         <DatePicker value="{view>entryDateFormatted}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="8rem" editable="{view>editMode}"/>
                                                                         <Input value="{view>remarksText}" width="10rem" editable="{view>editMode}"/>
-                                                                        <ObjectStatus text="{= ${view>decisionStatus} === 'DECLINED_CLOSED' ? 'DECLINED' : ${view>decisionStatus}}" state="{view>decisionStatusState}" icon="{= ${view>decisionStatus} === 'APPROVED' ? 'sap-icon://accept' : (${view>decisionStatus} === 'DECLINED' || ${view>decisionStatus} === 'CANCELLED' || ${view>decisionStatus} === 'DECLINED_CLOSED') ? 'sap-icon://decline' : ''}"/>
+                                                                        <ObjectStatus text="{= ${view>decisionStatus} === 'DECLINED_CLOSED' ? 'CHANGE' : ${view>decisionStatus}}" state="{view>decisionStatusState}"/>
                                                                     </cells>
                                                                 </ColumnListItem>
                                                             </items>
@@ -266,10 +278,16 @@
                                                                 <core:CustomData key="tableType" value="Mileage"/>
                                                             </customData>
                                                         </Button>
-                                                        <Button text="{i18n>tmEditSelected}" icon="sap-icon://edit" press=".onEditSelectedTM" visible="{= ${view>mileageEditMode} !== true}" class="sapUiTinyMarginBegin"/>
+                                                        <Button text="{i18n>tmEditSelected}" icon="sap-icon://edit" press=".onEditSelectedTM" visible="{= ${view>mileageEditMode} !== true &amp;&amp; ${view>isReadOnly} !== true}" class="sapUiTinyMarginBegin"/>
                                                         <Button text="{i18n>tmSaveAll}" icon="sap-icon://save" type="Emphasized" press=".onSaveAllTM" visible="{= ${view>mileageEditMode} === true}" class="sapUiTinyMarginBegin"/>
                                                         <Button text="{i18n>tmEndEdit}" icon="sap-icon://sys-cancel" press=".onEndEditTM" visible="{= ${view>mileageEditMode} === true}" class="sapUiTinyMarginBegin"/>
-                                                        <Button text="{i18n>tmAddEntry}" icon="sap-icon://add" type="Emphasized" press=".onAddNewTMEntry" visible="{= ${view>status} !== 'CLOSED' &amp;&amp; ${view>status} !== 'CANCELLED'}" class="sapUiTinyMarginBegin"/>
+                                                        <Button text="{i18n>tmAddEntry}" icon="sap-icon://add" type="Emphasized" press=".onAddNewTMEntry" visible="{= ${view>isReadOnly} !== true}" class="sapUiTinyMarginBegin"/>
+                                                        <ObjectStatus 
+                                                            text="{= ${view>isCancelled} ? ${i18n>activityCancelled} : ${i18n>activityClosed}}" 
+                                                            state="{= ${view>isCancelled} ? 'Error' : 'None'}" 
+                                                            icon="{= ${view>isCancelled} ? 'sap-icon://decline' : 'sap-icon://locked'}"
+                                                            visible="{= ${view>isReadOnly} === true}"
+                                                            class="sapUiTinyMarginBegin"/>
                                                         <ObjectNumber number="{view>tmMileageCount}" unit="{i18n>tmEntriesUnit}" class="sapUiSmallMarginBegin"/>
                                                     </OverflowToolbar>
                                                 </headerToolbar>
@@ -293,7 +311,7 @@
                                                                 <Column width="5rem" hAlign="Center"><Text text="{i18n>tmColStatus}"/></Column>
                                                             </columns>
                                                             <items>
-                                                                <ColumnListItem type="Inactive" highlight="{= ${view>decisionStatus} === 'APPROVED' ? 'Success' : (${view>decisionStatus} === 'DECLINED' || ${view>decisionStatus} === 'CANCELLED' || ${view>decisionStatus} === 'DECLINED_CLOSED') ? 'Error' : ${view>editMode} ? 'Information' : 'None'}">
+                                                                <ColumnListItem type="Inactive" highlight="{= ${view>decisionStatus} === 'APPROVED' ? 'Success' : (${view>decisionStatus} === 'DECLINED' || ${view>decisionStatus} === 'CANCELLED') ? 'Error' : ${view>decisionStatus} === 'DECLINED_CLOSED' ? 'Warning' : ${view>editMode} ? 'Information' : 'None'}">
                                                                     <cells>
                                                                         <CheckBox selected="{view>selected}" visible="{= ${view>decisionStatus} === 'PENDING' || ${view>decisionStatus} === 'REVIEW'}"/>
                                                                         <Text text="{view>mileageTypeDisplayText}"/>
@@ -304,7 +322,7 @@
                                                                         <Text text="{i18n>unitMinutes}"/>
                                                                         <DatePicker value="{view>entryDateFormatted}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="100%" editable="{view>editMode}"/>
                                                                         <Input value="{view>remarksText}" width="100%" editable="{view>editMode}"/>
-                                                                        <ObjectStatus text="{= ${view>decisionStatus} === 'DECLINED_CLOSED' ? 'DECLINED' : ${view>decisionStatus}}" state="{view>decisionStatusState}" icon="{= ${view>decisionStatus} === 'APPROVED' ? 'sap-icon://accept' : (${view>decisionStatus} === 'DECLINED' || ${view>decisionStatus} === 'CANCELLED' || ${view>decisionStatus} === 'DECLINED_CLOSED') ? 'sap-icon://decline' : ''}"/>
+                                                                        <ObjectStatus text="{= ${view>decisionStatus} === 'DECLINED_CLOSED' ? 'CHANGE' : ${view>decisionStatus}}" state="{view>decisionStatusState}"/>
                                                                     </cells>
                                                                 </ColumnListItem>
                                                             </items>
@@ -317,7 +335,13 @@
                                             <VBox visible="{= ${view>tmReportsCount} === 0 }" alignItems="Center" class="sapUiMediumMarginTopBottom">
                                                 <core:Icon src="sap-icon://document" size="2rem" color="#888"/>
                                                 <Text text="{i18n>tmNoEntries}" class="sapUiTinyMarginTop"/>
-                                                <Button text="{i18n>tmAddEntry}" icon="sap-icon://add" type="Emphasized" press=".onAddNewTMEntry" visible="{= ${view>status} !== 'CLOSED' &amp;&amp; ${view>status} !== 'CANCELLED'}" class="sapUiSmallMarginTop"/>
+                                                <Button text="{i18n>tmAddEntry}" icon="sap-icon://add" type="Emphasized" press=".onAddNewTMEntry" visible="{= ${view>isReadOnly} !== true}" class="sapUiSmallMarginTop"/>
+                                                <ObjectStatus 
+                                                    text="{= ${view>isCancelled} ? ${i18n>activityCancelled} : ${i18n>activityClosed}}" 
+                                                    state="{= ${view>isCancelled} ? 'Error' : 'None'}" 
+                                                    icon="{= ${view>isCancelled} ? 'sap-icon://decline' : 'sap-icon://locked'}"
+                                                    visible="{= ${view>isReadOnly} === true}"
+                                                    class="sapUiSmallMarginTop"/>
                                             </VBox>
                                         </VBox>
                                     </content>

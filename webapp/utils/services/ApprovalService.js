@@ -39,7 +39,7 @@ sap.ui.define([], () => {
          * Fetch approval statuses for multiple T&M entry IDs.
          * Uses cache to avoid redundant API calls.
          * @param {string[]} objectIds - Array of T&M entry IDs
-         * @returns {Promise<Object>} Map of objectId â†’ decisionStatus
+         * @returns {Promise<Object>} Map of objectId Ã¢â€ â€™ decisionStatus
          */
         async fetchApprovalStatuses(objectIds) {
             if (!objectIds || objectIds.length === 0) {
@@ -143,7 +143,7 @@ sap.ui.define([], () => {
                 'APPROVED': 'Success',
                 'DECLINED': 'Error',
                 'APPROVED_CLOSED': 'Success',
-                'DECLINED_CLOSED': 'Error',
+                'DECLINED_CLOSED': 'Warning',  // Orange - shows as "CHANGE"
                 'CANCELLED': 'None'
             };
 

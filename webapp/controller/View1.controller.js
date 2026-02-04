@@ -185,6 +185,8 @@ sap.ui.define([
          */
         _prepareActivityDataOptimized(activity, entryActivityId) {
             const isClosed = activity.executionStage === 'CLOSED';
+            const isCancelled = activity.executionStage === 'CANCELLED';
+            const isReadOnly = isClosed || isCancelled;
             const fullActivity = activity.fullActivity || {};
             
             // Check if this is the entry activity (case-insensitive comparison)
@@ -220,7 +222,8 @@ sap.ui.define([
                 plannedEndDate: activity.plannedEndDate,
 
                 isClosed: isClosed,
-                isReadOnly: isClosed,
+                isCancelled: isCancelled,
+                isReadOnly: isReadOnly,
                 isEntryActivity: isEntryActivity,
                 entryActivityFlag: entryActivityFlag,
 
@@ -246,9 +249,9 @@ sap.ui.define([
 
                 // Auto-expand entry activity, collapse others
                 detailsExpanded: isEntryActivity,
-                textClass: isClosed ? 'closedActivityText' : '',
+                textClass: isReadOnly ? 'closedActivityText' : '',
                 statusState: this._getStatusState(activity),
-                stageState: isClosed ? 'None' : 'Information',
+                stageState: this._getStageState(activity),
 
                 externalId: fullActivity.externalId || 'N/A',
                 orgLevelId: fullActivity.orgLevelIds?.[0] || 'N/A',
@@ -375,7 +378,7 @@ sap.ui.define([
          * @private
          */
         _getStatusState(activity) {
-            if (activity.executionStage === 'CLOSED') {
+            if (activity.executionStage === 'CLOSED' || activity.executionStage === 'CANCELLED') {
                 return 'None';
             }
 
@@ -383,6 +386,22 @@ sap.ui.define([
                 case 'OPEN': return 'Warning';
                 case 'COMPLETED': return 'Success';
                 default: return 'None';
+            }
+        },
+
+        /**
+         * Get execution stage state for ObjectStatus
+         * @param {Object} activity - Activity data
+         * @returns {string} State value
+         * @private
+         */
+        _getStageState(activity) {
+            switch (activity.executionStage) {
+                case 'CLOSED': return 'None';
+                case 'CANCELLED': return 'Error';
+                case 'EXECUTION': return 'Success';
+                case 'PLANNING': return 'Information';
+                default: return 'Information';
             }
         },
 

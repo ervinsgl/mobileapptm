@@ -340,12 +340,17 @@ sap.ui.define([
                 const userOrgLevelId = viewModel.getProperty("/webContainerContext/orgLevelId");
                 const userOrgLevelName = viewModel.getProperty("/webContainerContext/orgLevelName");
 
-                // Filter EXECUTION and CLOSED activities
+                // Filter activities by execution stage:
+                // - EXECUTION: Active, can add entries
+                // - CLOSED: Read-only, show "Activity Closed"
+                // - CANCELLED: Read-only, show "Activity Cancelled"
                 let filteredActivities = allActivities.filter(activity =>
-                    activity.executionStage === "EXECUTION" || activity.executionStage === "CLOSED"
+                    activity.executionStage === "EXECUTION" || 
+                    activity.executionStage === "CLOSED" ||
+                    activity.executionStage === "CANCELLED"
                 );
                 
-                const totalExecutionClosedCount = filteredActivities.length;
+                const totalVisibleCount = filteredActivities.length;
 
                 // Filter by user's org level if available
                 if (userOrgLevelId) {
@@ -358,13 +363,13 @@ sap.ui.define([
                     });
                     
                     // Show info message if activities were filtered out
-                    const filteredOutCount = totalExecutionClosedCount - filteredActivities.length;
+                    const filteredOutCount = totalVisibleCount - filteredActivities.length;
                     if (filteredOutCount > 0 && filteredActivities.length === 0) {
                         // All activities filtered - show prominent message
                         viewModel.setProperty("/noActivitiesMessage", {
                             show: true,
                             title: this._getText("msgNoActivitiesOrgTitle"),
-                            description: this._getText("msgNoActivitiesOrgDesc", [totalExecutionClosedCount, userOrgLevelName || userOrgLevelId]),
+                            description: this._getText("msgNoActivitiesOrgDesc", [totalVisibleCount, userOrgLevelName || userOrgLevelId]),
                             type: "information"
                         });
                     } else if (filteredOutCount > 0) {
