@@ -146,6 +146,7 @@
                                                             </customData>
                                                         </Button>
                                                         <Button text="{i18n>tmEditSelected}" icon="sap-icon://edit" press=".onEditSelectedTM" visible="{= ${view>tmEditMode} !== true &amp;&amp; ${view>isReadOnly} !== true}" class="sapUiTinyMarginBegin"/>
+                                                        <Button text="{i18n>tmDeleteSelected}" icon="sap-icon://delete" type="Reject" press=".onDeleteSelectedTM" visible="{= ${view>tmEditMode} !== true &amp;&amp; ${view>isReadOnly} !== true}" class="sapUiTinyMarginBegin"/>
                                                         <Button text="{i18n>tmSaveAll}" icon="sap-icon://save" type="Emphasized" press=".onSaveAllTM" visible="{= ${view>tmEditMode} === true}" class="sapUiTinyMarginBegin"/>
                                                         <Button text="{i18n>tmEndEdit}" icon="sap-icon://sys-cancel" press=".onEndEditTM" visible="{= ${view>tmEditMode} === true}" class="sapUiTinyMarginBegin"/>
                                                         <Button text="{i18n>tmAddEntry}" icon="sap-icon://add" type="Emphasized" press=".onAddNewTMEntry" visible="{= ${view>isReadOnly} !== true}" class="sapUiTinyMarginBegin"/>
@@ -216,6 +217,7 @@
                                                             </customData>
                                                         </Button>
                                                         <Button text="{i18n>tmEditSelected}" icon="sap-icon://edit" press=".onEditSelectedTM" visible="{= ${view>expenseEditMode} !== true &amp;&amp; ${view>isReadOnly} !== true}" class="sapUiTinyMarginBegin"/>
+                                                        <Button text="{i18n>tmDeleteSelected}" icon="sap-icon://delete" type="Reject" press=".onDeleteSelectedTM" visible="{= ${view>expenseEditMode} !== true &amp;&amp; ${view>isReadOnly} !== true}" class="sapUiTinyMarginBegin"/>
                                                         <Button text="{i18n>tmSaveAll}" icon="sap-icon://save" type="Emphasized" press=".onSaveAllTM" visible="{= ${view>expenseEditMode} === true}" class="sapUiTinyMarginBegin"/>
                                                         <Button text="{i18n>tmEndEdit}" icon="sap-icon://sys-cancel" press=".onEndEditTM" visible="{= ${view>expenseEditMode} === true}" class="sapUiTinyMarginBegin"/>
                                                         <Button text="{i18n>tmAddEntry}" icon="sap-icon://add" type="Emphasized" press=".onAddNewTMEntry" visible="{= ${view>isReadOnly} !== true}" class="sapUiTinyMarginBegin"/>
@@ -279,6 +281,7 @@
                                                             </customData>
                                                         </Button>
                                                         <Button text="{i18n>tmEditSelected}" icon="sap-icon://edit" press=".onEditSelectedTM" visible="{= ${view>mileageEditMode} !== true &amp;&amp; ${view>isReadOnly} !== true}" class="sapUiTinyMarginBegin"/>
+                                                        <Button text="{i18n>tmDeleteSelected}" icon="sap-icon://delete" type="Reject" press=".onDeleteSelectedTM" visible="{= ${view>mileageEditMode} !== true &amp;&amp; ${view>isReadOnly} !== true}" class="sapUiTinyMarginBegin"/>
                                                         <Button text="{i18n>tmSaveAll}" icon="sap-icon://save" type="Emphasized" press=".onSaveAllTM" visible="{= ${view>mileageEditMode} === true}" class="sapUiTinyMarginBegin"/>
                                                         <Button text="{i18n>tmEndEdit}" icon="sap-icon://sys-cancel" press=".onEndEditTM" visible="{= ${view>mileageEditMode} === true}" class="sapUiTinyMarginBegin"/>
                                                         <Button text="{i18n>tmAddEntry}" icon="sap-icon://add" type="Emphasized" press=".onAddNewTMEntry" visible="{= ${view>isReadOnly} !== true}" class="sapUiTinyMarginBegin"/>

@@ -406,6 +406,61 @@ class FSMService {
     }
 
     /**
+     * Batch delete multiple T&M entries using FSM Batch API.
+     * Uses DELETE method for each entry in a single batch request.
+     * FSM DELETE requires lastChanged for optimistic locking.
+     * @param {Array<Object>} entries - Array of entries to delete
+     * @param {string} entries[].type - Entry type: 'Expense', 'Mileage', 'Material', 'TimeEffort'
+     * @param {string} entries[].id - Entry ID to delete
+     * @param {number} entries[].lastChanged - Last changed timestamp for optimistic locking
+     * @param {boolean} [transactional=false] - If true, all-or-nothing; if false, partial success allowed
+     * @returns {Promise<Object>} Batch result summary
+     */
+    async batchDeleteEntries(entries, transactional = false) {
+        // Map entry types to API paths
+        const typeConfig = {
+            'Expense': { path: '/Expense' },
+            'Mileage': { path: '/Mileage' },
+            'Material': { path: '/Material' },
+            'TimeEffort': { path: '/TimeEffort' }
+        };
+
+        // Build batch requests array
+        const requests = entries.map(entry => {
+            const config = typeConfig[entry.type];
+            if (!config) {
+                throw new Error(`Unknown entry type: ${entry.type}`);
+            }
+            if (!entry.id) {
+                throw new Error(`Entry ID is required for delete`);
+            }
+            if (!entry.lastChanged) {
+                throw new Error(`lastChanged is required for delete`);
+            }
+            return {
+                method: 'DELETE',
+                path: `${config.path}/${entry.id}`,
+                params: { lastChanged: entry.lastChanged }
+            };
+        });
+
+        // Execute batch request
+        const results = await this.makeBatchRequest(requests, transactional);
+
+        // Summarize results
+        const deleteSuccessCount = results.filter(r => r.success).length;
+        const deleteErrorCount = results.filter(r => !r.success).length;
+
+        return {
+            success: deleteErrorCount === 0,
+            successCount: deleteSuccessCount,
+            errorCount: deleteErrorCount,
+            totalCount: entries.length,
+            results
+        };
+    }
+
+    /**
      * Update Expense in FSM.
      * @param {string} expenseId - Expense ID
      * @param {Object} expenseData - Expense update payload
@@ -646,6 +701,7 @@ class FSMService {
 
                 return {
                     id: timeEffort.id,
+                    lastChanged: timeEffort.lastChanged,
                     createDateTime: timeEffort.createDateTime,
                     createPerson: timeEffort.createPerson || 'N/A',
                     orgLevel: timeEffort.orgLevel || 'N/A',
@@ -692,6 +748,7 @@ class FSMService {
 
                 return {
                     id: material.id,
+                    lastChanged: material.lastChanged,
                     createDateTime: material.createDateTime,
                     createPerson: material.createPerson || 'N/A',
                     orgLevel: material.orgLevel || 'N/A',
@@ -743,6 +800,7 @@ class FSMService {
 
                 return {
                     id: expense.id,
+                    lastChanged: expense.lastChanged,
                     createDateTime: expense.createDateTime,
                     createPerson: expense.createPerson || 'N/A',
                     orgLevel: expense.orgLevel || 'N/A',
@@ -807,6 +865,7 @@ class FSMService {
 
                 return {
                     id: mileage.id,
+                    lastChanged: mileage.lastChanged,
                     createDateTime: mileage.createDateTime,
                     createPerson: mileage.createPerson || 'N/A',
                     orgLevel: mileage.orgLevel || 'N/A',

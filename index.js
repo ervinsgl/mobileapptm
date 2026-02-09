@@ -366,6 +366,71 @@ app.patch("/api/batch-update", async (req, res) => {
     }
 });
 
+/**
+ * DELETE /api/batch-delete
+ * Delete multiple entries in a single batch request.
+ * Body: {
+ *   entries: [
+ *     { type: 'Expense'|'Mileage'|'Material'|'TimeEffort', id: '...', lastChanged: 1234567890 },
+ *     ...
+ *   ],
+ *   transactional: false (optional, default false - partial success allowed)
+ * }
+ * 
+ * Response: {
+ *   success: boolean,
+ *   successCount: number,
+ *   errorCount: number,
+ *   totalCount: number,
+ *   results: [{ success, status, data }...]
+ * }
+ */
+app.delete("/api/batch-delete", async (req, res) => {
+    const { entries, transactional = false } = req.body;
+
+    if (!entries || !Array.isArray(entries) || entries.length === 0) {
+        return res.status(400).json({ 
+            success: false,
+            message: 'Entries array is required and must not be empty' 
+        });
+    }
+
+    // Validate entries
+    const validTypes = ['Expense', 'Mileage', 'Material', 'TimeEffort'];
+    const invalidEntries = entries.filter(e => !validTypes.includes(e.type) || !e.id || !e.lastChanged);
+    if (invalidEntries.length > 0) {
+        return res.status(400).json({ 
+            success: false,
+            message: 'All entries must have valid type (Expense, Mileage, Material, TimeEffort), id, and lastChanged' 
+        });
+    }
+
+    try {
+        console.log(`Batch delete: ${entries.length} entries (transactional: ${transactional})`);
+        
+        const result = await FSMService.batchDeleteEntries(entries, transactional);
+        
+        res.json({
+            success: result.success,
+            successCount: result.successCount,
+            errorCount: result.errorCount,
+            totalCount: result.totalCount,
+            results: result.results,
+            message: result.success 
+                ? `Successfully deleted ${result.successCount} entries`
+                : `Deleted ${result.successCount} of ${result.totalCount} entries (${result.errorCount} failed)`
+        });
+
+    } catch (error) {
+        console.error("Error in batch delete:", error.response?.data || error.message);
+        res.status(error.response?.status || 500).json({
+            success: false,
+            message: error.response?.data?.message || 'Batch delete failed',
+            error: error.response?.data || error.message
+        });
+    }
+});
+
 // Create Expense Report
 app.post("/api/create-expense", async (req, res) => {
     const expenseData = req.body;
