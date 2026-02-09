@@ -347,7 +347,7 @@
     height: auto !important;
     min-height: 2.5rem;
     padding: 0.5rem 1rem !important;
-    align-items: flex-start !important;
+    align-items: center !important;
 }
 
 .activitySubjectBar .sapMTitle {
@@ -666,7 +666,7 @@
    3-COLUMN LAYOUT (Time Effort, Material, Expense, Mileage)
    ======================================== */
 
-/* Container for 3-column Time entries - responsive 3Ã¢â€ â€™2Ã¢â€ â€™1 */
+/* Container for 3-column Time entries - responsive 3ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢2ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢1 */
 .tmTimeColumns {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
