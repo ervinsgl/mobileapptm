@@ -309,7 +309,7 @@
                                                                 <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
                                                                 <Column width="5rem" hAlign="Begin"><Text text="{i18n>tmColDuration}"/></Column>
                                                                 <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
-                                                                <Column width="9rem" hAlign="Begin"><Text text="{i18n>tmColDate}"/></Column>
+                                                                <Column width="8rem" hAlign="Begin"><Text text="{i18n>tmColDate}"/></Column>
                                                                 <Column hAlign="Begin"><Text text="{i18n>tmColRemarks}"/></Column>
                                                                 <Column width="5rem" hAlign="Center"><Text text="{i18n>tmColStatus}"/></Column>
                                                             </columns>
