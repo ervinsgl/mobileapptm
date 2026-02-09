@@ -157,8 +157,10 @@ sap.ui.define([
             const oModel = this._tmCreateDialog?.getModel("createTM");
             if (!oModel) return;
             
-            // Recalculate remaining and validate all entries
-            this._updateMaterialQuantityStates(oModel);
+            // Use setTimeout to ensure model binding has completed before validation
+            setTimeout(() => {
+                this._updateMaterialQuantityStates(oModel);
+            }, 0);
         },
 
         /**

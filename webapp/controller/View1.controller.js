@@ -38,6 +38,7 @@ sap.ui.define([
     "mobileappsc/utils/services/ItemService",
     "mobileappsc/utils/services/UdfMetaService",
     "mobileappsc/utils/services/TypeConfigService",
+    "mobileappsc/utils/services/CacheService",
     "mobileappsc/utils/tm/TMDialogService",
     "./mixin/DataLoadingMixin",
     "./mixin/TMDialogMixin",
@@ -48,7 +49,7 @@ sap.ui.define([
     "./mixin/TMTimeEntryMixin",
     "./mixin/TMSaveMixin",
     "./mixin/TechnicianMixin"
-], (Controller, JSONModel, Fragment, MessageToast, MessageBox, formatter, OrganizationService, PersonService, ItemService, UdfMetaService, TypeConfigService, TMDialogService, DataLoadingMixin, TMDialogMixin, TMEditMixin, TMTableMixin, TMExpenseMileageMixin, TMMaterialMixin, TMTimeEntryMixin, TMSaveMixin, TechnicianMixin) => {
+], (Controller, JSONModel, Fragment, MessageToast, MessageBox, formatter, OrganizationService, PersonService, ItemService, UdfMetaService, TypeConfigService, CacheService, TMDialogService, DataLoadingMixin, TMDialogMixin, TMEditMixin, TMTableMixin, TMExpenseMileageMixin, TMMaterialMixin, TMTimeEntryMixin, TMSaveMixin, TechnicianMixin) => {
     "use strict";
 
     /**
@@ -98,10 +99,9 @@ sap.ui.define([
             });
             
             // Background loading (parallel) - non-blocking
+            // CacheService warms all reference data caches in parallel for instant dialog access
             this._loadOrganizationalHierarchy();
-            this._loadTimeTasks();
-            this._loadItems();
-            this._loadExpenseTypes();
+            CacheService.warmAllCaches();
         },
 
         /* =========================================================================

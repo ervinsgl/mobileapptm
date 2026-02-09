@@ -241,12 +241,6 @@
     line-height: 1.3;
 }
 
-/* Product Panel ID - subtle styling */
-.productPanelId {
-    font-size: 0.6875rem;
-    color: #666;
-}
-
 /* Activity Header Subject - wrapping title in header */
 .activityHeaderSubject {
     flex: 1;
@@ -427,227 +421,6 @@
     color: #333;
 }
 
-/* T&M Summary Section inside Activity */
-.tmSummarySection {
-    padding: 0.75rem 1rem;
-    background: #fafafa;
-}
-
-/* ========================================
-   T&M ENTRY CARDS (TMReportsDialog fragment)
-   ======================================== */
-
-.tmEntryPanel {
-    margin-bottom: 0.75rem;
-    border: 1px solid #e0e0e0;
-}
-
-.tmEntryPanel:last-child {
-    margin-bottom: 0;
-}
-
-/* Entry Panel Header - multi-line support */
-.tmEntryPanel .sapMOTB {
-    height: auto !important;
-    min-height: 2.5rem;
-    padding: 0.5rem 0;
-}
-
-.tmEntryPanel .sapMOTB .sapMTitle {
-    white-space: normal !important;
-    line-height: 1.4;
-    flex: 1 1 auto;
-}
-
-/* Compact 3-Column Layout - CSS Grid for smooth transitions */
-.tmEntryContent {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    padding: 0.75rem 1rem;
-    gap: 1rem;
-}
-
-.tmColumn {
-    /* Grid children don't need flex properties */
-    min-width: 0; /* Prevent grid blowout */
-    padding-right: 1rem;
-    border-right: 1px solid #e5e5e5;
-}
-
-/* Remove border from last column */
-.tmColumn:last-child {
-    border-right: none;
-    padding-right: 0;
-}
-
-.tmFieldRow {
-    margin-bottom: 0.5rem;
-    align-items: center;
-    width: 100%;
-    display: flex;
-    min-width: 0;
-    overflow: hidden;
-}
-
-.tmFieldRow:last-child {
-    margin-bottom: 0;
-}
-
-/* T&M Field Label - Fixed width for alignment */
-.tmFieldLabel {
-    font-size: 0.75rem;
-    color: #666;
-    min-width: 5rem;
-    max-width: 5rem;
-    flex-shrink: 0;
-    margin-right: 0.5rem;
-}
-
-/* T&M Field Value */
-.tmFieldValue {
-    font-size: 0.875rem;
-    color: #333;
-}
-
-/* ========================================
-   T&M INPUT FIELDS STYLING
-   ======================================== */
-
-/* Input field in T&M forms - FIXED WIDTH */
-.tmFieldInput {
-    width: 200px !important;
-    min-width: 200px !important;
-    max-width: 200px !important;
-    flex: 0 0 200px !important;
-}
-
-.tmFieldInput .sapMInputBaseInner {
-    font-size: 0.875rem;
-}
-
-/* Narrow inputs - SAME FIXED WIDTH */
-.tmFieldInputNarrow {
-    width: 200px !important;
-    min-width: 200px !important;
-    max-width: 200px !important;
-    flex: 0 0 200px !important;
-}
-
-.tmFieldInputNarrow .sapMInputBaseInner {
-    font-size: 0.8125rem;
-}
-
-/* DatePicker styling - SAME FIXED WIDTH as inputs */
-.tmFieldInputNarrow.sapMDP,
-.tmFieldInputNarrow.sapMDatePicker {
-    width: 200px !important;
-    min-width: 200px !important;
-    max-width: 200px !important;
-    flex: 0 0 200px !important;
-}
-
-.tmFieldInputNarrow.sapMDP .sapMInputBaseInner,
-.tmFieldInputNarrow.sapMDatePicker .sapMInputBaseInner {
-    font-size: 0.8125rem;
-}
-
-/* DateTimePicker styling - SAME FIXED WIDTH as inputs */
-.tmFieldInputNarrow.sapMDTI {
-    width: 200px !important;
-    min-width: 200px !important;
-    max-width: 200px !important;
-    flex: 0 0 200px !important;
-}
-
-.tmFieldInputNarrow.sapMDTI .sapMInputBaseInner {
-    font-size: 0.8125rem;
-}
-
-/* TextArea styling - SAME FIXED WIDTH as inputs */
-.tmFieldInputNarrow.sapMTextArea {
-    width: 200px !important;
-    min-width: 200px !important;
-    max-width: 200px !important;
-    flex: 0 0 200px !important;
-}
-
-.tmFieldInputNarrow.sapMTextArea .sapMTextAreaInner {
-    font-size: 0.8125rem;
-}
-
-/* Required field indicator */
-.tmFieldLabelRequired::after {
-    content: " *";
-    color: #bb0000;
-    font-weight: bold;
-}
-
-/* StepInput styling - SAME FIXED WIDTH as inputs */
-.tmFieldInputNarrow.sapMStepInput {
-    width: 200px !important;
-    min-width: 200px !important;
-    max-width: 200px !important;
-    flex: 0 0 200px !important;
-}
-
-.tmFieldInputNarrow.sapMStepInput .sapMInputBaseInner {
-    font-size: 0.8125rem;
-}
-
-/* Input placeholder styling */
-.tmFieldInput input::placeholder,
-.tmFieldInputNarrow input::placeholder {
-    color: #999;
-    font-style: italic;
-}
-
-/* Focus state for inputs */
-.tmFieldInput.sapMInputFocused,
-.tmFieldInputNarrow.sapMInputFocused {
-    border-color: #0854a0;
-}
-
-/* ComboBox styling for technician search */
-.tmFieldInput.sapMComboBox,
-.tmFieldInputNarrow.sapMComboBox,
-.tmFieldInput.sapMInput,
-.tmFieldInputNarrow.sapMInput {
-    flex: 1;
-    min-width: 0;
-    width: 100%;
-}
-
-.tmFieldInput.sapMComboBox .sapMInputBaseInner,
-.tmFieldInputNarrow.sapMComboBox .sapMInputBaseInner {
-    font-size: 0.875rem;
-}
-
-/* Select dropdown - SAME FIXED WIDTH as inputs */
-.tmFieldSelectNarrow {
-    width: 200px !important;
-    min-width: 200px !important;
-    max-width: 200px !important;
-    flex: 0 0 200px !important;
-}
-
-/* Force UI5 Select to respect fixed width */
-.tmFieldSelectNarrow.sapMSlt {
-    width: 200px !important;
-    min-width: 200px !important;
-    max-width: 200px !important;
-}
-
-.tmFieldSelectNarrow .sapMSltLabel {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.tmFieldSelectNarrow .sapMSltLabel,
-.tmFieldSelectNarrow .sapMSelectListItemText {
-    font-size: 0.8125rem;
-}
-
 /* ComboBox dropdown list styling */
 .sapMComboBoxBasePicker .sapMListItem {
     padding: 0.5rem 0.75rem;
@@ -660,154 +433,6 @@
 .sapMComboBoxBasePicker .sapMSLIInfo {
     font-size: 0.75rem;
     color: #666;
-}
-
-/* ========================================
-   3-COLUMN LAYOUT (Time Effort, Material, Expense, Mileage)
-   ======================================== */
-
-/* Container for 3-column Time entries - responsive 3ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢2ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢1 */
-.tmTimeColumns {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
-    width: 100%;
-}
-
-/* Medium screens: 2 columns */
-@media (max-width: 900px) {
-    .tmTimeColumns {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-/* Small screens: 1 column */
-@media (max-width: 600px) {
-    .tmTimeColumns {
-        grid-template-columns: 1fr;
-    }
-}
-
-/* Time Panel styling */
-.tmTimePanel {
-    min-height: 80px;
-}
-
-/* Prevent nested scrollbars in time panel lists */
-.tmTimePanel .sapMList {
-    overflow: visible;
-}
-
-.tmTimePanel .sapMListItems {
-    overflow: visible;
-}
-
-/* Time Entry List - empty state styling */
-.tmTimeEntryList .sapMListNoData {
-    border: 1px dashed #ccc;
-    border-radius: 4px;
-    padding: 1rem;
-    color: #999;
-    font-style: italic;
-    text-align: center;
-    background: #fafafa;
-}
-
-/* Remove borders on time panels in grid layout */
-.tmTimeColumns > .tmColumn {
-    border-right: none;
-    padding-right: 0;
-}
-
-/* Time Entry Item styling */
-.tmTimeEntryItem {
-    background: #f7f7f7;
-    border-radius: 4px;
-    margin-bottom: 0.5rem;
-    border: 1px solid #e5e5e5;
-}
-
-.tmTimeEntryItem:last-child {
-    margin-bottom: 0;
-}
-
-.tmTimeEntryContent {
-    padding: 0.5rem;
-    align-items: flex-start;
-}
-
-/* Time Entry field sizing */
-.tmTimeEntrySelect,
-.tmTimeEntryInput {
-    flex: 0 1 auto !important;
-    min-width: 150px !important;
-    max-width: 150px !important;
-    width: 100% !important;
-}
-
-/* StepInput internal - give more space to input, less to description */
-.tmTimeEntryItem .sapMStepInput .sapMInputBaseContentWrapper {
-    width: 70% !important;
-}
-
-.tmTimeEntryItem .sapMStepInput .sapMInputDescriptionWrapper {
-    width: 30% !important;
-}
-
-/* Force all time entry input wrappers to fixed width */
-.tmTimeEntryItem .tmFieldRow > div.sapMFlexItem {
-    flex: 0 1 auto !important;
-    min-width: 150px !important;
-    max-width: 150px !important;
-}
-
-/* Label wrapper - fit content only */
-.tmTimeEntryItem .tmFieldRow > div.sapMFlexItem:first-child {
-    flex: 0 0 auto !important;
-    min-width: auto !important;
-    max-width: none !important;
-}
-
-/* Time entry rows - align items to start */
-.tmTimeEntryItem .tmFieldRow {
-    justify-content: flex-start !important;
-}
-
-/* Label for time entries */
-.tmFieldLabelNarrow {
-    min-width: 4.5rem;
-    width: 4.5rem;
-    margin-right: 0.25rem;
-    flex-shrink: 0;
-}
-
-/* ========================================
-   DECISION STATUS STYLING
-   ======================================== */
-
-.decisionStatusValue {
-    font-weight: 700;
-    font-size: 0.9375rem;
-}
-
-.decisionStatusValue.sapMObjectStatusWarning {
-    color: #e09d00 !important;
-}
-
-.decisionStatusValue.sapMObjectStatusSuccess {
-    color: #107e3e !important;
-}
-
-.decisionStatusValue.sapMObjectStatusError {
-    color: #bb0000 !important;
-}
-
-.decisionStatusValue.sapMObjectStatusInformation {
-    color: #0854a0 !important;
-}
-
-.decisionStatusValue.sapMObjectStatusNone {
-    color: #666 !important;
 }
 
 /* ========================================
@@ -881,16 +506,8 @@
     .sapMDialogSection,
     .sapMDialogScroll,
     .sapMPanelContent,
-    .tmEntryPanel,
     .activityEntryPanel {
         overflow-x: hidden !important;
-    }
-    
-    /* Prevent nested scrollbars */
-    .tmTimePanel .sapMList,
-    .tmTimePanel .sapMListItems,
-    .tmTimePanel .sapMListUl {
-        overflow: visible !important;
     }
     
     /* ----- DIALOG ADJUSTMENTS ----- */
@@ -907,15 +524,13 @@
     
     /* ----- PANEL HEADERS ----- */
     .productGroupPanel .sapMPanelHdr,
-    .activityEntryPanel .sapMPanelHdr,
-    .tmEntryPanel .sapMPanelHdr {
+    .activityEntryPanel .sapMPanelHdr {
         padding: 0.5rem !important;
     }
     
     /* Allow title text to wrap on mobile */
     .productGroupPanel .sapMTitle,
     .activityEntryPanel .sapMTitle,
-    .tmEntryPanel .sapMTitle,
     .sapMOTB .sapMTitle {
         white-space: normal !important;
         line-height: 1.3 !important;
@@ -924,8 +539,7 @@
     
     /* Hide ID labels on mobile in headers */
     .productGroupPanel .sapMOTB > .sapMLabel,
-    .activityEntryPanel .sapMOTB > .sapMLabel,
-    .tmEntryPanel .sapMOTB > .sapMLabel {
+    .activityEntryPanel .sapMOTB > .sapMLabel {
         display: none !important;
     }
     
@@ -947,8 +561,6 @@
     
     /* ----- COLUMN LAYOUTS ----- */
     /* Force single column on mobile */
-    .tmEntryContent,
-    .tmTimeColumns,
     .activityEntryContent,
     .serviceOrderContent {
         display: grid !important;
@@ -959,7 +571,6 @@
         max-width: 100% !important;
     }
     
-    .tmColumn,
     .activityColumn,
     .serviceOrderColumn {
         border-right: none !important;
@@ -969,14 +580,6 @@
         margin-bottom: 0.5rem;
     }
     
-    /* Time panel columns don't need border-bottom (entries have their own borders) */
-    .tmTimeColumns > .tmColumn {
-        border-bottom: none;
-        padding-bottom: 0;
-        margin-bottom: 0.5rem;
-    }
-    
-    .tmColumn:last-child,
     .activityColumn:last-child,
     .serviceOrderColumn:last-child {
         border-bottom: none;
@@ -985,7 +588,6 @@
     }
     
     /* ----- FIELD ROWS - KEEP LABEL AND VALUE INLINE ----- */
-    .tmFieldRow,
     .activityFieldRow,
     .serviceOrderFieldRow {
         flex-wrap: nowrap !important;
@@ -994,7 +596,6 @@
     }
     
     /* Labels - fixed width, stay inline */
-    .tmFieldLabel,
     .activityFieldLabel,
     .serviceOrderFieldLabel {
         min-width: 5.5rem !important;
@@ -1004,14 +605,7 @@
         font-size: 0.75rem !important;
     }
     
-    /* Column headers - larger on mobile */
-    .tmColumnHeader {
-        font-size: 0.875rem !important;
-        margin-bottom: 0.5rem;
-    }
-    
     /* Values - take remaining space */
-    .tmFieldValue,
     .activityFieldValue,
     .serviceOrderFieldValue {
         flex: 1 !important;
@@ -1023,11 +617,6 @@
     .sapMOTB .sapMBtn {
         min-width: auto !important;
         padding: 0 0.5rem !important;
-    }
-    
-    /* Show only icons on very small screens */
-    .tmEntryPanel .sapMOTB .sapMBtnContent .sapMBtnText {
-        display: none !important;
     }
     
     /* ----- MARGINS & PADDING ----- */
@@ -1054,16 +643,6 @@
         font-size: 0.75rem !important;
     }
     
-    /* ----- T&M SUMMARY SECTION ----- */
-    .tmSummarySection {
-        padding: 0.5rem !important;
-    }
-    
-    .tmSummarySection .sapMHBox {
-        flex-wrap: wrap;
-        gap: 0.5rem;
-    }
-    
     /* ----- DIALOG HEADER ----- */
     .sapMDialogTitle {
         font-size: 1rem !important;
@@ -1075,8 +654,7 @@
     /* Hide ID labels on very small screens */
     .activityEntryPanel .sapMTB.sapMTBInfo .sapMLabel,
     .sapMDialog .sapMTB.sapMTBInfo .sapMLabel,
-    .sapMDialog .sapMDialogSubHeader .sapMLabel,
-    .productPanelId {
+    .sapMDialog .sapMDialogSubHeader .sapMLabel {
         display: none !important;
     }
 }
@@ -1100,22 +678,19 @@
     
     /* ----- PANEL HEADERS ----- */
     .productGroupPanel .sapMTitle,
-    .activityEntryPanel .sapMTitle,
-    .tmEntryPanel .sapMTitle {
+    .activityEntryPanel .sapMTitle {
         font-size: 0.9rem !important;
         white-space: normal !important;
     }
     
     /* ----- COLUMN LAYOUTS ----- */
     /* Grid auto-fit handles column count automatically */
-    .tmEntryContent,
     .activityEntryContent,
     .serviceOrderContent {
         gap: 1rem !important;
     }
     
     /* ----- FIELD ROWS - KEEP LABEL AND VALUE INLINE ----- */
-    .tmFieldRow,
     .activityFieldRow,
     .serviceOrderFieldRow {
         flex-wrap: nowrap !important;
@@ -1159,65 +734,12 @@
 }
 
 /* ========================================
-   T&M GRID TABLE - INLINE EDIT STYLING
-   ======================================== */
-
-/* Compact buttons inside table cells */
-.tmGridTable .sapMBtn {
-    height: 1.75rem !important;
-    min-width: 1.75rem !important;
-    padding: 0 !important;
-}
-
-.tmGridTable .sapMBtnInner {
-    height: 1.5rem !important;
-    min-width: 1.5rem !important;
-    padding: 0 0.25rem !important;
-}
-
-.tmGridTable .sapMBtnIcon {
-    font-size: 0.875rem !important;
-}
-
-/* Compact inputs in table cells */
-.tmGridTable .sapMInput {
-    height: 1.75rem !important;
-}
-
-.tmGridTable .sapMInputBaseInner {
-    height: 1.5rem !important;
-    padding: 0 0.25rem !important;
-}
-
-/* Row highlight for edit mode */
-.tmGridTable .sapUiTableRowHighlightInformation {
-    background-color: #EBF5FF !important;
-}
-
-/* Vertical center content in table cells */
-.tmGridTable .sapUiTableCell {
-    vertical-align: middle !important;
-}
-
-/* Center save button in cell */
-.tmGridTable .sapUiTableCellInner {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-}
-
-/* Checkbox styling */
-.tmGridTable .sapMCb {
-    margin: 0 auto !important;
-}
-
-/* ========================================
    T&M TABLES - HORIZONTAL SCROLL
    ======================================== */
 
 /* Ensure tables have fixed minimum width for horizontal scrolling */
 .tmMTable {
-    min-width: 55rem !important;
+    min-width: 65rem !important;
 }
 
 /* Compact table for time entries with repeat columns */
@@ -1267,4 +789,26 @@
 .tmMTable .sapUiIcon:hover,
 .tmCompactTable .sapUiIcon:hover {
     opacity: 0.7;
+}
+
+/* ========================================
+   ROW SELECTION FEEDBACK
+   ======================================== */
+
+/* Selected row highlight when checkbox is checked */
+.tmMTable .sapMListTblRow:has(.sapMCbBg.sapMCbMarkChecked),
+.tmCompactTable .sapMListTblRow:has(.sapMCbBg.sapMCbMarkChecked) {
+    background-color: #e8f4fd !important;
+}
+
+/* Hover state for selectable rows */
+.tmMTable .sapMListTblRow:hover,
+.tmCompactTable .sapMListTblRow:hover {
+    background-color: #f5f5f5;
+}
+
+/* Selected row with hover */
+.tmMTable .sapMListTblRow:has(.sapMCbBg.sapMCbMarkChecked):hover,
+.tmCompactTable .sapMListTblRow:has(.sapMCbBg.sapMCbMarkChecked):hover {
+    background-color: #d4e9f7 !important;
 }
