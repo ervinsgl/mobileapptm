@@ -811,13 +811,38 @@ sap.ui.define([
                 });
                 
                 // Call batch delete API
-                const response = await fetch('/api/batch-delete', {
+                let response = await fetch('/api/batch-delete', {
                     method: 'DELETE',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ entries, transactional: false })
                 });
                 
-                const result = await response.json();
+                let result = await response.json();
+                
+                // Handle CA-27 (concurrent modification) errors by retrying with updated lastChanged
+                if (!result.success && result.results) {
+                    const ca27Errors = result.results.filter(r => !r.success && r.data?.error === 'CA-27');
+                    if (ca27Errors.length > 0) {
+                        console.log("CA-27 detected, retrying with updated lastChanged values");
+                        
+                        // Update entries with correct lastChanged from error response
+                        ca27Errors.forEach(err => {
+                            const entryIndex = entries.findIndex(e => e.id === err.data?.values?.[2]);
+                            if (entryIndex >= 0 && err.data?.values?.[0]) {
+                                entries[entryIndex].lastChanged = err.data.values[0];
+                            }
+                        });
+                        
+                        // Retry the delete
+                        response = await fetch('/api/batch-delete', {
+                            method: 'DELETE',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ entries, transactional: false })
+                        });
+                        
+                        result = await response.json();
+                    }
+                }
                 
                 if (result.success) {
                     MessageToast.show(this._getText("msgEntriesDeleted", [result.successCount]));

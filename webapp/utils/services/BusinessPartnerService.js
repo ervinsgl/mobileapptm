@@ -10,7 +10,7 @@
  * - Prevention of duplicate concurrent requests
  * - Search and dropdown support for cached data
  * 
- * Display Format: "Company Name (55003748)"
+ * Display Format: "Company Name"
  * 
  * API Endpoint Used:
  * - POST /api/get-business-partner-by-external-id
@@ -40,14 +40,14 @@ sap.ui.define([], () => {
          * Get business partner display text by externalId.
          * Loads from API on-demand if not in cache.
          * @param {string} externalId - Business partner external ID
-         * @returns {string} Display text "Name (externalId)" or just externalId if not cached
+         * @returns {string} Company name or just externalId if not cached
          */
         getBusinessPartnerDisplayTextByExternalId(externalId) {
             if (!externalId || externalId === 'N/A') return 'N/A';
 
             const cached = this._businessPartnerCache.get(externalId);
             if (cached) {
-                return `${cached.name} (${cached.externalId})`;
+                return cached.name;
             }
 
             // Not in cache - load asynchronously

@@ -212,6 +212,7 @@ sap.ui.define([
             let itemSuggestions = [];
             let defaultItemDisplay = "";
             let defaultItemId = "";
+            let defaultItemExternalId = "";
             let expenseTypeSuggestions = [];
 
             const [timeTasksResult, itemsResult, expenseTypesResult] = await Promise.allSettled([
@@ -241,11 +242,13 @@ sap.ui.define([
                     if (defaultItem) {
                         defaultItemDisplay = defaultItem.displayText;
                         defaultItemId = defaultItem.id;
+                        defaultItemExternalId = defaultItem.externalId;
                     }
                 }
                 
                 TMCreationService.setDefaultItem({
                     id: defaultItemId,
+                    externalId: defaultItemExternalId,
                     displayText: defaultItemDisplay
                 });
             } else {
@@ -357,9 +360,11 @@ sap.ui.define([
                 defaultExpenseTypeCode: defaultExpenseType?.code || "",
                 defaultExpenseTypeDisplay: defaultExpenseType?.displayText || "",
                 defaultMileageTypeId: defaultItem?.id || "",
+                defaultMileageTypeExternalId: defaultItem?.externalId || "",
                 defaultMileageTypeDisplay: defaultItem?.displayText || "",
                 // Default item for Material
                 defaultItemId: defaultItem?.id || "",
+                defaultItemExternalId: defaultItem?.externalId || "",
                 defaultItemDisplay: defaultItem?.displayText || "",
                 // Default date from activity
                 defaultDate: activityData.plannedStartDate ? activityData.plannedStartDate.split('T')[0] : ""

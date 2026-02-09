@@ -260,6 +260,7 @@ sap.ui.define([
                 technicianExternalId: defaultTech ? defaultTech.externalId : "",
                 technicianDisplay: defaultTech ? defaultTech.displayText : "",
                 itemId: defaultItem ? defaultItem.id : "",
+                itemExternalId: defaultItem ? defaultItem.externalId : "",
                 itemDisplay: defaultItem ? defaultItem.displayText : "",
                 quantity: defaultQuantity || "",
                 chargeOption: "CHARGEABLE",
@@ -326,6 +327,7 @@ sap.ui.define([
                 technicianExternalId: defaultTech ? defaultTech.externalId : "",
                 technicianDisplay: defaultTech ? defaultTech.displayText : "",
                 itemId: defaultItem ? defaultItem.id : "",
+                itemExternalId: defaultItem ? defaultItem.externalId : "",
                 itemDisplay: defaultItem ? defaultItem.displayText : "",
                 distance: defaultQuantity || 0,
                 travelDuration: 30,
@@ -363,6 +365,7 @@ sap.ui.define([
                 technicianDisplay: defaultTech ? defaultTech.displayText : "",
                 // Material fields (Item from Service Product - read-only, Quantity from Activity)
                 itemId: defaultItem ? defaultItem.id : "",
+                itemExternalId: defaultItem ? defaultItem.externalId : "",
                 itemDisplay: defaultItem ? defaultItem.displayText : "",
                 quantity: defaultQuantity || "",
                 materialDate: defaultDate,  // Date for Material entry

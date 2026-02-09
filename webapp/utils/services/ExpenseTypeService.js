@@ -9,7 +9,7 @@
  * - ID-to-name lookup for display
  * - Dropdown data transformation (sorted by code)
  * 
- * Display Format: "Z40000001 - Travel Expenses"
+ * Display Format: "Travel Expenses"
  * 
  * API Endpoint Used:
  * - GET /api/get-expense-types
@@ -103,7 +103,7 @@ sap.ui.define([], () => {
         /**
          * Get expense type display text by ID.
          * @param {string} expenseTypeId - Expense type ID
-         * @returns {string} Formatted display text "code - name" or ID as fallback
+         * @returns {string} Expense type name or ID as fallback
          */
         getExpenseTypeDisplayTextById(expenseTypeId) {
             if (!expenseTypeId || expenseTypeId === 'N/A') {
@@ -116,7 +116,7 @@ sap.ui.define([], () => {
 
             const expenseType = _expenseTypesMap.get(expenseTypeId);
             if (expenseType) {
-                return `${expenseType.code} - ${expenseType.name}`;
+                return expenseType.name;
             }
             return expenseTypeId;
         },
@@ -131,7 +131,7 @@ sap.ui.define([], () => {
 
         /**
          * Transform expense types for dropdown/select control.
-         * Sorted by code to ensure consistent order.
+         * Sorted by name to ensure consistent order.
          * @returns {Array<{key: string, text: string, code: string, name: string}>}
          */
         getExpenseTypesForDropdown() {
@@ -141,12 +141,12 @@ sap.ui.define([], () => {
 
             const items = _expenseTypesCache.map(expenseType => ({
                 key: expenseType.id,
-                text: `${expenseType.code} - ${expenseType.name}`,
+                text: expenseType.name,
                 code: expenseType.code,
                 name: expenseType.name
             }));
 
-            items.sort((a, b) => a.code.localeCompare(b.code));
+            items.sort((a, b) => a.name.localeCompare(b.name));
             
             return items;
         },

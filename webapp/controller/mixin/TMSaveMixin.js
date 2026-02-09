@@ -241,6 +241,7 @@ sap.ui.define([
                             technicianId: entry.technicianId,
                             technicianExternalId: entry.technicianExternalId,
                             itemId: entry.itemId,
+                            itemExternalId: entry.itemExternalId,
                             itemDisplay: entry.itemDisplay,
                             quantity: entry.quantity,
                             remarks: entry.remarks

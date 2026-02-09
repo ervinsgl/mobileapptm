@@ -10,7 +10,7 @@
  * - Search and suggestion support for item selection
  * - Dropdown data transformation
  * 
- * Display Format: "Z10000001 - Material Name"
+ * Display Format: "Material Name"
  * 
  * API Endpoint Used:
  * - GET /api/get-items
@@ -135,7 +135,7 @@ sap.ui.define([], () => {
         /**
          * Get item display text by ID.
          * @param {string} itemId - Item ID
-         * @returns {string} Formatted display text "externalId - name" or ID as fallback
+         * @returns {string} Item name or ID as fallback
          */
         getItemDisplayTextById(itemId) {
             if (!itemId || itemId === 'N/A') {
@@ -148,7 +148,7 @@ sap.ui.define([], () => {
 
             const item = _itemsMapById.get(itemId);
             if (item) {
-                return `${item.externalId} - ${item.name}`;
+                return item.name;
             }
             return itemId;
         },
@@ -156,7 +156,7 @@ sap.ui.define([], () => {
         /**
          * Get item display text by external ID.
          * @param {string} externalId - Item external ID
-         * @returns {string} Formatted display text "externalId - name" or externalId as fallback
+         * @returns {string} Item name or externalId as fallback
          */
         getItemDisplayTextByExternalId(externalId) {
             if (!externalId || externalId === 'N/A') {
@@ -169,7 +169,7 @@ sap.ui.define([], () => {
 
             const item = _itemsMapByExternalId.get(externalId);
             if (item) {
-                return `${item.externalId} - ${item.name}`;
+                return item.name;
             }
             return externalId;
         },
@@ -205,7 +205,7 @@ sap.ui.define([], () => {
 
             return _itemsCache.map(item => ({
                 key: item.id,
-                text: `${item.externalId} - ${item.name}`,
+                text: item.name,
                 externalId: item.externalId,
                 name: item.name
             }));
@@ -224,7 +224,7 @@ sap.ui.define([], () => {
                 id: item.id,
                 externalId: item.externalId,
                 name: item.name,
-                displayText: `${item.externalId} - ${item.name}`
+                displayText: item.name
             }));
         },
 
@@ -244,7 +244,7 @@ sap.ui.define([], () => {
                     id: item.id,
                     externalId: item.externalId,
                     name: item.name,
-                    displayText: `${item.externalId} - ${item.name}`
+                    displayText: item.name
                 };
             }
             return null;

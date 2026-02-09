@@ -159,7 +159,11 @@ sap.ui.define([], () => {
                 const udfValues = report.udfValues || report.fullData?.udfValues || [];
                 udfValues.forEach(udf => {
                     if (udf.meta) {
-                        allMetaIds.add(udf.meta);
+                        // Handle both string ID and object with id/externalId
+                        const metaId = typeof udf.meta === 'string' ? udf.meta : (udf.meta.id || udf.meta.externalId);
+                        if (metaId && typeof metaId === 'string') {
+                            allMetaIds.add(metaId);
+                        }
                     }
                 });
             });

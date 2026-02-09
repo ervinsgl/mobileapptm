@@ -9,7 +9,7 @@
  * - ID-to-name lookup for display
  * - Dropdown data transformation
  * 
- * Display Format: "AZ001 - Working Time"
+ * Display Format: "Working Time"
  * 
  * Task Code Prefixes:
  * - AZ: Arbeitszeit (Working Time)
@@ -108,7 +108,7 @@ sap.ui.define([], () => {
         /**
          * Get time task display text by ID.
          * @param {string} taskId - Time task ID
-         * @returns {string} Formatted display text "code - name" or ID as fallback
+         * @returns {string} Task name or ID as fallback
          */
         getTaskDisplayTextById(taskId) {
             if (!taskId || taskId === 'N/A') {
@@ -121,7 +121,7 @@ sap.ui.define([], () => {
 
             const task = _timeTasksMap.get(taskId);
             if (task) {
-                return `${task.code} - ${task.name}`;
+                return task.name;
             }
             return taskId;
         },
@@ -170,7 +170,7 @@ sap.ui.define([], () => {
 
             return _timeTasksCache.map(task => ({
                 key: task.id,
-                text: `${task.code} - ${task.name}`,
+                text: task.name,
                 code: task.code,
                 name: task.name
             }));

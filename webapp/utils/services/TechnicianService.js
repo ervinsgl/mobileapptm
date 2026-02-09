@@ -10,7 +10,7 @@
  * - Result limiting for UI performance (max 50 results)
  * - Integration with PersonService for data loading
  * 
- * Display Format: "John Doe (ZZ00094912)"
+ * Display Format: "John Doe"
  * 
  * Optimization Strategy:
  * - Builds flat array from PersonService cache for faster iteration
@@ -124,9 +124,7 @@ sap.ui.define([
                         firstName: person.firstName,
                         lastName: person.lastName,
                         fullName: person.fullName,
-                        displayText: person.externalId 
-                            ? `${person.firstName} ${person.lastName} (${person.externalId})`
-                            : `${person.firstName} ${person.lastName}`,
+                        displayText: person.fullName || `${person.firstName} ${person.lastName}`,
                         searchText: searchText
                     });
                 }

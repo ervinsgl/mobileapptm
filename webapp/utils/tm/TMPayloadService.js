@@ -154,10 +154,8 @@ sap.ui.define([
          * @returns {Object} Material payload
          */
         buildMaterialPayload(oEntry, activityId, orgLevelId) {
-            let itemExternalId = "";
-            if (oEntry.itemDisplay) {
-                itemExternalId = oEntry.itemDisplay.split(' - ')[0];
-            }
+            // Use itemExternalId directly from entry
+            const itemExternalId = oEntry.itemExternalId || "";
 
             // Get activity planned start date and extract date portion
             const activityPlannedStart = TMCreationService.getActivityPlannedStartDate();
@@ -252,11 +250,8 @@ sap.ui.define([
             // Extract date portion for date field
             const dateValue = baseStartDateTime.split('T')[0];
             
-            // Get item externalId for UDF value
-            let itemExternalId = "";
-            if (oEntry.itemDisplay) {
-                itemExternalId = oEntry.itemDisplay.split(' - ')[0];
-            }
+            // Use itemExternalId directly from entry
+            const itemExternalId = oEntry.itemExternalId || "";
 
             return {
                 date: dateValue,
@@ -307,10 +302,8 @@ sap.ui.define([
          * @returns {Object} Combined T&M payload structure
          */
         buildTimeAndMaterialPayload(oEntry, activityId, orgLevelId) {
-            let itemExternalId = "";
-            if (oEntry.itemDisplay) {
-                itemExternalId = oEntry.itemDisplay.split(' - ')[0];
-            }
+            // Use itemExternalId directly from entry
+            const itemExternalId = oEntry.itemExternalId || "";
 
             const technicianExternalId = oEntry.technicianExternalId || "";
 
@@ -391,7 +384,7 @@ sap.ui.define([
                 ...expandMultiTechnicianEntries(oEntry.timeEffortsWZ, 3, 'WZ')
             ];
 
-            // Sort entries: first by date, then by type order (AZ Ã¢â€ â€™ FZ Ã¢â€ â€™ WZ)
+            // Sort entries: first by date, then by type order (AZ -> FZ -> WZ)
             allTimeEntries.sort((a, b) => {
                 const dateA = a.entryDate || baseStartDateTime.split('T')[0];
                 const dateB = b.entryDate || baseStartDateTime.split('T')[0];

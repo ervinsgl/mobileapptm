@@ -11,7 +11,7 @@
  * - Batch preloading for optimized loading
  * - Full person list loading for search functionality
  * 
- * Display Format: "John Doe (ZZ00094912)"
+ * Display Format: "John Doe"
  * 
  * API Endpoints Used:
  * - POST /api/get-person-by-id
@@ -43,16 +43,14 @@ sap.ui.define([], () => {
          * Get person display text by ID.
          * Loads from API on-demand if not in cache.
          * @param {string} personId - Person ID
-         * @returns {string} Display text "Name (externalId)" or ID if not cached
+         * @returns {string} Display text (full name only) or ID if not cached
          */
         getPersonDisplayTextById(personId) {
             if (!personId || personId === 'N/A') return 'N/A';
 
             const cached = this._personCache.get(personId);
             if (cached) {
-                return cached.externalId 
-                    ? `${cached.fullName} (${cached.externalId})`
-                    : cached.fullName;
+                return cached.fullName;
             }
 
             this._loadPersonById(personId);
@@ -63,14 +61,14 @@ sap.ui.define([], () => {
          * Get person display text by externalId.
          * Loads from API on-demand if not in cache.
          * @param {string} externalId - Person external ID
-         * @returns {string} Display text "Name (externalId)" or externalId if not cached
+         * @returns {string} Display text (full name only) or externalId if not cached
          */
         getPersonDisplayTextByExternalId(externalId) {
             if (!externalId || externalId === 'N/A') return 'N/A';
 
             const cached = this._personCache.get(externalId);
             if (cached) {
-                return `${cached.fullName} (${cached.externalId})`;
+                return cached.fullName;
             }
 
             this._loadPersonByExternalId(externalId);

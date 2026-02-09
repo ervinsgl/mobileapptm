@@ -100,6 +100,7 @@ sap.ui.define([
             }
             if (defaultItem) {
                 newEntry.itemId = defaultItem.id;
+                newEntry.itemExternalId = defaultItem.externalId;
                 newEntry.itemDisplay = defaultItem.displayText;
             }
             
@@ -310,6 +311,7 @@ sap.ui.define([
             const defaultTechExternalId = oModel.getProperty("/defaultTechnicianExternalId") || "";
             const defaultDate = oModel.getProperty("/defaultDate") || "";
             const defaultItemId = oModel.getProperty("/defaultItemId") || "";
+            const defaultItemExternalId = oModel.getProperty("/defaultItemExternalId") || "";
             const defaultItemDisplay = oModel.getProperty("/defaultItemDisplay") || "";
             const defaultMileageTypeDisplay = oModel.getProperty("/defaultMileageTypeDisplay") || "";
             // Get activity quantity for default distance
@@ -321,6 +323,7 @@ sap.ui.define([
                 technicianExternalId: defaultTechExternalId,
                 technicianDisplay: defaultTechDisplay,
                 itemId: defaultItemId,
+                itemExternalId: defaultItemExternalId,
                 itemDisplay: defaultItemDisplay,
                 mileageTypeDisplay: defaultMileageTypeDisplay,
                 distance: activityQuantity,
@@ -443,6 +446,7 @@ sap.ui.define([
                         type: "Mileage",
                         technicianId: entry.technicianId,
                         technicianExternalId: entry.technicianExternalId,
+                        itemExternalId: entry.itemExternalId,
                         itemDisplay: entry.itemDisplay,
                         distance: entry.distance,
                         travelDuration: entry.travelDuration,

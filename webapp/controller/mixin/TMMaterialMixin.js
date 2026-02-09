@@ -36,6 +36,7 @@ sap.ui.define([
             const defaultTechExternalId = oModel.getProperty("/defaultTechnicianExternalId") || "";
             const defaultDate = oModel.getProperty("/defaultDate") || "";
             const defaultItemId = oModel.getProperty("/defaultItemId") || "";
+            const defaultItemExternalId = oModel.getProperty("/defaultItemExternalId") || "";
             const defaultItemDisplay = oModel.getProperty("/defaultItemDisplay") || "";
             
             const newEntry = {
@@ -44,6 +45,7 @@ sap.ui.define([
                 technicianExternalId: defaultTechExternalId,
                 technicianDisplay: defaultTechDisplay,
                 itemId: defaultItemId,
+                itemExternalId: defaultItemExternalId,
                 itemDisplay: defaultItemDisplay,
                 quantity: 1,
                 quantityState: "None",

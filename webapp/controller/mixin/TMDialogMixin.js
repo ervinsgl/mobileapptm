@@ -114,10 +114,16 @@ sap.ui.define([
                 // Mileage: item name and distance for table display
                 if (report.type === "Mileage") {
                     // Extract item from UDF value - find Z_Mileage_MatID UDF
-                    // Note: u.meta is a string ID, need to lookup externalId via UdfMetaService
+                    // Note: u.meta can be either a string ID (needs lookup) or an object with externalId
                     const matIdUdf = report.fullData?.udfValues?.find(u => {
                         if (!u.meta) return false;
-                        // u.meta can be either a string ID or an object with id/externalId
+                        
+                        // If meta is an object with externalId, use it directly
+                        if (typeof u.meta === 'object' && u.meta.externalId) {
+                            return u.meta.externalId === 'Z_Mileage_MatID' || u.meta.externalId === 'Z_Mileage_Type';
+                        }
+                        
+                        // Otherwise meta is a string ID, lookup via UdfMetaService
                         const metaId = typeof u.meta === 'string' ? u.meta : (u.meta.id || u.meta.externalId);
                         const externalId = UdfMetaService.getExternalIdById(metaId);
                         return externalId === 'Z_Mileage_MatID' || externalId === 'Z_Mileage_Type';
