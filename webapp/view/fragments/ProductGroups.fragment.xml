@@ -201,7 +201,7 @@
                                                                         <!-- Date: editable DatePicker in edit mode -->
                                                                         <DatePicker value="{view>entryDateFormatted}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="8rem" editable="{view>editMode}"/>
                                                                         <Text text="{view>decisionRemarks}" wrapping="true"/>
-                                                                        <Input value="{view>remarksText}" width="10rem" editable="{view>editMode}"/>
+                                                                        <Input value="{view>remarksText}" width="100%" editable="{view>editMode}"/>
                                                                     </cells>
                                                                 </ColumnListItem>
                                                             </items>
@@ -267,7 +267,7 @@
                                                                         <Text text="{i18n>unitEuro}"/>
                                                                         <DatePicker value="{view>entryDateFormatted}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="8rem" editable="{view>editMode}"/>
                                                                         <Text text="{view>decisionRemarks}" wrapping="true"/>
-                                                                        <Input value="{view>remarksText}" width="10rem" editable="{view>editMode}"/>
+                                                                        <Input value="{view>remarksText}" width="100%" editable="{view>editMode}"/>
                                                                     </cells>
                                                                 </ColumnListItem>
                                                             </items>
@@ -319,8 +319,8 @@
                                                                 <Column width="5rem" hAlign="Begin"><Text text="{i18n>tmColDuration}"/></Column>
                                                                 <Column width="3rem" hAlign="Begin"><Text text=""/></Column>
                                                                 <Column width="8rem" hAlign="Begin"><Text text="{i18n>tmColDate}"/></Column>
-                                                                <Column hAlign="Begin"><Text text="{i18n>tmColDecision}"/></Column>
-                                                                <Column hAlign="Begin"><Text text="{i18n>tmColRemarks}"/></Column>
+                                                                <Column width="9rem" hAlign="Begin"><Text text="{i18n>tmColDecision}"/></Column>
+                                                                <Column width="9rem" hAlign="Begin"><Text text="{i18n>tmColRemarks}"/></Column>
                                                             </columns>
                                                             <items>
                                                                 <ColumnListItem type="Inactive" highlight="{= ${view>decisionStatus} === 'APPROVED' ? 'Success' : (${view>decisionStatus} === 'DECLINED' || ${view>decisionStatus} === 'CANCELLED') ? 'Error' : ${view>decisionStatus} === 'DECLINED_CLOSED' ? 'Warning' : ${view>editMode} ? 'Information' : 'None'}">
