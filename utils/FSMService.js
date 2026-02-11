@@ -853,7 +853,7 @@ class FSMService {
                     `${mileage.distance} ${mileage.distanceUnit}` : 'N/A';
 
                 const routeText = mileage.source && mileage.destination ?
-                    `${mileage.source} -> ${mileage.destination}` : 'N/A';
+                    `${mileage.source} ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ ${mileage.destination}` : 'N/A';
 
                 // Calculate travel duration in minutes
                 let travelDurationMinutes = 'N/A';
@@ -1024,14 +1024,17 @@ class FSMService {
      */
     async getApprovalStatus(objectId) {
         try {
-            const query = `SELECT w.decisionStatus FROM Approval w WHERE w.object.objectId = '${objectId}'`;
+            const query = `SELECT w.decisionStatus, w.decisionRemarks FROM Approval w WHERE w.object.objectId = '${objectId}'`;
             const data = await this.makeQueryRequest(query, 'Approval.15');
 
             if (!data.data || data.data.length === 0) {
                 return null;
             }
 
-            return data.data[0]?.w?.decisionStatus || null;
+            return {
+                decisionStatus: data.data[0]?.w?.decisionStatus || null,
+                decisionRemarks: data.data[0]?.w?.decisionRemarks || null
+            };
 
         } catch (error) {
             console.error("FSMService: Error fetching Approval status:", error.message);
@@ -1054,13 +1057,16 @@ class FSMService {
             
             const promises = objectIds.map(async (objectId) => {
                 try {
-                    const query = `SELECT w.decisionStatus FROM Approval w WHERE w.object.objectId = '${objectId}'`;
+                    const query = `SELECT w.decisionStatus, w.decisionRemarks FROM Approval w WHERE w.object.objectId = '${objectId}'`;
                     const data = await this.makeQueryRequest(query, 'Approval.15');
                     
                     if (data.data && data.data.length > 0) {
-                        const decisionStatus = data.data[0]?.w?.decisionStatus;
-                        if (decisionStatus) {
-                            statusMap[objectId] = decisionStatus;
+                        const approval = data.data[0]?.w;
+                        if (approval?.decisionStatus) {
+                            statusMap[objectId] = {
+                                decisionStatus: approval.decisionStatus,
+                                decisionRemarks: approval.decisionRemarks || null
+                            };
                         }
                     }
                 } catch (err) {

@@ -55,6 +55,7 @@ sap.ui.define([
                 const status = ApprovalService.getStatusById(report.id);
                 report.decisionStatus = status || 'PENDING';
                 report.decisionStatusState = ApprovalService.getStatusState(report.decisionStatus);
+                report.decisionRemarks = ApprovalService.getRemarksById(report.id) || '';
                 
                 // Technician
                 if (report.createPerson) {

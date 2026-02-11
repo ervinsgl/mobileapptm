@@ -115,6 +115,7 @@ sap.ui.define([
                 travelDuration: report.type === 'Mileage' ? report.travelDurationText : '',
                 date: report.startDateTime ? report.startDateTime.substring(0, 10) : '',
                 remarks: report.remarksText || '',
+                decision: report.decisionRemarks || '',
                 charge: report.chargeOption || '',
                 status: report.decisionStatus || ''
             }));
@@ -130,9 +131,10 @@ sap.ui.define([
                 { label: "Distance", property: "distance" },
                 { label: "Travel Duration", property: "travelDuration" },
                 { label: "Date", property: "date" },
+                { label: "Status", property: "status" },
+                { label: "Decision", property: "decision" },
                 { label: "Remarks", property: "remarks" },
-                { label: "Charge", property: "charge" },
-                { label: "Status", property: "status" }
+                { label: "Charge", property: "charge" }
             ];
 
             const settings = {

@@ -2,10 +2,10 @@
  * ApprovalService.js
  * 
  * Frontend service for T&M entry approval status management.
- * Handles fetching, caching, and displaying approval decision statuses.
+ * Handles fetching, caching, and displaying approval decision statuses and remarks.
  * 
  * Key Features:
- * - Batch fetch approval statuses for multiple T&M entries
+ * - Batch fetch approval statuses and decision remarks for multiple T&M entries
  * - Cache statuses to avoid redundant API calls
  * - Convert status codes to display text and UI5 ValueStates
  * 
@@ -29,17 +29,17 @@ sap.ui.define([], () => {
 
     return {
         /**
-         * Cache for approval statuses.
-         * @type {Map<string, string|null>}
+         * Cache for approval data (status + decision remarks).
+         * @type {Map<string, {status: string, remarks: string|null}|null>}
          * @private
          */
-        _statusCache: new Map(),
+        _approvalCache: new Map(),
 
         /**
          * Fetch approval statuses for multiple T&M entry IDs.
          * Uses cache to avoid redundant API calls.
          * @param {string[]} objectIds - Array of T&M entry IDs
-         * @returns {Promise<Object>} Map of objectId Ã¢â€ â€™ decisionStatus
+         * @returns {Promise<Object>} Map of objectId to decisionStatus
          */
         async fetchApprovalStatuses(objectIds) {
             if (!objectIds || objectIds.length === 0) {
@@ -47,7 +47,7 @@ sap.ui.define([], () => {
             }
 
             // Filter out IDs we already have cached
-            const uncachedIds = objectIds.filter(id => !this._statusCache.has(id));
+            const uncachedIds = objectIds.filter(id => !this._approvalCache.has(id));
 
             if (uncachedIds.length > 0) {
                 try {
@@ -64,15 +64,27 @@ sap.ui.define([], () => {
                     const data = await response.json();
                     const statuses = data.statuses || {};
 
-                    // Cache the results
+                    // Cache the results (handle both object and string formats)
                     Object.keys(statuses).forEach(id => {
-                        this._statusCache.set(id, statuses[id]);
+                        const entry = statuses[id];
+                        if (typeof entry === 'object' && entry !== null) {
+                            this._approvalCache.set(id, {
+                                status: entry.decisionStatus || null,
+                                remarks: entry.decisionRemarks || null
+                            });
+                        } else {
+                            // Backward compatibility: plain string
+                            this._approvalCache.set(id, {
+                                status: entry,
+                                remarks: null
+                            });
+                        }
                     });
 
                     // Also cache null for IDs that had no approval record
                     uncachedIds.forEach(id => {
-                        if (!this._statusCache.has(id)) {
-                            this._statusCache.set(id, null);
+                        if (!this._approvalCache.has(id)) {
+                            this._approvalCache.set(id, null);
                         }
                     });
 
@@ -80,8 +92,8 @@ sap.ui.define([], () => {
                     console.error("ApprovalService: Error fetching statuses:", error);
                     // Cache null for failed lookups to avoid repeated requests
                     uncachedIds.forEach(id => {
-                        if (!this._statusCache.has(id)) {
-                            this._statusCache.set(id, null);
+                        if (!this._approvalCache.has(id)) {
+                            this._approvalCache.set(id, null);
                         }
                     });
                 }
@@ -90,7 +102,8 @@ sap.ui.define([], () => {
             // Return all requested statuses from cache
             const result = {};
             objectIds.forEach(id => {
-                result[id] = this._statusCache.get(id) || null;
+                const cached = this._approvalCache.get(id);
+                result[id] = cached ? cached.status : null;
             });
             return result;
         },
@@ -101,7 +114,18 @@ sap.ui.define([], () => {
          * @returns {string|null} Decision status or null if not found
          */
         getStatusById(objectId) {
-            return this._statusCache.get(objectId) || null;
+            const cached = this._approvalCache.get(objectId);
+            return cached ? cached.status : null;
+        },
+
+        /**
+         * Get approval decision remarks for a single T&M entry ID from cache.
+         * @param {string} objectId - T&M entry ID
+         * @returns {string|null} Decision remarks or null if not found
+         */
+        getRemarksById(objectId) {
+            const cached = this._approvalCache.get(objectId);
+            return cached ? cached.remarks : null;
         },
 
         /**
@@ -176,7 +200,7 @@ sap.ui.define([], () => {
             }
 
             // Remove from cache to force fresh fetch
-            this._statusCache.delete(objectId);
+            this._approvalCache.delete(objectId);
 
             try {
                 const response = await fetch("/api/get-approval-status", {
@@ -190,12 +214,19 @@ sap.ui.define([], () => {
                 }
 
                 const data = await response.json();
-                const status = data.statuses?.[objectId] || null;
+                const entry = data.statuses?.[objectId] || null;
 
                 // Update cache with fresh value
-                this._statusCache.set(objectId, status);
-
-                return status;
+                if (entry && typeof entry === 'object') {
+                    this._approvalCache.set(objectId, {
+                        status: entry.decisionStatus || null,
+                        remarks: entry.decisionRemarks || null
+                    });
+                    return entry.decisionStatus || null;
+                } else {
+                    this._approvalCache.set(objectId, entry ? { status: entry, remarks: null } : null);
+                    return entry || null;
+                }
 
             } catch (error) {
                 console.error("ApprovalService: Error refreshing status for", objectId, ":", error);
@@ -204,10 +235,10 @@ sap.ui.define([], () => {
         },
 
         /**
-         * Clear the status cache.
+         * Clear the approval cache.
          */
         clearCache() {
-            this._statusCache.clear();
+            this._approvalCache.clear();
         }
     };
 });
