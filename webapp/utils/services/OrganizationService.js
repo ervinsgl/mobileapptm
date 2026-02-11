@@ -243,6 +243,8 @@ sap.ui.define([], () => {
                 if (!matched) {
                     return {
                         found: false,
+                        personIds: userOrgData.personIds,
+                        personExternalIds: userOrgData.personExternalIds,
                         userOrgData: userOrgData,
                         message: 'Organization level not found in hierarchy'
                     };
@@ -257,6 +259,8 @@ sap.ui.define([], () => {
                     matchedBy: matched.matchedBy,
                     originalId: matched.originalId,
                     formattedId: matched.formattedId,
+                    personIds: userOrgData.personIds,
+                    personExternalIds: userOrgData.personExternalIds,
                     userOrgData: userOrgData
                 };
 

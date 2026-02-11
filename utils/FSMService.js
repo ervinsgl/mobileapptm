@@ -853,7 +853,7 @@ class FSMService {
                     `${mileage.distance} ${mileage.distanceUnit}` : 'N/A';
 
                 const routeText = mileage.source && mileage.destination ?
-                    `${mileage.source} Ã¢â€ â€™ ${mileage.destination}` : 'N/A';
+                    `${mileage.source} -> ${mileage.destination}` : 'N/A';
 
                 // Calculate travel duration in minutes
                 let travelDurationMinutes = 'N/A';
@@ -1290,17 +1290,35 @@ class FSMService {
         try {
             if (!userId) return null;
 
-            const query = `SELECT w.orgLevel, w.orgLevelIds FROM Person w WHERE w.userName = '${userId}'`;
+            const query = `SELECT w.orgLevel, w.orgLevelIds, w.id, w.externalId FROM Person w WHERE w.userName = '${userId}'`;
             const data = await this.makeQueryRequest(query, 'Person.25');
 
             if (!data.data || data.data.length === 0) {
                 return null;
             }
 
-            const personData = data.data[0].w;
+            const personData = data.data;
+            
+            // Collect all person IDs and externalIds (multiple Person records possible per user)
+            const personIds = [];
+            const personExternalIds = [];
+            let orgLevel = null;
+            let orgLevelIds = null;
+
+            personData.forEach(item => {
+                const w = item.w;
+                if (w.id) personIds.push(w.id);
+                if (w.externalId) personExternalIds.push(w.externalId);
+                // Use first non-null orgLevel found
+                if (!orgLevel && w.orgLevel) orgLevel = w.orgLevel;
+                if (!orgLevelIds && w.orgLevelIds) orgLevelIds = w.orgLevelIds;
+            });
+
             return {
-                orgLevel: personData.orgLevel || null,
-                orgLevelIds: personData.orgLevelIds || null
+                orgLevel: orgLevel,
+                orgLevelIds: orgLevelIds,
+                personIds: personIds,
+                personExternalIds: personExternalIds
             };
 
         } catch (error) {
@@ -1334,7 +1352,9 @@ class FSMService {
                 userFirstName: user.firstName,
                 userLastName: user.lastName,
                 orgLevel: orgLevelData.orgLevel,
-                orgLevelIds: orgLevelData.orgLevelIds
+                orgLevelIds: orgLevelData.orgLevelIds,
+                personIds: orgLevelData.personIds,
+                personExternalIds: orgLevelData.personExternalIds
             };
 
         } catch (error) {

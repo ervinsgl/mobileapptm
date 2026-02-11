@@ -136,6 +136,8 @@ sap.ui.define([
                     cloudId: null,
                     orgLevelId: null,
                     orgLevelName: "Loading...",
+                    personIds: [],
+                    personExternalIds: [],
                     source: null,
                     cloudHost: null
                 },
@@ -262,6 +264,7 @@ sap.ui.define([
                 responsibleDisplayText: fullActivity.responsibles?.[0]?.externalId 
                     ? PersonService.getPersonDisplayTextByExternalId(fullActivity.responsibles[0].externalId)
                     : 'N/A',
+                techniciansDisplayText: '...',
                 serviceProductId: serviceProductId,
                 serviceProductDisplayText: serviceProductId !== 'N/A'
                     ? ItemService.getItemDisplayTextByExternalId(serviceProductId)

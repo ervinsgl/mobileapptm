@@ -67,6 +67,10 @@
                                                     <Label text="{i18n>activityResponsible}" design="Bold" class="activityFieldLabel"/>
                                                     <Text text="{view>responsibleDisplayText}" class="activityFieldValue"/>
                                                 </HBox>
+                                                <HBox class="activityFieldRow">
+                                                    <Label text="{i18n>activityTechnicians}" design="Bold" class="activityFieldLabel"/>
+                                                    <Text text="{view>techniciansDisplayText}" class="activityFieldValue" wrapping="true"/>
+                                                </HBox>
                                             </VBox>
                                             <VBox class="activityColumn">
                                                 <HBox class="activityFieldRow">

@@ -65,6 +65,8 @@ sap.ui.define([
                     if (resolvedOrgLevel && resolvedOrgLevel.found) {
                         viewModel.setProperty("/webContainerContext/orgLevelId", resolvedOrgLevel.id);
                         viewModel.setProperty("/webContainerContext/orgLevelName", resolvedOrgLevel.name);
+                        viewModel.setProperty("/webContainerContext/personIds", resolvedOrgLevel.personIds || []);
+                        viewModel.setProperty("/webContainerContext/personExternalIds", resolvedOrgLevel.personExternalIds || []);
                         viewModel.setProperty("/selectedOrganizationLevel", {
                             key: resolvedOrgLevel.id,
                             text: resolvedOrgLevel.name
@@ -76,6 +78,11 @@ sap.ui.define([
                         return;
                     } else {
                         viewModel.setProperty("/webContainerContext/orgLevelName", "Not Assigned");
+                        // Still store person IDs if available (for logging/debugging)
+                        if (resolvedOrgLevel) {
+                            viewModel.setProperty("/webContainerContext/personIds", resolvedOrgLevel.personIds || []);
+                            viewModel.setProperty("/webContainerContext/personExternalIds", resolvedOrgLevel.personExternalIds || []);
+                        }
                     }
                 } else {
                     viewModel.setProperty("/webContainerContext/orgLevelName", "N/A");
@@ -339,6 +346,8 @@ sap.ui.define([
 
                 const userOrgLevelId = viewModel.getProperty("/webContainerContext/orgLevelId");
                 const userOrgLevelName = viewModel.getProperty("/webContainerContext/orgLevelName");
+                const userPersonIds = viewModel.getProperty("/webContainerContext/personIds") || [];
+                const userPersonExternalIds = viewModel.getProperty("/webContainerContext/personExternalIds") || [];
 
                 // Filter activities by execution stage:
                 // - EXECUTION: Active, can add entries
@@ -352,8 +361,18 @@ sap.ui.define([
                 
                 const totalVisibleCount = filteredActivities.length;
 
-                // Filter by user's org level if available
-                if (userOrgLevelId) {
+                // FILTER 1: Organization level (mandatory)
+                // If user has no org level resolved → show NO activities
+                if (!userOrgLevelId) {
+                    filteredActivities = [];
+                    viewModel.setProperty("/noActivitiesMessage", {
+                        show: true,
+                        title: this._getText("msgNoActivitiesNoOrgTitle"),
+                        description: this._getText("msgNoActivitiesNoOrgDesc"),
+                        type: "warning"
+                    });
+                } else {
+                    // Filter by matching org level
                     filteredActivities = filteredActivities.filter(activity => {
                         const activityOrgLevelIds = activity.orgLevelIds || [];
                         return activityOrgLevelIds.some(activityOrgLevelId => {
@@ -361,27 +380,68 @@ sap.ui.define([
                             return formattedActivityOrgLevelId === userOrgLevelId;
                         });
                     });
+
+                    // FILTER 2: User assignment (responsible or supporting technician)
+                    if (filteredActivities.length > 0 && (userPersonIds.length > 0 || userPersonExternalIds.length > 0)) {
+                        // Phase 1: Check responsible match from composite-tree (no API call)
+                        const responsibleActivities = [];
+                        const needsSupportCheck = [];
+
+                        filteredActivities.forEach(activity => {
+                            const responsibleExternalId = activity.responsibles?.[0]?.externalId;
+                            if (responsibleExternalId && userPersonExternalIds.includes(responsibleExternalId)) {
+                                responsibleActivities.push(activity);
+                            } else {
+                                needsSupportCheck.push(activity);
+                            }
+                        });
+
+                        // Phase 2: For non-responsible activities, check supporting technicians via Data API
+                        const supportingActivities = [];
+                        if (needsSupportCheck.length > 0 && userPersonIds.length > 0) {
+                            const chunkSize = 5;
+                            for (let i = 0; i < needsSupportCheck.length; i += chunkSize) {
+                                const chunk = needsSupportCheck.slice(i, i + chunkSize);
+                                const promises = chunk.map(async (activity) => {
+                                    try {
+                                        const techData = await ActivityService.fetchActivityTechnicians(activity.id);
+                                        const supportingIds = techData.supportingPersonIds || [];
+                                        const responsibleIds = techData.responsibleIds || [];
+                                        // Check if any of user's person IDs match supporting or responsible
+                                        const allActivityPersonIds = [...supportingIds, ...responsibleIds];
+                                        const isAssigned = userPersonIds.some(uid => allActivityPersonIds.includes(uid));
+                                        if (isAssigned) {
+                                            supportingActivities.push(activity);
+                                        }
+                                    } catch (e) {
+                                        console.error('Error checking assignment for activity', activity.id, ':', e);
+                                    }
+                                });
+                                await Promise.allSettled(promises);
+                                if (i + chunkSize < needsSupportCheck.length) {
+                                    await new Promise(resolve => setTimeout(resolve, 100));
+                                }
+                            }
+                        }
+
+                        filteredActivities = [...responsibleActivities, ...supportingActivities];
+                    }
                     
-                    // Show info message if activities were filtered out
+                    // Show info messages about filtering
                     const filteredOutCount = totalVisibleCount - filteredActivities.length;
                     if (filteredOutCount > 0 && filteredActivities.length === 0) {
-                        // All activities filtered - show prominent message
                         viewModel.setProperty("/noActivitiesMessage", {
                             show: true,
-                            title: this._getText("msgNoActivitiesOrgTitle"),
-                            description: this._getText("msgNoActivitiesOrgDesc", [totalVisibleCount, userOrgLevelName || userOrgLevelId]),
+                            title: this._getText("msgNoActivitiesAssignmentTitle"),
+                            description: this._getText("msgNoActivitiesAssignmentDesc", [totalVisibleCount, userOrgLevelName || userOrgLevelId]),
                             type: "information"
                         });
                     } else if (filteredOutCount > 0) {
-                        // Some activities filtered - show info toast
                         MessageToast.show(this._getText("msgActivitiesHidden", [filteredOutCount]));
                         viewModel.setProperty("/noActivitiesMessage", { show: false });
                     } else {
                         viewModel.setProperty("/noActivitiesMessage", { show: false });
                     }
-                } else {
-                    // No org level filter - clear any message
-                    viewModel.setProperty("/noActivitiesMessage", { show: false });
                 }
 
                 // Preload activity responsible persons for display
@@ -446,8 +506,9 @@ sap.ui.define([
 
                 viewModel.setProperty("/productGroups", optimizedGroups);
 
-                // Batch load T&M reports in background
+                // Batch load T&M reports and supporting technicians in background
                 this._batchLoadTMReports(optimizedGroups);
+                this._batchLoadSupportingTechnicians(optimizedGroups);
 
             } catch (error) {
                 console.error("Load activities error:", error);
@@ -551,6 +612,87 @@ sap.ui.define([
             } catch (error) {
                 console.error(`Error loading T&M for activity ${activityId}:`, error);
                 TMDataService.setErrorState(model, activityPath);
+            }
+        },
+
+        /* =========================================================================
+         * SUPPORTING TECHNICIANS BATCH LOADING
+         * ========================================================================= */
+
+        /**
+         * Batch load supporting technicians for all activities.
+         * Fetches each activity individually via Data API (composite-tree doesn't include supportingPersons).
+         * @param {Array} productGroups - Product groups with activities
+         * @private
+         */
+        async _batchLoadSupportingTechnicians(productGroups) {
+            const model = this.getView().getModel("view");
+            const allActivities = [];
+
+            productGroups.forEach((group, groupIndex) => {
+                group.activities.forEach((activity, activityIndex) => {
+                    allActivities.push({
+                        id: activity.id,
+                        path: `/productGroups/${groupIndex}/activities/${activityIndex}`
+                    });
+                });
+            });
+
+            // Process in chunks to avoid API overload
+            const chunkSize = 5;
+            for (let i = 0; i < allActivities.length; i += chunkSize) {
+                const chunk = allActivities.slice(i, i + chunkSize);
+
+                const promises = chunk.map(activity =>
+                    this._loadSupportingTechniciansForActivity(activity.id, activity.path, model)
+                );
+
+                try {
+                    await Promise.allSettled(promises);
+                } catch (error) {
+                    console.error('Error in batch loading supporting technicians:', error);
+                }
+
+                if (i + chunkSize < allActivities.length) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+            }
+
+            model.refresh(true);
+        },
+
+        /**
+         * Load supporting technicians for a single activity.
+         * @param {string} activityId - Activity ID
+         * @param {string} activityPath - Model path to the activity
+         * @param {Object} model - View model
+         * @private
+         */
+        async _loadSupportingTechniciansForActivity(activityId, activityPath, model) {
+            try {
+                const technicianData = await ActivityService.fetchActivityTechnicians(activityId);
+                const supportingIds = technicianData.supportingPersonIds || [];
+
+                if (supportingIds.length === 0) {
+                    model.setProperty(activityPath + "/techniciansDisplayText", "N/A");
+                    return;
+                }
+
+                // Preload persons if not cached
+                await PersonService.preloadPersonsById(supportingIds);
+
+                // Resolve IDs to display names
+                const names = supportingIds
+                    .map(id => PersonService.getPersonDisplayTextById(id))
+                    .filter(name => name && name !== 'N/A');
+
+                model.setProperty(
+                    activityPath + "/techniciansDisplayText",
+                    names.length > 0 ? names.join(', ') : 'N/A'
+                );
+            } catch (error) {
+                console.error(`Error loading technicians for activity ${activityId}:`, error);
+                model.setProperty(activityPath + "/techniciansDisplayText", "N/A");
             }
         }
     };
