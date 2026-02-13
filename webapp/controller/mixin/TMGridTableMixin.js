@@ -95,12 +95,15 @@ sap.ui.define([
             const path = oContext.getPath();
             const data = model.getProperty(path + "/tmReports") || [];
             
-            if (data.length === 0) {
+            // Exclude REVIEW entries (hidden from tables)
+            const visibleData = data.filter(r => r.decisionStatus !== 'REVIEW');
+            
+            if (visibleData.length === 0) {
                 MessageToast.show(this._getText("msgNoDataToExport"));
                 return;
             }
 
-            const exportData = data.map(report => ({
+            const exportData = visibleData.map(report => ({
                 type: report.type,
                 description: report.type === 'Time Effort' ? report.taskDisplayText :
                              report.type === 'Material' ? report.itemDisplayText :

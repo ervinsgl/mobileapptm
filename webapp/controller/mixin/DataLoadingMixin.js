@@ -607,6 +607,15 @@ sap.ui.define([
             try {
                 const tmData = await TMDataService.loadTMReports(activityId);
                 await this._enrichTMReports(tmData.reports);
+
+                // Recalculate counts excluding REVIEW entries (hidden from tables)
+                const visibleReports = tmData.reports.filter(r => r.decisionStatus !== 'REVIEW');
+                tmData.counts.timeEffort = visibleReports.filter(r => r.type === 'Time Effort').length;
+                tmData.counts.material = visibleReports.filter(r => r.type === 'Material').length;
+                tmData.counts.expense = visibleReports.filter(r => r.type === 'Expense').length;
+                tmData.counts.mileage = visibleReports.filter(r => r.type === 'Mileage').length;
+                tmData.totalCount = visibleReports.length;
+
                 TMDataService.updateActivityWithTMData(model, activityPath, tmData);
 
             } catch (error) {

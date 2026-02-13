@@ -166,7 +166,7 @@
                                                 <content>
                                                     <ScrollContainer horizontal="true" vertical="false" width="100%">
                                                         <Table
-                                                            items="{path: 'view>tmReports', templateShareable: false, filters: [{ path: 'type', operator: 'NE', value1: 'Expense' }, { path: 'type', operator: 'NE', value1: 'Mileage' }], sorter: { path: 'sortDate', descending: true }}"
+                                                            items="{path: 'view>tmReports', templateShareable: false, filters: [{ path: 'type', operator: 'NE', value1: 'Expense' }, { path: 'type', operator: 'NE', value1: 'Mileage' }, { path: 'decisionStatus', operator: 'NE', value1: 'REVIEW' }], sorter: { path: 'sortDate', descending: true }}"
                                                             class="tmMTable"
                                                             width="auto"
                                                         >
@@ -239,7 +239,7 @@
                                                 <content>
                                                     <ScrollContainer horizontal="true" vertical="false" width="100%">
                                                         <Table
-                                                            items="{path: 'view>tmReports', templateShareable: false, filters: [{ path: 'type', operator: 'EQ', value1: 'Expense' }], sorter: { path: 'sortDate', descending: true }}"
+                                                            items="{path: 'view>tmReports', templateShareable: false, filters: [{ path: 'type', operator: 'EQ', value1: 'Expense' }, { path: 'decisionStatus', operator: 'NE', value1: 'REVIEW' }], sorter: { path: 'sortDate', descending: true }}"
                                                             class="tmMTable"
                                                             width="auto"
                                                         >
@@ -305,7 +305,7 @@
                                                 <content>
                                                     <ScrollContainer horizontal="true" vertical="false" width="100%">
                                                         <Table
-                                                            items="{path: 'view>tmReports', templateShareable: false, filters: [{ path: 'type', operator: 'EQ', value1: 'Mileage' }], sorter: { path: 'sortDate', descending: true }}"
+                                                            items="{path: 'view>tmReports', templateShareable: false, filters: [{ path: 'type', operator: 'EQ', value1: 'Mileage' }, { path: 'decisionStatus', operator: 'NE', value1: 'REVIEW' }], sorter: { path: 'sortDate', descending: true }}"
                                                             class="tmMTable"
                                                             width="auto"
                                                         >
