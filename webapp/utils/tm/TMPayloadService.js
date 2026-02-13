@@ -146,7 +146,7 @@ sap.ui.define([
 
         /**
          * Build Material API payload.
-         * Date is derived from Activity Planned Start.
+         * Date uses user-selected entryDate, falls back to Activity Planned Start.
          * chargeOption is always "CHARGEABLE".
          * @param {Object} oEntry - Material entry data
          * @param {string} activityId - Activity ID
@@ -157,11 +157,11 @@ sap.ui.define([
             // Use itemExternalId directly from entry
             const itemExternalId = oEntry.itemExternalId || "";
 
-            // Get activity planned start date and extract date portion
+            // Use user-selected date, fallback to activity planned start, then today
             const activityPlannedStart = TMCreationService.getActivityPlannedStartDate();
-            const materialDate = activityPlannedStart 
-                ? activityPlannedStart.split('T')[0] 
-                : new Date().toISOString().split('T')[0];
+            const materialDate = oEntry.entryDate 
+                || (activityPlannedStart ? activityPlannedStart.split('T')[0] : null)
+                || new Date().toISOString().split('T')[0];
 
             return {
                 chargeOption: "CHARGEABLE",
@@ -182,7 +182,7 @@ sap.ui.define([
 
         /**
          * Build Expense API payload.
-         * Date is derived from Activity Planned Start.
+         * Date uses user-selected entryDate, falls back to Activity Planned Start.
          * chargeOption is always "CHARGEABLE".
          * @param {Object} oEntry - Expense entry data
          * @param {string} activityId - Activity ID
@@ -193,11 +193,11 @@ sap.ui.define([
             // Get expense type ID (UUID)
             const expenseTypeId = oEntry.expenseTypeId || "";
 
-            // Get activity planned start date and extract date portion
+            // Use user-selected date, fallback to activity planned start, then today
             const activityPlannedStart = TMCreationService.getActivityPlannedStartDate();
-            const expenseDate = activityPlannedStart 
-                ? activityPlannedStart.split('T')[0] 
-                : new Date().toISOString().split('T')[0];
+            const expenseDate = oEntry.entryDate 
+                || (activityPlannedStart ? activityPlannedStart.split('T')[0] : null)
+                || new Date().toISOString().split('T')[0];
 
             return {
                 chargeOption: "CHARGEABLE",
@@ -239,7 +239,17 @@ sap.ui.define([
         buildMileagePayload(oEntry, activityId, orgLevelId) {
             // Get activity planned start date for travel times
             const activityPlannedStart = TMCreationService.getActivityPlannedStartDate();
-            const baseStartDateTime = activityPlannedStart || new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
+            
+            // Use user-selected date, fallback to activity planned start, then today
+            const userDate = oEntry.entryDate 
+                || (activityPlannedStart ? activityPlannedStart.split('T')[0] : null)
+                || new Date().toISOString().split('T')[0];
+            
+            // Build travel start from user date + time portion from planned start
+            const timePortion = activityPlannedStart 
+                ? activityPlannedStart.split('T')[1] || '12:00:00Z'
+                : '12:00:00Z';
+            const baseStartDateTime = `${userDate}T${timePortion}`;
             
             // Calculate travel end time: start + duration
             const startDate = new Date(baseStartDateTime);
@@ -247,14 +257,11 @@ sap.ui.define([
             
             const formatDateTime = (date) => date.toISOString().replace(/\.\d{3}Z$/, 'Z');
             
-            // Extract date portion for date field
-            const dateValue = baseStartDateTime.split('T')[0];
-            
             // Use itemExternalId directly from entry
             const itemExternalId = oEntry.itemExternalId || "";
 
             return {
-                date: dateValue,
+                date: userDate,
                 orgLevel: orgLevelId || "",
                 distanceUnit: "KM",
                 distance: oEntry.distance || 0,

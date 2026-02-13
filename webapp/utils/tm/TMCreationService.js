@@ -296,6 +296,7 @@ sap.ui.define([
                 externalAmountValue: 0,
                 internalAmountValue: 0,
                 chargeOption: "CHARGEABLE",
+                entryDate: this._activityPlannedStartDate ? this._activityPlannedStartDate.split('T')[0] : "",
                 remarks: ""
             };
         },
@@ -332,6 +333,7 @@ sap.ui.define([
                 distance: defaultQuantity || 0,
                 travelDuration: 30,
                 chargeOption: "CHARGEABLE",
+                entryDate: this._activityPlannedStartDate ? this._activityPlannedStartDate.split('T')[0] : "",
                 remarks: ""
             };
         },

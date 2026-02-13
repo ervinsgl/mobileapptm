@@ -128,7 +128,7 @@ sap.ui.define([
 
         /**
          * Get the Table from a toolbar control (handles ScrollContainer wrapper)
-         * Navigation: Control Ã¢â€ â€™ Toolbar Ã¢â€ â€™ Panel Ã¢â€ â€™ Content Ã¢â€ â€™ [ScrollContainer Ã¢â€ â€™] Table
+         * Navigation: Control → Toolbar → Panel → Content → [ScrollContainer →] Table
          * @private
          */
         _getTableFromToolbarControl(oControl) {

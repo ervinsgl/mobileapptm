@@ -278,6 +278,7 @@ sap.ui.define([
                         expenseTypeId: entry.expenseTypeId,
                         externalAmountValue: entry.externalAmountValue,
                         internalAmountValue: entry.internalAmountValue,
+                        entryDate: entry.entryDate,
                         remarks: entry.remarks
                     }, activityId, orgLevelId)
                 }));
@@ -469,6 +470,7 @@ sap.ui.define([
                         itemDisplay: entry.itemDisplay,
                         distance: entry.distance,
                         travelDuration: entry.travelDuration,
+                        entryDate: entry.entryDate,
                         remarks: entry.remarks
                     }, activityId, orgLevelId)
                 }));

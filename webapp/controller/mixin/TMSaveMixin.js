@@ -244,6 +244,7 @@ sap.ui.define([
                             itemExternalId: entry.itemExternalId,
                             itemDisplay: entry.itemDisplay,
                             quantity: entry.quantity,
+                            entryDate: entry.entryDate,
                             remarks: entry.remarks
                         }, activityId, orgLevelId)
                     });
