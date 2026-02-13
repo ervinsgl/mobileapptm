@@ -2,7 +2,21 @@
  * TMTimeEntryMixin.js
  * 
  * Mixin for Time Entry (AZ/FZ/WZ) table-based creation handlers.
- * Includes repeat date range functionality.
+ * Handles row operations, technician selection, and repeat date expansion.
+ * 
+ * Row Operations:
+ * - onAddCreateTimeEntry(AZ|FZ|WZ) / onRemoveCreateTimeEntry(AZ|FZ|WZ) / onCopyCreateTimeEntry(AZ|FZ|WZ)
+ * 
+ * Technician Selection:
+ * - onCreateTimeEntryTechnicianLiveChange: Filter suggestions as user types
+ * - onCreateTimeEntrySuggestionSelect: Select single technician
+ * - onCreateTimeEntryMultiTechnicianSelect: Select from multi-technician dropdown
+ * - onTimeEntryTechnicianTokenUpdate: Handle token add/remove in MultiInput
+ * 
+ * Date & Repeat:
+ * - onTimeEntryDateChange: Update date across related entries
+ * - onRepeatCheckboxChange: Toggle repeat date range UI
+ * - _generateDateRange: Expand start/end dates into daily array
  * 
  * @file TMTimeEntryMixin.js
  * @module mobileappsc/controller/mixin/TMTimeEntryMixin

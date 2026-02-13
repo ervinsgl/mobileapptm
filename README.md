@@ -749,7 +749,12 @@ POST /web-container-access-point
 mobileappsc/
 │
 ├── # ─────────── ROOT LEVEL ───────────
-├── index.js                             # Express server (~960 lines)
+├── index.js                             # Express server, middleware, web container (~100 lines)
+├── routes/
+│   ├── activityRoutes.js                # Activity CRUD & reported items (~155 lines)
+│   ├── configRoutes.js                  # Type configuration endpoints (~240 lines)
+│   ├── entryRoutes.js                   # T&M entry batch & individual CRUD (~430 lines)
+│   └── lookupRoutes.js                  # Person, org, lookup, approval, user (~275 lines)
 ├── package.json                         # Node.js dependencies
 ├── package-lock.json                    # Dependency lock file
 ├── manifest.yaml                        # Cloud Foundry deployment
@@ -759,16 +764,23 @@ mobileappsc/
 ├── ui5.yaml                             # UI5 tooling configuration
 ├── ui5-local.yaml                       # UI5 local development config
 ├── ui5-deploy.yaml                      # UI5 deployment config
-├── typeconfig.json                      # Expense/Mileage type configuration
-├── TypeConfigStore.js                   # Backend type config storage (~250 lines)
+├── config/
+│   ├── TypeConfigStore.js                   # Backend type config storage (~280 lines)
+│   └── typeconfig.json                      # Expense/Mileage type configuration
 ├── .gitignore                           # Git ignore rules
 ├── README.md                            # This file
 │
+├── # ─────────── DOCUMENTATION ───────────
+├── docs/
+│   └── screenshots/                     # App screenshots for documentation
+│
 ├── # ─────────── BACKEND SERVICES ───────────
 ├── utils/
-│   ├── DestinationService.js            # BTP Destination handling
-│   ├── FSMService.js                    # FSM API integration (~1045 lines)
-│   └── TokenCache.js                    # OAuth token caching
+│   ├── DestinationService.js            # BTP Destination handling (~90 lines)
+│   ├── FSMService.js                    # FSM API core: HTTP methods, CRUD, batch (~680 lines)
+│   ├── FSMLookupService.js              # FSM lookup, approval, person, org, user (~475 lines)
+│   ├── FSMQueryService.js               # FSM T&M entry retrieval queries (~255 lines)
+│   └── TokenCache.js                    # OAuth token caching (~110 lines)
 │
 └── # ─────────── FRONTEND (SAP UI5) ───────────
 webapp/
@@ -777,7 +789,7 @@ webapp/
 ├── index.html                       # App entry point
 ├── simple.html                      # Simple test page
 ├── manifest.json                    # UI5 app descriptor
-├── Component.js                     # UI5 Component
+├── Component.js                     # UI5 Component (~65 lines)
 ├── appconfig.json                   # App configuration
 ├── _appGenInfo.json                 # Generator info
 │
@@ -786,77 +798,82 @@ webapp/
 │   ├── App.view.xml                 # Root view
 │   ├── View1.view.xml               # Main view (T&M Journal page)
 │   └── fragments/
-│       ├── WebContainerContext.fragment.xml  # Session Context panel
-│       ├── ServiceCall.fragment.xml          # Service Order header panel
-│       ├── ProductGroups.fragment.xml        # Activity panels with T&M tables (~360 lines)
-│       ├── TMCreateDialog.fragment.xml       # T&M Creation dialog (~700 lines)
-│       └── TypeConfigDialog.fragment.xml     # Type Configuration dialog (~120 lines)
+│       ├── ProductGroups.fragment.xml        # Activity panels with T&M tables (~370 lines)
+│       ├── ServiceCall.fragment.xml          # Service Order header panel (~70 lines)
+│       ├── TMCreateDialog.fragment.xml       # T&M Creation dialog (~680 lines)
+│       ├── TMSortDialog.fragment.xml         # T&M Sort options dialog (~20 lines)
+│       ├── TypeConfigDialog.fragment.xml     # Type Configuration dialog (~120 lines)
+│       └── WebContainerContext.fragment.xml  # FSM Mobile session context (~70 lines)
 │
 ├── # ─────────── CONTROLLERS & MIXINS ───────────
 ├── controller/
 │   ├── App.controller.js            # Root controller
-│   ├── View1.controller.js          # Main controller (~600 lines)
+│   ├── View1.controller.js          # Main controller (~680 lines)
 │   └── mixin/
-│       ├── DataLoadingMixin.js      # Data loading, batch T&M loading (~525 lines)
-│       ├── TechnicianMixin.js       # Technician/task selection (~160 lines)
-│       ├── TMDialogMixin.js         # T&M dialog open/enrichment (~490 lines)
-│       ├── TMEditMixin.js           # Individual entry edit handlers (~730 lines)
-│       ├── TMExpenseMileageMixin.js # Expense & Mileage creation (~520 lines)
-│       ├── TMGridTableMixin.js      # Grid table utilities (~170 lines)
-│       ├── TMMaterialMixin.js       # Material entry creation (~200 lines)
-│       ├── TMSaveMixin.js           # Batch save operations (~470 lines)
-│       ├── TMTableMixin.js          # Table filter/sort/selection (~590 lines)
-│       └── TMTimeEntryMixin.js      # Time entry creation with repeat (~390 lines)
+│       ├── DataLoadingMixin.js      # Data loading, batch T&M loading (~640 lines)
+│       ├── TechnicianMixin.js       # Technician/task selection (~150 lines)
+│       ├── TMDialogMixin.js         # T&M dialog open/enrichment (~405 lines)
+│       ├── TMEditMixin.js           # Individual entry edit handlers (~740 lines)
+│       ├── TMExpenseMileageMixin.js # Expense & Mileage creation (~525 lines)
+│       ├── TMMaterialMixin.js       # Material entry creation (~195 lines)
+│       ├── TMSaveMixin.js           # Batch save operations (~400 lines)
+│       ├── TMTableMixin.js          # Table filter/sort/edit selected (~530 lines)
+│       ├── TMSaveAllMixin.js        # Batch save edited entries from table (~220 lines)
+│       ├── TMDeleteMixin.js         # Delete selected entries + count update (~225 lines)
+│       └── TMTimeEntryMixin.js      # Time entry creation with repeat (~365 lines)
 │
 ├── # ─────────── FRONTEND SERVICES ───────────
 ├── utils/
 │   ├── helpers/
-│   │   ├── DateTimeService.js       # Date/time utilities
-│   │   ├── ProductGroupService.js   # Activity grouping by product
-│   │   ├── ReportedItemsData.js     # T&M data fetching
-│   │   └── URLHelper.js             # Web container context handling
+│   │   ├── DateTimeService.js       # Date/time utilities (~115 lines)
+│   │   ├── ProductGroupService.js   # Activity grouping by product (~130 lines)
+│   │   ├── ReportedItemsData.js     # T&M data fetching (~55 lines)
+│   │   └── URLHelper.js             # Web container context handling (~230 lines)
 │   │
 │   ├── services/
-│   │   ├── ActivityService.js       # Activity data management
-│   │   ├── ApprovalService.js       # Approval status lookup
-│   │   ├── BusinessPartnerService.js# Business partner lookup
-│   │   ├── ContextService.js        # Web container & shell context handling
-│   │   ├── ExpenseTypeService.js    # Expense type ID lookup
-│   │   ├── ItemService.js           # Item ID/ExternalId lookup
-│   │   ├── OrganizationService.js   # Organization level + user resolution
-│   │   ├── PersonService.js         # Person ID/name lookup
-│   │   ├── ServiceOrderService.js   # Service order/composite tree
-│   │   ├── TechnicianService.js     # Technician suggestions
-│   │   ├── TimeTaskService.js       # Time task ID lookup
+│   │   ├── ActivityService.js       # Activity data management (~125 lines)
+│   │   ├── ApprovalService.js       # Approval status & remarks lookup (~210 lines)
+│   │   ├── BusinessPartnerService.js# Business partner lookup (~130 lines)
+│   │   ├── CacheService.js          # Startup cache warming (~225 lines)
+│   │   ├── ContextService.js        # Web container & shell context (~535 lines)
+│   │   ├── ExpenseTypeService.js    # Expense type ID lookup (~170 lines)
+│   │   ├── ItemService.js           # Item ID/ExternalId lookup (~260 lines)
+│   │   ├── OrganizationService.js   # Organization level + user resolution (~270 lines)
+│   │   ├── PersonService.js         # Person ID/name lookup (~280 lines)
+│   │   ├── ServiceOrderService.js   # Service order/composite tree (~95 lines)
+│   │   ├── TechnicianService.js     # Technician suggestions (~240 lines)
+│   │   ├── TimeTaskService.js       # Time task ID lookup (~195 lines)
 │   │   ├── TypeConfigService.js     # Expense/Mileage type config (~320 lines)
-│   │   └── UdfMetaService.js        # UDF Meta ID lookup
+│   │   └── UdfMetaService.js        # UDF Meta ID lookup (~180 lines)
 │   │
 │   └── tm/
-│       ├── TMCreationService.js     # T&M entry creation (~19KB)
-│       ├── TMDataService.js         # T&M data management
-│       ├── TMDialogService.js       # T&M dialog management (~23KB)
-│       ├── TMEditService.js         # T&M entry editing
-│       └── TMPayloadService.js      # T&M API payload building (~21KB)
+│       ├── TMCreationService.js     # T&M entry creation (~490 lines)
+│       ├── TMDataService.js         # T&M data loading & model update (~155 lines)
+│       ├── TMDialogService.js       # T&M dialog management (~485 lines)
+│       ├── TMEditService.js         # T&M entry editing (~180 lines)
+│       └── TMPayloadService.js      # T&M API payload building (~490 lines)
 │
 ├── # ─────────── MODEL ───────────
 ├── model/
-│   ├── formatter.js                 # Date/number/type formatting (~170 lines)
+│   ├── formatter.js                 # Date/number/type formatting (~245 lines)
 │   └── models.js                    # Device model
 │
 ├── # ─────────── STYLES ───────────
 ├── css/
-│   └── style.css                    # Custom styles (~1000 lines)
+│   └── style.css                    # Custom styles (~815 lines)
 │
 ├── # ─────────── IMAGES ───────────
 ├── images/
-│   └── TUEV-NORD_Logo.png           # Customer logo
+│   ├── favicon.png                      # Browser tab favicon (32x32, from logo)
+│   └── TUEVNORD_Logo.png               # Customer logo
 │
 ├── # ─────────── TEST ───────────
 ├── test/                            # Test files
 │
 └── # ─────────── I18N ───────────
-i18n/
-└── i18n.properties              # Internationalization
+└── i18n/
+    ├── i18n.properties              # English translations (~900 lines)
+    └── i18n_de.properties           # German translations (~900 lines)
 ```
 
 ---

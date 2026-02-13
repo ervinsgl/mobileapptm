@@ -1,8 +1,16 @@
 /**
  * TMDialogMixin.js
  * 
- * Core mixin for T&M (Time & Materials) dialog operations.
- * Handles dialog lifecycle, activity details, and enrichment.
+ * Mixin for T&M dialog utility handlers.
+ * Contains edit-mode duration change handlers, dialog cancel,
+ * activity path resolution, and debug helpers.
+ * 
+ * Handlers:
+ * - onEditDurationChange: Recalculate endDateTime when duration changes in edit mode
+ * - onEditMileageDurationChange: Recalculate travelEndDateTime for mileage edits
+ * - onCancelCreateTM: Close the T&M creation dialog
+ * - _getActivityIdFromPath: Extract activity ID from model path
+ * - _showEntryJSON: Debug helper to display entry data as formatted JSON
  * 
  * @file TMDialogMixin.js
  * @module mobileappsc/controller/mixin/TMDialogMixin

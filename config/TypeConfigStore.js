@@ -9,8 +9,8 @@
  * - Mileage types  
  * - Time & Material types (everything else)
  * 
- * @file TypeConfigStore.js
- * @module utils/TypeConfigStore
+ * @file config/TypeConfigStore.js
+ * @module config/TypeConfigStore
  */
 const fs = require('fs');
 const path = require('path');

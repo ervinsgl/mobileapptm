@@ -1,8 +1,20 @@
 /**
  * TMEditMixin.js
  * 
- * Mixin for editing and saving individual T&M entries.
- * Handles close, save, update confirmations and submissions.
+ * Mixin for creating and updating individual T&M entries.
+ * Handles confirmation dialogs, preview formatting, and API submissions
+ * for all four entry types (Expense, Mileage, Material, TimeEffort).
+ * 
+ * Entry Point:
+ * - onSaveEntry: Routes to create or update based on entry ID presence
+ * - onCloseEntry: Close entry detail view
+ * 
+ * Per entry type (create + update):
+ * - _showExpenseConfirmation / _showExpenseUpdateConfirmation → _submitExpenseToFSM / _submitExpenseUpdate
+ * - _showMileageConfirmation / _showMileageUpdateConfirmation → _submitMileageToFSM / _submitMileageUpdate
+ * - _showMaterialUpdateConfirmation → _submitMaterialUpdate
+ * - _showTimeEffortUpdateConfirmation → _submitTimeEffortUpdate
+ * - _showTimeAndMaterialConfirmation → _submitTimeAndMaterialToFSM
  * 
  * @file TMEditMixin.js
  * @module mobileappsc/controller/mixin/TMEditMixin

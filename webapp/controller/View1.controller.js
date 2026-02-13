@@ -20,6 +20,8 @@
  * - TMDialogMixin: Core T&M dialog handlers (enrichment, edit mode)
  * - TMEditMixin: Individual entry edit/save handlers
  * - TMTableMixin: Table filter/sort/edit selected handlers
+ * - TMSaveAllMixin: Save all edited T&M entries from table
+ * - TMDeleteMixin: Delete selected T&M entries
  * - TMExpenseMileageMixin: Expense & Mileage creation handlers
  * - TMMaterialMixin: Material creation handlers
  * - TMTimeEntryMixin: Time entry creation with repeat
@@ -44,12 +46,14 @@ sap.ui.define([
     "./mixin/TMDialogMixin",
     "./mixin/TMEditMixin",
     "./mixin/TMTableMixin",
+    "./mixin/TMSaveAllMixin",
+    "./mixin/TMDeleteMixin",
     "./mixin/TMExpenseMileageMixin",
     "./mixin/TMMaterialMixin",
     "./mixin/TMTimeEntryMixin",
     "./mixin/TMSaveMixin",
     "./mixin/TechnicianMixin"
-], (Controller, JSONModel, Fragment, MessageToast, MessageBox, formatter, OrganizationService, PersonService, ItemService, UdfMetaService, TypeConfigService, CacheService, TMDialogService, DataLoadingMixin, TMDialogMixin, TMEditMixin, TMTableMixin, TMExpenseMileageMixin, TMMaterialMixin, TMTimeEntryMixin, TMSaveMixin, TechnicianMixin) => {
+], (Controller, JSONModel, Fragment, MessageToast, MessageBox, formatter, OrganizationService, PersonService, ItemService, UdfMetaService, TypeConfigService, CacheService, TMDialogService, DataLoadingMixin, TMDialogMixin, TMEditMixin, TMTableMixin, TMSaveAllMixin, TMDeleteMixin, TMExpenseMileageMixin, TMMaterialMixin, TMTimeEntryMixin, TMSaveMixin, TechnicianMixin) => {
     "use strict";
 
     /**
@@ -60,6 +64,8 @@ sap.ui.define([
         TMDialogMixin, 
         TMEditMixin,
         TMTableMixin,
+        TMSaveAllMixin,
+        TMDeleteMixin,
         TMExpenseMileageMixin,
         TMMaterialMixin,
         TMTimeEntryMixin,
@@ -136,8 +142,6 @@ sap.ui.define([
                     cloudId: null,
                     orgLevelId: null,
                     orgLevelName: "Loading...",
-                    personIds: [],
-                    personExternalIds: [],
                     source: null,
                     cloudHost: null
                 },
@@ -359,7 +363,7 @@ sap.ui.define([
         /**
          * Extract name from display text by removing code prefix
          * e.g., "AZ - Arbeitszeit" -> "Arbeitszeit"
-         * e.g., "Z12000007 - PrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¼fung" -> "PrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¼fung"
+         * e.g., "Z12000007 - Prufung" -> "Prufung"
          * @private
          */
         _extractNameFromDisplayText(displayText) {

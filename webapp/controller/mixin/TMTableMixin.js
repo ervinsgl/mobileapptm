@@ -2,7 +2,22 @@
  * TMTableMixin.js
  * 
  * Mixin for T&M table view handlers.
- * Handles filtering, sorting, edit selected, and save all operations.
+ * Handles filtering, sorting, edit/cancel edit, save all, delete selected,
+ * and legacy dynamic time effort add/remove.
+ * 
+ * Handlers:
+ * - onTMTypeFilterChange: Filter table by Time Effort / Material / All
+ * - onOpenSortDialog / onTMSortDialogConfirm/Cancel/Reset: Sort dialog lifecycle
+ * - onTMSortChange: Legacy Select-based sort (deprecated)
+ * - onEditSelectedTM / onEndEditTM: Toggle edit mode on selected entries
+ * - onSaveAllTM: Batch save edited entries with confirmation
+ * - onDeleteSelectedTM: Batch delete selected PENDING/REVIEW entries
+ * - onAddTimeEffort(FZ|WZ|AZ) / onRemoveTimeEffort(FZ|WZ|AZ): Legacy time effort rows
+ * 
+ * Shared helpers (used by other mixins via Object.assign):
+ * - _getTableFromToolbarControl: Navigate DOM to find table from toolbar button
+ * - _getActivityPathFromToolbarControl: Find activity model path from control
+ * - _getEditModeProperty: Determine which edit mode flag to use (tm/expense/mileage)
  * 
  * @file TMTableMixin.js
  * @module mobileappsc/controller/mixin/TMTableMixin

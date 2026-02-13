@@ -2,7 +2,15 @@
  * TMMaterialMixin.js
  * 
  * Mixin for Material table-based creation handlers.
- * Handles add/remove/copy rows for material entries.
+ * Handles add/remove/copy rows and quantity validation for material entries.
+ * 
+ * Row Operations:
+ * - onAddCreateMaterialRow / onRemoveCreateMaterialRow / onCopyCreateMaterialRow
+ * - onCreateMaterialTechnicianSelect: Technician dropdown for material
+ * 
+ * Quantity Validation:
+ * - onMaterialQuantityChange: Validate quantity against activity remaining qty
+ * - _updateMaterialQuantityStates: Set min/max ValueStates on quantity inputs
  * 
  * @file TMMaterialMixin.js
  * @module mobileappsc/controller/mixin/TMMaterialMixin

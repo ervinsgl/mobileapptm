@@ -1,9 +1,15 @@
 /**
  * TechnicianMixin.js
  * 
- * Mixin containing technician and task selection handlers.
- * Mixed into View1.controller.js to handle lookup field interactions
- * in the T&M Creation Dialog.
+ * Mixin containing technician selection, task selection, and duration
+ * handlers for the T&M Creation Dialog.
+ * 
+ * Handlers:
+ * - onTechnicianSelect: Technician dropdown selection (single entry mode)
+ * - onTaskSelect: Task type dropdown selection (AZ/FZ/WZ)
+ * - onTimeEntryTechnicianLiveChange: Filter technician suggestions in time entry table
+ * - onTimeEntryTechnicianSuggestionSelect: Select technician from suggestions
+ * - onTimeEffortDurationChange: Convert hours to minutes when duration StepInput changes
  * 
  * @file TechnicianMixin.js
  * @module mobileappsc/controller/mixin/TechnicianMixin

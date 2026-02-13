@@ -1,8 +1,27 @@
 /**
  * TMExpenseMileageMixin.js
  * 
- * Mixin for Expense and Mileage table-based creation handlers.
- * Handles add/remove/copy rows and save operations.
+ * Mixin for Expense, Mileage, and Time & Material table-based creation handlers.
+ * Handles add/remove/copy rows, save operations, and shared technician search.
+ * 
+ * Expense Handlers:
+ * - onAddExpenseEntry: Open expense creation panel
+ * - onAddCreateExpenseRow / onRemoveCreateExpenseRow / onCopyCreateExpenseRow
+ * - onCreateExpenseTechnicianSelect: Technician dropdown for expense
+ * - onSaveAllCreateExpense: Save all expense rows
+ * 
+ * Mileage Handlers:
+ * - onAddMileageEntry: Open mileage creation panel
+ * - onAddCreateMileageRow / onRemoveCreateMileageRow / onCopyCreateMileageRow
+ * - onCreateMileageTechnicianSelect: Technician dropdown for mileage
+ * - onSaveAllCreateMileage: Save all mileage rows
+ * 
+ * Time & Material Handler:
+ * - onAddTimeAndMaterialEntry: Open T&M panel creation (material + time efforts)
+ * 
+ * Shared Technician Search (used by Expense & Mileage tables):
+ * - onCreateTechnicianLiveChange: Filter technician suggestions
+ * - onCreateTechnicianSuggestionSelect: Select technician from suggestions
  * 
  * @file TMExpenseMileageMixin.js
  * @module mobileappsc/controller/mixin/TMExpenseMileageMixin

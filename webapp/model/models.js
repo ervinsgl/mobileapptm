@@ -1,3 +1,12 @@
+/**
+ * models.js
+ * 
+ * Model factory for the UI5 application.
+ * Provides the device model used for responsive layout decisions.
+ * 
+ * @file models.js
+ * @module mobileappsc/model/models
+ */
 sap.ui.define([
     "sap/ui/model/json/JSONModel",
     "sap/ui/Device"
