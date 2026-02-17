@@ -1,0 +1,62 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+>
+    <!--
+        ContextInfoDialog Fragment: Shows FSM session context details.
+        Displays user, account, organization, and connection info.
+        Opened via footer "Context Info" button.
+        Model: view>/webContainerContext
+    -->
+    <Dialog
+        id="contextInfoDialog"
+        title="{i18n>sessionContextTitle}"
+        type="Message"
+        state="Information"
+        contentWidth="28rem"
+    >
+        <content>
+            <VBox class="sapUiSmallMargin">
+                <HBox alignItems="Start" class="sapUiTinyMarginBottom">
+                    <Label text="{i18n>sessionContextSource}" design="Bold" width="9rem"/>
+                    <Text text="{= ${view>/webContainerContext/source} || 'N/A'}" wrapping="true"/>
+                </HBox>
+                <HBox alignItems="Start" class="sapUiTinyMarginBottom">
+                    <Label text="{i18n>sessionContextUser}" design="Bold" width="9rem"/>
+                    <Text text="{= ${view>/webContainerContext/userName} || 'N/A'}" wrapping="true"/>
+                </HBox>
+                <HBox alignItems="Start" class="sapUiTinyMarginBottom">
+                    <Label text="{i18n>sessionContextLanguage}" design="Bold" width="9rem"/>
+                    <Text text="{= ${view>/webContainerContext/language} || 'N/A'}" wrapping="true"/>
+                </HBox>
+                <HBox alignItems="Start" class="sapUiTinyMarginBottom">
+                    <Label text="{i18n>sessionContextAccount}" design="Bold" width="9rem"/>
+                    <Text text="{= ${view>/webContainerContext/cloudAccount} || 'N/A'}" wrapping="true"/>
+                </HBox>
+                <HBox alignItems="Start" class="sapUiTinyMarginBottom">
+                    <Label text="{i18n>sessionContextCompany}" design="Bold" width="9rem"/>
+                    <Text text="{= ${view>/webContainerContext/companyName} || 'N/A'}" wrapping="true"/>
+                </HBox>
+                <HBox alignItems="Start" class="sapUiTinyMarginBottom">
+                    <Label text="{i18n>sessionContextOrganization}" design="Bold" width="9rem"/>
+                    <Text text="{= ${view>/webContainerContext/orgLevelName} || 'N/A'}" wrapping="true"/>
+                </HBox>
+                <HBox alignItems="Start" class="sapUiTinyMarginBottom">
+                    <Label text="{i18n>sessionContextObjectType}" design="Bold" width="9rem"/>
+                    <Text text="{= ${view>/webContainerContext/objectType} || 'N/A'}" wrapping="true"/>
+                </HBox>
+                <HBox alignItems="Start" class="sapUiTinyMarginBottom">
+                    <Label text="{i18n>sessionContextObjectId}" design="Bold" width="9rem"/>
+                    <Text text="{= ${view>/webContainerContext/cloudId} || 'N/A'}" wrapping="true"/>
+                </HBox>
+                <HBox alignItems="Start" visible="{= !!${view>/webContainerContext/cloudHost} }">
+                    <Label text="{i18n>sessionContextCloudHost}" design="Bold" width="9rem"/>
+                    <Text text="{view>/webContainerContext/cloudHost}" wrapping="true"/>
+                </HBox>
+            </VBox>
+        </content>
+        <beginButton>
+            <Button text="{i18n>sessionContextClose}" press=".onCloseContextInfoDialog"/>
+        </beginButton>
+    </Dialog>
+</core:FragmentDefinition>

@@ -148,6 +148,7 @@
                                                         <core:Icon src="sap-icon://time-entry-request" class="sapUiTinyMarginEnd"/>
                                                         <Title text="{i18n>tmTimeEffortMaterial}" level="H5"/>
                                                         <ToolbarSpacer/>
+                                                        <Button icon="sap-icon://hint" type="Transparent" press=".onShowStatusLegend" tooltip="{i18n>tmStatusLegendTooltip}" class="sapUiTinyMarginBegin"/>
                                                         <SegmentedButton selectedKey="ALL" selectionChange=".onTMTypeFilterChange">
                                                             <items>
                                                                 <SegmentedButtonItem key="ALL" text="{i18n>tmFilterAll}"/>
@@ -228,6 +229,7 @@
                                                         <core:Icon src="sap-icon://money-bills" class="sapUiTinyMarginEnd" color="#E9730C"/>
                                                         <Title text="{i18n>tmExpenses}" level="H5"/>
                                                         <ToolbarSpacer/>
+                                                        <Button icon="sap-icon://hint" type="Transparent" press=".onShowStatusLegend" tooltip="{i18n>tmStatusLegendTooltip}" class="sapUiTinyMarginBegin"/>
                                                         <Button icon="sap-icon://sort" press=".onOpenSortDialog" tooltip="{i18n>tmSortByTooltip}" class="sapUiTinyMarginBegin">
                                                             <customData>
                                                                 <core:CustomData key="tableType" value="Expense"/>
@@ -294,6 +296,7 @@
                                                         <core:Icon src="sap-icon://car-rental" class="sapUiTinyMarginEnd" color="#6C32A9"/>
                                                         <Title text="{i18n>tmMileage}" level="H5"/>
                                                         <ToolbarSpacer/>
+                                                        <Button icon="sap-icon://hint" type="Transparent" press=".onShowStatusLegend" tooltip="{i18n>tmStatusLegendTooltip}" class="sapUiTinyMarginBegin"/>
                                                         <Button icon="sap-icon://sort" press=".onOpenSortDialog" tooltip="{i18n>tmSortByTooltip}" class="sapUiTinyMarginBegin">
                                                             <customData>
                                                                 <core:CustomData key="tableType" value="Mileage"/>

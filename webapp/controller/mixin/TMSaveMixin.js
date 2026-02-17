@@ -382,6 +382,9 @@ sap.ui.define([
                 // Update model using TMDataService method
                 TMDataService.updateActivityWithTMData(oViewModel, activityPath, tmData);
                 
+                // Recalculate all counts (activity + product group totals)
+                this._updateTMCounts(oViewModel);
+                
                 console.log("T&M reports refreshed for activity:", activityId, "Count:", tmData.totalCount);
             } catch (error) {
                 console.error("Error refreshing T&M reports:", error);

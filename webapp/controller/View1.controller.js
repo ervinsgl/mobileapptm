@@ -474,62 +474,51 @@ sap.ui.define([
          * ========================================================================= */
 
         /**
-         * Show Session Context info popup.
-         * Displays context data (user, account, org level, source) in a dialog.
+         * Show Session Context info dialog.
+         * Loads ContextInfoDialog fragment on first open, reuses on subsequent.
          */
-        onShowContextInfo() {
-            const oViewModel = this.getView().getModel("view");
-            const ctx = oViewModel.getProperty("/webContainerContext") || {};
-
-            // Build info items
-            const items = [
-                { label: this._getText("sessionContextSource"), value: ctx.source || "N/A" },
-                { label: this._getText("sessionContextUser"), value: ctx.userName || "N/A" },
-                { label: this._getText("sessionContextLanguage"), value: ctx.language || "N/A" },
-                { label: this._getText("sessionContextAccount"), value: ctx.cloudAccount || "N/A" },
-                { label: this._getText("sessionContextCompany"), value: ctx.companyName || "N/A" },
-                { label: this._getText("sessionContextOrganization"), value: ctx.orgLevelName || "N/A" },
-                { label: this._getText("sessionContextObjectType"), value: ctx.objectType || "N/A" },
-                { label: this._getText("sessionContextObjectId"), value: ctx.cloudId || "N/A" }
-            ];
-
-            // Add cloud host if available (Shell context)
-            if (ctx.cloudHost) {
-                items.push({ label: this._getText("sessionContextCloudHost"), value: ctx.cloudHost });
+        async onShowContextInfo() {
+            if (!this._contextInfoDialog) {
+                this._contextInfoDialog = await Fragment.load({
+                    name: "mobileappsc.view.fragments.ContextInfoDialog",
+                    controller: this
+                });
+                this.getView().addDependent(this._contextInfoDialog);
             }
+            this._contextInfoDialog.open();
+        },
 
-            // Build VBox content
-            const oContent = new sap.m.VBox({ class: "sapUiSmallMargin" });
-            items.forEach(item => {
-                oContent.addItem(new sap.m.HBox({
-                    alignItems: "Start",
-                    items: [
-                        new sap.m.Label({ text: item.label, design: "Bold", width: "9rem" }),
-                        new sap.m.Text({ text: item.value, wrapping: true })
-                    ]
-                }).addStyleClass("sapUiTinyMarginBottom"));
-            });
+        /**
+         * Close Context Info dialog
+         */
+        onCloseContextInfoDialog() {
+            if (this._contextInfoDialog) {
+                this._contextInfoDialog.close();
+            }
+        },
 
-            // Create and open dialog
-            const oDialog = new sap.m.Dialog({
-                title: this._getText("sessionContextTitle"),
-                type: "Message",
-                state: "Information",
-                contentWidth: "28rem",
-                content: [oContent],
-                beginButton: new sap.m.Button({
-                    text: this._getText("sessionContextClose"),
-                    press: function () {
-                        oDialog.close();
-                    }
-                }),
-                afterClose: function () {
-                    oDialog.destroy();
-                }
-            });
+        /**
+         * Show T&M Entry Status Legend dialog.
+         * Loads StatusLegendDialog fragment on first open, reuses on subsequent.
+         */
+        async onShowStatusLegend() {
+            if (!this._statusLegendDialog) {
+                this._statusLegendDialog = await Fragment.load({
+                    name: "mobileappsc.view.fragments.StatusLegendDialog",
+                    controller: this
+                });
+                this.getView().addDependent(this._statusLegendDialog);
+            }
+            this._statusLegendDialog.open();
+        },
 
-            this.getView().addDependent(oDialog);
-            oDialog.open();
+        /**
+         * Close Status Legend dialog
+         */
+        onCloseStatusLegendDialog() {
+            if (this._statusLegendDialog) {
+                this._statusLegendDialog.close();
+            }
         },
 
         /**

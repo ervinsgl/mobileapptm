@@ -1,0 +1,111 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+>
+    <!--
+        StatusLegendDialog Fragment: T&M Entry Status Guide.
+        Shows two tables:
+        1. Entry Statuses - what each status means for the technician
+        2. Supervisor Actions - what changes the status
+        Opened via the info button in the T&M Reports section header.
+    -->
+    <Dialog
+        id="statusLegendDialog"
+        title="{i18n>statusLegendTitle}"
+        type="Message"
+        state="Information"
+        contentWidth="36rem"
+        verticalScrolling="true"
+    >
+        <content>
+            <VBox class="sapUiSmallMargin">
+            
+                <!-- Section 1: Entry Statuses -->
+                <Label text="{i18n>statusLegendStatusHeader}" design="Bold" class="sapUiSmallMarginBottom"/>
+                <Table>
+                    <columns>
+                        <Column width="8rem"><Text text="{i18n>statusLegendColStatus}"/></Column>
+                        <Column><Text text="{i18n>statusLegendColMeaning}"/></Column>
+                    </columns>
+                    <items>
+                        <ColumnListItem>
+                            <cells>
+                                <ObjectStatus text="PENDING" state="Warning"/>
+                                <Text text="{i18n>statusLegendPendingDesc}" wrapping="true"/>
+                            </cells>
+                        </ColumnListItem>
+                        <ColumnListItem>
+                            <cells>
+                                <ObjectStatus text="REVIEW" state="Information"/>
+                                <Text text="{i18n>statusLegendReviewDesc}" wrapping="true"/>
+                            </cells>
+                        </ColumnListItem>
+                        <ColumnListItem>
+                            <cells>
+                                <ObjectStatus text="APPROVED" state="Success"/>
+                                <Text text="{i18n>statusLegendApprovedDesc}" wrapping="true"/>
+                            </cells>
+                        </ColumnListItem>
+                        <ColumnListItem>
+                            <cells>
+                                <ObjectStatus text="DECLINED" state="Error"/>
+                                <Text text="{i18n>statusLegendDeclinedDesc}" wrapping="true"/>
+                            </cells>
+                        </ColumnListItem>
+                        <ColumnListItem>
+                            <cells>
+                                <ObjectStatus text="{i18n>statusLegendRejectedLabel}" state="Error"/>
+                                <Text text="{i18n>statusLegendRejectedDesc}" wrapping="true"/>
+                            </cells>
+                        </ColumnListItem>
+                        <ColumnListItem>
+                            <cells>
+                                <ObjectStatus text="CANCELLED" state="None"/>
+                                <Text text="{i18n>statusLegendCancelledDesc}" wrapping="true"/>
+                            </cells>
+                        </ColumnListItem>
+                    </items>
+                </Table>
+                
+                <!-- Section 2: Supervisor Actions -->
+                <Label text="{i18n>statusLegendActionsHeader}" design="Bold" class="sapUiMediumMarginTop sapUiSmallMarginBottom"/>
+                <Table>
+                    <columns>
+                        <Column width="10rem"><Text text="{i18n>statusLegendColAction}"/></Column>
+                        <Column><Text text="{i18n>statusLegendColResult}"/></Column>
+                    </columns>
+                    <items>
+                        <ColumnListItem>
+                            <cells>
+                                <Text text="{i18n>statusLegendActionApprove}" wrapping="true"/>
+                                <Text text="{i18n>statusLegendActionApproveResult}" wrapping="true"/>
+                            </cells>
+                        </ColumnListItem>
+                        <ColumnListItem>
+                            <cells>
+                                <Text text="{i18n>statusLegendActionReject}" wrapping="true"/>
+                                <Text text="{i18n>statusLegendActionRejectResult}" wrapping="true"/>
+                            </cells>
+                        </ColumnListItem>
+                        <ColumnListItem>
+                            <cells>
+                                <Text text="{i18n>statusLegendActionReview}" wrapping="true"/>
+                                <Text text="{i18n>statusLegendActionReviewResult}" wrapping="true"/>
+                            </cells>
+                        </ColumnListItem>
+                        <ColumnListItem>
+                            <cells>
+                                <Text text="{i18n>statusLegendActionChange}" wrapping="true"/>
+                                <Text text="{i18n>statusLegendActionChangeResult}" wrapping="true"/>
+                            </cells>
+                        </ColumnListItem>
+                    </items>
+                </Table>
+                
+            </VBox>
+        </content>
+        <beginButton>
+            <Button text="{i18n>sessionContextClose}" press=".onCloseStatusLegendDialog"/>
+        </beginButton>
+    </Dialog>
+</core:FragmentDefinition>

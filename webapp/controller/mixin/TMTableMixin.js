@@ -13,9 +13,9 @@ sap.ui.define([
     "sap/ui/model/Filter",
     "sap/ui/model/FilterOperator",
     "sap/ui/model/Sorter",
-    "sap/m/ViewSettingsDialog",
+    "sap/ui/core/Fragment",
     "sap/m/ViewSettingsItem"
-], (MessageToast, MessageBox, Filter, FilterOperator, Sorter, ViewSettingsDialog, ViewSettingsItem) => {
+], (MessageToast, MessageBox, Filter, FilterOperator, Sorter, Fragment, ViewSettingsItem) => {
     "use strict";
 
     return {
@@ -113,7 +113,7 @@ sap.ui.define([
 
         /**
          * Get the Table from a toolbar control (handles ScrollContainer wrapper)
-         * Navigation: Control Ã¢â€ â€™ Toolbar Ã¢â€ â€™ Panel Ã¢â€ â€™ Content Ã¢â€ â€™ [ScrollContainer Ã¢â€ â€™] Table
+         * Navigation: Control -> Toolbar -> Panel -> Content -> [ScrollContainer] Table
          * @private
          */
         _getTableFromToolbarControl(oControl) {
@@ -251,7 +251,7 @@ sap.ui.define([
          * Open sort dialog for table
          * @param {sap.ui.base.Event} oEvent - Button press event
          */
-        onOpenSortDialog(oEvent) {
+        async onOpenSortDialog(oEvent) {
             const oButton = oEvent.getSource();
             const oTable = this._getTableFromToolbarControl(oButton);
             
@@ -263,13 +263,11 @@ sap.ui.define([
             // Determine table type from custom data or parent context
             const sTableType = oButton.data("tableType") || "TM";
             
-            // Create or get existing dialog
+            // Load fragment on first open, reuse on subsequent
             if (!this._oSortDialog) {
-                this._oSortDialog = new ViewSettingsDialog({
-                    title: this._getText("sortDialogTitle"),
-                    confirm: this.onTMSortDialogConfirm.bind(this),
-                    cancel: this.onTMSortDialogCancel.bind(this),
-                    resetFilters: this.onTMSortDialogReset.bind(this)
+                this._oSortDialog = await Fragment.load({
+                    name: "mobileappsc.view.fragments.TMSortDialog",
+                    controller: this
                 });
                 this.getView().addDependent(this._oSortDialog);
             }
@@ -890,6 +888,8 @@ sap.ui.define([
             const aProductGroups = oModel.getProperty("/productGroups") || [];
             
             aProductGroups.forEach((group, groupIndex) => {
+                let groupTotal = 0;
+                
                 (group.activities || []).forEach((activity, activityIndex) => {
                     const aReports = activity.tmReports || [];
                     const basePath = `/productGroups/${groupIndex}/activities/${activityIndex}`;
@@ -905,7 +905,12 @@ sap.ui.define([
                     oModel.setProperty(basePath + "/tmExpenseCount", expenseCount);
                     oModel.setProperty(basePath + "/tmMileageCount", mileageCount);
                     oModel.setProperty(basePath + "/tmReportsCount", aReports.length);
+                    
+                    groupTotal += aReports.length;
                 });
+                
+                // Update product group total
+                oModel.setProperty(`/productGroups/${groupIndex}/tmTotalCount`, groupTotal);
             });
         },
 
