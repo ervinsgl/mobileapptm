@@ -6,7 +6,8 @@
  * person/technician data, organization hierarchy, and user management.
  * 
  * These methods are mixed into the FSMService class prototype at startup,
- * so they have access to FSMService's HTTP methods via `this`.
+ * so they have access to FSMService's instance properties and HTTP methods via `this`.
+ * Destination names are defined centrally in FSMService constructor.
  * 
  * Sections:
  * - LOOKUP DATA: TimeTasks, Items, ExpenseTypes, UdfMeta
@@ -332,7 +333,7 @@ module.exports = {
      */
     async getOrganizationLevels() {
         try {
-            const destination = await DestinationService.getDestination('FSM_S4E');
+            const destination = await DestinationService.getDestination(this.destinationName);
             const token = await TokenCache.getToken(destination);
 
             const baseUrl = destination.destinationConfiguration.URL;
@@ -367,11 +368,11 @@ module.exports = {
         try {
             if (!username) return null;
 
-            const destination = await DestinationService.getDestination('FSM_S4E');
+            const destination = await DestinationService.getDestination(this.destinationName);
             const token = await TokenCache.getToken(destination);
 
             const baseUrl = destination.destinationConfiguration.URL;
-            const account = destination.destinationConfiguration.account || this.config.account;
+            const { account } = this._getAccountCompany(destination);
             const fullUrl = `${baseUrl}/api/user/v1/users`;
 
             const headers = {

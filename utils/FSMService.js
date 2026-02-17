@@ -40,14 +40,30 @@ const TokenCache = require('./TokenCache');
 
 class FSMService {
     constructor() {
-        /**
-         * Default FSM account/company configuration.
-         * @type {{account: string, company: string}}
-         */
-        this.config = {
-            account: 'tuev-nord_t1',
-            company: 'TUEV-NORD_S4E'
-        };
+        // BTP destination name — change here to update all methods (including mixed-in modules)
+        this.destinationName = 'FSM_OAUTH_CONNECT';
+    }
+
+    /**
+     * Extract and validate account/company from destination configuration.
+     * Throws a clear error if either value is missing, so configuration
+     * problems surface immediately instead of silently using wrong credentials.
+     * @param {Object} destination - BTP destination object
+     * @returns {{account: string, company: string}} Validated account and company
+     * @throws {Error} If account or company is missing from destination
+     */
+    _getAccountCompany(destination) {
+        const account = destination.destinationConfiguration.account;
+        const company = destination.destinationConfiguration.company;
+
+        if (!account) {
+            throw new Error('FSMService: "account" is missing from destination configuration. Check BTP destination properties.');
+        }
+        if (!company) {
+            throw new Error('FSMService: "company" is missing from destination configuration. Check BTP destination properties.');
+        }
+
+        return { account, company };
     }
 
     /**
@@ -59,16 +75,17 @@ class FSMService {
      */
     async makeRequest(path, params = {}) {
         try {
-            const destination = await DestinationService.getDestination('FSM_S4E');
+            const destination = await DestinationService.getDestination(this.destinationName);
             const token = await TokenCache.getToken(destination);
 
             const baseUrl = destination.destinationConfiguration.URL;
             const fullUrl = `${baseUrl}/api/data/v4${path}`;
+            const { account, company } = this._getAccountCompany(destination);
 
             const queryParams = {
                 ...params,
-                account: destination.destinationConfiguration.account || this.config.account,
-                company: destination.destinationConfiguration.company || this.config.company
+                account,
+                company
             };
 
             const headers = {
@@ -102,16 +119,17 @@ class FSMService {
      */
     async postRequest(path, data, params = {}) {
         try {
-            const destination = await DestinationService.getDestination('FSM_S4E');
+            const destination = await DestinationService.getDestination(this.destinationName);
             const token = await TokenCache.getToken(destination);
 
             const baseUrl = destination.destinationConfiguration.URL;
             const fullUrl = `${baseUrl}/api/data/v4${path}`;
+            const { account, company } = this._getAccountCompany(destination);
 
             const queryParams = {
                 ...params,
-                account: destination.destinationConfiguration.account || this.config.account,
-                company: destination.destinationConfiguration.company || this.config.company
+                account,
+                company
             };
 
             const headers = {
@@ -145,17 +163,18 @@ class FSMService {
      */
     async patchRequest(path, data, params = {}) {
         try {
-            const destination = await DestinationService.getDestination('FSM_S4E');
+            const destination = await DestinationService.getDestination(this.destinationName);
             const token = await TokenCache.getToken(destination);
 
             const baseUrl = destination.destinationConfiguration.URL;
             const fullUrl = `${baseUrl}/api/data/v4${path}`;
+            const { account, company } = this._getAccountCompany(destination);
 
             const queryParams = {
                 ...params,
                 forceUpdate: true,
-                account: destination.destinationConfiguration.account || this.config.account,
-                company: destination.destinationConfiguration.company || this.config.company
+                account,
+                company
             };
 
             const headers = {
@@ -194,12 +213,11 @@ class FSMService {
                 return [];
             }
 
-            const destination = await DestinationService.getDestination('FSM_S4E');
+            const destination = await DestinationService.getDestination(this.destinationName);
             const token = await TokenCache.getToken(destination);
 
             const baseUrl = destination.destinationConfiguration.URL;
-            const account = destination.destinationConfiguration.account || this.config.account;
-            const company = destination.destinationConfiguration.company || this.config.company;
+            const { account, company } = this._getAccountCompany(destination);
 
             // Create unique boundary
             const boundary = `======batch_${Date.now()}======`;
@@ -569,7 +587,7 @@ class FSMService {
      */
     async getActivitiesForServiceCall(serviceCallId) {
         try {
-            const destination = await DestinationService.getDestination('FSM_S4E');
+            const destination = await DestinationService.getDestination(this.destinationName);
             const token = await TokenCache.getToken(destination);
 
             const baseUrl = destination.destinationConfiguration.URL;
@@ -600,16 +618,17 @@ class FSMService {
      * @returns {Promise<Object>} Updated activity data
      */
     async updateActivity(activityId, updateData) {
-        const destination = await DestinationService.getDestination('FSM_S4E');
+        const destination = await DestinationService.getDestination(this.destinationName);
         const token = await TokenCache.getToken(destination);
 
         const baseUrl = destination.destinationConfiguration.URL;
         const fullUrl = `${baseUrl}/api/data/v4/Activity/${activityId}`;
+        const { account, company } = this._getAccountCompany(destination);
 
         const queryParams = {
             dtos: 'Activity.40',
-            account: destination.destinationConfiguration.account || this.config.account,
-            company: destination.destinationConfiguration.company || this.config.company
+            account,
+            company
         };
 
         const headers = {
@@ -637,17 +656,18 @@ class FSMService {
      */
     async makeQueryRequest(query, dtos) {
         try {
-            const destination = await DestinationService.getDestination('FSM_S4E');
+            const destination = await DestinationService.getDestination(this.destinationName);
             const token = await TokenCache.getToken(destination);
 
             const baseUrl = destination.destinationConfiguration.URL;
             const queryUrl = `${baseUrl}/api/query/v1`;
+            const { account, company } = this._getAccountCompany(destination);
 
             const queryParams = {
                 query: query,
                 dtos: dtos,
-                account: destination.destinationConfiguration.account || this.config.account,
-                company: destination.destinationConfiguration.company || this.config.company
+                account,
+                company
             };
 
             const headers = {

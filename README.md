@@ -281,7 +281,7 @@ The application supports **multiple deployment contexts**:
                                │ OAuth Token
                                ▼
                       ┌─────────────────┐
-                      │ BTP Destination  │  (FSM_S4E destination)
+                      │ BTP Destination  │  (FSM_OAUTH_CONNECT destination)
                       │    Service       │
                       └────────┬─────────┘
                                │ Authenticated Request
@@ -376,9 +376,9 @@ All tables support: batch selection (checkbox), inline edit mode, sort dialog, r
 |---------|---------------|---------|
 | **Destination Service** | `mobileappsc-destination` | FSM API connectivity |
 
-### Destination Configuration (FSM_S4E):
+### Destination Configuration (FSM_OAUTH_CONNECT):
 
-The destination `FSM_S4E` must be configured in BTP Cockpit with:
+The destination `FSM_OAUTH_CONNECT` must be configured in BTP Cockpit with:
 
 | Property | Description |
 |----------|-------------|
@@ -437,9 +437,9 @@ Edit `typeconfig.json` to set default Service Product IDs:
 
 ### 3. Configure BTP Destination
 
-Create a destination named **FSM_S4E** in SAP BTP Cockpit:
+Create a destination named **FSM_OAUTH_CONNECT** in SAP BTP Cockpit:
 ```
-Name: FSM_S4E
+Name: FSM_OAUTH_CONNECT
 Type: HTTP
 URL: https://de.fsm.cloud.sap
 Authentication: OAuth2ClientCredentials
@@ -725,7 +725,7 @@ POST /web-container-access-point
 └──────────────────────────┬──────────────────────────────────────┘
                            ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│  4. Fetch FSM_S4E destination → Get FSM URL + OAuth config      │
+│  4. Fetch FSM_OAUTH_CONNECT destination → Get FSM URL + OAuth config      │
 └──────────────────────────┬──────────────────────────────────────┘
                            ▼
 ┌─────────────────────────────────────────────────────────────────┐
