@@ -167,7 +167,7 @@ sap.ui.define([], () => {
                 'APPROVED': 'Success',
                 'DECLINED': 'Error',
                 'APPROVED_CLOSED': 'Success',
-                'DECLINED_CLOSED': 'Warning',  // Orange - shows as "CHANGE"
+                'DECLINED_CLOSED': 'Error',
                 'CANCELLED': 'None'
             };
 

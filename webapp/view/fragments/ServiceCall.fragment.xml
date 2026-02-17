@@ -5,7 +5,7 @@
     <!-- 
         ServiceCall Fragment: Displays service order header information.
         
-        Shows: ID, Subject, Business Partner, Responsible, Dates
+        Shows: Subject, Business Partner, Responsible, Dates
         
         Model: view>/serviceCall
     -->
@@ -30,12 +30,8 @@
             <!-- Service Order Details: 3-Column Layout -->
             <HBox class="serviceOrderContent">
             
-                <!-- Col 1: ID, Subject -->
+                <!-- Col 1: Subject -->
                 <VBox class="serviceOrderColumn">
-                    <HBox class="serviceOrderFieldRow">
-                        <Label text="{i18n>serviceOrderId}" design="Bold" class="serviceOrderFieldLabel"/>
-                        <Text text="{view>/serviceCall/id}" class="serviceOrderFieldValue"/>
-                    </HBox>
                     <HBox class="serviceOrderFieldRow">
                         <Label text="{i18n>serviceOrderSubject}" design="Bold" class="serviceOrderFieldLabel"/>
                         <Text text="{view>/serviceCall/subject}" class="serviceOrderFieldValue" wrapping="true"/>

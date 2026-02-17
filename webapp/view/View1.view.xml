@@ -9,10 +9,10 @@
         View1: Main view for FSM Service Confirmation application.
         
         Layout Structure:
-        1. Session Context Panel (FSM Mobile web container info)
-        2. Service Order Panel (service call header details)
-        3. Product Groups (activities grouped by product)
+        1. Service Order Panel (service call header details)
+        2. Product Groups (activities grouped by product)
         
+        Session context available via footer info button (ℹ️).
         Controller: mobileappsc.controller.View1
     -->
     <Page
@@ -32,9 +32,6 @@
         <content>
             <layout:VerticalLayout id="mobileAppMainLayout" width="100%" class="sapUiContentPadding">
                 
-                <!-- Session Context (visible when launched from FSM Mobile) -->
-                <core:Fragment fragmentName="mobileappsc.view.fragments.WebContainerContext" type="XML"/>
-
                 <!-- Service Order Header -->
                 <core:Fragment fragmentName="mobileappsc.view.fragments.ServiceCall" type="XML"/>
 
@@ -64,6 +61,13 @@
                     text="{i18n>view1TypeConfig}" 
                     press=".onOpenTypeConfig"
                     tooltip="{i18n>view1TypeConfigTooltip}"
+                />
+                <Button 
+                    id="mobileAppContextInfoButton" 
+                    icon="sap-icon://hint" 
+                    text="{i18n>view1ContextInfo}" 
+                    press=".onShowContextInfo"
+                    tooltip="{i18n>view1ContextInfoTooltip}"
                 />
                 <ToolbarSpacer id="mobileAppFooterSpacer"/>
                 <Button id="mobileAppRefreshButton" icon="sap-icon://refresh" text="{i18n>view1Refresh}" press=".onRefresh"/>

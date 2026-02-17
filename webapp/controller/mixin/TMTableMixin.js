@@ -2,22 +2,7 @@
  * TMTableMixin.js
  * 
  * Mixin for T&M table view handlers.
- * Handles filtering, sorting, edit/cancel edit, save all, delete selected,
- * and legacy dynamic time effort add/remove.
- * 
- * Handlers:
- * - onTMTypeFilterChange: Filter table by Time Effort / Material / All
- * - onOpenSortDialog / onTMSortDialogConfirm/Cancel/Reset: Sort dialog lifecycle
- * - onTMSortChange: Legacy Select-based sort (deprecated)
- * - onEditSelectedTM / onEndEditTM: Toggle edit mode on selected entries
- * - onSaveAllTM: Batch save edited entries with confirmation
- * - onDeleteSelectedTM: Batch delete selected PENDING/REVIEW entries
- * - onAddTimeEffort(FZ|WZ|AZ) / onRemoveTimeEffort(FZ|WZ|AZ): Legacy time effort rows
- * 
- * Shared helpers (used by other mixins via Object.assign):
- * - _getTableFromToolbarControl: Navigate DOM to find table from toolbar button
- * - _getActivityPathFromToolbarControl: Find activity model path from control
- * - _getEditModeProperty: Determine which edit mode flag to use (tm/expense/mileage)
+ * Handles filtering, sorting, edit selected, and save all operations.
  * 
  * @file TMTableMixin.js
  * @module mobileappsc/controller/mixin/TMTableMixin
@@ -128,7 +113,7 @@ sap.ui.define([
 
         /**
          * Get the Table from a toolbar control (handles ScrollContainer wrapper)
-         * Navigation: Control → Toolbar → Panel → Content → [ScrollContainer →] Table
+         * Navigation: Control Ã¢â€ â€™ Toolbar Ã¢â€ â€™ Panel Ã¢â€ â€™ Content Ã¢â€ â€™ [ScrollContainer Ã¢â€ â€™] Table
          * @private
          */
         _getTableFromToolbarControl(oControl) {
@@ -740,7 +725,7 @@ sap.ui.define([
 
         /**
          * Delete selected T&M entries.
-         * Only entries with PENDING or REVIEW status can be deleted.
+         * Only entries with PENDING status can be deleted (REVIEW entries can be edited but not deleted).
          * Shows confirmation dialog before deletion.
          * @param {sap.ui.base.Event} oEvent - Button press event
          */
@@ -754,8 +739,8 @@ sap.ui.define([
             aProductGroups.forEach((group, groupIndex) => {
                 (group.activities || []).forEach((activity, activityIndex) => {
                     (activity.tmReports || []).forEach((report, reportIndex) => {
-                        // Only include selected entries with PENDING or REVIEW status
-                        if (report.selected && (report.decisionStatus === 'PENDING' || report.decisionStatus === 'REVIEW')) {
+                        // Only include selected entries with PENDING status (REVIEW can be edited but not deleted)
+                        if (report.selected && report.decisionStatus === 'PENDING') {
                             aSelectedEntries.push({
                                 report: report,
                                 path: `/productGroups/${groupIndex}/activities/${activityIndex}/tmReports/${reportIndex}`,
@@ -909,18 +894,17 @@ sap.ui.define([
                     const aReports = activity.tmReports || [];
                     const basePath = `/productGroups/${groupIndex}/activities/${activityIndex}`;
                     
-                    // Count by type (excluding REVIEW entries which are hidden from tables)
-                    const visibleReports = aReports.filter(r => r.decisionStatus !== 'REVIEW');
-                    const timeEffortCount = visibleReports.filter(r => r.type === 'Time Effort').length;
-                    const materialCount = visibleReports.filter(r => r.type === 'Material').length;
-                    const expenseCount = visibleReports.filter(r => r.type === 'Expense').length;
-                    const mileageCount = visibleReports.filter(r => r.type === 'Mileage').length;
+                    // Count by type
+                    const timeEffortCount = aReports.filter(r => r.type === 'Time Effort').length;
+                    const materialCount = aReports.filter(r => r.type === 'Material').length;
+                    const expenseCount = aReports.filter(r => r.type === 'Expense').length;
+                    const mileageCount = aReports.filter(r => r.type === 'Mileage').length;
                     
                     oModel.setProperty(basePath + "/tmTimeEffortCount", timeEffortCount);
                     oModel.setProperty(basePath + "/tmMaterialCount", materialCount);
                     oModel.setProperty(basePath + "/tmExpenseCount", expenseCount);
                     oModel.setProperty(basePath + "/tmMileageCount", mileageCount);
-                    oModel.setProperty(basePath + "/tmReportsCount", visibleReports.length);
+                    oModel.setProperty(basePath + "/tmReportsCount", aReports.length);
                 });
             });
         },

@@ -20,8 +20,6 @@
  * - TMDialogMixin: Core T&M dialog handlers (enrichment, edit mode)
  * - TMEditMixin: Individual entry edit/save handlers
  * - TMTableMixin: Table filter/sort/edit selected handlers
- * - TMSaveAllMixin: Save all edited T&M entries from table
- * - TMDeleteMixin: Delete selected T&M entries
  * - TMExpenseMileageMixin: Expense & Mileage creation handlers
  * - TMMaterialMixin: Material creation handlers
  * - TMTimeEntryMixin: Time entry creation with repeat
@@ -46,14 +44,12 @@ sap.ui.define([
     "./mixin/TMDialogMixin",
     "./mixin/TMEditMixin",
     "./mixin/TMTableMixin",
-    "./mixin/TMSaveAllMixin",
-    "./mixin/TMDeleteMixin",
     "./mixin/TMExpenseMileageMixin",
     "./mixin/TMMaterialMixin",
     "./mixin/TMTimeEntryMixin",
     "./mixin/TMSaveMixin",
     "./mixin/TechnicianMixin"
-], (Controller, JSONModel, Fragment, MessageToast, MessageBox, formatter, OrganizationService, PersonService, ItemService, UdfMetaService, TypeConfigService, CacheService, TMDialogService, DataLoadingMixin, TMDialogMixin, TMEditMixin, TMTableMixin, TMSaveAllMixin, TMDeleteMixin, TMExpenseMileageMixin, TMMaterialMixin, TMTimeEntryMixin, TMSaveMixin, TechnicianMixin) => {
+], (Controller, JSONModel, Fragment, MessageToast, MessageBox, formatter, OrganizationService, PersonService, ItemService, UdfMetaService, TypeConfigService, CacheService, TMDialogService, DataLoadingMixin, TMDialogMixin, TMEditMixin, TMTableMixin, TMExpenseMileageMixin, TMMaterialMixin, TMTimeEntryMixin, TMSaveMixin, TechnicianMixin) => {
     "use strict";
 
     /**
@@ -64,8 +60,6 @@ sap.ui.define([
         TMDialogMixin, 
         TMEditMixin,
         TMTableMixin,
-        TMSaveAllMixin,
-        TMDeleteMixin,
         TMExpenseMileageMixin,
         TMMaterialMixin,
         TMTimeEntryMixin,
@@ -478,6 +472,65 @@ sap.ui.define([
         /* =========================================================================
          * TYPE CONFIGURATION DIALOG HANDLERS
          * ========================================================================= */
+
+        /**
+         * Show Session Context info popup.
+         * Displays context data (user, account, org level, source) in a dialog.
+         */
+        onShowContextInfo() {
+            const oViewModel = this.getView().getModel("view");
+            const ctx = oViewModel.getProperty("/webContainerContext") || {};
+
+            // Build info items
+            const items = [
+                { label: this._getText("sessionContextSource"), value: ctx.source || "N/A" },
+                { label: this._getText("sessionContextUser"), value: ctx.userName || "N/A" },
+                { label: this._getText("sessionContextLanguage"), value: ctx.language || "N/A" },
+                { label: this._getText("sessionContextAccount"), value: ctx.cloudAccount || "N/A" },
+                { label: this._getText("sessionContextCompany"), value: ctx.companyName || "N/A" },
+                { label: this._getText("sessionContextOrganization"), value: ctx.orgLevelName || "N/A" },
+                { label: this._getText("sessionContextObjectType"), value: ctx.objectType || "N/A" },
+                { label: this._getText("sessionContextObjectId"), value: ctx.cloudId || "N/A" }
+            ];
+
+            // Add cloud host if available (Shell context)
+            if (ctx.cloudHost) {
+                items.push({ label: this._getText("sessionContextCloudHost"), value: ctx.cloudHost });
+            }
+
+            // Build VBox content
+            const oContent = new sap.m.VBox({ class: "sapUiSmallMargin" });
+            items.forEach(item => {
+                oContent.addItem(new sap.m.HBox({
+                    alignItems: "Start",
+                    items: [
+                        new sap.m.Label({ text: item.label, design: "Bold", width: "9rem" }),
+                        new sap.m.Text({ text: item.value, wrapping: true })
+                    ]
+                }).addStyleClass("sapUiTinyMarginBottom"));
+            });
+
+            // Create and open dialog
+            const oDialog = new sap.m.Dialog({
+                title: this._getText("sessionContextTitle"),
+                type: "Message",
+                state: "Information",
+                contentWidth: "28rem",
+                content: [oContent],
+                beginButton: new sap.m.Button({
+                    text: this._getText("sessionContextClose"),
+                    press: function () {
+                        oDialog.close();
+                    }
+                }),
+                afterClose: function () {
+                    oDialog.destroy();
+                }
+            });
+
+            this.getView().addDependent(oDialog);
+            oDialog.open();
+        },
 
         /**
          * Open Type Configuration Dialog
