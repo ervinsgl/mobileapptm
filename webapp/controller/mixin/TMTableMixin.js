@@ -501,16 +501,26 @@ sap.ui.define([
             
             const aFilters = [];
             
-            // 1. Base type filter — keeps each table showing only its own data type
-            aFilters.push(...this._getBaseTypeFilters(sTableType));
-            
-            // 2. Sub-type filter — SegmentedButton (All / Time Effort / Material), TM table only
+            // For TM table, the SegmentedButton sub-filter takes priority over base type filters.
+            // When a specific sub-type (Time Effort / Material) is selected, use that EQ filter alone —
+            // this matches original behaviour and avoids conflicting AND combinations in UI5 JSONModel.
+            // Base type filters (NE Expense, NE Mileage) are only needed for the "ALL" case.
             if (sTableType === "TM") {
                 const sSubFilter = oTable.data("typeSubFilter") || "ALL";
-                aFilters.push(...this._getTypeSubFilters(sSubFilter));
+                const aSubFilters = this._getTypeSubFilters(sSubFilter);
+                if (aSubFilters.length > 0) {
+                    // Specific sub-type selected — use EQ filter only, skip base type filters
+                    aFilters.push(...aSubFilters);
+                } else {
+                    // ALL — use base type filters to exclude Expense and Mileage
+                    aFilters.push(...this._getBaseTypeFilters(sTableType));
+                }
+            } else {
+                // Expense / Mileage tables always use their base type filter
+                aFilters.push(...this._getBaseTypeFilters(sTableType));
             }
             
-            // 3. User filters — from ViewSettingsDialog (status & technician)
+            // User filters from ViewSettingsDialog (status & technician) — always AND'd on top
             const oActiveFilters = oTable.data("activeFilters") || {};
             aFilters.push(...this._buildUserFilters(oActiveFilters));
             
