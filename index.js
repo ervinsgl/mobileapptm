@@ -32,8 +32,35 @@ const app = express();
 // ===========================
 // FSM WEB CONTAINER CONTEXT STORAGE
 // ===========================
-// Stores context from FSM Mobile web container POST request
-let mobileAppContext = undefined;
+// Keyed by "userName_cloudId" so each user/object gets their own slot.
+// Prevents concurrent users overwriting each other's context.
+// Each entry has a timestamp — entries older than 30 min are cleaned up on every POST.
+
+const contextStore = new Map();
+const CONTEXT_TTL_MS = 30 * 60 * 1000; // 30 minutes
+
+/**
+ * Build a unique key from POST body.
+ * Falls back gracefully if fields are missing.
+ */
+function buildContextKey(body) {
+    const userName = (body.userName || 'anonymous').replace(/[^a-zA-Z0-9_-]/g, '_');
+    const cloudId  = (body.cloudId  || 'unknown'  ).replace(/[^a-zA-Z0-9_-]/g, '_');
+    return `${userName}_${cloudId}`;
+}
+
+/**
+ * Remove entries older than CONTEXT_TTL_MS.
+ * Called on every POST to keep memory usage bounded.
+ */
+function evictExpiredContexts() {
+    const now = Date.now();
+    for (const [key, entry] of contextStore.entries()) {
+        if (now - entry.timestamp > CONTEXT_TTL_MS) {
+            contextStore.delete(key);
+        }
+    }
+}
 
 // Middleware
 app.use((req, res, next) => {
@@ -53,31 +80,55 @@ app.enable('trust proxy');
 // Configure this URL in FSM Admin > Web Containers
 
 app.post("/web-container-access-point", (req, res) => {
-    // Store context in memory (for frontend Session Context panel and cloudId)
-    mobileAppContext = req.body || {};
-    
-    // Redirect to app root (frontend will fetch context via GET)
-    const redirectUrl = req.protocol + '://' + req.get('host');
+    const body = req.body || {};
+
+    // Clean up stale entries first
+    evictExpiredContexts();
+
+    // Store under unique key
+    const key = buildContextKey(body);
+    contextStore.set(key, { data: body, timestamp: Date.now() });
+    console.log(`WebContainer: context stored for key=${key} (store size=${contextStore.size})`);
+
+    // Pass key to frontend via redirect URL query param
+    const redirectUrl = `${req.protocol}://${req.get('host')}/?contextKey=${encodeURIComponent(key)}`;
     res.redirect(redirectUrl);
 });
 
 // GET endpoint for frontend to retrieve stored context
 app.get("/web-container-context", (req, res) => {
-    if (mobileAppContext === undefined) {
-        return res.status(404).json({ 
-            message: 'Context from mobile web container is not available.',
+    const key = req.query.key;
+
+    if (!key) {
+        return res.status(400).json({
+            message: 'Missing context key.',
+            hint: 'Pass ?key=<contextKey> — value comes from the contextKey URL param after redirect.'
+        });
+    }
+
+    const entry = contextStore.get(key);
+
+    if (!entry) {
+        return res.status(404).json({
+            message: 'Context not found or expired.',
             hint: 'Open this app from FSM Mobile web container, not directly in browser.'
         });
     }
-    
-    // Return context (for Session Context panel and cloudId)
-    return res.json(mobileAppContext);
+
+    return res.json(entry.data);
 });
 
 // Also handle POST to root "/" in case FSM sends there
 app.post("/", (req, res) => {
-    mobileAppContext = req.body || {};
-    const redirectUrl = req.protocol + '://' + req.get('host');
+    const body = req.body || {};
+
+    evictExpiredContexts();
+
+    const key = buildContextKey(body);
+    contextStore.set(key, { data: body, timestamp: Date.now() });
+    console.log(`WebContainer (/): context stored for key=${key} (store size=${contextStore.size})`);
+
+    const redirectUrl = `${req.protocol}://${req.get('host')}/?contextKey=${encodeURIComponent(key)}`;
     res.redirect(redirectUrl);
 });
 

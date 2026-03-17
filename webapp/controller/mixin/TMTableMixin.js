@@ -181,7 +181,8 @@ sap.ui.define([
          * ======================================== */
 
         /**
-         * Handle T&M type filter change
+         * Handle T&M type filter change (SegmentedButton: All / Time Effort / Material)
+         * Stores the sub-filter key on the table and re-applies all filters via shared helper.
          */
         onTMTypeFilterChange(oEvent) {
             const sKey = oEvent.getParameter("item").getKey();
@@ -190,22 +191,11 @@ sap.ui.define([
             const oTable = this._getTableFromToolbarControl(oButton);
             if (!oTable || !oTable.getBinding) return;
             
-            const oBinding = oTable.getBinding("rows") || oTable.getBinding("items");
-            if (!oBinding) return;
+            // Store sub-filter key so it survives dialog-based filter changes
+            oTable.data("typeSubFilter", sKey);
             
-            // Build filters
-            const aFilters = [];
-            if (sKey === "Time Effort") {
-                aFilters.push(new Filter("type", FilterOperator.EQ, "Time Effort"));
-            } else if (sKey === "Material") {
-                aFilters.push(new Filter("type", FilterOperator.EQ, "Material"));
-            } else {
-                // ALL - exclude Expense and Mileage
-                aFilters.push(new Filter("type", FilterOperator.NE, "Expense"));
-                aFilters.push(new Filter("type", FilterOperator.NE, "Mileage"));
-            }
-            
-            oBinding.filter(aFilters);
+            // Re-apply all filters (base type + sub-filter + user filters)
+            this._applyTableFilters(oTable, "TM");
         },
 
         /* ========================================
@@ -248,7 +238,7 @@ sap.ui.define([
         },
 
         /**
-         * Open sort dialog for table
+         * Open sort & filter dialog for table
          * @param {sap.ui.base.Event} oEvent - Button press event
          */
         async onOpenSortDialog(oEvent) {
@@ -272,17 +262,15 @@ sap.ui.define([
                 this.getView().addDependent(this._oSortDialog);
             }
             
-            // Store reference to current table
+            // Store reference to current table and type
             this._oSortDialog.data("currentTable", oTable);
             this._oSortDialog.data("tableType", sTableType);
             
-            // Clear existing sort items
+            // ── SORT ITEMS ──────────────────────────────────────────
             this._oSortDialog.removeAllSortItems();
             
-            // Add sort items based on table type
             const aSortConfig = this._getSortConfig()[sTableType] || this._getSortConfig()["TM"];
             
-            // Get current sort state from binding
             const oBinding = oTable.getBinding("rows") || oTable.getBinding("items");
             let sCurrentSortKey = null;
             let bCurrentDescending = true;
@@ -292,7 +280,6 @@ sap.ui.define([
                 bCurrentDescending = oBinding.aSorters[0].bDescending;
             }
             
-            // Add sort items
             aSortConfig.forEach((oConfig, index) => {
                 const oItem = new ViewSettingsItem({
                     key: oConfig.key,
@@ -302,38 +289,137 @@ sap.ui.define([
                 this._oSortDialog.addSortItem(oItem);
             });
             
-            // Set sort order
             this._oSortDialog.setSortDescending(sCurrentSortKey ? bCurrentDescending : true);
             
-            // Open dialog
+            // ── TECHNICIAN FILTER ITEMS (dynamic per table) ─────────
+            // Remove old technician group and rebuild from current binding data
+            const aExistingFilterItems = this._oSortDialog.getFilterItems();
+            const oOldTechGroup = aExistingFilterItems.find(item => item.getKey() === "technician");
+            if (oOldTechGroup) {
+                this._oSortDialog.removeFilterItem(oOldTechGroup);
+            }
+            
+            // Collect unique technician names from all (unfiltered) binding contexts
+            const aAllContexts = oBinding ? oBinding.getContexts(0, oBinding.getLength()) : [];
+            const aAllData = aAllContexts.map(ctx => ctx.getObject());
+            
+            // Also read directly from model to get unfiltered technicians
+            const oModel = this.getView().getModel("view");
+            const sActivityPath = this._getActivityPathFromTable(oTable);
+            let aTechnicianNames = [];
+            
+            if (sActivityPath) {
+                const aReports = oModel.getProperty(sActivityPath + "/tmReports") || [];
+                const oNames = {};
+                aReports.forEach(r => {
+                    const sName = r.createPersonDisplayText;
+                    if (sName && !oNames[sName]) {
+                        oNames[sName] = true;
+                        aTechnicianNames.push(sName);
+                    }
+                });
+                aTechnicianNames.sort();
+            } else {
+                // Fallback: use visible binding contexts
+                const oNames = {};
+                aAllData.forEach(r => {
+                    const sName = r.createPersonDisplayText;
+                    if (sName && !oNames[sName]) {
+                        oNames[sName] = true;
+                        aTechnicianNames.push(sName);
+                    }
+                });
+                aTechnicianNames.sort();
+            }
+            
+            if (aTechnicianNames.length > 0) {
+                const { ViewSettingsFilterItem } = sap.m;
+                const oTechGroup = new ViewSettingsFilterItem({
+                    key: "technician",
+                    text: this._getText("filterByTechnician"),
+                    multiSelect: true
+                });
+                
+                // Restore previously active technician filter keys for this table
+                const oActiveFilters = oTable.data("activeFilters") || {};
+                const aActiveTechKeys = oActiveFilters.technicianKeys || [];
+                
+                aTechnicianNames.forEach(sName => {
+                    oTechGroup.addItem(new ViewSettingsItem({
+                        key: sName,
+                        text: sName,
+                        selected: aActiveTechKeys.includes(sName)
+                    }));
+                });
+                
+                this._oSortDialog.addFilterItem(oTechGroup);
+            }
+            
+            // Restore status filter selections for this table
+            const oActiveFilters = oTable.data("activeFilters") || {};
+            const aActiveStatusKeys = oActiveFilters.statusKeys || [];
+            const oStatusGroup = this._oSortDialog.getFilterItems().find(item => item.getKey() === "status");
+            if (oStatusGroup) {
+                oStatusGroup.getItems().forEach(oItem => {
+                    oItem.setSelected(aActiveStatusKeys.includes(oItem.getKey()));
+                });
+            }
+            
             this._oSortDialog.open();
         },
 
         /**
-         * Handle sort dialog confirm
+         * Handle sort & filter dialog confirm
          * @param {sap.ui.base.Event} oEvent - Confirm event
          */
         onTMSortDialogConfirm(oEvent) {
             const oSortItem = oEvent.getParameter("sortItem");
             const bDescending = oEvent.getParameter("sortDescending");
+            const aFilterItems = oEvent.getParameter("filterItems") || [];
             
-            if (!oSortItem) return;
-            
-            const sPath = oSortItem.getKey();
             const oTable = this._oSortDialog.data("currentTable");
-            
+            const sTableType = this._oSortDialog.data("tableType");
             if (!oTable) return;
             
             const oBinding = oTable.getBinding("rows") || oTable.getBinding("items");
             if (!oBinding) return;
             
-            // Apply sort
-            const oSorter = new Sorter(sPath, bDescending);
-            oBinding.sort(oSorter);
+            // ── APPLY SORT ───────────────────────────────────────────
+            if (oSortItem) {
+                const oSorter = new Sorter(oSortItem.getKey(), bDescending);
+                oBinding.sort(oSorter);
+            }
             
-            // Show confirmation
-            const sDirection = bDescending ? this._getText("sortDescending") : this._getText("sortAscending");
-            MessageToast.show(this._getText("msgSortApplied", [oSortItem.getText(), sDirection]));
+            // ── COLLECT & STORE FILTER SELECTIONS ───────────────────
+            const aStatusKeys = [];
+            const aTechnicianKeys = [];
+            
+            aFilterItems.forEach(oItem => {
+                const sGroupKey = oItem.getParent ? oItem.getParent().getKey() : null;
+                if (sGroupKey === "status") {
+                    aStatusKeys.push(oItem.getKey());
+                } else if (sGroupKey === "technician") {
+                    aTechnicianKeys.push(oItem.getKey());
+                }
+            });
+            
+            // Persist active filter state on the table element
+            oTable.data("activeFilters", { statusKeys: aStatusKeys, technicianKeys: aTechnicianKeys });
+            
+            // ── APPLY FILTERS ────────────────────────────────────────
+            this._applyTableFilters(oTable, sTableType);
+            
+            // ── FEEDBACK ─────────────────────────────────────────────
+            const iFilterCount = aStatusKeys.length + aTechnicianKeys.length;
+            if (oSortItem && iFilterCount > 0) {
+                const sDirection = bDescending ? this._getText("sortDescending") : this._getText("sortAscending");
+                MessageToast.show(this._getText("msgSortAndFilterApplied", [oSortItem.getText(), sDirection, iFilterCount]));
+            } else if (oSortItem) {
+                const sDirection = bDescending ? this._getText("sortDescending") : this._getText("sortAscending");
+                MessageToast.show(this._getText("msgSortApplied", [oSortItem.getText(), sDirection]));
+            } else if (iFilterCount > 0) {
+                MessageToast.show(this._getText("msgFilterApplied", [iFilterCount]));
+            }
         },
 
         /**
@@ -344,7 +430,7 @@ sap.ui.define([
         },
 
         /**
-         * Handle sort dialog reset
+         * Handle sort & filter dialog reset — clears both sort and filters
          * @param {sap.ui.base.Event} oEvent - Reset event
          */
         onTMSortDialogReset(oEvent) {
@@ -356,21 +442,23 @@ sap.ui.define([
             const oBinding = oTable.getBinding("rows") || oTable.getBinding("items");
             if (!oBinding) return;
             
-            // Reset to default sort (first field, descending)
+            // Reset sort to default (first field, descending)
             const aSortConfig = this._getSortConfig()[sTableType] || this._getSortConfig()["TM"];
-            const sDefaultPath = aSortConfig[0].key;
-            
-            const oSorter = new Sorter(sDefaultPath, true);
+            const oSorter = new Sorter(aSortConfig[0].key, true);
             oBinding.sort(oSorter);
             
-            // Update dialog selection
             const aSortItems = this._oSortDialog.getSortItems();
-            aSortItems.forEach((oItem, index) => {
-                oItem.setSelected(index === 0);
-            });
+            aSortItems.forEach((oItem, index) => oItem.setSelected(index === 0));
             this._oSortDialog.setSortDescending(true);
             
-            MessageToast.show(this._getText("msgSortReset"));
+            // Clear stored filter state and re-apply (only base type filters remain)
+            oTable.data("activeFilters", { statusKeys: [], technicianKeys: [] });
+            if (sTableType === "TM") {
+                oTable.data("typeSubFilter", "ALL");
+            }
+            this._applyTableFilters(oTable, sTableType);
+            
+            MessageToast.show(this._getText("msgSortFilterReset"));
         },
 
         /**
@@ -394,6 +482,132 @@ sap.ui.define([
             // Create sorter
             const oSorter = new Sorter(sPath, bDescending);
             oBinding.sort(oSorter);
+        },
+
+        /* ========================================
+         * FILTER HELPERS
+         * ======================================== */
+
+        /**
+         * Apply all active filters to a table binding.
+         * Combines: base type filter + TM sub-filter (SegmentedButton) + user filters (status/technician).
+         * @param {sap.m.Table} oTable - Target table
+         * @param {string} sTableType - "TM", "Expense", or "Mileage"
+         * @private
+         */
+        _applyTableFilters(oTable, sTableType) {
+            const oBinding = oTable.getBinding("rows") || oTable.getBinding("items");
+            if (!oBinding) return;
+            
+            const aFilters = [];
+            
+            // 1. Base type filter — keeps each table showing only its own data type
+            aFilters.push(...this._getBaseTypeFilters(sTableType));
+            
+            // 2. Sub-type filter — SegmentedButton (All / Time Effort / Material), TM table only
+            if (sTableType === "TM") {
+                const sSubFilter = oTable.data("typeSubFilter") || "ALL";
+                aFilters.push(...this._getTypeSubFilters(sSubFilter));
+            }
+            
+            // 3. User filters — from ViewSettingsDialog (status & technician)
+            const oActiveFilters = oTable.data("activeFilters") || {};
+            aFilters.push(...this._buildUserFilters(oActiveFilters));
+            
+            oBinding.filter(aFilters);
+        },
+
+        /**
+         * Base filters that lock each table to its own data type.
+         * @param {string} sTableType - "TM", "Expense", or "Mileage"
+         * @returns {sap.ui.model.Filter[]}
+         * @private
+         */
+        _getBaseTypeFilters(sTableType) {
+            if (sTableType === "Expense") {
+                return [new Filter("type", FilterOperator.EQ, "Expense")];
+            }
+            if (sTableType === "Mileage") {
+                return [new Filter("type", FilterOperator.EQ, "Mileage")];
+            }
+            // TM: exclude Expense and Mileage rows
+            return [
+                new Filter("type", FilterOperator.NE, "Expense"),
+                new Filter("type", FilterOperator.NE, "Mileage")
+            ];
+        },
+
+        /**
+         * Sub-type filters from the SegmentedButton (TM table only).
+         * @param {string} sKey - "ALL", "Time Effort", or "Material"
+         * @returns {sap.ui.model.Filter[]}
+         * @private
+         */
+        _getTypeSubFilters(sKey) {
+            if (sKey === "Time Effort") return [new Filter("type", FilterOperator.EQ, "Time Effort")];
+            if (sKey === "Material")    return [new Filter("type", FilterOperator.EQ, "Material")];
+            return []; // ALL — no extra filter needed
+        },
+
+        /**
+         * Build Filter objects from the stored user filter state.
+         * Within each group (status / technician) filters are OR'd.
+         * Between groups they are AND'd.
+         * @param {{ statusKeys: string[], technicianKeys: string[] }} oActiveFilters
+         * @returns {sap.ui.model.Filter[]}
+         * @private
+         */
+        _buildUserFilters(oActiveFilters) {
+            const aResult = [];
+            
+            const aStatusKeys     = oActiveFilters.statusKeys     || [];
+            const aTechnicianKeys = oActiveFilters.technicianKeys || [];
+            
+            if (aStatusKeys.length > 0) {
+                const aStatusFilters = aStatusKeys.map(sKey =>
+                    new Filter("decisionStatus", FilterOperator.EQ, sKey)
+                );
+                // OR within status group
+                aResult.push(aStatusFilters.length === 1
+                    ? aStatusFilters[0]
+                    : new Filter({ filters: aStatusFilters, and: false })
+                );
+            }
+            
+            if (aTechnicianKeys.length > 0) {
+                const aTechFilters = aTechnicianKeys.map(sName =>
+                    new Filter("createPersonDisplayText", FilterOperator.EQ, sName)
+                );
+                // OR within technician group
+                aResult.push(aTechFilters.length === 1
+                    ? aTechFilters[0]
+                    : new Filter({ filters: aTechFilters, and: false })
+                );
+            }
+            
+            return aResult;
+        },
+
+        /**
+         * Walk up the DOM to find the activity model path from a table's binding context.
+         * Used to read all tmReports (unfiltered) for the technician list.
+         * @param {sap.m.Table} oTable
+         * @returns {string|null} e.g. "/productGroups/0/activities/1"
+         * @private
+         */
+        _getActivityPathFromTable(oTable) {
+            let oParent = oTable;
+            while (oParent) {
+                const oContext = oParent.getBindingContext?.("view");
+                if (oContext) {
+                    const sPath = oContext.getPath();
+                    if (sPath && sPath.includes("/activities/")) {
+                        return sPath;
+                    }
+                }
+                oParent = oParent.getParent?.();
+            }
+            return null;
         },
 
         /* ========================================

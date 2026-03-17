@@ -24,10 +24,6 @@
    ======================================== */
 
 /* ========================================
-   PAGE HEADER WITH CUSTOMER LOGO
-   ======================================== */
-
-/* ========================================
    GLOBAL FONT SIZE REDUCTION (~20% smaller)
    ======================================== */
 
@@ -134,23 +130,6 @@
 /* Custom header toolbar styling */
 #mobileAppServiceConfirmationPage .sapMPageHeader .sapMITBHead {
     background-color: #fff;
-}
-
-/* ========================================
-   SESSION CONTEXT PANEL (WebContainerContext fragment)
-   ======================================== */
-
-.sessionContextPanel {
-    border: 1px solid #c5cae9;
-    border-radius: 6px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    background-color: #f8f9ff;
-}
-
-.sessionContextPanel .sapMPanelHdr {
-    border-radius: 4px 4px 0 0;
-    overflow: hidden;
-    background-color: #e8eaf6;
 }
 
 /* ========================================
@@ -472,12 +451,6 @@
 .sapMMsgStrip.sapMMsgStripInformation {
     background-color: #e5f4ff;
     border-left: 3px solid #0854a0;
-}
-
-.sapMBtn,
-.sapMLink {
-    min-height: 44px;
-    min-width: 44px;
 }
 
 /* ========================================

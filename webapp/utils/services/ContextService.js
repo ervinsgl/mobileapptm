@@ -203,12 +203,22 @@ sap.ui.define([], function() {
         },
 
         /**
-         * Get context from backend (web-container-context endpoint)
-         * This is set when FSM Mobile POSTs to /web-container-access-point
+         * Get context from backend (web-container-context endpoint).
+         * The contextKey is injected into the URL by the server redirect after POST,
+         * e.g. /?contextKey=userName_cloudId — we read it here and pass it to GET.
          * @private
          */
         _getMobileContext: async function() {
-            const response = await fetch('/web-container-context', {
+            // Read the key the server embedded in the redirect URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const contextKey = urlParams.get('contextKey');
+
+            if (!contextKey) {
+                // No key in URL — not coming from a mobile web container redirect
+                return null;
+            }
+
+            const response = await fetch(`/web-container-context?key=${encodeURIComponent(contextKey)}`, {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' }
             });

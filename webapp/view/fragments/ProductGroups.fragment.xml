@@ -156,7 +156,7 @@
                                                                 <SegmentedButtonItem key="Material" icon="sap-icon://product" tooltip="{i18n>tooltipMaterial}"/>
                                                             </items>
                                                         </SegmentedButton>
-                                                        <Button icon="sap-icon://sort" press=".onOpenSortDialog" tooltip="{i18n>tmSortByTooltip}" class="sapUiTinyMarginBegin">
+                                                        <Button icon="sap-icon://filter" press=".onOpenSortDialog" tooltip="{i18n>tmSortFilterTooltip}" class="sapUiTinyMarginBegin">
                                                             <customData>
                                                                 <core:CustomData key="tableType" value="TM"/>
                                                             </customData>
@@ -230,7 +230,7 @@
                                                         <Title text="{i18n>tmExpenses}" level="H5"/>
                                                         <ToolbarSpacer/>
                                                         <Button icon="sap-icon://hint" type="Transparent" press=".onShowStatusLegend" tooltip="{i18n>tmStatusLegendTooltip}" class="sapUiTinyMarginBegin"/>
-                                                        <Button icon="sap-icon://sort" press=".onOpenSortDialog" tooltip="{i18n>tmSortByTooltip}" class="sapUiTinyMarginBegin">
+                                                        <Button icon="sap-icon://filter" press=".onOpenSortDialog" tooltip="{i18n>tmSortFilterTooltip}" class="sapUiTinyMarginBegin">
                                                             <customData>
                                                                 <core:CustomData key="tableType" value="Expense"/>
                                                             </customData>
@@ -297,7 +297,7 @@
                                                         <Title text="{i18n>tmMileage}" level="H5"/>
                                                         <ToolbarSpacer/>
                                                         <Button icon="sap-icon://hint" type="Transparent" press=".onShowStatusLegend" tooltip="{i18n>tmStatusLegendTooltip}" class="sapUiTinyMarginBegin"/>
-                                                        <Button icon="sap-icon://sort" press=".onOpenSortDialog" tooltip="{i18n>tmSortByTooltip}" class="sapUiTinyMarginBegin">
+                                                        <Button icon="sap-icon://filter" press=".onOpenSortDialog" tooltip="{i18n>tmSortFilterTooltip}" class="sapUiTinyMarginBegin">
                                                             <customData>
                                                                 <core:CustomData key="tableType" value="Mileage"/>
                                                             </customData>
