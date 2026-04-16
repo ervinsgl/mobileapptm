@@ -5,7 +5,7 @@
  * Handles filtering, sorting, edit selected, and save all operations.
  * 
  * @file TMTableMixin.js
- * @module mobileappsc/controller/mixin/TMTableMixin
+ * @module mobileapptm/controller/mixin/TMTableMixin
  */
 sap.ui.define([
     "sap/m/MessageToast",
@@ -256,7 +256,7 @@ sap.ui.define([
             // Load fragment on first open, reuse on subsequent
             if (!this._oSortDialog) {
                 this._oSortDialog = await Fragment.load({
-                    name: "mobileappsc.view.fragments.TMSortDialog",
+                    name: "mobileapptm.view.fragments.TMSortDialog",
                     controller: this
                 });
                 this.getView().addDependent(this._oSortDialog);

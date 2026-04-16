@@ -17,19 +17,19 @@
  * - _showTimeAndMaterialConfirmation → _submitTimeAndMaterialToFSM
  * 
  * @file TMEditMixin.js
- * @module mobileappsc/controller/mixin/TMEditMixin
+ * @module mobileapptm/controller/mixin/TMEditMixin
  */
 sap.ui.define([
     "sap/m/MessageToast",
     "sap/m/MessageBox",
-    "mobileappsc/utils/tm/TMCreationService",
-    "mobileappsc/utils/tm/TMDataService",
-    "mobileappsc/utils/tm/TMPayloadService",
-    "mobileappsc/utils/tm/TMEditService",
-    "mobileappsc/utils/helpers/DateTimeService",
-    "mobileappsc/utils/services/TimeTaskService",
-    "mobileappsc/utils/services/ItemService",
-    "mobileappsc/utils/services/ExpenseTypeService"
+    "mobileapptm/utils/tm/TMCreationService",
+    "mobileapptm/utils/tm/TMDataService",
+    "mobileapptm/utils/tm/TMPayloadService",
+    "mobileapptm/utils/tm/TMEditService",
+    "mobileapptm/utils/helpers/DateTimeService",
+    "mobileapptm/utils/services/TimeTaskService",
+    "mobileapptm/utils/services/ItemService",
+    "mobileapptm/utils/services/ExpenseTypeService"
 ], (MessageToast, MessageBox, TMCreationService, TMDataService, TMPayloadService, TMEditService, DateTimeService, TimeTaskService, ItemService, ExpenseTypeService) => {
     "use strict";
 

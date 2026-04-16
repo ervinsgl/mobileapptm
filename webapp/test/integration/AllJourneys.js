@@ -7,7 +7,7 @@ sap.ui.define([
 
 	Opa5.extendConfig({
 		arrangements: new Startup(),
-		viewNamespace: "mobileappsc.view.",
+		viewNamespace: "mobileapptm.view.",
 		autoWait: true
 	});
 });

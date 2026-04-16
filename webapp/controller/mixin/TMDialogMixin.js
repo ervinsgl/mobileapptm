@@ -13,22 +13,22 @@
  * - _showEntryJSON: Debug helper to display entry data as formatted JSON
  * 
  * @file TMDialogMixin.js
- * @module mobileappsc/controller/mixin/TMDialogMixin
+ * @module mobileapptm/controller/mixin/TMDialogMixin
  */
 sap.ui.define([
     "sap/m/MessageToast",
     "sap/m/MessageBox",
-    "mobileappsc/utils/tm/TMDialogService",
-    "mobileappsc/utils/tm/TMCreationService",
-    "mobileappsc/utils/tm/TMDataService",
-    "mobileappsc/utils/tm/TMEditService",
-    "mobileappsc/utils/helpers/DateTimeService",
-    "mobileappsc/utils/services/UdfMetaService",
-    "mobileappsc/utils/services/ApprovalService",
-    "mobileappsc/utils/services/PersonService",
-    "mobileappsc/utils/services/TimeTaskService",
-    "mobileappsc/utils/services/ItemService",
-    "mobileappsc/utils/services/ExpenseTypeService"
+    "mobileapptm/utils/tm/TMDialogService",
+    "mobileapptm/utils/tm/TMCreationService",
+    "mobileapptm/utils/tm/TMDataService",
+    "mobileapptm/utils/tm/TMEditService",
+    "mobileapptm/utils/helpers/DateTimeService",
+    "mobileapptm/utils/services/UdfMetaService",
+    "mobileapptm/utils/services/ApprovalService",
+    "mobileapptm/utils/services/PersonService",
+    "mobileapptm/utils/services/TimeTaskService",
+    "mobileapptm/utils/services/ItemService",
+    "mobileapptm/utils/services/ExpenseTypeService"
 ], (MessageToast, MessageBox, TMDialogService, TMCreationService, TMDataService, TMEditService, DateTimeService, UdfMetaService, ApprovalService, PersonService, TimeTaskService, ItemService, ExpenseTypeService) => {
     "use strict";
 

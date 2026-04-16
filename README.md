@@ -374,7 +374,7 @@ All tables support: batch selection (checkbox), inline edit mode, sort dialog, r
 
 | Service | Instance Name | Purpose |
 |---------|---------------|---------|
-| **Destination Service** | `mobileappsc-destination` | FSM API connectivity |
+| **Destination Service** | `mobileapptm-destination` | FSM API connectivity |
 
 ### Destination Configuration (FSM_OAUTH_CONNECT):
 
@@ -408,7 +408,7 @@ The destination `FSM_OAUTH_CONNECT` must be configured in BTP Cockpit with:
 ### 1. Clone & Install
 ```bash
 git clone <repository-url>
-cd mobileappsc
+cd mobileapptm
 npm install
 ```
 
@@ -458,7 +458,7 @@ Additional Properties:
 
 ### 4. Create Destination Service Instance
 ```bash
-cf create-service destination lite mobileappsc-destination
+cf create-service destination lite mobileapptm-destination
 ```
 
 ### 5. Deploy to Cloud Foundry
@@ -468,10 +468,10 @@ cf push
 
 ### 6. Get Application URL
 ```bash
-cf app mobileappsc
+cf app mobileapptm
 ```
 
-Copy the URL (e.g., `https://mobileappsc-xxx.cfapps.eu10.hana.ondemand.com`)
+Copy the URL (e.g., `https://mobileapptm-xxx.cfapps.eu10.hana.ondemand.com`)
 
 ---
 
@@ -486,7 +486,7 @@ Navigate to: **FSM Admin → Company → Web Containers**
 |-------|-------|
 | **Name** | `T&M Journal` |
 | **External ID** | `Z_TMJournal` |
-| **URL** | `https://mobileappsc-xxx.cfapps.eu10.hana.ondemand.com` |
+| **URL** | `https://mobileapptm-xxx.cfapps.eu10.hana.ondemand.com` |
 | **Object Types** | `Activity` |
 | **Active** | ✓ Checked |
 
@@ -528,7 +528,7 @@ Navigate to: **FSM Admin → Company → Extensions**
 |-------|-------|
 | **Name** | `T&M Journal` |
 | **External ID** | `Z_TMJournal_Web` |
-| **URL** | `https://mobileappsc-xxx.cfapps.eu10.hana.ondemand.com` |
+| **URL** | `https://mobileapptm-xxx.cfapps.eu10.hana.ondemand.com` |
 | **Context** | `Activity` or `ServiceCall` |
 | **Active** | ✓ Checked |
 
@@ -565,10 +565,10 @@ The app listens for both lowercase and uppercase ViewState keys. If a ViewState 
 For testing without FSM Mobile or Web UI, use URL parameters:
 ```
 # Open with specific Activity
-https://mobileappsc-xxx.cfapps.eu10.hana.ondemand.com?activityId=ABC123
+https://mobileapptm-xxx.cfapps.eu10.hana.ondemand.com?activityId=ABC123
 
 # Open with specific Service Call
-https://mobileappsc-xxx.cfapps.eu10.hana.ondemand.com?serviceCallId=XYZ789
+https://mobileapptm-xxx.cfapps.eu10.hana.ondemand.com?serviceCallId=XYZ789
 ```
 
 ### Local Development
@@ -770,7 +770,7 @@ POST /web-container-access-point
 
 ## 📁 Project Structure
 ```
-mobileappsc/
+mobileapptm/
 │
 ├── # ─────────── ROOT LEVEL ───────────
 ├── index.js                             # Express server, middleware, web container (~100 lines)
@@ -1133,7 +1133,7 @@ router.get("/api/your-endpoint", async (req, res) => {
 4. **Add to cache warming** in `webapp/utils/services/CacheService.js`:
 ```javascript
 // Add to imports
-"mobileappsc/utils/services/YourService"
+"mobileapptm/utils/services/YourService"
 
 // Add to _executeWarmup parallel loading
 YourService.fetchData()
@@ -1232,7 +1232,7 @@ const isTravelType = TypeConfigService.isTravelType(serviceProductExtId);
 
 ### View Logs
 ```bash
-cf logs mobileappsc --recent
+cf logs mobileapptm --recent
 ```
 
 ### Common Issues
@@ -1326,7 +1326,7 @@ Server running on port 3000
 |                                    |                                                          |
 |------------------------------------|----------------------------------------------------------|
 | **App Name**                       | T&M Journal                                              |
-| **Module Name**                    | mobileappsc                                              |
+| **Module Name**                    | mobileapptm                                              |
 | **Framework**                      | SAP UI5 (Fiori) + Node.js Express                        |
 | **UI5 Theme**                      | sap_horizon                                              |
 | **UI5 Version**                    | Latest (OpenUI5 from CDN)                                |

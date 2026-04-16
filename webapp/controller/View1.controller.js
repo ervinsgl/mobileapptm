@@ -6,7 +6,7 @@
  * resolution, activity loading, and T&M (Time & Materials) reporting.
  * 
  * @file View1.controller.js
- * @module mobileappsc/controller/View1
+ * @module mobileapptm/controller/View1
  * 
  * Initialization Flow:
  * 1. Load web container context (FSM Mobile sends userName, cloudId, etc.)
@@ -32,14 +32,14 @@ sap.ui.define([
     "sap/ui/core/Fragment",
     "sap/m/MessageToast",
     "sap/m/MessageBox",
-    "mobileappsc/model/formatter",
-    "mobileappsc/utils/services/OrganizationService",
-    "mobileappsc/utils/services/PersonService",
-    "mobileappsc/utils/services/ItemService",
-    "mobileappsc/utils/services/UdfMetaService",
-    "mobileappsc/utils/services/TypeConfigService",
-    "mobileappsc/utils/services/CacheService",
-    "mobileappsc/utils/tm/TMDialogService",
+    "mobileapptm/model/formatter",
+    "mobileapptm/utils/services/OrganizationService",
+    "mobileapptm/utils/services/PersonService",
+    "mobileapptm/utils/services/ItemService",
+    "mobileapptm/utils/services/UdfMetaService",
+    "mobileapptm/utils/services/TypeConfigService",
+    "mobileapptm/utils/services/CacheService",
+    "mobileapptm/utils/tm/TMDialogService",
     "./mixin/DataLoadingMixin",
     "./mixin/TMDialogMixin",
     "./mixin/TMEditMixin",
@@ -55,7 +55,7 @@ sap.ui.define([
     /**
      * Merge all mixins with controller methods
      */
-    return Controller.extend("mobileappsc.controller.View1", Object.assign({}, 
+    return Controller.extend("mobileapptm.controller.View1", Object.assign({}, 
         DataLoadingMixin, 
         TMDialogMixin, 
         TMEditMixin,
@@ -480,7 +480,7 @@ sap.ui.define([
         async onShowContextInfo() {
             if (!this._contextInfoDialog) {
                 this._contextInfoDialog = await Fragment.load({
-                    name: "mobileappsc.view.fragments.ContextInfoDialog",
+                    name: "mobileapptm.view.fragments.ContextInfoDialog",
                     controller: this
                 });
                 this.getView().addDependent(this._contextInfoDialog);
@@ -504,7 +504,7 @@ sap.ui.define([
         async onShowStatusLegend() {
             if (!this._statusLegendDialog) {
                 this._statusLegendDialog = await Fragment.load({
-                    name: "mobileappsc.view.fragments.StatusLegendDialog",
+                    name: "mobileapptm.view.fragments.StatusLegendDialog",
                     controller: this
                 });
                 this.getView().addDependent(this._statusLegendDialog);
@@ -527,7 +527,7 @@ sap.ui.define([
         async onOpenTypeConfig() {
             if (!this._typeConfigDialog) {
                 this._typeConfigDialog = await Fragment.load({
-                    name: "mobileappsc.view.fragments.TypeConfigDialog",
+                    name: "mobileapptm.view.fragments.TypeConfigDialog",
                     controller: this
                 });
                 this.getView().addDependent(this._typeConfigDialog);

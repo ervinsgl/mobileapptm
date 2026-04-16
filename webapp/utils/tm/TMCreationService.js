@@ -18,13 +18,13 @@
  * - Time & Material: Combined entry (material + up to 3 time entries)
  * 
  * @file TMCreationService.js
- * @module mobileappsc/utils/tm/TMCreationService
+ * @module mobileapptm/utils/tm/TMCreationService
  * @requires sap/m/MessageToast
- * @requires mobileappsc/utils/helpers/DateTimeService
+ * @requires mobileapptm/utils/helpers/DateTimeService
  */
 sap.ui.define([
     "sap/m/MessageToast",
-    "mobileappsc/utils/helpers/DateTimeService"
+    "mobileapptm/utils/helpers/DateTimeService"
 ], (MessageToast, DateTimeService) => {
     "use strict";
 
@@ -37,7 +37,7 @@ sap.ui.define([
          * @private
          */
         _getText(key, args) {
-            const oComponent = sap.ui.getCore().getComponent("container-mobileappsc");
+            const oComponent = sap.ui.getCore().getComponent("container-mobileapptm");
             if (oComponent) {
                 const oBundle = oComponent.getModel("i18n").getResourceBundle();
                 return oBundle.getText(key, args);

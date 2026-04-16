@@ -15,7 +15,7 @@
  * - POST /api/get-activities-by-service-call
  * 
  * @file ActivityService.js
- * @module mobileappsc/utils/services/ActivityService
+ * @module mobileapptm/utils/services/ActivityService
  */
 sap.ui.define([], () => {
     "use strict";

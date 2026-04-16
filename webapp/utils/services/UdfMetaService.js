@@ -17,7 +17,7 @@
  * - POST /api/get-udf-meta
  * 
  * @file UdfMetaService.js
- * @module mobileappsc/utils/services/UdfMetaService
+ * @module mobileapptm/utils/services/UdfMetaService
  */
 sap.ui.define([], () => {
     "use strict";

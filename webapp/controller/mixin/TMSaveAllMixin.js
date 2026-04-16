@@ -8,7 +8,7 @@
  * newly created entries from the create dialog.
  * 
  * @file TMSaveAllMixin.js
- * @module mobileappsc/controller/mixin/TMSaveAllMixin
+ * @module mobileapptm/controller/mixin/TMSaveAllMixin
  */
 sap.ui.define([
     "sap/m/MessageToast",

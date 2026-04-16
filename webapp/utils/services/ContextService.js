@@ -18,7 +18,7 @@
  *   });
  * 
  * @file ContextService.js
- * @module mobileappsc/utils/services/ContextService
+ * @module mobileapptm/utils/services/ContextService
  */
 sap.ui.define([], function() {
     "use strict";

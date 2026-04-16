@@ -1,7 +1,7 @@
 /* global QUnit */
 QUnit.config.autostart = false;
 
-sap.ui.require(["mobileappsc/test/integration/AllJourneys"
+sap.ui.require(["mobileapptm/test/integration/AllJourneys"
 ], function () {
 	QUnit.start();
 });

@@ -10,10 +10,10 @@
  * 3. FSM Web UI Shell: fsm-shell SDK communication
  * 
  * @file URLHelper.js
- * @module mobileappsc/utils/helpers/URLHelper
+ * @module mobileapptm/utils/helpers/URLHelper
  */
 sap.ui.define([
-    "mobileappsc/utils/services/ContextService"
+    "mobileapptm/utils/services/ContextService"
 ], (ContextService) => {
     "use strict";
 

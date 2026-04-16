@@ -16,26 +16,26 @@
  * - ServiceCall: Goes directly to service call API (skips activity fetch)
  * 
  * @file DataLoadingMixin.js
- * @module mobileappsc/controller/mixin/DataLoadingMixin
+ * @module mobileapptm/controller/mixin/DataLoadingMixin
  */
 sap.ui.define([
     "sap/m/MessageToast",
     "sap/m/MessageBox",
-    "mobileappsc/utils/services/OrganizationService",
-    "mobileappsc/utils/services/TimeTaskService",
-    "mobileappsc/utils/services/ItemService",
-    "mobileappsc/utils/services/ExpenseTypeService",
-    "mobileappsc/utils/services/ActivityService",
-    "mobileappsc/utils/services/ServiceOrderService",
-    "mobileappsc/utils/services/PersonService",
-    "mobileappsc/utils/services/BusinessPartnerService",
-    "mobileappsc/utils/services/ApprovalService",
-    "mobileappsc/utils/services/UdfMetaService",
-    "mobileappsc/utils/services/TechnicianService",
-    "mobileappsc/utils/services/ContextService",
-    "mobileappsc/utils/helpers/URLHelper",
-    "mobileappsc/utils/helpers/ProductGroupService",
-    "mobileappsc/utils/tm/TMDataService"
+    "mobileapptm/utils/services/OrganizationService",
+    "mobileapptm/utils/services/TimeTaskService",
+    "mobileapptm/utils/services/ItemService",
+    "mobileapptm/utils/services/ExpenseTypeService",
+    "mobileapptm/utils/services/ActivityService",
+    "mobileapptm/utils/services/ServiceOrderService",
+    "mobileapptm/utils/services/PersonService",
+    "mobileapptm/utils/services/BusinessPartnerService",
+    "mobileapptm/utils/services/ApprovalService",
+    "mobileapptm/utils/services/UdfMetaService",
+    "mobileapptm/utils/services/TechnicianService",
+    "mobileapptm/utils/services/ContextService",
+    "mobileapptm/utils/helpers/URLHelper",
+    "mobileapptm/utils/helpers/ProductGroupService",
+    "mobileapptm/utils/tm/TMDataService"
 ], (MessageToast, MessageBox, OrganizationService, TimeTaskService, ItemService, ExpenseTypeService, ActivityService, ServiceOrderService, PersonService, BusinessPartnerService, ApprovalService, UdfMetaService, TechnicianService, ContextService, URLHelper, ProductGroupService, TMDataService) => {
     "use strict";
 

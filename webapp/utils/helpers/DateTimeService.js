@@ -15,7 +15,7 @@
  * Date Format: yyyy-MM-dd (e.g., "2025-11-28")
  * 
  * @file DateTimeService.js
- * @module mobileappsc/utils/helpers/DateTimeService
+ * @module mobileapptm/utils/helpers/DateTimeService
  */
 sap.ui.define([], () => {
     "use strict";

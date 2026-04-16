@@ -6,7 +6,7 @@
  * model cleanup, and count recalculation.
  * 
  * @file TMDeleteMixin.js
- * @module mobileappsc/controller/mixin/TMDeleteMixin
+ * @module mobileapptm/controller/mixin/TMDeleteMixin
  */
 sap.ui.define([
     "sap/m/MessageToast",

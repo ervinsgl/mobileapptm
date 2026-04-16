@@ -14,7 +14,7 @@
  * - POST /api/get-reported-items
  * 
  * @file ReportedItemsData.js
- * @module mobileappsc/utils/helpers/ReportedItemsData
+ * @module mobileapptm/utils/helpers/ReportedItemsData
  */
 sap.ui.define([], () => {
     "use strict";

@@ -2,7 +2,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Start mobileappsc",
+      "name": "Start mobileapptm",
       "type": "node",
       "request": "launch",
       "cwd": "${workspaceFolder}",
@@ -24,11 +24,11 @@
       "env": {
         "DEBUG": "--inspect",
         "FIORI_TOOLS_URL_PARAMS": "sap-ui-xx-viewCache=false",
-        "run.config": "{\"handlerId\":\"fiori_tools\",\"runnableId\":\"/home/user/projects/mobileappsc\"}"
+        "run.config": "{\"handlerId\":\"fiori_tools\",\"runnableId\":\"/home/user/projects/mobileapptm\"}"
       }
     },
     {
-      "name": "Start mobileappsc Local",
+      "name": "Start mobileapptm Local",
       "type": "node",
       "request": "launch",
       "cwd": "${workspaceFolder}",
@@ -51,7 +51,7 @@
       "outputCapture": "std",
       "env": {
         "FIORI_TOOLS_URL_PARAMS": "sap-ui-xx-viewCache=false",
-        "run.config": "{\"handlerId\":\"fiori_tools\",\"runnableId\":\"/home/user/projects/mobileappsc\"}"
+        "run.config": "{\"handlerId\":\"fiori_tools\",\"runnableId\":\"/home/user/projects/mobileapptm\"}"
       }
     }
   ]

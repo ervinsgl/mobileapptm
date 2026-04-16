@@ -5,14 +5,14 @@
  * Handles multi-technician and repeat date expansion.
  * 
  * @file TMSaveMixin.js
- * @module mobileappsc/controller/mixin/TMSaveMixin
+ * @module mobileapptm/controller/mixin/TMSaveMixin
  */
 sap.ui.define([
     "sap/m/MessageToast",
     "sap/m/MessageBox",
-    "mobileappsc/utils/tm/TMPayloadService",
-    "mobileappsc/utils/tm/TMDataService",
-    "mobileappsc/utils/services/TimeTaskService"
+    "mobileapptm/utils/tm/TMPayloadService",
+    "mobileapptm/utils/tm/TMDataService",
+    "mobileapptm/utils/services/TimeTaskService"
 ], (MessageToast, MessageBox, TMPayloadService, TMDataService, TimeTaskService) => {
     "use strict";
 

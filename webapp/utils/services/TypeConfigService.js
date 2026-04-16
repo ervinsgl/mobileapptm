@@ -14,7 +14,7 @@
  * - Mileage: Z40000038, Z40000008
  * 
  * @file TypeConfigService.js
- * @module mobileappsc/utils/services/TypeConfigService
+ * @module mobileapptm/utils/services/TypeConfigService
  */
 sap.ui.define([], () => {
     "use strict";

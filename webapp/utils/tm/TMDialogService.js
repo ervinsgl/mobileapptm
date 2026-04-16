@@ -16,27 +16,27 @@
  * - TMCreateDialog: Create new T&M entries
  * 
  * @file TMDialogService.js
- * @module mobileappsc/utils/tm/TMDialogService
+ * @module mobileapptm/utils/tm/TMDialogService
  * @requires sap/ui/core/Fragment
  * @requires sap/ui/model/json/JSONModel
  * @requires sap/m/MessageToast
- * @requires mobileappsc/utils/services/TechnicianService
- * @requires mobileappsc/utils/tm/TMCreationService
- * @requires mobileappsc/utils/services/TimeTaskService
- * @requires mobileappsc/utils/services/ItemService
- * @requires mobileappsc/utils/services/ExpenseTypeService
+ * @requires mobileapptm/utils/services/TechnicianService
+ * @requires mobileapptm/utils/tm/TMCreationService
+ * @requires mobileapptm/utils/services/TimeTaskService
+ * @requires mobileapptm/utils/services/ItemService
+ * @requires mobileapptm/utils/services/ExpenseTypeService
  */
 sap.ui.define([
     "sap/ui/core/Fragment",
     "sap/ui/model/json/JSONModel",
     "sap/m/MessageToast",
-    "mobileappsc/utils/services/TechnicianService",
-    "mobileappsc/utils/tm/TMCreationService",
-    "mobileappsc/utils/services/TimeTaskService",
-    "mobileappsc/utils/services/ItemService",
-    "mobileappsc/utils/services/ExpenseTypeService",
-    "mobileappsc/utils/services/ActivityService",
-    "mobileappsc/utils/services/TypeConfigService"
+    "mobileapptm/utils/services/TechnicianService",
+    "mobileapptm/utils/tm/TMCreationService",
+    "mobileapptm/utils/services/TimeTaskService",
+    "mobileapptm/utils/services/ItemService",
+    "mobileapptm/utils/services/ExpenseTypeService",
+    "mobileapptm/utils/services/ActivityService",
+    "mobileapptm/utils/services/TypeConfigService"
 ], (Fragment, JSONModel, MessageToast, TechnicianService, TMCreationService, TimeTaskService, ItemService, ExpenseTypeService, ActivityService, TypeConfigService) => {
     "use strict";
 
@@ -385,7 +385,7 @@ sap.ui.define([
         async _openDialog(fragmentName, model, modelName, dialogProperty) {
             if (!this._controller[dialogProperty]) {
                 this._controller[dialogProperty] = await Fragment.load({
-                    name: `mobileappsc.view.fragments.${fragmentName}`,
+                    name: `mobileapptm.view.fragments.${fragmentName}`,
                     controller: this._controller
                 });
                 this._controller.getView().addDependent(this._controller[dialogProperty]);

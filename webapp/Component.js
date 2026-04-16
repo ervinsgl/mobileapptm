@@ -14,18 +14,18 @@
  * includes fallback navigation to ensure View1 loads correctly.
  * 
  * @file Component.js
- * @module mobileappsc/Component
+ * @module mobileapptm/Component
  * @extends sap.ui.core.UIComponent
  * @requires sap/ui/core/UIComponent
- * @requires mobileappsc/model/models
+ * @requires mobileapptm/model/models
  */
 sap.ui.define([
     "sap/ui/core/UIComponent",
-    "mobileappsc/model/models"
+    "mobileapptm/model/models"
 ], (UIComponent, models) => {
     "use strict";
 
-    return UIComponent.extend("mobileappsc.Component", {
+    return UIComponent.extend("mobileapptm.Component", {
         metadata: {
             manifest: "json",
             interfaces: [

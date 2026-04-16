@@ -1,5 +1,5 @@
 applications:
-  - name: mobileappsc
+  - name: mobileapptm
     memory: 512M
     disk_quota: 512M
     instances: 1
@@ -7,6 +7,7 @@ applications:
       - nodejs_buildpack
     command: npm start
     path: .
-    random-route: true
+    routes:
+      - route: mobileapptm-fsm-dev-op.cfapps.eu10-004.hana.ondemand.com
     services:
-      - mobileappsc-destination
+      - mobileapptm-destination
