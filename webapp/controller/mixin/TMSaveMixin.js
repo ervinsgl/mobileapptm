@@ -44,7 +44,11 @@ sap.ui.define([
             let hasErrors = false;
             let errorMessages = [];
             
-            [...aTimeEntriesAZ, ...aTimeEntriesFZ, ...aTimeEntriesWZ].forEach(entry => {
+            // Validate no future dates across all time entries
+            const allTimeEntries = [...aTimeEntriesAZ, ...aTimeEntriesFZ, ...aTimeEntriesWZ];
+            if (this._validateNoFutureDates([...aMaterialEntries, ...allTimeEntries])) return;
+
+            allTimeEntries.forEach(entry => {
                 if (!entry.taskCode) {
                     hasErrors = true;
                     errorMessages.push("task");
@@ -398,6 +402,37 @@ sap.ui.define([
         _updateMainViewTMCounts(activityId, reports) {
             // This method is now replaced by _refreshTMReportsAfterCreate
             // Keeping for backward compatibility
+        },
+
+        /**
+         * Validate that no entry has a future entryDate or repeatEndDate.
+         * Shows a MessageBox.error with the localized message and returns true if invalid.
+         * Shared helper — callable from all 3 save handlers via this.
+         * @param {Array} aEntries - Array of entry objects with optional entryDate / repeatEndDate
+         * @returns {boolean} true if future date found (caller should return early)
+         * @private
+         */
+        _validateNoFutureDates(aEntries) {
+            const today = new Date();
+            today.setHours(23, 59, 59, 999);
+
+            const hasFuture = aEntries.some(entry => {
+                if (entry.entryDate) {
+                    const d = new Date(entry.entryDate);
+                    if (!isNaN(d) && d > today) return true;
+                }
+                if (entry.repeatEndDate) {
+                    const d = new Date(entry.repeatEndDate);
+                    if (!isNaN(d) && d > today) return true;
+                }
+                return false;
+            });
+
+            if (hasFuture) {
+                MessageBox.error(this._getText("msgFutureDateNotAllowed"));
+                return true;
+            }
+            return false;
         }
 
     };

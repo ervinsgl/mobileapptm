@@ -244,6 +244,8 @@ sap.ui.define([
                 return;
             }
             
+            if (this._validateNoFutureDates(aExpenseEntries)) return;
+            
             const lines = aExpenseEntries.map((e, i) => 
                 `${i + 1}. ${e.expenseTypeDisplay || 'N/A'} - Ext: ${e.externalAmountValue} EUR`
             );
@@ -434,6 +436,8 @@ sap.ui.define([
                 MessageBox.warning(this._getText("msgSelectItemAndTechnician"));
                 return;
             }
+
+            if (this._validateNoFutureDates(aMileageEntries)) return;
             
             const lines = aMileageEntries.map((e, i) => 
                 `${i + 1}. ${e.itemDisplay || 'N/A'} - ${e.distance} km`

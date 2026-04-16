@@ -140,7 +140,7 @@
                                             <Input value="{createTM>externalAmountValue}" type="Number" width="100%"/>
                                             <Input value="{createTM>internalAmountValue}" type="Number" width="100%"/>
                                             <Text text="{i18n>tmEurCurrency}"/>
-                                            <DatePicker value="{createTM>entryDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="100%"/>
+                                            <DatePicker value="{createTM>entryDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="100%" maxDate="{path: 'createTM>entryDate', formatter: '.formatTodayMaxDate'}"/>
                                             <Input value="{createTM>remarks}" width="100%" placeholder="{i18n>createTMEnterRemarks}"/>
                                         </cells>
                                     </ColumnListItem>
@@ -225,7 +225,7 @@
                                             <Text text="{i18n>tmKmUnit}"/>
                                             <Input value="{createTM>travelDuration}" type="Number" width="100%"/>
                                             <Text text="{i18n>tmMinUnit}"/>
-                                            <DatePicker value="{createTM>entryDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="100%"/>
+                                            <DatePicker value="{createTM>entryDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="100%" maxDate="{path: 'createTM>entryDate', formatter: '.formatTodayMaxDate'}"/>
                                             <Input value="{createTM>remarks}" width="100%" placeholder="{i18n>createTMEnterRemarks}"/>
                                         </cells>
                                     </ColumnListItem>
@@ -315,7 +315,7 @@
                                                     valueStateText="{i18n>createTMQtyExceeds}"
                                                 />
                                                 <Text text="{path: 'createTM>/remainingMaterialQty', formatter: '.formatter.formatRemainingQty'}"/>
-                                                <DatePicker value="{createTM>entryDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="100%"/>
+                                                <DatePicker value="{createTM>entryDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="100%" maxDate="{path: 'createTM>entryDate', formatter: '.formatTodayMaxDate'}"/>
                                                 <Input value="{createTM>remarks}" placeholder="{i18n>createTMRemarksPlaceholder}" width="100%"/>
                                             </cells>
                                         </ColumnListItem>
@@ -411,7 +411,7 @@
                                                 </MultiInput>
                                                 <StepInput value="{createTM>durationHrs}" min="0" step="0.25" displayValuePrecision="2" width="100%"/>
                                                 <Text text="{i18n>activityHoursUnit}"/>
-                                                <DatePicker value="{createTM>entryDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yy" width="100%" change=".onTimeEntryDateChange"/>
+                                                <DatePicker value="{createTM>entryDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yy" width="100%" change=".onTimeEntryDateChange" maxDate="{path: 'createTM>entryDate', formatter: '.formatTodayMaxDate'}"/>
                                                 <CheckBox selected="{createTM>repeatEnabled}" select=".onRepeatCheckboxChange"/>
                                                 <DatePicker 
                                                     value="{createTM>repeatEndDate}" 
@@ -420,6 +420,7 @@
                                                     width="100%" 
                                                     enabled="{createTM>repeatEnabled}"
                                                     minDate="{path: 'createTM>entryDate', formatter: '.formatMinEndDate'}"
+                                                    maxDate="{path: 'createTM>entryDate', formatter: '.formatTodayMaxDate'}"
                                                     placeholder="{i18n>createTMEndPlaceholder}"
                                                 />
                                                 <Input value="{createTM>remarks}" placeholder="{i18n>createTMRemarksPlaceholder}" width="100%"/>
@@ -517,7 +518,7 @@
                                                 </MultiInput>
                                                 <StepInput value="{createTM>durationHrs}" min="0" step="0.25" displayValuePrecision="2" width="100%"/>
                                                 <Text text="{i18n>activityHoursUnit}"/>
-                                                <DatePicker value="{createTM>entryDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yy" width="100%" change=".onTimeEntryDateChange"/>
+                                                <DatePicker value="{createTM>entryDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yy" width="100%" change=".onTimeEntryDateChange" maxDate="{path: 'createTM>entryDate', formatter: '.formatTodayMaxDate'}"/>
                                                 <CheckBox selected="{createTM>repeatEnabled}" select=".onRepeatCheckboxChange"/>
                                                 <DatePicker 
                                                     value="{createTM>repeatEndDate}" 
@@ -526,6 +527,7 @@
                                                     width="100%" 
                                                     enabled="{createTM>repeatEnabled}"
                                                     minDate="{path: 'createTM>entryDate', formatter: '.formatMinEndDate'}"
+                                                    maxDate="{path: 'createTM>entryDate', formatter: '.formatTodayMaxDate'}"
                                                     placeholder="{i18n>createTMEndPlaceholder}"
                                                 />
                                                 <Input value="{createTM>remarks}" placeholder="{i18n>createTMRemarksPlaceholder}" width="100%"/>
@@ -623,7 +625,7 @@
                                                 </MultiInput>
                                                 <StepInput value="{createTM>durationHrs}" min="0" step="0.25" displayValuePrecision="2" width="100%"/>
                                                 <Text text="{i18n>activityHoursUnit}"/>
-                                                <DatePicker value="{createTM>entryDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yy" width="100%" change=".onTimeEntryDateChange"/>
+                                                <DatePicker value="{createTM>entryDate}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yy" width="100%" change=".onTimeEntryDateChange" maxDate="{path: 'createTM>entryDate', formatter: '.formatTodayMaxDate'}"/>
                                                 <CheckBox selected="{createTM>repeatEnabled}" select=".onRepeatCheckboxChange"/>
                                                 <DatePicker 
                                                     value="{createTM>repeatEndDate}" 
@@ -632,6 +634,7 @@
                                                     width="100%" 
                                                     enabled="{createTM>repeatEnabled}"
                                                     minDate="{path: 'createTM>entryDate', formatter: '.formatMinEndDate'}"
+                                                    maxDate="{path: 'createTM>entryDate', formatter: '.formatTodayMaxDate'}"
                                                     placeholder="{i18n>createTMEndPlaceholder}"
                                                 />
                                                 <Input value="{createTM>remarks}" placeholder="{i18n>createTMRemarksPlaceholder}" width="100%"/>
