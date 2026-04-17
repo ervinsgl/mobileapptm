@@ -69,6 +69,32 @@ sap.ui.define([
         },
 
         /**
+         * Normalize a date string to yyyy-MM-dd for API submission.
+         * Handles both yyyy-MM-dd (model format) and dd.MM.yyyy (display format from manual typing).
+         * If the string is already yyyy-MM-dd it passes through unchanged.
+         * @param {string} sDate - Date string in either format
+         * @returns {string|null} Date in yyyy-MM-dd format, or null if unparseable
+         * @private
+         */
+        _normalizeDate(sDate) {
+            if (!sDate) return null;
+            // Already in API format yyyy-MM-dd
+            if (/^\d{4}-\d{2}-\d{2}$/.test(sDate)) return sDate;
+            // Display format dd.MM.yyyy (from manual typing in DatePicker)
+            if (/^\d{2}\.\d{2}\.\d{4}$/.test(sDate)) {
+                const parts = sDate.split('.');
+                return `${parts[2]}-${parts[1]}-${parts[0]}`;
+            }
+            // Shortened display format dd.MM.yy
+            if (/^\d{2}\.\d{2}\.\d{2}$/.test(sDate)) {
+                const parts = sDate.split('.');
+                return `20${parts[2]}-${parts[1]}-${parts[0]}`;
+            }
+            console.warn("TMPayloadService: unrecognized date format:", sDate);
+            return null;
+        },
+
+        /**
          * Build payload based on entry type.
          * @param {Object} oEntry - Entry data object
          * @param {string} activityId - Activity ID
@@ -159,7 +185,7 @@ sap.ui.define([
 
             // Use user-selected date, fallback to activity planned start, then today
             const activityPlannedStart = TMCreationService.getActivityPlannedStartDate();
-            const materialDate = oEntry.entryDate 
+            const materialDate = this._normalizeDate(oEntry.entryDate)
                 || (activityPlannedStart ? activityPlannedStart.split('T')[0] : null)
                 || new Date().toISOString().split('T')[0];
 
@@ -195,7 +221,7 @@ sap.ui.define([
 
             // Use user-selected date, fallback to activity planned start, then today
             const activityPlannedStart = TMCreationService.getActivityPlannedStartDate();
-            const expenseDate = oEntry.entryDate 
+            const expenseDate = this._normalizeDate(oEntry.entryDate)
                 || (activityPlannedStart ? activityPlannedStart.split('T')[0] : null)
                 || new Date().toISOString().split('T')[0];
 
@@ -241,7 +267,7 @@ sap.ui.define([
             const activityPlannedStart = TMCreationService.getActivityPlannedStartDate();
             
             // Use user-selected date, fallback to activity planned start, then today
-            const userDate = oEntry.entryDate 
+            const userDate = this._normalizeDate(oEntry.entryDate)
                 || (activityPlannedStart ? activityPlannedStart.split('T')[0] : null)
                 || new Date().toISOString().split('T')[0];
             
@@ -393,8 +419,8 @@ sap.ui.define([
 
             // Sort entries: first by date, then by type order (AZ -> FZ -> WZ)
             allTimeEntries.sort((a, b) => {
-                const dateA = a.entryDate || baseStartDateTime.split('T')[0];
-                const dateB = b.entryDate || baseStartDateTime.split('T')[0];
+                const dateA = this._normalizeDate(a.entryDate) || baseStartDateTime.split('T')[0];
+                const dateB = this._normalizeDate(b.entryDate) || baseStartDateTime.split('T')[0];
                 
                 if (dateA !== dateB) {
                     return dateA.localeCompare(dateB);
@@ -407,7 +433,7 @@ sap.ui.define([
 
             // Build payload for each entry with sequential times per date
             const buildTimeEffortPayload = (entry) => {
-                const entryDateStr = entry.entryDate || baseStartDateTime.split('T')[0];
+                const entryDateStr = this._normalizeDate(entry.entryDate) || baseStartDateTime.split('T')[0];
                 
                 // Get start time: either from previous entry's end time (same date) or base time
                 let startTime;

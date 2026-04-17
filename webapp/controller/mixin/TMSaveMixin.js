@@ -44,9 +44,14 @@ sap.ui.define([
             let hasErrors = false;
             let errorMessages = [];
             
-            // Validate no future dates across all time entries
+            // Validate no future dates across all entries — blocks everything if any entry is faulty
             const allTimeEntries = [...aTimeEntriesAZ, ...aTimeEntriesFZ, ...aTimeEntriesWZ];
-            if (this._validateNoFutureDates([...aMaterialEntries, ...allTimeEntries])) return;
+            const allEntries = [...aMaterialEntries, ...allTimeEntries];
+            if (this._validateNoFutureDates(allEntries, (entry, index) => {
+                const type = entry.type || (index < aMaterialEntries.length ? "Material" : "Time Entry");
+                const desc = entry.itemDisplay || entry.taskDisplay || entry.technicianDisplay || "";
+                return `${this._getText("msgEntryNumber")} ${index + 1} (${type}${desc ? " - " + desc : ""})`;
+            })) return;
 
             allTimeEntries.forEach(entry => {
                 if (!entry.taskCode) {
@@ -227,8 +232,8 @@ sap.ui.define([
                 
                 // Sort by date, then type order
                 allTimeEntries.sort((a, b) => {
-                    const dateA = a.entryDate || '';
-                    const dateB = b.entryDate || '';
+                    const dateA = TMPayloadService._normalizeDate(a.entryDate) || a.entryDate || '';
+                    const dateB = TMPayloadService._normalizeDate(b.entryDate) || b.entryDate || '';
                     if (dateA !== dateB) return dateA.localeCompare(dateB);
                     return a.typeOrder - b.typeOrder;
                 });
@@ -260,7 +265,9 @@ sap.ui.define([
                 const baseTimePortion = activityPlannedStart.split('T')[1] || '12:00:00Z';
                 
                 for (const entry of allTimeEntries) {
-                    const entryDateStr = entry.entryDate || activityPlannedStart.split('T')[0];
+                    // Normalize date — handles both yyyy-MM-dd and dd.MM.yyyy from manual typing
+                    const rawDate = entry.entryDate || activityPlannedStart.split('T')[0];
+                    const entryDateStr = TMPayloadService._normalizeDate(rawDate) || activityPlannedStart.split('T')[0];
                     
                     // Calculate start time
                     let startTime;
@@ -406,30 +413,53 @@ sap.ui.define([
 
         /**
          * Validate that no entry has a future entryDate or repeatEndDate.
-         * Shows a MessageBox.error with the localized message and returns true if invalid.
-         * Shared helper — callable from all 3 save handlers via this.
-         * @param {Array} aEntries - Array of entry objects with optional entryDate / repeatEndDate
-         * @returns {boolean} true if future date found (caller should return early)
+         * Handles both yyyy-MM-dd (model format) and dd.MM.yyyy (manual typing).
+         * Collects ALL faulty entries and shows which ones are invalid.
+         * Shows MessageBox.error and returns true if any future date found — caller should return early.
+         * @param {Array} aEntries - Array of entry objects
+         * @param {Function} [fnLabel] - Optional fn(entry, index) => string for entry label in error message
+         * @returns {boolean} true if future date found
          * @private
          */
-        _validateNoFutureDates(aEntries) {
-            const today = new Date();
-            today.setHours(23, 59, 59, 999);
+        _validateNoFutureDates(aEntries, fnLabel) {
+            const now = new Date();
+            const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
 
-            const hasFuture = aEntries.some(entry => {
-                if (entry.entryDate) {
-                    const d = new Date(entry.entryDate);
-                    if (!isNaN(d) && d > today) return true;
+            // Parse a date string in either yyyy-MM-dd or dd.MM.yyyy or dd.MM.yy as LOCAL midnight
+            const parseLocal = (sDate) => {
+                if (!sDate) return null;
+                // yyyy-MM-dd
+                if (/^\d{4}-\d{2}-\d{2}$/.test(sDate)) {
+                    const p = sDate.split('-');
+                    return new Date(parseInt(p[0]), parseInt(p[1]) - 1, parseInt(p[2]));
                 }
-                if (entry.repeatEndDate) {
-                    const d = new Date(entry.repeatEndDate);
-                    if (!isNaN(d) && d > today) return true;
+                // dd.MM.yyyy
+                if (/^\d{2}\.\d{2}\.\d{4}$/.test(sDate)) {
+                    const p = sDate.split('.');
+                    return new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0]));
                 }
-                return false;
+                // dd.MM.yy
+                if (/^\d{2}\.\d{2}\.\d{2}$/.test(sDate)) {
+                    const p = sDate.split('.');
+                    return new Date(2000 + parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0]));
+                }
+                return null;
+            };
+
+            const aFaulty = [];
+            aEntries.forEach((entry, index) => {
+                const d1 = parseLocal(entry.entryDate);
+                const d2 = parseLocal(entry.repeatEndDate);
+                if ((d1 && d1 > todayEnd) || (d2 && d2 > todayEnd)) {
+                    const sLabel = fnLabel ? fnLabel(entry, index) : `${this._getText("msgEntryNumber")} ${index + 1}`;
+                    const sBadDate = (d1 && d1 > todayEnd) ? entry.entryDate : entry.repeatEndDate;
+                    aFaulty.push(`${sLabel}: ${sBadDate}`);
+                }
             });
 
-            if (hasFuture) {
-                MessageBox.error(this._getText("msgFutureDateNotAllowed"));
+            if (aFaulty.length > 0) {
+                const sDetails = aFaulty.join('\n');
+                MessageBox.error(`${this._getText("msgFutureDateNotAllowed")}\n\n${sDetails}`);
                 return true;
             }
             return false;

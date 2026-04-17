@@ -242,6 +242,17 @@ sap.ui.define([
                 }
             } catch (e) { /* fallback */ }
             return `of ${qty || 0} pcs`;
+        },
+
+        /**
+         * Returns today at end of day as a Date object — used as maxDate on inline edit DatePickers.
+         * Bound via formatter so it reacts to model changes but always returns today.
+         * @returns {Date} Today at 23:59:59
+         */
+        formatTodayMaxDate: function() {
+            const d = new Date();
+            d.setHours(23, 59, 59, 999);
+            return d;
         }
     };
 });

@@ -367,7 +367,9 @@ sap.ui.define([
                 defaultItemExternalId: defaultItem?.externalId || "",
                 defaultItemDisplay: defaultItem?.displayText || "",
                 // Default date from activity
-                defaultDate: activityData.plannedStartDate ? activityData.plannedStartDate.split('T')[0] : ""
+                defaultDate: activityData.plannedStartDate ? activityData.plannedStartDate.split('T')[0] : "",
+                // Today's date for maxDate binding on DatePickers — set once, avoids re-render floods
+                todayDate: (() => { const d = new Date(); d.setHours(23,59,59,999); return d; })()
             });
 
             await this._openDialog("TMCreateDialog", oCreateTMDialogModel, "createTM", "_tmCreateDialog");

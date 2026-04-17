@@ -156,7 +156,7 @@
                                                                 <SegmentedButtonItem key="Material" icon="sap-icon://product" tooltip="{i18n>tooltipMaterial}"/>
                                                             </items>
                                                         </SegmentedButton>
-                                                        <Button icon="sap-icon://filter" press=".onOpenSortDialog" tooltip="{i18n>tmSortFilterTooltip}" class="sapUiTinyMarginBegin">
+                                                        <Button icon="sap-icon://sort" press=".onOpenSortDialog" tooltip="{i18n>tmSortByTooltip}" class="sapUiTinyMarginBegin">
                                                             <customData>
                                                                 <core:CustomData key="tableType" value="TM"/>
                                                             </customData>
@@ -211,7 +211,7 @@
                                                                         <Input value="{view>quantity}" type="Number" width="4rem" editable="{view>editMode}" visible="{= ${view>type} === 'Material'}"/>
                                                                         <Text text="{path: 'view>type', formatter: '.formatter.formatPiecesUnit'}"/>
                                                                         <!-- Date: editable DatePicker in edit mode -->
-                                                                        <DatePicker value="{view>entryDateFormatted}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="8rem" editable="{view>editMode}"/>
+                                                                        <DatePicker value="{view>entryDateFormatted}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="8rem" editable="{view>editMode}" maxDate="{path: 'view>entryDateFormatted', formatter: '.formatter.formatTodayMaxDate'}"/>
                                                                         <Text text="{view>decisionRemarks}" wrapping="true"/>
                                                                         <Input value="{view>remarksText}" width="100%" editable="{view>editMode}"/>
                                                                     </cells>
@@ -230,7 +230,7 @@
                                                         <Title text="{i18n>tmExpenses}" level="H5"/>
                                                         <ToolbarSpacer/>
                                                         <Button icon="sap-icon://hint" type="Transparent" press=".onShowStatusLegend" tooltip="{i18n>tmStatusLegendTooltip}" class="sapUiTinyMarginBegin"/>
-                                                        <Button icon="sap-icon://filter" press=".onOpenSortDialog" tooltip="{i18n>tmSortFilterTooltip}" class="sapUiTinyMarginBegin">
+                                                        <Button icon="sap-icon://sort" press=".onOpenSortDialog" tooltip="{i18n>tmSortByTooltip}" class="sapUiTinyMarginBegin">
                                                             <customData>
                                                                 <core:CustomData key="tableType" value="Expense"/>
                                                             </customData>
@@ -278,7 +278,7 @@
                                                                         <Input value="{view>externalAmountValue}" type="Number" width="5rem" editable="{view>editMode}"/>
                                                                         <Input value="{view>internalAmountValue}" type="Number" width="5rem" editable="{view>editMode}"/>
                                                                         <Text text="{i18n>unitEuro}"/>
-                                                                        <DatePicker value="{view>entryDateFormatted}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="8rem" editable="{view>editMode}"/>
+                                                                        <DatePicker value="{view>entryDateFormatted}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="8rem" editable="{view>editMode}" maxDate="{path: 'view>entryDateFormatted', formatter: '.formatter.formatTodayMaxDate'}"/>
                                                                         <Text text="{view>decisionRemarks}" wrapping="true"/>
                                                                         <Input value="{view>remarksText}" width="100%" editable="{view>editMode}"/>
                                                                     </cells>
@@ -297,7 +297,7 @@
                                                         <Title text="{i18n>tmMileage}" level="H5"/>
                                                         <ToolbarSpacer/>
                                                         <Button icon="sap-icon://hint" type="Transparent" press=".onShowStatusLegend" tooltip="{i18n>tmStatusLegendTooltip}" class="sapUiTinyMarginBegin"/>
-                                                        <Button icon="sap-icon://filter" press=".onOpenSortDialog" tooltip="{i18n>tmSortFilterTooltip}" class="sapUiTinyMarginBegin">
+                                                        <Button icon="sap-icon://sort" press=".onOpenSortDialog" tooltip="{i18n>tmSortByTooltip}" class="sapUiTinyMarginBegin">
                                                             <customData>
                                                                 <core:CustomData key="tableType" value="Mileage"/>
                                                             </customData>
@@ -347,7 +347,7 @@
                                                                         <Text text="{i18n>unitKilometersUC}"/>
                                                                         <Input value="{view>travelDurationMinutes}" type="Number" width="100%" editable="{view>editMode}"/>
                                                                         <Text text="{i18n>unitMinutes}"/>
-                                                                        <DatePicker value="{view>entryDateFormatted}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="100%" editable="{view>editMode}"/>
+                                                                        <DatePicker value="{view>entryDateFormatted}" valueFormat="yyyy-MM-dd" displayFormat="dd.MM.yyyy" width="100%" editable="{view>editMode}" maxDate="{path: 'view>entryDateFormatted', formatter: '.formatter.formatTodayMaxDate'}"/>
                                                                         <Text text="{view>decisionRemarks}" wrapping="true"/>
                                                                         <Input value="{view>remarksText}" width="100%" editable="{view>editMode}"/>
                                                                     </cells>
