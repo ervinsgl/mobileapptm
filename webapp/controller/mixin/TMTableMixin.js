@@ -779,6 +779,16 @@ sap.ui.define([
                 return;
             }
             
+            // Validate no future dates before showing confirmation
+            const aMapped = aEditedReports.map(r => ({
+                entryDate: r.entryDateFormatted,
+                type: r.type,
+                _desc: r.taskDisplayText || r.itemDisplayText || r.expenseTypeDisplayText || r.mileageTypeDisplayText || ""
+            }));
+            if (this._validateNoFutureDates(aMapped, (entry, index) => {
+                return `${this._getText("msgEntryNumber")} ${index + 1} (${entry.type}${entry._desc ? " - " + entry._desc : ""})`;
+            })) return;
+            
             // Get activity path and edit mode property for later
             const sActivityPath = this._getActivityPathFromToolbarControl(oButton);
             const sEditModeProp = this._getEditModeProperty(oTable);
@@ -833,7 +843,16 @@ sap.ui.define([
                 
                 for (const report of aEditedReports) {
                     let type, payload;
-                    
+
+                    // Normalize entryDateFormatted — handles dd.MM.yyyy from manual typing
+                    const normalizeDate = (s) => {
+                        if (!s) return s;
+                        if (/^\d{2}\.\d{2}\.\d{4}$/.test(s)) { const p = s.split('.'); return `${p[2]}-${p[1]}-${p[0]}`; }
+                        if (/^\d{2}\.\d{2}\.\d{2}$/.test(s))  { const p = s.split('.'); return `20${p[2]}-${p[1]}-${p[0]}`; }
+                        return s;
+                    };
+                    const entryDate = normalizeDate(report.entryDateFormatted);
+
                     switch (report.type) {
                         case "Time Effort":
                             type = 'TimeEffort';
@@ -844,9 +863,9 @@ sap.ui.define([
                                 const endDate = new Date(startDate.getTime() + durationMinutes * 60 * 1000);
                                 payload.endDateTime = endDate.toISOString().replace(/\.\d{3}Z$/, 'Z');
                             }
-                            if (report.entryDateFormatted && payload.startDateTime) {
+                            if (entryDate && payload.startDateTime) {
                                 const originalTime = payload.startDateTime.split('T')[1];
-                                payload.startDateTime = `${report.entryDateFormatted}T${originalTime}`;
+                                payload.startDateTime = `${entryDate}T${originalTime}`;
                                 const startDate = new Date(payload.startDateTime);
                                 const endDate = new Date(startDate.getTime() + durationMinutes * 60 * 1000);
                                 payload.endDateTime = endDate.toISOString().replace(/\.\d{3}Z$/, 'Z');
@@ -856,8 +875,8 @@ sap.ui.define([
                         case "Material":
                             type = 'Material';
                             payload = { ...report.fullData, quantity: report.quantity, remarks: report.remarksText || report.remarks };
-                            if (report.entryDateFormatted) {
-                                payload.date = report.entryDateFormatted;
+                            if (entryDate) {
+                                payload.date = entryDate;
                             }
                             break;
                             
