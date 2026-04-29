@@ -243,7 +243,13 @@ stores it in an in-memory `sessionStore` keyed to the user's context, and either
 - `SameSite=None` — kept from the original cookie-only design. Could be
   `Lax` for the Mobile WebView's first-party context, but `None` is harmless
   here and avoids potential edge cases on older WebView implementations.
-- `Max-Age=1800` — session expires after 30 minutes. The server-side
+- `Max-Age=1800` — cookie expires after 60 minutes. The server-side
+  `sessionStore` has a matching 60-minute TTL but is **sliding** — every
+  authenticated request resets the expiration. Active users effectively
+  never expire; only sessions truly idle for 60 minutes get expired.
+  The cookie's `Max-Age` is also refreshed on every authenticated request
+  for the cookie flow (Mobile), so browser-side expiry stays in sync with
+  server-side.
   `sessionStore` has a matching TTL with eviction on every entry POST.
 
 **Bearer token storage (Web UI flow):** The token returned in the JSON response
@@ -402,9 +408,10 @@ This decision should be revisited if any of the following change:
 ### In-memory state
 
 - `contextStore` — Map from contextKey (`<userName>_<cloudId>`) to FSM context
-  data. TTL 30 minutes. In-memory only; not persisted.
+  data. TTL 60 minutes, sliding (extended on every authenticated request to
+  the matching session). In-memory only; not persisted.
 - `sessionStore` — Map from session token to contextKey + expiration timestamp.
-  TTL 30 minutes. In-memory only; not persisted.
+  TTL 60 minutes, sliding. In-memory only; not persisted.
 - `FSMJwtValidator` JWKS cache — Map from `kid` to public key, managed by
   `jwks-rsa`. TTL 24 hours.
 - `window.__fsmSessionToken` (browser-side, Web UI flow only) — In-memory holder
@@ -466,7 +473,7 @@ for horizontal scaling. See `manifest.yaml` (currently `instances: 1`).
 | Bearer token theft via XSS (Web UI flow) | Token is JS-readable, but the iframe is sandboxed from the parent page — XSS would have to come from inside the iframe (i.e., from your own code) |
 | Cookie/Bearer theft via network sniffing | All transport is HTTPS-only; CF enforces HTTPS |
 | Session reuse after logout/timeout | Server-side `sessionStore` lookup — expired entries removed on every entry POST or session-init call |
-| Privileged technician misuses FSM API via leaked token within 30 min | Mitigated only by 30-minute TTL; same residual risk as any session-token auth |
+| Privileged technician misuses FSM API via leaked token | Mitigated by sliding 60-minute idle TTL — a leaked but unused token expires after 60 min, but an actively-used leaked token could remain valid indefinitely until the WebView/iframe is closed. Same residual risk as any session-token auth with sliding refresh. |
 
 ---
 

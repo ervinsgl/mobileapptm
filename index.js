@@ -68,8 +68,8 @@ function isAuthKeyValid(body) {
 // SESSION & CONTEXT STORES
 // ===========================
 
-const SESSION_TTL_MS = 30 * 60 * 1000;
-const CONTEXT_TTL_MS = 30 * 60 * 1000;
+const SESSION_TTL_MS = 60 * 60 * 1000;
+const CONTEXT_TTL_MS = 60 * 60 * 1000;
 
 const contextStore = new Map();
 const sessionStore = new Map();
@@ -162,6 +162,27 @@ function requireSession(req, res, next) {
             hint: 'This endpoint requires a valid session, supplied either via fsm_session ' +
                   'cookie (Mobile flow) or Authorization: Bearer header (Web UI flow).'
         });
+    }
+
+    // Sliding session: extend the expiration on every authenticated request.
+    // Active users effectively never expire; only sessions truly idle for
+    // SESSION_TTL_MS get expired by resolveSession() on next access.
+    const entry = sessionStore.get(token);
+    entry.expiresAt = Date.now() + SESSION_TTL_MS;
+
+    // Also extend the underlying context entry so it doesn't get evicted
+    // while its session is still active.
+    const contextEntry = contextStore.get(contextKey);
+    if (contextEntry) {
+        contextEntry.timestamp = Date.now();
+    }
+
+    // Refresh the cookie's Max-Age too — otherwise the browser-side expiry
+    // hits at the original time even though the server-side has been extended.
+    // Skipped for Bearer flow: the browser ignores Set-Cookie in third-party
+    // iframe context anyway, and the Bearer token uses server-side expiresAt.
+    if (source === 'cookie') {
+        res.cookie(SESSION_COOKIE_NAME, token, SESSION_COOKIE_OPTIONS);
     }
 
     req.fsmContextKey = contextKey;
