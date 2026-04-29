@@ -5,17 +5,12 @@
  * Handles FSM Mobile web container integration, serves the UI5 frontend,
  * and mounts API route modules.
  * 
- * Key Responsibilities:
- * 1. Web Container Entry Point - Receives POST from FSM Mobile with context
- *    Validates the Authentication Key shared secret before accepting context.
- * 2. Static File Serving - Serves the UI5 frontend from /webapp
- * 3. Route Mounting - Delegates API handling to route modules
- * 
- * Route Modules (mounted at /api):
- * - activityRoutes  - Activity CRUD and reported items
- * - entryRoutes     - T&M entry batch and individual CRUD
- * - lookupRoutes    - Person, org, lookup, approval, user endpoints
- * - configRoutes    - Expense/Mileage type configuration
+ * Security model (two layers):
+ * 1. Authentication Key (shared secret with FSM) — validates that incoming
+ *    WebContainer POSTs come from a legitimate FSM Mobile client.
+ * 2. Session Cookie (per-session opaque token) — issued after successful
+ *    auth-key validation, required on all /api/* and /web-container-context
+ *    calls. Prevents anyone-with-the-URL from calling the API directly.
  * 
  * Required Environment Variables:
  * - FSM_WEBCONTAINER_AUTH_KEY - Shared secret matching the Authentication Key
@@ -24,6 +19,7 @@
  * 
  * @file index.js
  * @requires express
+ * @requires cookie-parser
  * @requires ./routes/activityRoutes
  * @requires ./routes/entryRoutes
  * @requires ./routes/lookupRoutes
@@ -31,6 +27,7 @@
  */
 
 const express = require('express');
+const cookieParser = require('cookie-parser');
 const path = require('path');
 const crypto = require('crypto');
 
@@ -64,9 +61,6 @@ if (FSM_WEBCONTAINER_AUTH_KEY.length < 16) {
 /**
  * Validate the Authentication Key shared secret from a WebContainer POST.
  * Uses constant-time comparison to avoid timing-based secret discovery.
- * 
- * @param {Object} body - The parsed request body
- * @returns {boolean} true if the key matches, false otherwise
  */
 function isAuthKeyValid(body) {
     const provided = body && body.authenticationKey;
@@ -74,8 +68,6 @@ function isAuthKeyValid(body) {
         return false;
     }
 
-    // Both buffers must be the same length for timingSafeEqual.
-    // If lengths differ, the secret is wrong — return false without comparing.
     const providedBuf = Buffer.from(provided, 'utf8');
     const expectedBuf = Buffer.from(FSM_WEBCONTAINER_AUTH_KEY, 'utf8');
     if (providedBuf.length !== expectedBuf.length) {
@@ -86,18 +78,25 @@ function isAuthKeyValid(body) {
 }
 
 // ===========================
-// FSM WEB CONTAINER CONTEXT STORAGE
+// SESSION & CONTEXT STORES
 // ===========================
-// Keyed by "userName_cloudId" so each user/object gets their own slot.
-// Prevents concurrent users overwriting each other's context.
-// Each entry has a timestamp — entries older than 30 min are cleaned up on every POST.
+// Two parallel maps with the same TTL:
+//   - contextStore: keyed by "userName_cloudId", holds FSM context data.
+//   - sessionStore: keyed by random session token, points to a contextKey.
+// 
+// The session token is what the browser holds in its HttpOnly cookie.
+// It's an opaque random string with no information; lookup happens server-side.
+
+const SESSION_TTL_MS = 30 * 60 * 1000; // 30 minutes
+const CONTEXT_TTL_MS = 30 * 60 * 1000; // 30 minutes — matches session TTL
 
 const contextStore = new Map();
-const CONTEXT_TTL_MS = 30 * 60 * 1000; // 30 minutes
+const sessionStore = new Map();
+
+const SESSION_COOKIE_NAME = 'fsm_session';
 
 /**
- * Build a unique key from POST body.
- * Falls back gracefully if fields are missing.
+ * Build a unique context key from POST body.
  */
 function buildContextKey(body) {
     const userName = (body.userName || 'anonymous').replace(/[^a-zA-Z0-9_-]/g, '_');
@@ -106,79 +105,141 @@ function buildContextKey(body) {
 }
 
 /**
- * Remove entries older than CONTEXT_TTL_MS.
- * Called on every POST to keep memory usage bounded.
+ * Generate a fresh random session token.
+ * 32 random bytes encoded as base64url → 43-character opaque string.
  */
-function evictExpiredContexts() {
+function generateSessionToken() {
+    return crypto.randomBytes(32).toString('base64url');
+}
+
+/**
+ * Remove expired entries from both stores.
+ * Called on every WebContainer POST and during session validation.
+ */
+function evictExpired() {
     const now = Date.now();
     for (const [key, entry] of contextStore.entries()) {
         if (now - entry.timestamp > CONTEXT_TTL_MS) {
             contextStore.delete(key);
         }
     }
+    for (const [token, entry] of sessionStore.entries()) {
+        if (now > entry.expiresAt) {
+            sessionStore.delete(token);
+        }
+    }
 }
 
-// Middleware
+/**
+ * Look up a session token and return the associated context key.
+ * Returns null if missing, expired, or unknown.
+ */
+function resolveSession(token) {
+    if (!token || typeof token !== 'string') return null;
+    const entry = sessionStore.get(token);
+    if (!entry) return null;
+    if (Date.now() > entry.expiresAt) {
+        sessionStore.delete(token);
+        return null;
+    }
+    return entry.contextKey;
+}
+
+/**
+ * Express middleware: require a valid session cookie.
+ * Used for /api/* and /web-container-context.
+ */
+function requireSession(req, res, next) {
+    const token = req.cookies && req.cookies[SESSION_COOKIE_NAME];
+    const contextKey = resolveSession(token);
+
+    if (!contextKey) {
+        const reason = !token ? 'missing-cookie' : 'invalid-or-expired';
+        console.warn(`AUTH: rejected ${req.method} ${req.originalUrl} — session ${reason} ` +
+                     `(remoteIp=${req.ip})`);
+        return res.status(401).json({
+            message: 'Unauthorized: missing or expired session.',
+            hint: 'This endpoint requires a valid session cookie issued via FSM Mobile WebContainer.'
+        });
+    }
+
+    // Attach contextKey to request for downstream handlers if they want it
+    req.fsmContextKey = contextKey;
+    next();
+}
+
+// ===========================
+// MIDDLEWARE
+// ===========================
 app.use((req, res, next) => {
     res.removeHeader('X-Frame-Options');
     next();
 });
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 app.enable('trust proxy');
 
 // ===========================
-// FSM WEB CONTAINER ENTRY POINT
+// FSM WEB CONTAINER ENTRY POINTS
 // ===========================
 // FSM Mobile sends POST request with context when opening web container.
 // iOS: Content-Type: application/json
 // Android: Content-Type: application/x-www-form-urlencoded
 // Configure this URL in FSM Admin > Web Containers.
-//
-// FSM Mobile transmits the Authentication Key value in the body as
-// `authenticationKey`. We validate it here before storing anything.
 
 /**
- * Shared handler for both POST entry points (/web-container-access-point and /).
- * Validates auth key, stores context, redirects to the frontend with a context key.
+ * Shared handler for both POST entry points.
+ * Validates auth key → stores context → issues session cookie → redirects.
  */
 function handleWebContainerPost(req, res, label) {
     const body = req.body || {};
 
     // STEP 1: Validate the Authentication Key shared secret.
-    // Without this, anyone with the URL could inject fake context for any user.
     if (!isAuthKeyValid(body)) {
-        // Log enough to diagnose mistakes (config drift, missing key) but
-        // never log the provided value — that would leak any partial guess
-        // an attacker is making, and could leak the real key on misconfig.
         const provided = body && body.authenticationKey;
         const reason = !provided
             ? 'missing'
             : (typeof provided !== 'string' ? 'wrong-type' : 'mismatch');
         console.warn(`${label}: rejected POST — authenticationKey ${reason} ` +
                      `(remoteIp=${req.ip}, userName=${body.userName || 'unknown'})`);
-
         return res.status(401).json({
             message: 'Unauthorized: invalid or missing authentication key.',
-            hint: 'This endpoint can only be reached from FSM Mobile. ' +
-                  'Verify the Authentication Key in FSM Admin > Web Containers ' +
-                  'matches the FSM_WEBCONTAINER_AUTH_KEY environment variable.'
+            hint: 'This endpoint can only be reached from FSM Mobile.'
         });
     }
 
-    // STEP 2: Auth passed. Clean up stale context entries before storing a new one.
-    evictExpiredContexts();
+    // STEP 2: Auth passed. Clean up stale entries before storing new ones.
+    evictExpired();
 
-    // STEP 3: Store context under a unique key.
-    // Note: we strip authenticationKey out of the stored data so the secret
-    // never sits in memory longer than this request needs it to.
+    // STEP 3: Strip the secret out of the data we keep.
     const { authenticationKey, ...storableBody } = body;
-    const key = buildContextKey(storableBody);
-    contextStore.set(key, { data: storableBody, timestamp: Date.now() });
-    console.log(`${label}: context stored for key=${key} (store size=${contextStore.size})`);
 
-    // STEP 4: Redirect browser to frontend with the context key.
-    const redirectUrl = `${req.protocol}://${req.get('host')}/?contextKey=${encodeURIComponent(key)}`;
+    // STEP 4: Store context.
+    const contextKey = buildContextKey(storableBody);
+    contextStore.set(contextKey, { data: storableBody, timestamp: Date.now() });
+
+    // STEP 5: Generate session token, store mapping.
+    const sessionToken = generateSessionToken();
+    sessionStore.set(sessionToken, {
+        contextKey: contextKey,
+        expiresAt: Date.now() + SESSION_TTL_MS
+    });
+
+    console.log(`${label}: context stored, session issued ` +
+                `(contextKey=${contextKey}, contextStoreSize=${contextStore.size}, ` +
+                `sessionStoreSize=${sessionStore.size})`);
+
+    // STEP 6: Set session cookie + redirect.
+    res.cookie(SESSION_COOKIE_NAME, sessionToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'lax',
+        path: '/',
+        maxAge: SESSION_TTL_MS
+    });
+
+    const redirectUrl = `${req.protocol}://${req.get('host')}/?contextKey=${encodeURIComponent(contextKey)}`;
     res.redirect(redirectUrl);
 }
 
@@ -186,19 +247,34 @@ app.post("/web-container-access-point", (req, res) => {
     handleWebContainerPost(req, res, 'WC-ACCESS-POINT');
 });
 
-// Also handle POST to root "/" in case FSM sends there
 app.post("/", (req, res) => {
     handleWebContainerPost(req, res, 'WC-ROOT');
 });
 
-// GET endpoint for frontend to retrieve stored context
-app.get("/web-container-context", (req, res) => {
+// ===========================
+// PROTECTED CONTEXT ENDPOINT
+// ===========================
+// Frontend calls this to retrieve its stored FSM context after redirect.
+// Now requires the session cookie — closes the previous "guess the contextKey"
+// side-channel.
+
+app.get("/web-container-context", requireSession, (req, res) => {
     const key = req.query.key;
 
     if (!key) {
         return res.status(400).json({
             message: 'Missing context key.',
             hint: 'Pass ?key=<contextKey> — value comes from the contextKey URL param after redirect.'
+        });
+    }
+
+    // Belt-and-suspenders: only allow reading the context tied to THIS session.
+    // Without this check, an authenticated user could read another user's context
+    // by passing a different contextKey.
+    if (key !== req.fsmContextKey) {
+        console.warn(`CONTEXT-FETCH: session ${req.fsmContextKey} attempted to read ${key}`);
+        return res.status(403).json({
+            message: 'Forbidden: session does not own this context.',
         });
     }
 
@@ -214,20 +290,38 @@ app.get("/web-container-context", (req, res) => {
     return res.json(entry.data);
 });
 
-// Serve static files (Fiori app) - serve from webapp folder
+// ===========================
+// STATIC FILES (UI5 FRONTEND)
+// ===========================
+// Served BEFORE the protected /api/* mount, so the UI itself loads
+// without authentication. The UI then gets its session from the cookie
+// already set by the WebContainer POST.
+
 app.use(express.static(path.join(__dirname, 'webapp')));
 
 // ===========================
-// API ROUTES
+// PROTECTED API ROUTES
 // ===========================
+// All /api/* endpoints require a valid session cookie.
+// The cookie is set automatically by the WebContainer POST handler;
+// browsers attach it to subsequent same-origin requests with no
+// frontend code changes required (after the global fetch wrapper
+// in webapp/Component.js — which is needed because UI5's fetch
+// defaults to omit cookies on some platforms).
+
+app.use('/api', requireSession);
+
 app.use('/api', require('./routes/activityRoutes'));
 app.use('/api', require('./routes/entryRoutes'));
 app.use('/api', require('./routes/lookupRoutes'));
 app.use('/api', require('./routes/configRoutes'));
 
-// Start server
+// ===========================
+// START SERVER
+// ===========================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`FSM_WEBCONTAINER_AUTH_KEY is set (${FSM_WEBCONTAINER_AUTH_KEY.length} chars)`);
+    console.log(`Session TTL: ${SESSION_TTL_MS / 60000} minutes`);
 });

@@ -1,3 +1,32 @@
+// ===========================================================================
+// GLOBAL FETCH WRAPPER — INCLUDE COOKIES ON ALL REQUESTS
+// ===========================================================================
+// All /api/* calls require a session cookie set by the backend after the
+// FSM WebContainer POST. This wrapper ensures every fetch() in the app
+// sends cookies automatically, without having to add credentials:'include'
+// to each call site individually across the 15+ service modules.
+//
+// Placed OUTSIDE sap.ui.define so it runs at file-parse time, before any
+// other module loads and fires its first request. Idempotent — safe if
+// the file is somehow evaluated more than once.
+// ===========================================================================
+(function wrapFetchToIncludeCookies() {
+    if (typeof window === 'undefined' || !window.fetch) return;
+    if (window.__fetchWrappedForCookies) return;
+    window.__fetchWrappedForCookies = true;
+
+    const originalFetch = window.fetch.bind(window);
+    window.fetch = function(input, init) {
+        const opts = init || {};
+        // Only set credentials if the caller didn't specify it explicitly.
+        // This preserves any future call that genuinely wants credentials:'omit'.
+        if (!opts.credentials) {
+            opts.credentials = 'include';
+        }
+        return originalFetch(input, opts);
+    };
+})();
+
 /**
  * Component.js
  * 
@@ -8,6 +37,8 @@
  * - Initialize device model for responsive layouts
  * - Configure router with mobile navigation fixes
  * - Handle bypassed routes for FSM Mobile compatibility
+ * - Wrap window.fetch globally to include session cookies on /api/* calls
+ *   (see IIFE at top of file).
  * 
  * Mobile Compatibility:
  * FSM Mobile web container may bypass initial routing, so the component
