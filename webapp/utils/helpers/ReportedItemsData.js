@@ -32,7 +32,7 @@ sap.ui.define([], () => {
             }
 
             try {
-                const response = await fetch("/api/get-reported-items", {
+                const response = await fetch("/api/v1/get-reported-items", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ activityId })

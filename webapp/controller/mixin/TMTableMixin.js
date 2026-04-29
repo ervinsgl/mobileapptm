@@ -920,7 +920,7 @@ sap.ui.define([
                 }
                 
                 // Single batch request for all updates
-                const response = await fetch('/api/batch-update', {
+                const response = await fetch('/api/v1/batch-update', {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
@@ -1052,7 +1052,7 @@ sap.ui.define([
                 });
                 
                 // Call batch delete API
-                let response = await fetch('/api/batch-delete', {
+                let response = await fetch('/api/v1/batch-delete', {
                     method: 'DELETE',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ entries, transactional: false })
@@ -1075,7 +1075,7 @@ sap.ui.define([
                         });
                         
                         // Retry the delete
-                        response = await fetch('/api/batch-delete', {
+                        response = await fetch('/api/v1/batch-delete', {
                             method: 'DELETE',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ entries, transactional: false })

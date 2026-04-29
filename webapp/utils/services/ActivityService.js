@@ -41,7 +41,7 @@ sap.ui.define([], () => {
         async fetchActivityById(activityId) {
             const formattedId = this.formatActivityId(activityId);
             
-            const response = await fetch("/api/get-activity-by-id", {
+            const response = await fetch("/api/v1/get-activity-by-id", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ activityId: formattedId })
@@ -101,7 +101,7 @@ sap.ui.define([], () => {
             const formattedId = this.formatActivityId(activityId);
             
             try {
-                const response = await fetch("/api/get-activity-by-id", {
+                const response = await fetch("/api/v1/get-activity-by-id", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ activityId: formattedId })

@@ -167,7 +167,7 @@ sap.ui.define([
             try {
                 sap.ui.core.BusyIndicator.show(0);
                 
-                const response = await fetch('/api/create-expense', {
+                const response = await fetch('/api/v1/create-expense', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -242,7 +242,7 @@ sap.ui.define([
             try {
                 sap.ui.core.BusyIndicator.show(0);
                 
-                const response = await fetch(`/api/update-expense/${expenseId}`, {
+                const response = await fetch(`/api/v1/update-expense/${expenseId}`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -324,7 +324,7 @@ sap.ui.define([
             try {
                 sap.ui.core.BusyIndicator.show(0);
                 
-                const response = await fetch(`/api/update-mileage/${mileageId}`, {
+                const response = await fetch(`/api/v1/update-mileage/${mileageId}`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -398,7 +398,7 @@ sap.ui.define([
             try {
                 sap.ui.core.BusyIndicator.show(0);
                 
-                const response = await fetch(`/api/update-material/${materialId}`, {
+                const response = await fetch(`/api/v1/update-material/${materialId}`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -486,7 +486,7 @@ sap.ui.define([
             try {
                 sap.ui.core.BusyIndicator.show(0);
                 
-                const response = await fetch(`/api/update-time-effort/${timeEffortId}`, {
+                const response = await fetch(`/api/v1/update-time-effort/${timeEffortId}`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -554,7 +554,7 @@ sap.ui.define([
             try {
                 sap.ui.core.BusyIndicator.show(0);
                 
-                const response = await fetch('/api/create-mileage', {
+                const response = await fetch('/api/v1/create-mileage', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -677,7 +677,7 @@ sap.ui.define([
                 
                 // 1. Create Material
                 if (payload.material) {
-                    const matResponse = await fetch('/api/create-material', {
+                    const matResponse = await fetch('/api/v1/create-material', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload.material)
@@ -688,7 +688,7 @@ sap.ui.define([
                 
                 // 2. Create Time Efforts (FZ)
                 for (const te of (payload.timeEffortsFZ || [])) {
-                    const teResponse = await fetch('/api/create-time-effort', {
+                    const teResponse = await fetch('/api/v1/create-time-effort', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(te)
@@ -699,7 +699,7 @@ sap.ui.define([
                 
                 // 3. Create Time Efforts (WZ)
                 for (const te of (payload.timeEffortsWZ || [])) {
-                    const teResponse = await fetch('/api/create-time-effort', {
+                    const teResponse = await fetch('/api/v1/create-time-effort', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(te)
@@ -710,7 +710,7 @@ sap.ui.define([
                 
                 // 4. Create Time Efforts (AZ)
                 for (const te of (payload.timeEffortsAZ || [])) {
-                    const teResponse = await fetch('/api/create-time-effort', {
+                    const teResponse = await fetch('/api/v1/create-time-effort', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(te)

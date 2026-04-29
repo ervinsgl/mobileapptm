@@ -90,7 +90,7 @@ sap.ui.define([], () => {
 
             const promise = (async () => {
                 try {
-                    const response = await fetch("/api/get-person-by-id", {
+                    const response = await fetch("/api/v1/get-person-by-id", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ personId })
@@ -145,7 +145,7 @@ sap.ui.define([], () => {
 
             const promise = (async () => {
                 try {
-                    const response = await fetch("/api/get-person-by-external-id", {
+                    const response = await fetch("/api/v1/get-person-by-external-id", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ externalId })
@@ -222,7 +222,7 @@ sap.ui.define([], () => {
          */
         async loadAllPersons() {
             try {
-                const response = await fetch("/api/get-persons", {
+                const response = await fetch("/api/v1/get-persons", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ loadAll: true })

@@ -29,7 +29,7 @@ sap.ui.define([], () => {
          * @throws {Error} If request fails
          */
         async fetchServiceCallById(serviceCallId) {
-            const response = await fetch("/api/get-activities-by-service-call", {
+            const response = await fetch("/api/v1/get-activities-by-service-call", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ serviceCallId: serviceCallId })

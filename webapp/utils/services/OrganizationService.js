@@ -66,7 +66,7 @@ sap.ui.define([], () => {
             }
 
             try {
-                const response = await fetch("/api/get-organization-levels-full", {
+                const response = await fetch("/api/v1/get-organization-levels-full", {
                     method: "GET",
                     headers: { "Content-Type": "application/json" }
                 });
@@ -159,7 +159,7 @@ sap.ui.define([], () => {
                     return null;
                 }
 
-                const response = await fetch("/api/get-user-org-level", {
+                const response = await fetch("/api/v1/get-user-org-level", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ username: username })

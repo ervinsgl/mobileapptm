@@ -51,7 +51,7 @@ sap.ui.define([], () => {
             }
 
             try {
-                const response = await fetch("/api/get-time-tasks", {
+                const response = await fetch("/api/v1/get-time-tasks", {
                     method: "GET",
                     headers: { "Content-Type": "application/json" }
                 });

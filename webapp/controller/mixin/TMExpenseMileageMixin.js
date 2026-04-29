@@ -289,7 +289,7 @@ sap.ui.define([
                 }));
                 
                 // Single batch request
-                const response = await fetch('/api/batch-create', {
+                const response = await fetch('/api/v1/batch-create', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ entries: batchEntries, transactional: false })
@@ -486,7 +486,7 @@ sap.ui.define([
                 }));
                 
                 // Single batch request
-                const response = await fetch('/api/batch-create', {
+                const response = await fetch('/api/v1/batch-create', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ entries: batchEntries, transactional: false })

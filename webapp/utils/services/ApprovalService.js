@@ -51,7 +51,7 @@ sap.ui.define([], () => {
 
             if (uncachedIds.length > 0) {
                 try {
-                    const response = await fetch("/api/get-approval-status", {
+                    const response = await fetch("/api/v1/get-approval-status", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ objectIds: uncachedIds })
@@ -203,7 +203,7 @@ sap.ui.define([], () => {
             this._approvalCache.delete(objectId);
 
             try {
-                const response = await fetch("/api/get-approval-status", {
+                const response = await fetch("/api/v1/get-approval-status", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ objectIds: [objectId] })

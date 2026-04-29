@@ -57,7 +57,7 @@ sap.ui.define([], () => {
             }
 
             try {
-                const response = await fetch("/api/get-type-config");
+                const response = await fetch("/api/v1/get-type-config");
                 if (response.ok) {
                     const result = await response.json();
                     if (result.success && result.data) {
@@ -166,7 +166,7 @@ sap.ui.define([], () => {
             }
 
             try {
-                const response = await fetch("/api/add-expense-type", {
+                const response = await fetch("/api/v1/add-expense-type", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ typeId, modifiedBy })
@@ -200,7 +200,7 @@ sap.ui.define([], () => {
             }
 
             try {
-                const response = await fetch("/api/remove-expense-type", {
+                const response = await fetch("/api/v1/remove-expense-type", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ typeId, modifiedBy })
@@ -234,7 +234,7 @@ sap.ui.define([], () => {
             }
 
             try {
-                const response = await fetch("/api/add-mileage-type", {
+                const response = await fetch("/api/v1/add-mileage-type", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ typeId, modifiedBy })
@@ -268,7 +268,7 @@ sap.ui.define([], () => {
             }
 
             try {
-                const response = await fetch("/api/remove-mileage-type", {
+                const response = await fetch("/api/v1/remove-mileage-type", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ typeId, modifiedBy })
@@ -297,7 +297,7 @@ sap.ui.define([], () => {
          */
         async resetToDefaults(modifiedBy) {
             try {
-                const response = await fetch("/api/reset-type-config", {
+                const response = await fetch("/api/v1/reset-type-config", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ modifiedBy })

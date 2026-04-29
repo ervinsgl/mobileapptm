@@ -72,7 +72,7 @@ sap.ui.define([], () => {
 
             const promise = (async () => {
                 try {
-                    const response = await fetch("/api/get-business-partner-by-external-id", {
+                    const response = await fetch("/api/v1/get-business-partner-by-external-id", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ externalId })

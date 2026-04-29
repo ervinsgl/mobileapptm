@@ -191,7 +191,7 @@ sap.ui.define([
                 }
                 
                 // Single batch request for all updates
-                const response = await fetch('/api/batch-update', {
+                const response = await fetch('/api/v1/batch-update', {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
