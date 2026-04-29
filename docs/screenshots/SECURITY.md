@@ -1,7 +1,7 @@
 # Security Architecture
 
 > **Status:** Approved deviation from BTP coding guideline (Programmierrichtlinie für SAP-Erweiterungen §10).
-> **Last updated:** April 2026 (Bearer-token mechanism added for Web UI; bootstrap sequencing finalized)
+> **Last updated:** April 2026 (cleanup pass — removed dead cookie path and request-gate machinery)
 > **Owner:** [Team or person responsible — fill in]
 > **Architecture approval:** [Approver name and date — fill in per Programmierrichtlinie §12]
 
@@ -116,28 +116,31 @@ Mobile flow uses an HttpOnly cookie because:
   domain — no per-request frontend code needed.
 - The Mobile WebView reliably stores it.
 
-### Why Web UI cannot use a cookie reliably
+### Why Web UI cannot use a cookie
 
 The FSM Web UI loads your app in an iframe. The iframe's domain
 (`mobileapptm-fsm-dev-op.cfapps.eu10-004.hana.ondemand.com`) is different from
 the parent page's domain (`de.fsm.cloud.sap`). From the browser's perspective,
 the iframe is **third-party** content embedded in a first-party page.
 
-Modern browsers — Edge, Chrome, Safari, Firefox — increasingly block third-party
-cookies by default, regardless of `SameSite=None; Secure` attributes. The
-browser receives the `Set-Cookie` response header from `/api/v1/shell-session-init`,
-**but silently does not store it**. Subsequent requests from the iframe carry no
-cookie. All `/api/v1/*` calls return 401.
+Modern browsers — Edge, Chrome, Safari, Firefox — block third-party
+cookies in this context regardless of `SameSite=None; Secure` attributes. The
+browser receives the `Set-Cookie` response header, **but silently does not
+store it**. Subsequent requests from the iframe carry no cookie. All
+`/api/v1/*` calls return 401.
 
-This was confirmed empirically in the implementation: `document.cookie` after
-Shell session init showed only pre-existing tracking cookies; no `fsm_session`
-was present.
+This was confirmed empirically during implementation: `document.cookie` after
+a `Set-Cookie` response showed no `fsm_session` value, only pre-existing
+tracking cookies.
 
-### How the Bearer header solves this
+The `/api/v1/shell-session-init` endpoint therefore deliberately does NOT
+attempt to set a cookie. It returns the session token in the JSON response
+body, and the frontend uses that token as a Bearer credential.
+
+### How the Bearer header works
 
 After `/api/v1/shell-session-init` succeeds, the backend returns the session
-token in the JSON response body (in addition to attempting to set the cookie,
-which is harmless when ignored). The frontend reads the token from the response
+token in the JSON response body. The frontend reads the token from the response
 and stores it on `window.__fsmSessionToken`. The global fetch wrapper in
 `webapp/Component.js` checks for this value on every `/api/v1/*` request and
 attaches it as `Authorization: Bearer <token>` if present.
@@ -223,23 +226,23 @@ HttpOnly cookie (Mobile flow) or an Authorization Bearer header (Web UI flow).
 
 **Issuance:** When either of the two authentication flows above succeeds, the
 server generates a cryptographically random 32-byte token (`crypto.randomBytes(32)`),
-stores it in an in-memory `sessionStore` keyed to the user's context, and:
+stores it in an in-memory `sessionStore` keyed to the user's context, and either:
 
-- Sets the `fsm_session` cookie on the response (Mobile flow benefits; Web UI
-  flow's browser silently ignores it).
+- Sets the `fsm_session` cookie on the response (Mobile flow only — done in
+  the WebContainer POST handler).
 - Returns the token in the JSON response body of `/api/v1/shell-session-init`
-  (Web UI flow uses this; Mobile flow doesn't read it because Mobile uses the
-  cookie path instead).
+  (Web UI flow only — no cookie attempted because browsers won't store it
+  in the iframe context).
 
-**Cookie attributes (Mobile flow):** `HttpOnly`, `Secure`, `SameSite=None`,
+**Cookie attributes (Mobile flow):** `HttpOnly`, `Secure`, `SameSite=Lax`,
 `Path=/`, `Max-Age=1800` (30 minutes).
 
 - `HttpOnly` — JavaScript cannot read the cookie. Mitigates XSS-based session
   theft for the Mobile flow.
-- `Secure` — only transmitted over HTTPS. CF enforces HTTPS, so this is satisfied.
-- `SameSite=None` — set even though the Mobile WebView doesn't need it; the
-  attribute is required when `Secure` is set this way and is harmless in the
-  WebView's first-party context.
+- `Secure` — only transmitted over HTTPS. CF enforces HTTPS.
+- `SameSite=None` — kept from the original cookie-only design. Could be
+  `Lax` for the Mobile WebView's first-party context, but `None` is harmless
+  here and avoids potential edge cases on older WebView implementations.
 - `Max-Age=1800` — session expires after 30 minutes. The server-side
   `sessionStore` has a matching TTL with eviction on every entry POST.
 
@@ -261,12 +264,6 @@ both sources:
 Whichever source provides a valid token, the request proceeds. Missing or
 invalid sessions return HTTP 401. Logs include `source=cookie` or `source=bearer`
 to make the auth path visible in operational data.
-
-**Threat blocked:** A random attacker who knows the URL cannot read another
-user's stored context, cannot replay an old contextKey, cannot impersonate
-an active user's Mobile or Web UI session, and cannot call any `/api/v1/*`
-endpoint without a valid session token issued by one of the two authenticated
-flows.
 
 ---
 
@@ -311,20 +308,11 @@ This satisfies the UI5 lifecycle contract (event listeners must return
 renders, so the Refresh button (and similar) cannot be clicked before its
 handler's prerequisites exist.
 
-### Defense-in-depth: fetch wrapper gate
-
-In addition to the explicit sequencing in `_initializeAsync()`, the global
-fetch wrapper in `webapp/Component.js` blocks `/api/v1/*` requests behind a
-`window.__fsmSessionReady` Promise that is resolved by `ContextService` after
-session establishment. If any code path in the future fires `/api/v1/*`
-outside the controlled bootstrap sequence, the gate prevents a 401 by waiting
-up to 10 seconds for context to be ready. After 10 seconds, a safety timeout
-fires and the request proceeds (so a context-resolution bug doesn't deadlock
-the UI permanently).
-
-In normal operation, the gate is never actually hit — `_initializeAsync()`
-sequences things correctly and nothing fires before context is ready. The
-gate is insurance for unexpected code paths.
+This explicit sequencing is the only mechanism preventing `/api/v1/*` calls
+from racing ahead of session establishment. **Do not break this ordering** —
+if any new code path fires `/api/v1/*` during bootstrap, it must either be
+called from after `_loadWebContainerContext()` resolves, or have its own
+explicit await on context resolution.
 
 ---
 
@@ -337,21 +325,20 @@ Prior to the Bearer-token implementation, the `/api/v1/*` middleware was lenient
 receiving a session cookie. Anyone with the URL could call any `/api/v1/*`
 endpoint without authentication.
 
-This carve-out has been **removed**. All `/api/v1/*` endpoints now require a
+This carve-out has been removed. All `/api/v1/*` endpoints now require a
 valid session token, supplied via either cookie (Mobile) or Bearer header
 (Web UI).
 
 ### Cookie-only model for Web UI (April 2026, brief)
 
 For a brief period during implementation, the Web UI flow attempted to use a
-cookie alone (with `SameSite=None; Secure`). This appeared to work in HTTP
-terms — the server's `Set-Cookie` response was correct — but failed
-silently because the browser refused to store the cookie due to third-party
-context blocking. All `/api/v1/*` calls in Web UI returned 401.
+cookie alone (with `SameSite=None; Secure`). The HTTP handshake worked but
+failed silently because the browser refused to store the cookie due to
+third-party context blocking.
 
-The Bearer-header mechanism replaced this. The cookie is still set as a
-best-effort fallback (where some browsers/configurations do allow it, it works),
-but the Bearer header is the actual primary mechanism for Web UI.
+The Bearer-header mechanism replaced this. The cookie set on Web UI's
+`/api/v1/shell-session-init` was kept briefly as a fallback, then removed
+once it was confirmed to never have effect.
 
 ### Standalone URL flow (now requires a real session)
 
@@ -404,7 +391,7 @@ This decision should be revisited if any of the following change:
 | Variable | Required | Purpose |
 |---|---|---|
 | `FSM_WEBCONTAINER_AUTH_KEY` | Yes — server refuses to start without it | Shared secret matching the FSM Web Container Authentication Key. Set via `cf set-env` and `cf restage`. |
-| `FSM_JWKS_URL` | No (default: DE region) | URL of FSM's public JWKS endpoint. Default is `https://de.fsm.cloud.sap/api/oauth2/v2/.well-known/jwks.json`. Override for other regions (e.g., US, EU non-DE). |
+| `FSM_JWKS_URL` | No (default: DE region) | URL of FSM's public JWKS endpoint. Default is `https://de.fsm.cloud.sap/api/oauth2/v2/.well-known/jwks.json`. Override for other regions. |
 
 ### Required FSM configuration
 
@@ -438,7 +425,7 @@ for horizontal scaling. See `manifest.yaml` (currently `instances: 1`).
 | `SHELL-INIT: session issued` | Successful Web UI entry, JWT verified |
 | `SHELL-INIT: rejected — JWT validation failed: ...` | Web UI entry with invalid JWT — could be expired token (benign) or attempted forgery (investigate) |
 | `SHELL-INIT: rejected — missing authToken in body` | Frontend bug or tampering — Web UI client should always send the token |
-| `AUTH: rejected ... missing-credential ... source=none` | Endpoint hit without cookie or Bearer — direct attack attempt, or bootstrap race in Web UI (should not happen with correct sequencing) |
+| `AUTH: rejected ... missing-credential ... source=none` | Endpoint hit without cookie or Bearer — direct attack attempt, or bootstrap sequencing was broken |
 | `AUTH: rejected ... invalid-or-expired ... source=cookie` | Mobile cookie expired or tampered — typically benign (user idle past TTL) |
 | `AUTH: rejected ... invalid-or-expired ... source=bearer` | Web UI Bearer token expired or tampered — typically benign (user idle past TTL or iframe alive past 30 min) |
 | `CONTEXT-FETCH: session ... attempted to read ...` | Cross-context read attempt — investigate immediately, this should not happen in normal use |

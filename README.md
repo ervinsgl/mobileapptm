@@ -37,8 +37,8 @@ A SAP Fiori mobile application for SAP Field Service Management (FSM), designed 
 
 | Element | Description | Key Files |
 |---------|-------------|-----------|
-| **Session Context Panel** | Shows User, Language, Account, Company, Organization, Object Type | `WebContainerContext_fragment.xml` |
-| **Type Config Button (⚙️)** | Opens Type Configuration dialog | `View1_controller.js` → `onOpenTypeConfig()` |
+| **Session Context Button (ℹ️)** | Opens Session Context dialog showing User, Language, Account, Company, Organization, Object Type | `View1_controller.js` → `onShowContextInfo()`, `ContextInfoDialog_fragment.xml` |
+| **Type Config Button (⚙️)** | Opens Type Configuration dialog | `View1_controller.js` → `onOpenTypeConfig()`, `TypeConfigDialog_fragment.xml` |
 | **Service Order Panel** | Expandable panel with Service Order details | `ServiceCall_fragment.xml` |
 
 ---
@@ -55,6 +55,7 @@ A SAP Fiori mobile application for SAP Field Service Management (FSM), designed 
 | **T&M Summary** | Reported hours (AZ/FZ/WZ) and Material qty vs planned | `ProductGroups_fragment.xml`, `TMDataService.js` |
 | **T&M Tables** | Inline tables for Time/Material, Expense, Mileage (with sort, edit, delete) | `ProductGroups_fragment.xml` |
 | **Add Entry Button** | Opens T&M Creation dialog | `TMDialogService.js` → `openTMCreationDialog()` |
+| **Delete Selected Button** | Batch deletes selected PENDING or REVIEW entries | `TMTableMixin.js` → `onDeleteSelectedTM()` |
 
 ---
 
@@ -129,10 +130,10 @@ A SAP Fiori mobile application for SAP Field Service Management (FSM), designed 
 | **Time/Material Table** | Combined table with type filter (All / Time Effort / Material) | `ProductGroups_fragment.xml` |
 | **Expense Table** | Expense entries with amounts and type | `ProductGroups_fragment.xml` |
 | **Mileage Table** | Mileage entries with distance and duration | `ProductGroups_fragment.xml` |
-| **Approval Status** | Color-coded status (PENDING, APPROVED, DECLINED, etc.) | `ApprovalService.js` |
+| **Approval Status** | Color-coded status (PENDING, APPROVED, DECLINED, REVIEW, REJECTED) | `ApprovalService.js` |
 | **Decision Column** | Approver's decision remarks | `ApprovalService.js` → `getRemarksById()` |
-| **Inline Edit** | Edit Selected → modify values → Save All | `TMTableMixin.js`, `TMSaveAllMixin.js` |
-| **Batch Delete** | Select rows via checkbox → Delete Selected | `TMDeleteMixin.js` |
+| **Inline Edit** | Edit Selected → modify values → Save All (batch update) | `TMTableMixin.js` → `onSaveAllTM()` |
+| **Batch Delete** | Select rows via checkbox → Delete Selected. Works for entries in PENDING or REVIEW status. | `TMTableMixin.js` → `onDeleteSelectedTM()` |
 | **Sort** | Configurable sort dialog per table type | `TMSortDialog_fragment.xml` |
 
 ---
@@ -150,7 +151,7 @@ A SAP Fiori mobile application for SAP Field Service Management (FSM), designed 
 | **Remove Button** | Delete icon to remove type ID | `View1_controller.js` → `onRemoveExpenseType()`, `onRemoveMileageType()` |
 | **Reset Button** | Resets to default configuration | `View1_controller.js` → `onResetTypeConfig()` |
 
-**Backend:** `TypeConfigStore.js` (file storage), `/api/*-type-config` endpoints
+**Backend:** `TypeConfigStore.js` (file storage), `/api/v1/*-type-config` endpoints (defined in `configRoutes.js`)
 
 **Frontend:** `TypeConfigService.js` (API client, type checking)
 
@@ -193,23 +194,24 @@ A SAP Fiori mobile application for SAP Field Service Management (FSM), designed 
 
 ## 🎯 Overview
 
-This application provides a mobile-optimized interface for viewing and managing FSM activities with T&M (Time & Materials) reporting. It integrates with FSM Mobile (Web Container), FSM Web UI (Shell Extension), or runs standalone in a browser.
+This application provides a mobile-optimized interface for viewing and managing FSM activities with T&M (Time & Materials) reporting. It integrates with FSM Mobile (Web Container) and FSM Web UI (Shell Extension).
 
 **Key Features:**
 - ✅ Progressive disclosure UI (Service Order → Product Groups → Activities → T&M Tables)
 - ✅ Organization level auto-resolution from logged-in user
 - ✅ Activities grouped by Product Description
-- ✅ Auto-loads activity data from FSM Mobile web container context or URL parameters
+- ✅ Auto-loads activity data from FSM Mobile web container context or FSM Web UI Shell context
 - ✅ Context activity highlighting (light blue SAP Fiori styling)
 - ✅ T&M entry creation and management:
   - **Time & Material** — Material entries + Time entries (AZ/FZ/WZ) with multi-technician and repeat dates
   - **Expense** — Batch expense creation with type, amounts, and technician
   - **Mileage** — Batch mileage creation with distance, duration, and technician
-- ✅ Inline T&M tables with edit, delete, sort, and approval status tracking
+- ✅ Inline T&M tables with edit, delete (PENDING/REVIEW), sort, and approval status tracking
 - ✅ **Configurable Entry Types** — Expense and Mileage Service Product IDs can be configured via UI
 - ✅ Session context display (User, Account, Company, Organization)
 - ✅ Mobile-first responsive design (desktop, tablet, mobile)
-- ✅ Secure authentication via SAP BTP Destination Service
+- ✅ **Two-path inbound authentication** — FSM Authentication Key (Mobile) and FSM JWT signature verification (Web UI), both backed by server-issued session tokens
+- ✅ **Outbound OAuth 2.0** to FSM APIs via SAP BTP Destination Service
 - ✅ Direct FSM Data API and Query API integration
 
 **Default Type Configuration:**
@@ -225,7 +227,10 @@ This application provides a mobile-optimized interface for viewing and managing 
 - **Frontend:** SAP UI5 (Fiori)
 - **Backend:** Node.js + Express
 - **Deployment:** SAP Business Technology Platform (Cloud Foundry)
-- **Authentication:** OAuth 2.0 via BTP Destination Service
+- **Inbound Authentication:** FSM Authentication Key (Mobile flow) + FSM JWT validation against JWKS (Web UI flow), with HttpOnly cookie or Authorization Bearer token session delivery. See [docs/SECURITY.md](docs/SECURITY.md).
+- **Outbound Authentication:** OAuth 2.0 via BTP Destination Service
+
+> **Note on standalone access:** Direct browser access via URL parameters (e.g., `?activityId=...`) was previously supported as a fallback mode. After the strict authentication implementation, standalone mode no longer authenticates and is treated as a development-only mode. Production access is through FSM Mobile or FSM Web UI.
 
 ---
 
@@ -235,33 +240,54 @@ The application supports **multiple deployment contexts**:
 
 | Context | Description | How It Works |
 |---------|-------------|--------------|
-| **FSM Mobile** | Web Container in FSM Mobile app | POST context to `/web-container-access-point` |
-| **FSM Web UI** | Extension in FSM Web application | fsm-shell SDK communicates via iframe |
-| **Standalone** | Direct browser access | URL parameters (`?activityId=...` or `?serviceCallId=...`) |
+| **FSM Mobile** | Web Container in FSM Mobile app | POST context to `/web-container-access-point` with FSM Authentication Key |
+| **FSM Web UI** | Extension in FSM Web application | fsm-shell SDK communicates via iframe; access_token JWT verified at `/api/v1/shell-session-init` |
+| **Standalone** | Direct browser access (development-only) | URL parameters (`?activityId=...` or `?serviceCallId=...`); does not authenticate, all `/api/v1/*` calls return 401 |
 
 **Context Detection Priority:** URL parameters → FSM Shell (if iframe) → Mobile Web Container (if not iframe) → Standalone mode
+
 ```
 ┌──────────────────────────────────────────────────────────────────────────┐
 │                         ENTRY POINTS                                     │
 ├──────────────────┬───────────────────────┬───────────────────────────────┤
-│   FSM Mobile     │     FSM Web UI        │     Standalone/Dev            │
+│   FSM Mobile     │     FSM Web UI        │     Standalone (dev only)     │
 │   (Web Container)│     (Shell Extension) │     (URL Parameters)          │
 │        │         │           │           │            │                  │
 │  POST context    │   fsm-shell SDK       │   ?activityId=XXX             │
-│        │         │   (iframe postMessage)│   ?serviceCallId=XXX          │
+│  + Auth Key      │   (iframe postMessage)│   ?serviceCallId=XXX          │
+│        │         │   + access_token JWT  │   (no auth — returns 401      │
+│        │         │           │           │    on all /api/v1/* calls)    │
 └────────┼─────────┴───────────┼───────────┴────────────┼──────────────────┘
          │                     │                        │
-         └─────────────────────┼────────────────────────┘
-                               ▼
+         ▼                     ▼                        │
+┌──────────────────────────────────────────────────────┐│
+│           INBOUND AUTHENTICATION LAYER               ││
+│                                                      ││
+│  Auth Key validation        JWT signature            ││
+│  (constant-time)            verification             ││
+│  ↓                          (against FSM JWKS)       ││
+│  Issues HttpOnly cookie     ↓                        ││
+│                             Returns Bearer token     ││
+│                                                      ││
+│  Both produce a session token in the same store;     ││
+│  requireSession middleware accepts either source     ││
+│  on every /api/v1/* request.                         ││
+└──────────────────┬───────────────────┬───────────────┘│
+                   │                   │                │
+                   ▼                   ▼                │ (no token)
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                      SAP BTP (Cloud Foundry)                            │
 │  ┌───────────────────────────────────────────────────────────────────┐  │
 │  │                      UI5 App (Frontend)                           │  │
 │  │                                                                   │  │
 │  │  ContextService.js - Detects environment & unifies context        │  │
+│  │   - In Web UI: POSTs JWT to /api/v1/shell-session-init,           │  │
+│  │     stores returned session token on window.__fsmSessionToken     │  │
+│  │   - Component.js fetch wrapper attaches Bearer header to          │  │
+│  │     /api/v1/* calls when token is present                         │  │
 │  │       ↓                                                           │  │
 │  │  1. T&M Journal Page (Service Order header)                       │  │
-│  │  2. Session Context Panel (User, Org, Account, Company)           │  │
+│  │  2. Session Context Dialog (User, Org, Account, Company)          │  │
 │  │  3. Organization Level (auto-resolved from user)                  │  │
 │  │  4. Product Groups → Activities (grouped view)                    │  │
 │  │  5. T&M Tables (inline view/edit/delete/sort)                     │  │
@@ -272,18 +298,21 @@ The application supports **multiple deployment contexts**:
 │  ┌───────────────────────────▼───────────────────────────────────────┐  │
 │  │                   Express Server (Backend)                        │  │
 │  │                                                                   │  │
-│  │  - Web Container Context Storage (for FSM Mobile)                 │  │
-│  │  - FSM API Proxy (authenticated via BTP Destination)              │  │
-│  │  - Type Config API (CRUD for entry types)                         │  │
-│  │  - Type Config Store (typeconfig.json)                            │  │
+│  │  - WebContainer entry (Mobile): /web-container-access-point       │  │
+│  │  - Shell session init (Web UI): /api/v1/shell-session-init        │  │
+│  │  - Context store + session store (in-memory, 30 min TTL)          │  │
+│  │  - requireSession middleware (cookie OR Bearer Authorization)     │  │
+│  │  - FSM API Proxy under /api/v1/* (FSMService.js)                  │  │
+│  │  - Type Config API: /api/v1/*-type-config (TypeConfigStore.js)    │  │
+│  │  - JWT validation against FSM JWKS (FSMJwtValidator.js)           │  │
 │  └───────────────────────────┬───────────────────────────────────────┘  │
 └──────────────────────────────┼──────────────────────────────────────────┘
                                │ OAuth Token
                                ▼
                       ┌─────────────────┐
-                      │ BTP Destination  │  (FSM_OAUTH_CONNECT destination)
-                      │    Service       │
-                      └────────┬─────────┘
+                      │ BTP Destination │  (FSM_S4E destination)
+                      │    Service      │
+                      └────────┬────────┘
                                │ Authenticated Request
                                ▼
                       ┌─────────────────┐
@@ -296,6 +325,10 @@ The application supports **multiple deployment contexts**:
                       └─────────────────┘
 ```
 
+For the inbound authentication layer in detail (cookie vs Bearer rationale, JWT
+validator safety properties, threat model, and rotation procedures), see
+[docs/SECURITY.md](docs/SECURITY.md).
+
 ---
 
 ## ✨ Features
@@ -304,7 +337,7 @@ The application supports **multiple deployment contexts**:
 
 | Component | Description |
 |-----------|-------------|
-| **Session Context Panel** | Shows User, Language, Account, Company, Organization, Object Type/ID (visible in all contexts) |
+| **Session Context Dialog** | Opened from footer toolbar (ℹ️ button). Shows User, Language, Account, Company, Organization, Object Type/ID. |
 | **Service Order Panel** | Expandable panel showing Service Order details (ID, External ID, Subject, Business Partner, Responsible, Dates) |
 | **Organization Level** | Auto-resolved from logged-in user (no manual selection required) |
 | **Product Groups** | Activities grouped by Product Description with activity count |
@@ -341,7 +374,7 @@ Entry type shown depends on Activity Service Product. **Types are configurable v
 | **Mileage** | Z40000038, Z40000008 | Mileage Type, Technician, Distance (km), Travel Duration (min), Date, Remarks |
 | **Time & Material** | All other IDs | Material section (Item, Technician, Quantity, Date, Remarks) + Time sections (AZ/FZ/WZ with Task, Multi-Technician, Duration, Date, Repeat Date Range, Remarks) |
 
-*Note: Default Service Product IDs can be modified at runtime via the "Type Config" button (⚙️) in the Session Context panel or footer toolbar.*
+*Note: Default Service Product IDs can be modified at runtime via the "Type Config" button (⚙️) in the footer toolbar.*
 
 ### T&M Table Columns (Viewing)
 
@@ -374,23 +407,41 @@ All tables support: batch selection (checkbox), inline edit mode, sort dialog, r
 
 | Service | Instance Name | Purpose |
 |---------|---------------|---------|
-| **Destination Service** | `mobileapptm-destination` | FSM API connectivity |
+| **Destination Service** | `mobileapptm-destination` | FSM API connectivity (outbound OAuth) |
 
-### Destination Configuration (FSM_OAUTH_CONNECT):
+### Required Environment Variables:
 
-The destination `FSM_OAUTH_CONNECT` must be configured in BTP Cockpit with:
+| Variable | Required | Purpose |
+|----------|----------|---------|
+| `FSM_WEBCONTAINER_AUTH_KEY` | Yes — server refuses to start without it | Shared secret matching the FSM Web Container Authentication Key configured in FSM Admin. Used to validate inbound POSTs from FSM Mobile. Set via `cf set-env mobileapptm FSM_WEBCONTAINER_AUTH_KEY <value>` followed by `cf restage mobileapptm`. Recommended: 32+ chars from `openssl rand -base64 32`. |
+| `FSM_JWKS_URL` | No (defaults to DE region) | URL of FSM's public JWKS endpoint, used to verify JWTs from the FSM Web UI Shell flow. Default: `https://de.fsm.cloud.sap/api/oauth2/v2/.well-known/jwks.json`. Override for non-DE regions. |
+
+For full details on the inbound authentication model, see [docs/SECURITY.md](docs/SECURITY.md).
+
+### Destination Configuration (FSM_S4E):
+
+The destination `FSM_S4E` must be configured in BTP Cockpit with:
 
 | Property | Description |
 |----------|-------------|
 | **URL** | FSM API base URL (e.g., `https://eu.coresystems.net`) |
 | **Authentication** | OAuth2ClientCredentials |
-| **Token Service URL** | FSM OAuth token endpoint |
+| **Token Service URL** | FSM OAuth token endpoint (e.g., `https://de.fsm.cloud.sap/api/oauth2/v2/token`) |
 | **Client ID** | FSM OAuth client ID |
 | **Client Secret** | FSM OAuth client secret |
 
+### FSM Configuration:
+
+In addition to API access (above), the FSM tenant must be configured to enable inbound authentication from FSM Mobile:
+
+| Setting | Where | Value |
+|---------|-------|-------|
+| **Web Container Authentication Key** | FSM Admin → Companies → [Company] → Web Containers → [Web Container Name] → Authentication Key | Must byte-exactly match the `FSM_WEBCONTAINER_AUTH_KEY` env var |
+
 ### FSM Access:
 - SAP Field Service Management instance
-- API access credentials (OAuth client)
+- API access credentials (OAuth client) for outbound calls
+- Web Container Authentication Key (above) for inbound Mobile auth
 - User with appropriate permissions for:
   - Activities & Service Calls (read/write)
   - T&M entries: Time Effort, Material, Expense, Mileage (read/write/create)
@@ -400,6 +451,7 @@ The destination `FSM_OAUTH_CONNECT` must be configured in BTP Cockpit with:
 ### Optional (for FSM Web UI Integration):
 - FSM Shell SDK access (loaded dynamically from `https://unpkg.com/fsm-shell@1.20.0`)
 - Extension configuration in FSM Admin
+- Inbound JWT validation works automatically once `FSM_JWKS_URL` resolves to FSM's JWKS endpoint (the default points at the DE region)
 
 ---
 
@@ -414,16 +466,7 @@ npm install
 
 ### 2. Configure Application (Optional)
 
-#### 2.1 FSM Account/Company Defaults
-Account and company are read from the BTP Destination's additional properties first. The fallback defaults in `FSMService.js` are used only if the destination doesn't have them:
-```javascript
-this.config = {
-    account: 'your-account',      // Default: 'tuev-nord_t1'
-    company: 'your-company'       // Default: 'TUEV-NORD_S4E'
-};
-```
-
-#### 2.2 Type Configuration Defaults
+#### 2.1 Type Configuration Defaults
 Edit `typeconfig.json` to set default Service Product IDs:
 ```json
 {
@@ -435,15 +478,17 @@ Edit `typeconfig.json` to set default Service Product IDs:
 ```
 *Note: These can also be changed at runtime via the Type Config dialog.*
 
+> **Account and company:** These are not configured here. They come from the BTP destination's additional properties (`account` and `company`) — see Step 3. The application throws a clear startup error if either value is missing from the destination, so configuration mistakes surface immediately instead of silently using wrong credentials.
+
 ### 3. Configure BTP Destination
 
-Create a destination named **FSM_OAUTH_CONNECT** in SAP BTP Cockpit:
+Create a destination named **FSM_S4E** in SAP BTP Cockpit:
 ```
-Name: FSM_OAUTH_CONNECT
+Name: FSM_S4E
 Type: HTTP
 URL: https://de.fsm.cloud.sap
 Authentication: OAuth2ClientCredentials
-Token Service URL: https://de.fsm.cloud.sap/api/oauth2/v1/token
+Token Service URL: https://de.fsm.cloud.sap/api/oauth2/v2/token
 Client ID: <your-fsm-client-id>
 Client Secret: <your-fsm-client-secret>
 
@@ -461,17 +506,60 @@ Additional Properties:
 cf create-service destination lite mobileapptm-destination
 ```
 
-### 5. Deploy to Cloud Foundry
+### 5. Configure FSM Web Container Authentication Key
+
+Inbound POSTs from FSM Mobile must carry an Authentication Key matching the value the app expects. Configure it on both sides:
+
+**FSM side** — In FSM Admin → Companies → [Your Company] → Web Containers → [Your Web Container]:
+- Set the **Authentication Key** field to a strong random value
+- Recommended: 32+ characters generated by `openssl rand -base64 32`
+- Save the value somewhere secure — you'll need it again in Step 6
+
+The same value will be configured as an environment variable in the next step. The two values must match byte-exactly.
+
+### 6. Deploy and Set Environment Variables
+
+The application requires `FSM_WEBCONTAINER_AUTH_KEY` to start; it refuses to start without it. The recommended sequence keeps the secret out of any committed file:
+
 ```bash
-cf push
+# Push without starting
+cf push mobileapptm --no-start
+
+# Set the auth key (use the value from Step 5)
+cf set-env mobileapptm FSM_WEBCONTAINER_AUTH_KEY '<the-value-from-step-5>'
+
+# Optional: override the default JWKS endpoint (used for FSM Web UI Shell auth).
+# The default points at the DE region. Set this if your FSM tenant is in another region.
+cf set-env mobileapptm FSM_JWKS_URL 'https://<region>.fsm.cloud.sap/api/oauth2/v2/.well-known/jwks.json'
+
+# Start the app
+cf start mobileapptm
 ```
 
-### 6. Get Application URL
+After startup, verify the auth key was loaded:
+```bash
+cf logs mobileapptm --recent | grep "FSM_WEBCONTAINER_AUTH_KEY is set"
+```
+You should see `FSM_WEBCONTAINER_AUTH_KEY is set (N chars)` confirming the env var was picked up.
+
+### 7. Get Application URL
 ```bash
 cf app mobileapptm
 ```
 
-Copy the URL (e.g., `https://mobileapptm-xxx.cfapps.eu10.hana.ondemand.com`)
+Copy the URL (e.g., `https://mobileapptm-fsm-dev-op.cfapps.eu10-004.hana.ondemand.com`).
+
+This URL is what you configure in FSM Admin as the Web Container URL so that FSM Mobile knows where to POST. Make sure the Web Container in FSM Admin points at this URL AND has the matching Authentication Key from Step 5.
+
+### Rotation: Changing the Authentication Key Later
+
+To rotate the Authentication Key after initial setup:
+
+1. Update the value in FSM Admin → Web Containers → Authentication Key
+2. `cf set-env mobileapptm FSM_WEBCONTAINER_AUTH_KEY '<new-value>'`
+3. `cf restage mobileapptm`
+
+Active Mobile WebContainer launches will return 401 during the brief window between the FSM-side update and the CF restage; users retap to relaunch with the new key.
 
 ---
 
@@ -488,19 +576,26 @@ Navigate to: **FSM Admin → Company → Web Containers**
 | **External ID** | `Z_TMJournal` |
 | **URL** | `https://mobileapptm-xxx.cfapps.eu10.hana.ondemand.com` |
 | **Object Types** | `Activity` |
+| **Authentication Key** | A strong random value (32+ chars). The same value MUST be set as the `FSM_WEBCONTAINER_AUTH_KEY` env var on the deployed app. See [docs/SECURITY.md](docs/SECURITY.md) for rotation procedure. |
 | **Active** | ✓ Checked |
 
+> **Important:** The Authentication Key is what protects `/web-container-access-point` from unauthenticated POSTs. If the values on the FSM side and the app side don't match byte-exactly, Mobile launches will return HTTP 401 and the app will not load.
+
 #### 2. Web Container Context
-When opened from FSM Mobile, the web container automatically POSTs context data:
+
+When opened from FSM Mobile, the web container POSTs context data to `/web-container-access-point`:
 
 | Field | Description |
 |-------|-------------|
+| `authenticationKey` | Shared secret from the Authentication Key field above. Validated server-side via constant-time comparison. Mismatches return HTTP 401. |
 | `cloudId` | Activity/ServiceCall ID (used to load and highlight the entry) |
 | `objectType` | Object type (`ACTIVITY` or `SERVICECALL`) |
 | `userName` | Current user's name (for organization level auto-resolution) |
 | `cloudAccount` | FSM account name |
 | `companyName` | FSM company name |
 | `language` | User's language preference |
+
+On successful authentication, the server issues an HttpOnly session cookie (`fsm_session`) that authenticates all subsequent `/api/v1/*` calls from the WebView.
 
 #### 3. Add to Mobile Screen Configuration
 Navigate to: **FSM Admin → Companies → [Your Company] → Screen Configurations**
@@ -532,10 +627,12 @@ Navigate to: **FSM Admin → Company → Extensions**
 | **Context** | `Activity` or `ServiceCall` |
 | **Active** | ✓ Checked |
 
+> **Note on authentication:** Unlike the FSM Mobile setup, no Authentication Key is needed here. The Web UI flow authenticates via the FSM-issued JWT (`access_token`) that the Shell SDK provides as part of the context handshake. The backend verifies the JWT signature against FSM's public JWKS endpoint — no shared secret involved on either side. See `FSM_JWKS_URL` in the Prerequisites section if your FSM tenant is in a non-DE region.
+
 #### 2. Shell Context
 When running in FSM Web UI, the app uses the fsm-shell SDK (loaded dynamically from `https://unpkg.com/fsm-shell@1.20.0`) to receive context via iframe postMessage. Context arrives in two stages:
 
-**Stage 1 — REQUIRE_CONTEXT response (user/session data):**
+**Stage 1 — REQUIRE_CONTEXT response (user/session data + auth token):**
 
 | Shell Field | Mapped To | Description |
 |-------------|-----------|-------------|
@@ -547,7 +644,7 @@ When running in FSM Web UI, the app uses the fsm-shell SDK (loaded dynamically f
 | `account` | `shellContext.accountName` | Account name |
 | `cloudHost` | `shellContext.cloudHost` | FSM cloud host URL |
 | `selectedLocale` | `shellContext.locale` | User's locale |
-| `auth.access_token` | `shellContext.authToken` | OAuth token (if available) |
+| `auth.access_token` | `shellContext.authToken` | RS256-signed JWT issued by FSM. Used for backend authentication (see Stage 3). |
 
 **Stage 2 — ViewState events (object context):**
 
@@ -558,11 +655,23 @@ When running in FSM Web UI, the app uses the fsm-shell SDK (loaded dynamically f
 
 The app listens for both lowercase and uppercase ViewState keys. If a ViewState with an object ID arrives in the initial context, it resolves immediately. Otherwise it waits up to 3 seconds for ViewState events before resolving with basic session context only.
 
+**Stage 3 — Backend session establishment:**
+
+After Stages 1 and 2 resolve, the frontend POSTs the JWT from Stage 1 (`shellContext.authToken`) to `/api/v1/shell-session-init`. The backend:
+
+1. Verifies the JWT signature against FSM's public JWKS endpoint (`FSM_JWKS_URL`)
+2. Validates the token's expiration and algorithm (RS256 only)
+3. Extracts the user identity from the validated payload
+4. Issues a session token, returned in the JSON response body
+
+The frontend stores the session token in memory (`window.__fsmSessionToken`) and the global fetch wrapper attaches it as `Authorization: Bearer <token>` on every subsequent `/api/v1/*` call. This is necessary because the FSM Web UI iframe runs in a third-party context where browsers refuse to store cookies — see [docs/SECURITY.md](docs/SECURITY.md) for the full rationale.
+
 ---
 
 ## 🧪 Standalone / Development Mode
 
-For testing without FSM Mobile or Web UI, use URL parameters:
+For local UI testing without an FSM session, URL parameters can drive the initial context selection:
+
 ```
 # Open with specific Activity
 https://mobileapptm-xxx.cfapps.eu10.hana.ondemand.com?activityId=ABC123
@@ -571,11 +680,26 @@ https://mobileapptm-xxx.cfapps.eu10.hana.ondemand.com?activityId=ABC123
 https://mobileapptm-xxx.cfapps.eu10.hana.ondemand.com?serviceCallId=XYZ789
 ```
 
+> **Important — current limitation:** With strict authentication enabled on `/api/v1/*`, standalone mode loads the page but cannot fetch any data. All API calls return HTTP 401 because no auth path was established (the Mobile flow needs the Authentication Key POST; the Web UI flow needs the Shell SDK's JWT). The page renders with empty caches and broken data.
+> 
+> Standalone mode is therefore now a **page-load-only** development convenience. It's useful for iterating on pure-frontend UI work (CSS, layout, view structure) but not for any workflow that depends on FSM data. For full end-to-end testing, launch from FSM Mobile or FSM Web UI.
+> 
+> If a development bypass for backend auth becomes needed, it should be implemented as a clearly-named environment variable (e.g., `DEV_BYPASS_AUTH=true`) that is **never** set on production environments.
+
 ### Local Development
 ```bash
 npm start              # Start Express server (backend + frontend) on port 3000
 npm run start:dev      # Start Fiori tools dev server (frontend only, no backend API)
 ```
+
+> **Local startup requires `FSM_WEBCONTAINER_AUTH_KEY`.** The Express server (`npm start`) refuses to start if this environment variable is not set, the same as on Cloud Foundry. For local dev, export it in your shell first:
+> 
+> ```bash
+> export FSM_WEBCONTAINER_AUTH_KEY='<any-32-char-value-for-local-use>'
+> npm start
+> ```
+> 
+> The `npm run start:dev` Fiori dev server doesn't start the backend, so it doesn't need the env var — but `/api/v1/*` calls won't work in that mode either.
 
 *Note: `npm start` runs the full app (Express serves both API and UI). `npm run start:dev` runs only the UI5 Fiori dev server — backend API endpoints will not be available.*
 
@@ -586,9 +710,9 @@ npm run start:dev      # Start Fiori tools dev server (frontend only, no backend
 ### On FSM Mobile:
 1. Technician opens an Activity
 2. Sees **"T&M Journal"** button
-3. Taps the button → Web Container opens the app
+3. Taps the button → Web Container POSTs to `/web-container-access-point` with the Authentication Key, server validates and issues an `fsm_session` cookie, app loads
 4. App displays **"T&M Journal for Service Order: {ID}"** as page title
-5. **Session Context Panel** shows:
+5. **Session Context Dialog** (opened via ℹ️ button in footer toolbar) shows:
    - User, Language, Account, Company
    - Organization (auto-resolved from user)
    - Object Type & ID
@@ -601,7 +725,8 @@ npm run start:dev      # Start Fiori tools dev server (frontend only, no backend
 1. User opens an Activity or Service Call
 2. Clicks **"T&M Journal"** extension button
 3. App opens in iframe within FSM Web UI
-4. Same functionality as Mobile:
+4. Frontend captures the FSM-issued JWT from the Shell SDK and POSTs it to `/api/v1/shell-session-init`; backend verifies the JWT signature against FSM's JWKS and returns a session token, which the frontend attaches as `Authorization: Bearer` on subsequent calls
+5. Same functionality as Mobile:
    - Session Context from fsm-shell SDK
    - Auto-resolved organization level
    - Context highlighting
@@ -609,8 +734,9 @@ npm run start:dev      # Start Fiori tools dev server (frontend only, no backend
 
 ### In Standalone Mode:
 1. Open app URL with parameter: `?activityId=XXX` or `?serviceCallId=XXX`
-2. App loads the specified Activity/Service Call
-3. Full functionality available (requires valid FSM destination)
+2. Page loads and the URL parameter selects the intended object
+3. **All `/api/v1/*` calls return HTTP 401** because no auth path was established (no Authentication Key POST, no Shell JWT). Caches stay empty, no FSM data populates.
+4. Standalone mode is now a page-load-only development convenience for pure-frontend UI work. For full functionality, launch from FSM Mobile or FSM Web UI.
 
 ### T&M Creation Flow:
 1. Click **"Add Entry"** button on an Activity panel
@@ -621,6 +747,16 @@ npm run start:dev      # Start Fiori tools dev server (frontend only, no backend
 3. Fill required fields and click **Save All**
 4. Dialog closes, entries created in FSM, and inline T&M table refreshes automatically
 
+### T&M Edit Flow:
+1. Click **"Edit Selected"** on a T&M table to enable inline edit mode for selected rows
+2. Modify values directly in the table
+3. Click **Save All** — batch-updates all edited entries via `/api/v1/batch-update`
+
+### T&M Delete Flow:
+1. Select rows via checkbox (entries with **PENDING** or **REVIEW** status are selectable)
+2. Click **"Delete Selected"** — confirmation dialog appears
+3. Confirm — entries are batch-deleted via `/api/v1/batch-delete`, table refreshes, count updates
+
 ---
 
 ## 🔄 How It Works
@@ -630,16 +766,25 @@ npm run start:dev      # Start Fiori tools dev server (frontend only, no backend
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                           USER ENTRY                                    │
 ├─────────────────┬───────────────────────┬───────────────────────────────┤
-│   FSM Mobile    │     FSM Web UI        │     Standalone/Dev            │
+│   FSM Mobile    │     FSM Web UI        │     Standalone (dev only)     │
 │   Tap button    │   Click extension     │   Open URL with params        │
 │        │        │          │            │            │                  │
 │  POST context   │   Shell SDK context   │   URL parameters              │
+│  + Auth Key     │   + access_token JWT  │   (no auth — /api/v1/*        │
+│        │        │          │            │   returns 401)                │
 └────────┼────────┴──────────┼────────────┴────────────┼──────────────────┘
          │                   │                         │
-         └───────────────────┼─────────────────────────┘
-                             ▼
-              ┌──────────────────────────────┐
-              │   ContextService.js          │
+         ▼                   ▼                         │ (no token issued)
+┌─────────────────────────────────────────────┐        │
+│   INBOUND AUTHENTICATION                    │        │
+│   Mobile: Auth Key validated → cookie set   │        │
+│   Web UI: JWT verified → Bearer token       │        │
+│   issued via /api/v1/shell-session-init     │        │
+└──────────────────────┬──────────────────────┘        │
+                       │                               │
+                       ▼                               │
+              ┌──────────────────────────────┐         │
+              │   ContextService.js          │◄────────┘
               │   (Detects source, unifies)  │
               └──────────────┬───────────────┘
                              ▼
@@ -658,15 +803,16 @@ npm run start:dev      # Start Fiori tools dev server (frontend only, no backend
 | Step | Action | Result |
 |------|--------|--------|
 | 1 | User opens Activity in FSM | Activity screen displayed |
-| 2 | User taps/clicks "T&M Journal" | App opens (web container/iframe/browser) |
-| 3 | Context received | `ContextService` detects source and extracts Activity/ServiceCall ID |
-| 4 | User org resolved | `userName` → User API → Person Query → Org Level assignment |
-| 5 | Session Context displayed | Shows User, Language, Account, Company, Organization |
-| 6 | Service Order loaded | Composite-tree API fetches Service Call + Activities |
-| 7 | Product Groups rendered | Activities grouped by Service Product description |
-| 8 | Context entry highlighted | Light blue border, auto-expanded |
-| 9 | T&M data loaded | Time Effort, Material, Expense, Mileage entries loaded into inline tables |
-| 10 | User views/creates T&M | Entry type determined by Service Product (configurable) |
+| 2 | User taps/clicks "T&M Journal" | App opens (web container/iframe) |
+| 3 | Inbound authentication | Mobile: Auth Key validated, `fsm_session` cookie issued. Web UI: JWT verified against FSM JWKS, session token returned and stored as Bearer header in `window.__fsmSessionToken`. |
+| 4 | Context received | `ContextService` detects source and extracts Activity/ServiceCall ID |
+| 5 | User org resolved | `userName` → User API → Person Query → Org Level assignment |
+| 6 | Session Context displayed | Available via ℹ️ button in footer toolbar (User, Language, Account, Company, Organization) |
+| 7 | Service Order loaded | Composite-tree API fetches Service Call + Activities |
+| 8 | Product Groups rendered | Activities grouped by Service Product description |
+| 9 | Context entry highlighted | Light blue border, auto-expanded |
+| 10 | T&M data loaded | Time Effort, Material, Expense, Mileage entries loaded into inline tables |
+| 11 | User views/creates T&M | Entry type determined by Service Product (configurable) |
 
 ### Context Sources:
 
@@ -674,6 +820,7 @@ npm run start:dev      # Start Fiori tools dev server (frontend only, no backend
 ```
 POST /web-container-access-point
 {
+  "authenticationKey": "<shared-secret-matching-FSM_WEBCONTAINER_AUTH_KEY>",
   "cloudId": "9D92E0B18FDC4A27A213401FEEA89FDA",
   "objectType": "ACTIVITY",
   "userName": "Max Mustermann",
@@ -683,9 +830,13 @@ POST /web-container-access-point
 }
 ```
 
+The server validates `authenticationKey` via constant-time comparison. On success,
+an HttpOnly `fsm_session` cookie is set on the response and the user is redirected
+to the loaded app.
+
 #### FSM Web UI (Shell SDK)
 ```javascript
-// Stage 1: REQUIRE_CONTEXT response (session data)
+// Stage 1: REQUIRE_CONTEXT response (session data + auth token)
 {
   "userId": "USER-UUID",
   "user": "Max Mustermann",
@@ -695,12 +846,19 @@ POST /web-container-access-point
   "accountId": "ACCOUNT-UUID",
   "cloudHost": "https://eu.coresystems.net",
   "selectedLocale": "de",
-  "auth": { "access_token": "..." }
+  "auth": { "access_token": "<RS256-signed FSM JWT>" }
 }
 
 // Stage 2: ViewState events (received via onViewState listeners)
 // Activity: { "id": "ACTIVITY-UUID" }
 // ServiceCall: { "id": "SERVICECALL-UUID" }
+
+// Stage 3: Backend session establishment
+// Frontend POSTs the JWT to /api/v1/shell-session-init.
+// Backend verifies signature against FSM JWKS, returns:
+//   { "success": true, "sessionToken": "<opaque-token>", ... }
+// Frontend stores sessionToken on window.__fsmSessionToken; the global fetch
+// wrapper attaches it as Authorization: Bearer on all subsequent /api/v1/* calls.
 ```
 
 #### Standalone (URL Parameters)
@@ -710,35 +868,72 @@ POST /web-container-access-point
 ?serviceCallId=ABC123DEF456...
 ```
 
+> Standalone mode loads the page but does not authenticate. All `/api/v1/*` calls
+> return 401, so no FSM data populates. Used only for pure-frontend UI iteration.
+
 ### Authentication Flow:
+
+The application has two distinct authentication concerns: **inbound** (FSM/Web UI
+→ your app) and **outbound** (your app → FSM API). The flows below cover each.
+
+#### Inbound (FSM Mobile or Web UI → app)
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  1. App receives context (Mobile POST / Shell SDK / URL)        │
+│  Mobile: POST /web-container-access-point with Auth Key         │
+│      OR                                                         │
+│  Web UI: POST /api/v1/shell-session-init with access_token JWT  │
 └──────────────────────────┬──────────────────────────────────────┘
                            ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│  2. Read VCAP_SERVICES → Get Destination Service credentials    │
+│  Mobile: constant-time compare against FSM_WEBCONTAINER_AUTH_KEY│
+│  Web UI: verify JWT signature against FSM JWKS endpoint         │
+│           (FSMJwtValidator.js, RS256 only, 24h key cache)       │
 └──────────────────────────┬──────────────────────────────────────┘
                            ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│  3. Call BTP Destination Service → Get OAuth token              │
+│  Generate 32-byte session token, store in sessionStore (30 min) │
+│  Mobile: set as HttpOnly fsm_session cookie                     │
+│  Web UI: return in JSON body, frontend stores in memory         │
 └──────────────────────────┬──────────────────────────────────────┘
                            ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│  4. Fetch FSM_OAUTH_CONNECT destination → Get FSM URL + OAuth config      │
+│  Subsequent /api/v1/* calls authenticated via:                  │
+│  - cookie (Mobile flow)                                         │
+│  - Authorization: Bearer header (Web UI flow)                   │
+│  requireSession middleware accepts either                       │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+For the full inbound auth model (threat model, rotation procedures, why not XSUAA),
+see [docs/SECURITY.md](docs/SECURITY.md).
+
+#### Outbound (app → FSM API)
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  1. Read VCAP_SERVICES → Get Destination Service credentials    │
 └──────────────────────────┬──────────────────────────────────────┘
                            ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│  5. Get FSM OAuth token → Authenticate with FSM API             │
+│  2. Call BTP Destination Service → Get OAuth token              │
 └──────────────────────────┬──────────────────────────────────────┘
                            ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│  6. Token cached (TokenCache.js) → Reused until 5 min before    │
+│  3. Fetch FSM_S4E destination → Get FSM URL + OAuth config      │
+└──────────────────────────┬──────────────────────────────────────┘
+                           ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  4. Get FSM OAuth token → Authenticate with FSM API             │
+└──────────────────────────┬──────────────────────────────────────┘
+                           ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  5. Token cached (TokenCache.js) → Reused until 5 min before    │
 │     expiry (default token lifetime: 60 min)                     │
 └──────────────────────────┬──────────────────────────────────────┘
                            ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│  7. Make FSM API calls → Activities, T&M, Lookups, etc.         │
+│  6. Make FSM API calls → Activities, T&M, Lookups, etc.         │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -773,13 +968,13 @@ POST /web-container-access-point
 mobileapptm/
 │
 ├── # ─────────── ROOT LEVEL ───────────
-├── index.js                             # Express server, middleware, web container (~100 lines)
+├── index.js                             # Express server, inbound auth (Auth Key + JWT), session store, /api/v1 routes (~150 lines)
 ├── routes/
 │   ├── activityRoutes.js                # Activity CRUD & reported items (~155 lines)
 │   ├── configRoutes.js                  # Type configuration endpoints (~240 lines)
 │   ├── entryRoutes.js                   # T&M entry batch & individual CRUD (~430 lines)
 │   └── lookupRoutes.js                  # Person, org, lookup, approval, user (~275 lines)
-├── package.json                         # Node.js dependencies
+├── package.json                         # Node.js dependencies (express, cookie-parser, jsonwebtoken, jwks-rsa)
 ├── package-lock.json                    # Dependency lock file
 ├── manifest.yaml                        # Cloud Foundry deployment
 ├── mta.yaml                             # Multi-Target Application descriptor
@@ -796,14 +991,16 @@ mobileapptm/
 │
 ├── # ─────────── DOCUMENTATION ───────────
 ├── docs/
+│   ├── SECURITY.md                      # Inbound auth architecture, threat model, rotation procedures
 │   └── screenshots/                     # App screenshots for documentation
 │
 ├── # ─────────── BACKEND SERVICES ───────────
 ├── utils/
 │   ├── DestinationService.js            # BTP Destination handling (~90 lines)
-│   ├── FSMService.js                    # FSM API core: HTTP methods, CRUD, batch (~680 lines)
+│   ├── FSMService.js                    # FSM API core: HTTP methods, CRUD, batch (~700 lines)
 │   ├── FSMLookupService.js              # FSM lookup, approval, person, org, user (~475 lines)
 │   ├── FSMQueryService.js               # FSM T&M entry retrieval queries (~255 lines)
+│   ├── FSMJwtValidator.js               # FSM JWT signature verification against JWKS (Web UI auth) (~70 lines)
 │   └── TokenCache.js                    # OAuth token caching (~110 lines)
 │
 └── # ─────────── FRONTEND (SAP UI5) ───────────
@@ -813,7 +1010,7 @@ webapp/
 ├── index.html                       # App entry point
 ├── simple.html                      # Simple test page
 ├── manifest.json                    # UI5 app descriptor
-├── Component.js                     # UI5 Component (~65 lines)
+├── Component.js                     # UI5 Component + global fetch wrapper (cookies, Bearer header) (~95 lines)
 ├── appconfig.json                   # App configuration
 ├── _appGenInfo.json                 # Generator info
 │
@@ -822,28 +1019,27 @@ webapp/
 │   ├── App.view.xml                 # Root view
 │   ├── View1.view.xml               # Main view (T&M Journal page)
 │   └── fragments/
+│       ├── ContextInfoDialog.fragment.xml    # Session Context info dialog (~70 lines)
 │       ├── ProductGroups.fragment.xml        # Activity panels with T&M tables (~370 lines)
 │       ├── ServiceCall.fragment.xml          # Service Order header panel (~70 lines)
+│       ├── StatusLegendDialog.fragment.xml   # Approval-status legend dialog
 │       ├── TMCreateDialog.fragment.xml       # T&M Creation dialog (~680 lines)
 │       ├── TMSortDialog.fragment.xml         # T&M Sort options dialog (~20 lines)
-│       ├── TypeConfigDialog.fragment.xml     # Type Configuration dialog (~120 lines)
-│       └── WebContainerContext.fragment.xml  # FSM Mobile session context (~70 lines)
+│       └── TypeConfigDialog.fragment.xml     # Type Configuration dialog (~120 lines)
 │
 ├── # ─────────── CONTROLLERS & MIXINS ───────────
 ├── controller/
 │   ├── App.controller.js            # Root controller
-│   ├── View1.controller.js          # Main controller (~680 lines)
+│   ├── View1.controller.js          # Main controller, sync onInit + async _initializeAsync sequencing (~725 lines)
 │   └── mixin/
-│       ├── DataLoadingMixin.js      # Data loading, batch T&M loading (~640 lines)
+│       ├── DataLoadingMixin.js      # Data loading, batch T&M loading (~700 lines)
 │       ├── TechnicianMixin.js       # Technician/task selection (~150 lines)
 │       ├── TMDialogMixin.js         # T&M dialog open/enrichment (~405 lines)
-│       ├── TMEditMixin.js           # Individual entry edit handlers (~740 lines)
+│       ├── TMEditMixin.js           # Individual entry edit handlers (~750 lines)
 │       ├── TMExpenseMileageMixin.js # Expense & Mileage creation (~525 lines)
 │       ├── TMMaterialMixin.js       # Material entry creation (~195 lines)
-│       ├── TMSaveMixin.js           # Batch save operations (~400 lines)
-│       ├── TMTableMixin.js          # Table filter/sort/edit selected (~530 lines)
-│       ├── TMSaveAllMixin.js        # Batch save edited entries from table (~220 lines)
-│       ├── TMDeleteMixin.js         # Delete selected entries + count update (~225 lines)
+│       ├── TMSaveMixin.js           # Batch save (new entries from creation dialog) (~470 lines)
+│       ├── TMTableMixin.js          # Table filter/sort + Edit Selected/Save All + Delete Selected (~1175 lines)
 │       └── TMTimeEntryMixin.js      # Time entry creation with repeat (~365 lines)
 │
 ├── # ─────────── FRONTEND SERVICES ───────────
@@ -859,7 +1055,7 @@ webapp/
 │   │   ├── ApprovalService.js       # Approval status & remarks lookup (~210 lines)
 │   │   ├── BusinessPartnerService.js# Business partner lookup (~130 lines)
 │   │   ├── CacheService.js          # Startup cache warming (~225 lines)
-│   │   ├── ContextService.js        # Web container & shell context (~535 lines)
+│   │   ├── ContextService.js        # Web container & Shell context detection, /api/v1/shell-session-init flow (~545 lines)
 │   │   ├── ExpenseTypeService.js    # Expense type ID lookup (~170 lines)
 │   │   ├── ItemService.js           # Item ID/ExternalId lookup (~260 lines)
 │   │   ├── OrganizationService.js   # Organization level + user resolution (~270 lines)
@@ -884,7 +1080,7 @@ webapp/
 │
 ├── # ─────────── STYLES ───────────
 ├── css/
-│   └── style.css                    # Custom styles (~815 lines)
+│   └── style.css                    # Custom styles (~785 lines)
 │
 ├── # ─────────── IMAGES ───────────
 ├── images/
@@ -906,73 +1102,84 @@ webapp/
 
 ### Backend Endpoints
 
-#### Web Container
+All `/api/v1/*` routes require an authenticated session — supplied via either the
+`fsm_session` cookie (Mobile flow) or the `Authorization: Bearer <token>` header
+(Web UI flow). Unauthenticated requests return HTTP 401. See
+[docs/SECURITY.md](docs/SECURITY.md) for the full auth model.
+
+#### Web Container & Session Establishment
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/web-container-access-point` | Receive context from FSM Mobile web container |
-| GET | `/web-container-context` | Retrieve stored web container context |
-| POST | `/` | Alternative web container entry point |
+| POST | `/web-container-access-point` | Receive context + Authentication Key from FSM Mobile. Validates the key, stores context, issues `fsm_session` cookie, redirects to app. |
+| POST | `/` | Alternative web container entry point (same handler as above). |
+| GET | `/web-container-context` | Retrieve stored web container context. Requires `fsm_session` cookie. |
+| POST | `/api/v1/shell-session-init` | FSM Web UI Shell flow entry. Receives the Shell SDK's `access_token` JWT, verifies signature against FSM JWKS, returns session token in JSON body. **Excluded from `requireSession` middleware** (it's what establishes the session). |
 
 #### Activity & Service Call
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/api/get-activity-by-id` | Fetch activity by ID |
-| POST | `/api/get-activity-by-code` | Fetch activity by code |
-| POST | `/api/get-activities-by-service-call` | Fetch composite tree for service call |
-| PUT | `/api/update-activity` | Update activity |
+| POST | `/api/v1/get-activity-by-id` | Fetch activity by ID |
+| POST | `/api/v1/get-activity-by-code` | Fetch activity by code |
+| POST | `/api/v1/get-activities-by-service-call` | Fetch composite tree for service call |
+| PUT | `/api/v1/update-activity` | Update activity |
 
 #### User & Organization
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/api/get-user-org-level` | Resolve user's organization level (userName → orgLevel) |
-| GET | `/api/get-organization-levels-full` | Fetch full organization hierarchy |
+| POST | `/api/v1/get-user-org-level` | Resolve user's organization level (userName → orgLevel) |
+| GET | `/api/v1/get-organization-levels-full` | Fetch full organization hierarchy |
 
 #### T&M Data
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/api/get-reported-items` | Fetch T&M entries for activity |
-| POST | `/api/get-approval-status` | Fetch approval status for T&M entries |
+| POST | `/api/v1/get-reported-items` | Fetch T&M entries for activity |
+| POST | `/api/v1/get-approval-status` | Fetch approval status for T&M entries |
 
 #### T&M Entry CRUD
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/api/batch-create` | Batch create multiple entries (Material, TimeEffort, Expense, Mileage) |
-| PATCH | `/api/batch-update` | Batch update multiple entries |
-| DELETE | `/api/batch-delete` | Batch delete multiple entries |
-| POST | `/api/create-expense` | Create individual Expense entry |
-| PATCH | `/api/update-expense/:id` | Update Expense entry |
-| POST | `/api/create-mileage` | Create individual Mileage entry |
-| PATCH | `/api/update-mileage/:id` | Update Mileage entry |
-| POST | `/api/create-material` | Create individual Material entry |
-| PATCH | `/api/update-material/:id` | Update Material entry |
-| POST | `/api/create-time-effort` | Create individual Time Effort entry |
-| PATCH | `/api/update-time-effort/:id` | Update Time Effort entry |
-| POST | `/api/create-time-material` | Create combined Time & Material (material + time efforts) |
+| POST | `/api/v1/batch-create` | Batch create multiple entries (Material, TimeEffort, Expense, Mileage) |
+| PATCH | `/api/v1/batch-update` | Batch update multiple entries |
+| DELETE | `/api/v1/batch-delete` | Batch delete multiple entries |
+| POST | `/api/v1/create-expense` | Create individual Expense entry |
+| PATCH | `/api/v1/update-expense/:id` | Update Expense entry |
+| POST | `/api/v1/create-mileage` | Create individual Mileage entry |
+| PATCH | `/api/v1/update-mileage/:id` | Update Mileage entry |
+| POST | `/api/v1/create-material` | Create individual Material entry |
+| PATCH | `/api/v1/update-material/:id` | Update Material entry |
+| POST | `/api/v1/create-time-effort` | Create individual Time Effort entry |
+| PATCH | `/api/v1/update-time-effort/:id` | Update Time Effort entry |
+| POST | `/api/v1/create-time-material` | Create combined Time & Material (material + time efforts) |
 
 #### Lookup Data
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/api/get-persons` | Fetch all persons (technicians) |
-| POST | `/api/get-person-by-id` | Fetch person by ID |
-| POST | `/api/get-person-by-external-id` | Fetch person by external ID |
-| POST | `/api/get-business-partner-by-external-id` | Fetch business partner by external ID |
-| GET | `/api/get-time-tasks` | Fetch time tasks for lookup |
-| GET | `/api/get-items` | Fetch items for lookup |
-| GET | `/api/get-expense-types` | Fetch expense types for lookup |
-| POST | `/api/get-udf-meta` | Resolve UDF Meta ID to externalId |
+| POST | `/api/v1/get-persons` | Fetch all persons (technicians) |
+| POST | `/api/v1/get-person-by-id` | Fetch person by ID |
+| POST | `/api/v1/get-person-by-external-id` | Fetch person by external ID |
+| POST | `/api/v1/get-business-partner-by-external-id` | Fetch business partner by external ID |
+| GET | `/api/v1/get-time-tasks` | Fetch time tasks for lookup |
+| GET | `/api/v1/get-items` | Fetch items for lookup |
+| GET | `/api/v1/get-expense-types` | Fetch expense types for lookup |
+| POST | `/api/v1/get-udf-meta` | Resolve UDF Meta ID to externalId |
 
 #### Type Configuration
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/get-type-config` | Get current type configuration |
-| POST | `/api/save-type-config` | Save full type configuration |
-| POST | `/api/add-expense-type` | Add expense type ID |
-| POST | `/api/remove-expense-type` | Remove expense type ID |
-| POST | `/api/add-mileage-type` | Add mileage type ID |
-| POST | `/api/remove-mileage-type` | Remove mileage type ID |
-| POST | `/api/reset-type-config` | Reset to default configuration |
+| GET | `/api/v1/get-type-config` | Get current type configuration |
+| POST | `/api/v1/save-type-config` | Save full type configuration |
+| POST | `/api/v1/add-expense-type` | Add expense type ID |
+| POST | `/api/v1/remove-expense-type` | Remove expense type ID |
+| POST | `/api/v1/add-mileage-type` | Add mileage type ID |
+| POST | `/api/v1/remove-mileage-type` | Remove mileage type ID |
+| POST | `/api/v1/reset-type-config` | Reset to default configuration |
 
-### FSM APIs Used
+> **API versioning policy:** All routes are mounted under `/api/v1/*` per the
+> Programmierrichtlinie §7. When breaking changes are required in the future,
+> they will be exposed as `/api/v2/*` alongside `/api/v1/*` — never replacing
+> v1 in place.
+
+### FSM APIs Used (Outbound)
 
 | API | Endpoint | Purpose |
 |-----|----------|---------|
@@ -984,6 +1191,8 @@ webapp/
 | **Service Management v2** | `/api/service-management/v2/composite-tree` | Service call with activities |
 | **User API** | `/api/user` | User data lookup (for org level resolution) |
 | **Org Level Service v1** | `/cloud-org-level-service/api/v1/levels` | Organization hierarchy |
+| **OAuth Token Endpoint** | `/api/oauth2/v2/token` | OAuth2 client credentials flow (via BTP Destination Service) |
+| **JWKS Endpoint** | `/api/oauth2/v2/.well-known/jwks.json` | FSM public keys for inbound JWT verification (Web UI flow). Default region: DE. Override via `FSM_JWKS_URL`. |
 
 ### Key Files
 
@@ -991,14 +1200,15 @@ webapp/
 
 | File | Lines | Purpose |
 |------|-------|---------|
-| `index.js` | ~100 | Express server: middleware, static files, web container context |
+| `index.js` | ~150 | Express server: middleware, inbound auth (Auth Key + JWT), session store, `requireSession`, `/api/v1` route mounting |
 | `routes/activityRoutes.js` | ~155 | Activity & Service Call endpoints |
 | `routes/entryRoutes.js` | ~430 | T&M entry CRUD: batch create/update/delete, individual CRUD |
 | `routes/lookupRoutes.js` | ~275 | Person, org, lookup, approval, user endpoints |
 | `routes/configRoutes.js` | ~240 | Type configuration endpoints |
-| `utils/FSMService.js` | ~680 | FSM API core: HTTP methods, Data API, batch operations |
+| `utils/FSMService.js` | ~700 | FSM API core: HTTP methods, Data API, batch operations |
 | `utils/FSMLookupService.js` | ~475 | FSM lookups: approval, person, org, user, business partner |
 | `utils/FSMQueryService.js` | ~255 | FSM Query API: T&M entry retrieval queries |
+| `utils/FSMJwtValidator.js` | ~70 | FSM JWT signature verification against JWKS endpoint (Web UI auth). Algorithm allow-list (RS256), 24h key cache, rate limited. |
 | `utils/DestinationService.js` | ~90 | BTP Destination Service: reads VCAP_SERVICES, fetches destination config |
 | `utils/TokenCache.js` | ~110 | OAuth token caching with 5 min pre-expiry buffer |
 | `config/TypeConfigStore.js` | ~280 | Type configuration storage: file-based CRUD for expense/mileage type IDs |
@@ -1007,9 +1217,11 @@ webapp/
 
 | File | Lines | Purpose |
 |------|-------|---------|
-| `View1.controller.js` | ~680 | Main controller: initialization, lifecycle, mixin coordination |
-| `ContextService.js` | ~535 | Universal context provider: Mobile, Shell SDK, URL params detection |
-| `DataLoadingMixin.js` | ~640 | Data loading: service call, activities, user org resolution |
+| `Component.js` | ~95 | UI5 Component + global fetch wrapper that attaches `credentials: 'include'` and `Authorization: Bearer` (when `window.__fsmSessionToken` is set) on all `/api/v1/*` requests |
+| `View1.controller.js` | ~725 | Main controller: sync `onInit` + async `_initializeAsync` (auth → type config → parallel data loading), mixin coordination |
+| `ContextService.js` | ~545 | Context detection (Mobile / Shell SDK / URL params) + `/api/v1/shell-session-init` flow + Bearer token storage on `window.__fsmSessionToken` |
+| `DataLoadingMixin.js` | ~700 | Data loading: service call, activities, user org resolution |
+| `TMTableMixin.js` | ~1175 | Table filter/sort + Edit Selected/Save All + Delete Selected (PENDING/REVIEW) |
 | `TMDialogMixin.js` | ~405 | T&M dialog event handlers: add/remove entries, validation |
 | `TMDialogService.js` | ~485 | T&M dialog management: open/close dialogs, model binding |
 | `TMCreationService.js` | ~490 | T&M entry creation: templates, type-specific field initialization |
@@ -1034,9 +1246,10 @@ webapp/
 
 | File | Size | Purpose |
 |------|------|---------|
-| `WebContainerContext.fragment.xml` | ~3KB | Session context panel with user/org info |
+| `ContextInfoDialog.fragment.xml` | ~3KB | Session context info dialog (User, Account, Company, Organization) |
 | `ServiceCall.fragment.xml` | ~3KB | Service Order details panel |
 | `ProductGroups.fragment.xml` | ~38KB | Activity panels grouped by product, inline T&M tables |
+| `StatusLegendDialog.fragment.xml` | ~2KB | Approval-status legend dialog |
 | `TMCreateDialog.fragment.xml` | ~49KB | T&M creation dialog (Expense/Mileage/T&M tables) |
 | `TMSortDialog.fragment.xml` | ~1KB | Sort options dialog |
 | `TypeConfigDialog.fragment.xml` | ~6KB | Type configuration dialog (add/remove type IDs) |
@@ -1048,15 +1261,21 @@ webapp/
 ### Local Development
 ```bash
 npm install
+
+# The Express server requires FSM_WEBCONTAINER_AUTH_KEY to start.
+# For local dev, export any 32+ character value (matching the FSM Admin
+# side isn't needed unless you're testing the Mobile flow locally).
+export FSM_WEBCONTAINER_AUTH_KEY='local-dev-key-not-used-against-real-fsm'
+
 npm start
 # App runs on http://localhost:3000
 ```
 
-**Note:** Local development requires BTP Destination Service binding. For rapid UI iteration, use SAP Business Application Studio with port forwarding on port 3003.
+**Note:** Local development requires BTP Destination Service binding for outbound FSM API calls. For rapid UI iteration without backend access, use SAP Business Application Studio with port forwarding on port 3003, or `npm run start:dev` (Fiori dev server, frontend only — backend API endpoints will not be available).
 
 ### Testing Without FSM
 
-Use URL parameters to test with specific Activity or Service Call:
+URL parameters can drive the initial context selection:
 ```bash
 # Test with Activity
 http://localhost:3000?activityId=YOUR-ACTIVITY-UUID
@@ -1065,22 +1284,28 @@ http://localhost:3000?activityId=YOUR-ACTIVITY-UUID
 http://localhost:3000?serviceCallId=YOUR-SERVICECALL-UUID
 ```
 
+> **Important:** With strict authentication on `/api/v1/*`, this only loads the page and selects which object would be shown — **no FSM data populates** because no auth path was established (no Mobile Auth Key POST, no Web UI JWT). All `/api/v1/*` calls return 401.
+> 
+> Useful for: pure-frontend UI work (CSS, layout, view structure changes).
+> 
+> Not useful for: testing data flows, T&M creation/edit/delete, or anything that depends on FSM data. For full end-to-end testing, launch from FSM Mobile or FSM Web UI.
+
 ### Context Sources
 
 The app supports 3 context sources (detected automatically by `ContextService.js`):
 
-| Source | Detection | How to Test |
-|--------|-----------|-------------|
-| **FSM Mobile** | POST to `/web-container-access-point` | Deploy and open from FSM Mobile app |
-| **FSM Web UI** | Running in iframe + fsm-shell SDK available | Configure as FSM Extension |
-| **URL Parameters** | `?activityId=` or `?serviceCallId=` in URL | Direct browser access |
+| Source | Detection | Auth Mechanism | How to Test |
+|--------|-----------|----------------|-------------|
+| **FSM Mobile** | POST to `/web-container-access-point` | Authentication Key → `fsm_session` cookie | Deploy and open from FSM Mobile app |
+| **FSM Web UI** | Running in iframe + fsm-shell SDK available | Shell SDK JWT → `Authorization: Bearer` token | Configure as FSM Extension |
+| **URL Parameters** | `?activityId=` or `?serviceCallId=` in URL | None (page loads but `/api/v1/*` returns 401) | Direct browser access (UI-only testing) |
 
 ### Web Container Context
 
-The app receives context from FSM Mobile via POST request:
+The app receives context from FSM Mobile via POST request to `/web-container-access-point`:
 ```javascript
-// POST to /web-container-access-point
 {
+  "authenticationKey": "<shared-secret-matching-FSM_WEBCONTAINER_AUTH_KEY>",
   "cloudId": "9D92E0B18FDC4A27A213401FEEA89FDA",
   "objectType": "ACTIVITY",
   "userName": "Max Mustermann",
@@ -1089,6 +1314,8 @@ The app receives context from FSM Mobile via POST request:
   "language": "de"
 }
 ```
+
+The server validates `authenticationKey` via constant-time comparison. On success, an HttpOnly `fsm_session` cookie is issued for subsequent `/api/v1/*` calls.
 
 ### Adding a New Lookup Service
 
@@ -1100,7 +1327,10 @@ sap.ui.define([], () => {
         _cache: new Map(),
         
         async fetchData() {
-            const response = await fetch("/api/your-endpoint");
+            // Note the /api/v1/ prefix — all backend endpoints are versioned.
+            // The global fetch wrapper in Component.js automatically attaches
+            // credentials (cookie or Bearer header) to /api/v1/* calls.
+            const response = await fetch("/api/v1/your-endpoint");
             const data = await response.json();
             data.items.forEach(item => {
                 this._cache.set(item.id, item);
@@ -1122,9 +1352,10 @@ async getYourData() {
 }
 ```
 
-3. **Add API endpoint** in `routes/lookupRoutes.js`:
+3. **Add route handler** in `routes/lookupRoutes.js`. Paths inside route files are **bare** (no `/api/v1` prefix) — the `/api/v1` prefix is added by `app.use('/api/v1', ...)` in `index.js`:
 ```javascript
-router.get("/api/your-endpoint", async (req, res) => {
+// This becomes /api/v1/your-endpoint when mounted
+router.get("/your-endpoint", async (req, res) => {
     const data = await FSMService.getYourData();
     res.json({ items: data });
 });
@@ -1171,26 +1402,28 @@ const DEFAULT_CONFIG = {
 #### Type Configuration API
 ```javascript
 // Get current config
-GET /api/get-type-config
+GET /api/v1/get-type-config
 // Response: { success: true, data: { expenseTypes: [...], mileageTypes: [...] } }
 
 // Add expense type
-POST /api/add-expense-type
+POST /api/v1/add-expense-type
 Body: { "typeId": "Z40000099", "modifiedBy": "username" }
 
 // Add mileage type
-POST /api/add-mileage-type
+POST /api/v1/add-mileage-type
 Body: { "typeId": "Z40000099", "modifiedBy": "username" }
 
 // Remove types
-POST /api/remove-expense-type
-POST /api/remove-mileage-type
+POST /api/v1/remove-expense-type
+POST /api/v1/remove-mileage-type
 Body: { "typeId": "Z40000099", "modifiedBy": "username" }
 
 // Reset to defaults
-POST /api/reset-type-config
+POST /api/v1/reset-type-config
 Body: { "modifiedBy": "username" }
 ```
+
+All these endpoints require an authenticated session (cookie or Bearer header) — see [docs/SECURITY.md](docs/SECURITY.md).
 
 ### Adding a New T&M Entry Type
 
@@ -1239,18 +1472,27 @@ cf logs mobileapptm --recent
 
 | Issue | Cause | Solution |
 |-------|-------|----------|
+| Server crashes immediately on startup with `FATAL: FSM_WEBCONTAINER_AUTH_KEY environment variable is not set` | Required env var missing | `cf set-env mobileapptm FSM_WEBCONTAINER_AUTH_KEY '<value>'` then `cf restage mobileapptm`. Locally: `export FSM_WEBCONTAINER_AUTH_KEY='...'` before `npm start`. |
+| Mobile launch returns 401 (`WC-ACCESS-POINT: rejected POST — authenticationKey mismatch`) | FSM Admin Authentication Key doesn't match the `FSM_WEBCONTAINER_AUTH_KEY` env var | Both values must match byte-exactly. Compare FSM Admin → Web Containers → Authentication Key against the env var (`cf env mobileapptm`). |
+| Web UI extension launches but all data is missing / 401s in console | Shell session init failed or JWKS validation failed | Check `cf logs` for `SHELL-INIT: rejected — JWT validation failed: ...`. If JWKS unreachable, verify `FSM_JWKS_URL` (default points at DE region; override for other regions). |
+| Standalone URL access (`?activityId=...`) loads page but no data populates | Strict auth — no Mobile Auth Key POST and no Web UI JWT means no session token | Standalone is now page-load-only for pure UI work. Use FSM Mobile or FSM Web UI for full functionality. |
 | 404 on app load | Static file path wrong | Verify `express.static` points to correct folder |
-| Session Context not showing | Context not detected | Ensure opened from FSM Mobile/Web UI or use URL params (`?activityId=...`) |
+| Session Context Dialog shows nothing | Context not detected | Ensure opened from FSM Mobile/Web UI |
 | Organization not resolved | User not assigned to org level in FSM | Verify user's Person record has orgLevelIds assigned |
 | No activities shown | No EXECUTION/CLOSED activities or wrong org level | Check activity execution stages and org level assignments in FSM |
-| T&M shows IDs instead of names | Lookup service not loaded | Check console for fetch errors in CacheService |
+| T&M shows IDs instead of names | Lookup service not loaded (often caused by 401s during cache warm) | Check console for `CacheService: Cache warm complete` line — if it shows `{technicians: false, ...}`, auth wasn't established before cache warm fired. Check `_initializeAsync` sequencing in `View1.controller.js`. |
 | Dialog shows "No data" | API timeout | Refresh and try again |
-| "Context not available" message | Context lost or not provided | Re-open app from FSM Mobile/Web UI or add URL params |
+| "Context not available" message | Context lost or not provided | Re-open app from FSM Mobile/Web UI |
 | Add Entry button not visible | Activity is cancelled/closed or read-only | Button hidden when `isReadOnly` is true |
 | Activity not highlighted | cloudId doesn't match any activity | Verify context passes correct Activity ID |
 | Type Config changes not persisting | File storage on Cloud Foundry is ephemeral | Changes persist during runtime but reset on app restart/redeploy |
 | Wrong creation form showing | Service Product ID not in correct type list | Use Type Config dialog to add/remove IDs |
-| "class" assertion error in console | UI5 debug mode warning | Can be ignored — cosmetic only, doesn't affect functionality |
+| Delete Selected toast says "0 entries deleted" but entries are gone | Multipart batch response parser drops bodyless 204 responses | Cosmetic — entries are actually deleted. Refresh the page to confirm. |
+| Refresh button click crashes with `Cannot read properties of undefined (reading 'setProperty')` | View model not yet initialized | Should not happen with current code (sync `onInit` ensures model exists before view renders). If it appears, verify `View1.controller.js` `onInit` is **not** declared `async`. |
+| `[FUTURE FATAL] mobileapptm.controller.View1: The registered Event Listener 'onInit' must not have a return value` | `onInit` declared as `async` (returns Promise) | Make `onInit` synchronous; delegate async work to a separate `_initializeAsync` method called fire-and-forget. |
+| `fetch-wrapper: session readiness gate timed out after 10s` | Some `/api/v1/*` call fired before session was established | Defensive backstop in `Component.js`. Should not appear in normal operation — investigate which service is fetching outside the controlled bootstrap sequence in `_initializeAsync`. |
+| Web UI extension works first time, then 401s after some idle | Session token expired (30 min TTL) or container restarted (in-memory `sessionStore` cleared) | Refresh the iframe; the Shell SDK will re-issue a JWT and the app will re-establish a session. |
+| `class` assertion error in console | UI5 debug mode warning | Can be ignored — cosmetic only, doesn't affect functionality |
 
 ### Debug Console Logs
 
@@ -1263,6 +1505,8 @@ The app logs detailed information to browser console:
 - `ContextService: Raw shell context received:` — REQUIRE_CONTEXT response
 - `ContextService: ViewState 'activity' received:` — Activity from shell
 - `ContextService: FSM Shell context detected` — Shell context resolved
+- `ContextService: Session token stored for Bearer auth (Web UI flow)` — JWT verified, session established
+- `ContextService: Shell session initialized — cookie set` — Shell session init returned 200
 - `ContextService: Mobile web container context detected` — Mobile POST context
 - `ContextService: No context found - standalone mode` — No context, empty state
 - `ContextService: Returning cached context from [source]` — Using cached context
@@ -1272,7 +1516,8 @@ The app logs detailed information to browser console:
 
 **Data Loading (`CacheService`, `DataLoadingMixin`):**
 - `CacheService: Starting parallel cache warm...` — Lookup data loading start
-- `CacheService: Cache warm complete in Xms` — All caches loaded
+- `CacheService: Cache warm complete in Xms {technicians: true, ...}` — All caches loaded successfully (all `true` = healthy bootstrap)
+- `CacheService: Cache warm complete in Xms {technicians: false, ...}` — Cache warm fired before auth was established (sequencing bug); check `_initializeAsync` order
 
 **Services:**
 - `ActivityService:` — Activity data operations
@@ -1288,13 +1533,33 @@ The app logs detailed information to browser console:
 
 Server-side logs (visible via `cf logs`):
 
+**Startup:**
+```
+Server running on port 3000
+FSM_WEBCONTAINER_AUTH_KEY is set (N chars)
+Session TTL: 30 minutes
+Cookie: HttpOnly; Secure; SameSite=None; Path=/
+API mounted at /api/v1 (strict auth — no Web UI carve-out)
+FSMJwtValidator: using JWKS endpoint https://de.fsm.cloud.sap/api/oauth2/v2/.well-known/jwks.json
+```
+
 **Normal operation:**
 ```
+WC-ACCESS-POINT: context stored, session issued (contextKey=..., sessionStoreSize=N)
+SHELL-INIT: session issued (contextKey=..., userEmail=..., sessionStoreSize=N)
 Batch create: 5 entries (transactional: false)
 Batch update: 3 entries (transactional: false)
 Batch delete: 2 entries (transactional: false)
-Server running on port 3000
 ```
+
+**Auth-related rejections:**
+- `WC-ACCESS-POINT: rejected POST — authenticationKey mismatch` — FSM Admin Auth Key doesn't match env var
+- `WC-ACCESS-POINT: rejected POST — authenticationKey missing` — Mobile POST didn't include `authenticationKey` field
+- `SHELL-INIT: rejected — JWT validation failed: ...` — Web UI JWT couldn't be verified (signature, expiration, or unknown key)
+- `SHELL-INIT: rejected — missing authToken in body` — Frontend bug or tampering
+- `AUTH: rejected ... missing-credential ... source=none` — `/api/v1/*` called without cookie or Bearer header — direct attack attempt or bootstrap sequencing bug
+- `AUTH: rejected ... invalid-or-expired ... source=cookie` — Mobile cookie expired or tampered
+- `AUTH: rejected ... invalid-or-expired ... source=bearer` — Web UI Bearer token expired or tampered
 
 **Error patterns to watch for:**
 - `Error fetching activity by ID:` — Activity fetch failed
@@ -1319,6 +1584,18 @@ Server running on port 3000
 | Reset doesn't restore all defaults | Refresh page after reset to reload from server |
 | Changes lost after redeploy | Expected behavior — file storage is ephemeral on Cloud Foundry |
 
+### Authentication Troubleshooting
+
+| Issue | Diagnostic | Solution |
+|-------|-----------|----------|
+| Don't know if Mobile cookie is set | `document.cookie` in DevTools console | Should contain `fsm_session=...`. If absent in iframe (Web UI), this is expected — Web UI uses Bearer header, not cookie. |
+| Don't know if Web UI Bearer token is set | `window.__fsmSessionToken` in DevTools console | Should be a 32+ char base64url string after Shell session init. If `undefined` or `null`, the init flow didn't complete — check console for ContextService errors. |
+| Don't know which auth source is being used | `cf logs mobileapptm \| grep "AUTH:"` | Successful requests don't log; rejections include `source=cookie` or `source=bearer` so you can see which path the request came in on. |
+| Want to verify JWKS endpoint is reachable from CF | `curl https://de.fsm.cloud.sap/api/oauth2/v2/.well-known/jwks.json` | Should return JSON with `"keys": [...]` array, HTTP 200. If unreachable, JWT validation will fail and Web UI auth breaks. |
+| Want to inspect what FSM Mobile is sending | `cf logs mobileapptm \| grep "WC-ACCESS-POINT"` | Successful POSTs log `context stored, session issued` with the contextKey. Missing log = POST never arrived. Rejection log = key mismatch. |
+
+For the full inbound auth model (threat model, rotation procedures, why not XSUAA), see [docs/SECURITY.md](docs/SECURITY.md).
+
 ---
 
 ## 📝 Application Details
@@ -1333,7 +1610,9 @@ Server running on port 3000
 | **Deployment Platform**            | SAP Business Technology Platform (Cloud Foundry)         |
 | **Node.js Version**                | 18+                                                      |
 | **npm Version**                    | 8+                                                       |
-| **Supported Contexts**             | FSM Mobile, FSM Web UI, Standalone (URL params)          |
+| **Inbound Authentication**         | FSM Authentication Key (Mobile) + FSM JWT validation against JWKS (Web UI), with HttpOnly cookie or Bearer token session delivery |
+| **Outbound Authentication**        | OAuth 2.0 via BTP Destination Service                    |
+| **Supported Contexts**             | FSM Mobile (full), FSM Web UI (full), Standalone (page-load-only, no auth) |
 
 ---
 
@@ -1342,11 +1621,20 @@ Server running on port 3000
 ### ✅ Implemented:
 
 **Context & Integration:**
-- Multi-context support (FSM Mobile, FSM Web UI, Standalone via URL params)
-- Web container integration (receives context from FSM Mobile)
-- FSM Shell SDK integration (receives context from FSM Web UI via iframe)
-- URL parameter support (`?activityId=` or `?serviceCallId=`)
-- Session Context panel (User, Language, Account, Company, Organization)
+- Multi-context support (FSM Mobile, FSM Web UI, Standalone via URL params — standalone now page-load-only after strict auth)
+- Web container integration (receives context + Authentication Key from FSM Mobile)
+- FSM Shell SDK integration (receives context + access_token JWT from FSM Web UI via iframe)
+- URL parameter support (`?activityId=` or `?serviceCallId=`) for object selection
+- Session Context Dialog (User, Language, Account, Company, Organization), opened from footer toolbar
+
+**Inbound Authentication:**
+- FSM Authentication Key validation on Mobile WebContainer entry POSTs (constant-time comparison)
+- FSM JWT signature verification on Web UI Shell flow (RS256, against FSM JWKS endpoint)
+- Server-issued opaque session tokens (32 bytes random, 30 min TTL)
+- Two delivery mechanisms: HttpOnly cookie (Mobile, first-party WebView) and `Authorization: Bearer` header (Web UI, where browsers refuse to store third-party cookies)
+- `requireSession` middleware on all `/api/v1/*` routes (no carve-out)
+- API versioning at `/api/v1` per Programmierrichtlinie §7
+- Full documentation in [docs/SECURITY.md](docs/SECURITY.md)
 
 **Organization & Navigation:**
 - Organization level auto-resolution from logged-in user (userName → User API → Person → orgLevel)
@@ -1363,11 +1651,11 @@ Server running on port 3000
 - Expense table with type, amounts, technician
 - Mileage table with distance, duration, technician
 - Row highlighting by approval status (Success/Error/Warning)
-- Approval status column (PENDING, APPROVED, DECLINED, CANCELLED, DECLINED_CLOSED → CHANGE)
+- Approval status column (PENDING, APPROVED, DECLINED, CANCELLED, DECLINED_CLOSED → CHANGE, REVIEW, REJECTED)
 - Decision column (approver's remarks)
-- Batch selection via checkbox (PENDING/REVIEW entries only)
+- Batch selection via checkbox (PENDING and REVIEW entries selectable for delete)
 - Inline edit mode (Edit Selected → modify values → Save All)
-- Batch delete (Delete Selected)
+- Batch delete (Delete Selected) — works for PENDING or REVIEW status
 - Sort dialog per table type
 - Horizontal scroll for wide tables on mobile
 
@@ -1394,10 +1682,16 @@ Server running on port 3000
 - Individual create/update endpoints for each entry type
 - Dialog closes and inline tables auto-refresh after creation
 
+**Bootstrap Sequencing:**
+- Synchronous `onInit` (UI5 lifecycle compliance, view model exists before render)
+- Async `_initializeAsync` chain: auth context → type config → parallel data loading
+- Eliminates race conditions between auth establishment and `/api/v1/*` calls
+- Documented in `View1.controller.js` and `docs/SECURITY.md`
+
 **Type Configuration:**
 - Configurable Expense/Mileage Service Product IDs
 - Type Config Dialog (add/remove/reset type IDs)
-- REST API for type configuration CRUD
+- REST API for type configuration CRUD (under `/api/v1/*`)
 - File-based storage (`config/typeconfig.json`)
 - Auto-uppercase and trim on type IDs
 - Auto-move between lists (adding to Expense removes from Mileage and vice versa)
@@ -1412,26 +1706,36 @@ Server running on port 3000
 
 **Services & Infrastructure:**
 - Lookup services for ID resolution (Person, Technician, Task, Item, ExpenseType, UdfMeta, Approval, Organization, BusinessPartner)
-- Parallel cache warming at startup (CacheService)
-- Authentication via BTP Destination Service
-- Token caching with 5 min pre-expiry buffer
+- Parallel cache warming at startup (CacheService) — runs after auth is established to avoid 401s
+- Outbound OAuth 2.0 to FSM via BTP Destination Service (`FSM_S4E`)
+- OAuth token caching with 5 min pre-expiry buffer (TokenCache.js)
+- Inbound JWT key caching with 24h TTL (FSMJwtValidator.js)
 - Responsive CSS with mobile-first design (CSS Grid auto-fit layout)
 
 ### 📋 Planned:
 - Persistent type configuration (database storage instead of file)
+- Persistent session storage (Redis or similar) for horizontal scaling — currently in-memory, requires `instances: 1`
+- Multi-region JWKS configuration (currently defaults to DE; override via `FSM_JWKS_URL`)
 - Offline support
+- Restoration of standalone mode for development via opt-in `DEV_BYPASS_AUTH` env var (clearly named, never set in production)
 
 ---
 
 ## 🔐 Security Notes
 
-- OAuth tokens cached in memory (not persisted to disk)
-- Destination credentials stored securely in VCAP_SERVICES
-- Web container context stored in memory (cleared on restart)
-- Type configuration stored in file (no sensitive data)
-- HTTPS enforced by Cloud Foundry
-- No sensitive data logged (auth tokens excluded from console output)
-- fsm-shell SDK loaded from trusted CDN (`https://unpkg.com/fsm-shell@1.20.0`)
+- **Inbound authentication on all API paths.** All `/api/v1/*` routes require a valid session token via cookie (Mobile) or Bearer header (Web UI). Direct browser access without an established session returns 401. See [docs/SECURITY.md](docs/SECURITY.md) for the full model.
+- **FSM Authentication Key** (Mobile flow) stored as env var (`FSM_WEBCONTAINER_AUTH_KEY`), validated server-side via constant-time comparison. Server refuses to start without it.
+- **FSM JWT validation** (Web UI flow) uses RS256 algorithm allow-list, prevents `alg: none` and HS256-confusion attacks. Public keys cached for 24h, fetch rate-limited to 10/min.
+- Session tokens generated via `crypto.randomBytes(32)`, stored in-memory only, 30-minute TTL.
+- **Outbound OAuth tokens** cached in memory (not persisted to disk).
+- **Destination credentials** stored securely in VCAP_SERVICES (BTP-managed).
+- **Cookies** set with `HttpOnly; Secure; SameSite=None`. Cookie attribute applies to Mobile flow; Web UI uses Bearer token because browsers refuse to store cookies in cross-site iframe context.
+- **Web container context** stored in memory (cleared on restart).
+- **Type configuration** stored in file (no sensitive data).
+- HTTPS enforced by Cloud Foundry.
+- No sensitive data logged (auth tokens, session tokens, and JWTs excluded from console output).
+- fsm-shell SDK loaded from trusted CDN (`https://unpkg.com/fsm-shell@1.20.0`).
+- Documented compliance deviation from Programmierrichtlinie §10 (no XSUAA) approved per §12 — see [docs/SECURITY.md](docs/SECURITY.md).
 
 ---
 
@@ -1441,4 +1745,4 @@ Internal use only — Company proprietary.
 
 ---
 
-**Last Updated:** February 2026
+**Last Updated:** April 2026

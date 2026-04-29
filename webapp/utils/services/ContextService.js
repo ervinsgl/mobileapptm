@@ -80,18 +80,9 @@ sap.ui.define([], function() {
          */
         getContext: function() {
             return new Promise((resolve, reject) => {
-                // Helper: signal the fetch wrapper that any session cookie that
-                // should be set is now set. Idempotent — safe to call multiple times.
-                const releaseSessionGate = () => {
-                    if (typeof window !== 'undefined' && window.__fsmSessionReadyResolve) {
-                        window.__fsmSessionReadyResolve();
-                    }
-                };
-
                 // Return cached context if available
                 if (_cachedContext) {
                     console.log("ContextService: Returning cached context from", _cachedContext.source);
-                    releaseSessionGate();
                     resolve(_cachedContext);
                     return;
                 }
@@ -101,19 +92,10 @@ sap.ui.define([], function() {
                     .then((context) => {
                         _cachedContext = context;
                         console.log("ContextService: Context resolved from", context.source, context);
-                        // Release the gate AFTER session init has fully completed
-                        // (in Shell flow, _detectAndGetContext awaits _initializeShellSession
-                        // before resolving; in Mobile flow the cookie was already set by the
-                        // backend redirect, so the gate is just a no-op pass-through).
-                        releaseSessionGate();
                         resolve(context);
                     })
                     .catch((error) => {
                         console.error("ContextService: Failed to get context", error);
-                        // Release the gate even on failure so the UI doesn't deadlock.
-                        // Failed /api/v1/* calls will surface as 401s, which is the right
-                        // signal that something genuinely went wrong.
-                        releaseSessionGate();
                         reject(error);
                     });
             });

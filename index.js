@@ -112,7 +112,7 @@ function resolveSession(token) {
 }
 
 /**
- * Cookie attributes used everywhere a session cookie is issued.
+ * Cookie attributes used for the Mobile WebContainer flow's session cookie.
  * 
  * SameSite=None is REQUIRED for the Web UI Shell iframe flow (cross-site
  * iframe context). For the Mobile WebView flow, the WebView is a top-level
@@ -300,16 +300,11 @@ app.post('/api/v1/shell-session-init', async (req, res) => {
                 `(contextKey=${contextKey}, userEmail=${payload.user_email || 'unknown'}, ` +
                 `sessionStoreSize=${sessionStore.size})`);
 
-    // Set the cookie as a best-effort fallback. In modern browsers running
-    // the FSM Web UI iframe, this Set-Cookie is typically ignored due to
-    // third-party cookie blocking. But where it works, it's a useful belt-and-
-    // suspenders. Mobile flow always works because the WebView is first-party.
-    res.cookie(SESSION_COOKIE_NAME, sessionToken, SESSION_COOKIE_OPTIONS);
-
-    // The session token is also returned in the response body so the Web UI
-    // frontend can stash it in memory and send it as Authorization: Bearer
-    // on subsequent /api/v1/* requests. This is the actual primary mechanism
-    // for the Shell flow — the cookie above rarely sticks in the iframe.
+    // We deliberately do NOT set a session cookie here.
+    // The Shell flow runs in a cross-site iframe where browsers refuse to
+    // store cookies regardless of SameSite=None; Secure. The session token
+    // returned in the response body is captured by ContextService and sent
+    // as Authorization: Bearer on subsequent requests. See docs/SECURITY.md.
     res.json({
         success: true,
         contextKey: contextKey,
