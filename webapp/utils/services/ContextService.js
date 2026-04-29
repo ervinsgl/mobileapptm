@@ -80,9 +80,18 @@ sap.ui.define([], function() {
          */
         getContext: function() {
             return new Promise((resolve, reject) => {
+                // Helper: signal the fetch wrapper that any session cookie that
+                // should be set is now set. Idempotent — safe to call multiple times.
+                const releaseSessionGate = () => {
+                    if (typeof window !== 'undefined' && window.__fsmSessionReadyResolve) {
+                        window.__fsmSessionReadyResolve();
+                    }
+                };
+
                 // Return cached context if available
                 if (_cachedContext) {
                     console.log("ContextService: Returning cached context from", _cachedContext.source);
+                    releaseSessionGate();
                     resolve(_cachedContext);
                     return;
                 }
@@ -92,10 +101,19 @@ sap.ui.define([], function() {
                     .then((context) => {
                         _cachedContext = context;
                         console.log("ContextService: Context resolved from", context.source, context);
+                        // Release the gate AFTER session init has fully completed
+                        // (in Shell flow, _detectAndGetContext awaits _initializeShellSession
+                        // before resolving; in Mobile flow the cookie was already set by the
+                        // backend redirect, so the gate is just a no-op pass-through).
+                        releaseSessionGate();
                         resolve(context);
                     })
                     .catch((error) => {
                         console.error("ContextService: Failed to get context", error);
+                        // Release the gate even on failure so the UI doesn't deadlock.
+                        // Failed /api/v1/* calls will surface as 401s, which is the right
+                        // signal that something genuinely went wrong.
+                        releaseSessionGate();
                         reject(error);
                     });
             });
@@ -121,6 +139,26 @@ sap.ui.define([], function() {
                     const shellContext = await this._getShellContext();
                     if (shellContext && (shellContext.objectId || shellContext.userId)) {
                         console.log("ContextService: FSM Shell context detected");
+
+                        // OPTION B: establish a backend session before returning context.
+                        // Without this, all /api/v1/* calls would 401 (strict auth, no carve-out).
+                        // The Shell SDK's access_token is a real FSM-signed JWT; the backend
+                        // verifies it and sets an HttpOnly session cookie.
+                        if (shellContext.authToken) {
+                            try {
+                                await this._initializeShellSession(shellContext.authToken);
+                                console.log("ContextService: Shell session initialized — cookie set");
+                            } catch (err) {
+                                console.error("ContextService: Shell session init failed:", err);
+                                // Fall through — the app will load but /api/v1/* calls will 401.
+                                // This makes the failure mode visible (errors in the UI) rather
+                                // than silently returning context that can't be used.
+                            }
+                        } else {
+                            console.warn("ContextService: Shell context has no authToken — " +
+                                         "/api/v1/* calls will not be authenticated");
+                        }
+
                         return shellContext;
                     }
                 } catch (e) {
@@ -164,6 +202,64 @@ sap.ui.define([], function() {
             } catch (e) {
                 return true; // If we can't access top, we're in iframe
             }
+        },
+
+         /**
+         * Establish a backend session for the Web UI Shell flow.
+         * 
+         * POSTs the Shell SDK's access_token to /api/v1/shell-session-init.
+         * The backend verifies the JWT against FSM's JWKS and returns a
+         * session token. We store the token on window.__fsmSessionToken so
+         * the global fetch wrapper in Component.js can attach it as an
+         * Authorization: Bearer header on subsequent /api/v1/* requests.
+         * 
+         * Why a Bearer header instead of just relying on the cookie:
+         * The FSM Web UI loads our app in a cross-site iframe. Modern
+         * browsers (Edge, Chrome, Safari) refuse to store third-party
+         * cookies even with SameSite=None; Secure set. The cookie's
+         * Set-Cookie response header is silently dropped by the browser.
+         * The Authorization header is the reliable mechanism for this
+         * context. The Mobile WebView flow continues to use cookies because
+         * the WebView is a first-party browsing context.
+         * 
+         * @param {string} authToken - The FSM JWT (access_token) from Shell SDK
+         * @returns {Promise<Object>} The session info returned by the backend
+         * @throws {Error} If the backend rejects the token or the request fails
+         * @private
+         */
+        _initializeShellSession: async function(authToken) {
+            const response = await fetch('/api/v1/shell-session-init', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ authToken: authToken })
+            });
+
+            if (!response.ok) {
+                let detail = '';
+                try {
+                    const errBody = await response.json();
+                    detail = errBody.message || JSON.stringify(errBody);
+                } catch (e) {
+                    detail = await response.text();
+                }
+                throw new Error(`Shell session init failed (${response.status}): ${detail}`);
+            }
+
+            const result = await response.json();
+
+            // Store the session token globally so the fetch wrapper in
+            // Component.js can attach it as Authorization: Bearer on
+            // subsequent /api/v1/* requests. Required because the cookie
+            // path is unreliable in the third-party iframe context.
+            if (result && result.sessionToken && typeof window !== 'undefined') {
+                window.__fsmSessionToken = result.sessionToken;
+                console.log("ContextService: Session token stored for Bearer auth (Web UI flow)");
+            } else {
+                console.warn("ContextService: shell-session-init returned no sessionToken — " +
+                             "/api/v1/* calls will rely on cookie (likely to fail in iframe)");
+            }
+
+            return result;
         },
 
         /**

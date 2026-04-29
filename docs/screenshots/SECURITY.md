@@ -1,50 +1,54 @@
 # Security Architecture
 
 > **Status:** Approved deviation from BTP coding guideline (Programmierrichtlinie für SAP-Erweiterungen §10).
-> **Last updated:** April 2026
-> **Owner:** TUVN
+> **Last updated:** April 2026 (Bearer-token mechanism added for Web UI; bootstrap sequencing finalized)
+> **Owner:** [Team or person responsible — fill in]
 > **Architecture approval:** [Approver name and date — fill in per Programmierrichtlinie §12]
 
 ## Purpose of this document
 
 This document describes the inbound authentication and authorization model of the
 T&M Journal app, why it differs from the company's standard XSUAA/OAuth2 pattern,
-and what the deliberate limitations of the current model are. It is intended for:
+and what the operational characteristics of the current model are. It is intended for:
 
 - Developers maintaining or extending this app.
 - Architects reviewing the app's compliance with internal coding standards.
 - Auditors verifying that security trade-offs have been deliberately made and documented.
 
 If you are reading this because you are about to change anything in `index.js` related
-to `requireSession`, `optionalSession`, the WebContainer POST handlers, the
-`fsm_session` cookie, or the FSM Authentication Key, **read this document first.**
+to `requireSession`, the WebContainer POST handlers, the `/api/v1/shell-session-init`
+endpoint, the `fsm_session` cookie, the `FSMJwtValidator`, the FSM Authentication Key,
+or the bootstrap order in `View1.controller.js` `_initializeAsync()` —
+**read this document first.**
 
 ---
 
 ## Summary
 
-The app implements a **two-tier inbound authentication model**:
+The app implements a **two-path inbound authentication model**, with full
+session-based authentication on every API call. Each path uses a different
+session-token delivery mechanism, but both reach the same backend session store.
 
-| Path | Tier | Mechanism |
+| Path | Auth source | Token delivery |
 |---|---|---|
-| `POST /web-container-access-point` (and `POST /`) | Tier 1 | FSM Authentication Key (shared secret) — required |
-| `GET /web-container-context` | Tier 2 | Session cookie — required |
-| `/api/v1/*` | Tier 2 | Session cookie — required when present, accepted when absent (Web UI carve-out) |
+| FSM Mobile WebContainer | Authentication Key (shared secret) | HttpOnly cookie (`fsm_session`) |
+| FSM Web UI Shell extension | FSM JWT signature verification | `Authorization: Bearer <token>` header |
+| Direct standalone URL | None — no longer functional | n/a |
 
 The app does **not** use SAP XSUAA or IAS for inbound authentication. This is a
-deliberate, approved deviation from the Programmierrichtlinie §10 ("Security: XSUAA,
-OAuth2"). The reasons are documented below.
+deliberate, approved deviation from the Programmierrichtlinie §10. Reasons documented
+below.
 
 The app does use the SAP BTP Destination Service with OAuth2 for **outbound**
-authentication to FSM APIs. Outbound credentials are not affected by this model —
-they remain compliant with the Programmierrichtlinie.
+authentication to FSM APIs. Outbound credentials are unaffected by this model and
+remain compliant with the Programmierrichtlinie.
 
 ---
 
 ## Architecture context
 
-The T&M Journal app is launched in three different contexts. Understanding which
-one is being used is essential for understanding why this security model exists.
+The T&M Journal app is launched in three different contexts. Each delivers a
+different authentication signal, and the app handles each one accordingly.
 
 ### Context 1 — FSM Mobile WebContainer
 
@@ -54,53 +58,101 @@ technician's phone. FSM Mobile sends an HTTP `POST` request to
 account, company, etc.) and an Authentication Key value configured in FSM Admin.
 The app then renders inside the FSM Mobile WebView.
 
+**Authentication path:** Authentication Key → session cookie issued on success.
+
 This is the primary, most-used context.
 
 ### Context 2 — FSM Web UI Shell extension
 
-The app is opened as an iframe-embedded extension inside the FSM Web UI (the
-browser-based FSM workspace). The iframe loads via `GET /` directly. There is no
-POST handshake. Context is delivered via the `fsm-shell` SDK, which uses
-`postMessage` to communicate with the FSM Web UI host page.
+The app is opened as an iframe-embedded extension inside the FSM Web UI. The iframe
+loads via `GET /` directly. There is no entry POST. Context is delivered via the
+`fsm-shell` SDK, which uses `postMessage` to communicate with the FSM Web UI host
+page. The Shell context includes an `access_token` field — a real RS256-signed JWT
+issued by FSM's `cloud-authentication-service-de`.
+
+**Authentication path:** Frontend captures the JWT from the Shell SDK, POSTs it
+to `/api/v1/shell-session-init`. Backend verifies the JWT signature against FSM's
+public JWKS endpoint and returns a session token in the response body. Frontend
+stores the token in memory and attaches it to subsequent `/api/v1/*` requests as
+`Authorization: Bearer <token>`.
 
 This context is occasionally used.
 
 ### Context 3 — Standalone URL
 
 A developer or tester opens the app directly in a browser with URL parameters
-(`?activityId=...` or `?serviceCallId=...`). Used for development, debugging,
-or specific demo scenarios.
+(`?activityId=...` or `?serviceCallId=...`). After the strict-auth implementation,
+this context **does not authenticate** and `/api/v1/*` calls return 401.
 
-This context is rarely used and is treated as a development-only convenience.
+This context is now a development-only mode that requires real Mobile or Web UI
+context to function. If a local-development bypass becomes needed, it should be
+implemented as a clearly-named env var (e.g., `DEV_BYPASS_AUTH=true`) that is
+never set on production environments.
 
 ---
 
-## The security challenge
+## Why two delivery mechanisms (cookie vs Bearer header)
 
-Each context delivers a different signal of "this user is legitimate":
+This is the most easily-misunderstood part of the architecture, so it gets its
+own section.
 
-- **Mobile** authenticates the user inside FSM Mobile (the native app handles login,
-  TOTP, SAML, etc.). FSM Mobile then sends the session context to your URL via POST.
-  By default, that POST has **no authentication** at the HTTP level — anyone who
-  knows the URL can send a crafted POST claiming to be any user.
-- **Web UI** authenticates the user via the FSM Shell. The `authToken` field in the
-  Shell context is a real RS256-signed JWT issued by FSM, but verifying it requires
-  fetching FSM's public keys (JWKS), and FSM does not expose a public JWKS endpoint
-  at standard discovery paths.
-- **Standalone** has no authentication signal at all — it's just URL parameters.
+The session token (random 32 bytes, base64url-encoded) is the same in both
+flows. The backend `requireSession` middleware accepts it from either source.
+What differs is **how the browser receives it and sends it back.**
 
-Without an auth model, the `/api/v1/*` endpoints (which include destructive operations
-like `batch-delete` and PII-exposing operations like `get-persons`) are reachable by
-anyone who knows the URL.
+### Why Mobile uses a cookie
 
-The standard SAP-recommended solution is XSUAA + IAS with federated authentication.
-This was evaluated and rejected — see "Why not XSUAA" below.
+The FSM Mobile WebView is a top-level browsing context. Cookies set on a
+response from your app's domain are first-party from the WebView's perspective.
+The browser stores them, the browser sends them on every subsequent request to
+your domain. This is exactly how cookies are designed to work, and it works
+reliably.
+
+Mobile flow uses an HttpOnly cookie because:
+
+- HttpOnly prevents JavaScript from reading the cookie, mitigating XSS-based
+  session theft.
+- The cookie is sent automatically by the browser on every request to your
+  domain — no per-request frontend code needed.
+- The Mobile WebView reliably stores it.
+
+### Why Web UI cannot use a cookie reliably
+
+The FSM Web UI loads your app in an iframe. The iframe's domain
+(`mobileapptm-fsm-dev-op.cfapps.eu10-004.hana.ondemand.com`) is different from
+the parent page's domain (`de.fsm.cloud.sap`). From the browser's perspective,
+the iframe is **third-party** content embedded in a first-party page.
+
+Modern browsers — Edge, Chrome, Safari, Firefox — increasingly block third-party
+cookies by default, regardless of `SameSite=None; Secure` attributes. The
+browser receives the `Set-Cookie` response header from `/api/v1/shell-session-init`,
+**but silently does not store it**. Subsequent requests from the iframe carry no
+cookie. All `/api/v1/*` calls return 401.
+
+This was confirmed empirically in the implementation: `document.cookie` after
+Shell session init showed only pre-existing tracking cookies; no `fsm_session`
+was present.
+
+### How the Bearer header solves this
+
+After `/api/v1/shell-session-init` succeeds, the backend returns the session
+token in the JSON response body (in addition to attempting to set the cookie,
+which is harmless when ignored). The frontend reads the token from the response
+and stores it on `window.__fsmSessionToken`. The global fetch wrapper in
+`webapp/Component.js` checks for this value on every `/api/v1/*` request and
+attaches it as `Authorization: Bearer <token>` if present.
+
+The token is only in memory. When the iframe is closed or refreshed, the token
+is gone — same security characteristic as a session cookie. The token is
+JavaScript-readable in principle, but the iframe is sandboxed from the parent
+(your code is the only thing inside the iframe), so the practical XSS surface
+is essentially the same as before.
 
 ---
 
 ## What is implemented
 
-### Tier 1 — Authentication Key on WebContainer entry POSTs
+### Tier 1 — Authentication Key on Mobile WebContainer entry POSTs
 
 **Mechanism:** Shared secret between FSM and the app.
 
@@ -119,112 +171,194 @@ timing attacks. Mismatches return HTTP 401 and are logged.
 into the app's session store. They would need the secret, which is known only to
 FSM Mobile clients (transmitted internally during sync).
 
-**Rotation:** Update FSM Admin first, then `cf set-env mobileapptm
-FSM_WEBCONTAINER_AUTH_KEY <new>` and `cf restage mobileapptm`. Brief failure
-window during which in-flight WebContainer launches return 401; user just retaps
-the button.
+**Rotation procedure:**
+1. Update FSM Admin → Web Containers → Authentication Key field.
+2. Wait briefly for the change to propagate.
+3. `cf set-env mobileapptm FSM_WEBCONTAINER_AUTH_KEY <new>` and
+   `cf restage mobileapptm`.
+4. Active Mobile WebContainer launches return 401 during the brief window
+   between FSM update and CF restage; users retap to launch with the new key.
 
-### Tier 2 — Session cookie on subsequent requests
+### Tier 2 — JWT signature verification for Web UI Shell
 
-**Mechanism:** Server-issued opaque session token, set as an HttpOnly cookie.
+**Mechanism:** Cryptographic verification of FSM-issued JWTs against FSM's public
+JWKS endpoint.
 
-**Issuance:** When a WebContainer POST passes Tier 1 validation, the server
-generates a cryptographically random 32-byte token (`crypto.randomBytes(32)`),
-stores it in an in-memory `sessionStore` keyed to the user's context, and sets
-it as the `fsm_session` cookie on the redirect response.
+**FSM side:** When a user launches the T&M Journal extension from FSM Web UI,
+the Shell SDK provides an `access_token` (JWT, RS256-signed) in the Shell context.
+This token is bound to the user's authenticated FSM Web UI session and includes
+their identity (user_name, user_email), account context, and an expiration claim.
 
-**Cookie attributes:** `HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/`,
-`Max-Age=1800` (30 minutes).
-- `HttpOnly` — JavaScript cannot read the cookie. Mitigates XSS-based session theft.
+**App side:** The frontend `ContextService.js` calls
+`POST /api/v1/shell-session-init` with the JWT in the body. The Express server
+delegates to `utils/FSMJwtValidator.js`, which uses `jsonwebtoken` and `jwks-rsa`
+to fetch FSM's public signing key and verify the JWT signature, expiration, and
+algorithm. On success, the user's identity is extracted from the validated payload,
+a session token is issued, and the token is returned in the response body.
+
+**JWKS endpoint (DE region):**
+`https://de.fsm.cloud.sap/api/oauth2/v2/.well-known/jwks.json`
+
+The endpoint is overridable via `FSM_JWKS_URL` for other regions or environments.
+
+**Key safety properties of the validator:**
+- Algorithm allow-list (`['RS256']`) — prevents the `alg: none` JWT downgrade
+  attack and HS256-vs-RS256 confusion attacks.
+- Public keys cached for 24 hours — FSM keys rotate rarely; we don't fetch on
+  every request.
+- JWKS fetch rate-limited to 10/minute — prevents catastrophic re-fetching if
+  the cache is bypassed.
+- Default `jsonwebtoken` expiration and notBefore validation enabled.
+
+**Threat blocked:** A random attacker who knows the URL cannot establish a session
+without a valid FSM-issued JWT. They cannot forge a JWT because they don't have
+FSM's signing key. Replaying an intercepted token expires within ~24 hours, and
+even within that window the attacker would need network access from a context
+that the JWT permits.
+
+### Tier 3 — Session token on subsequent requests
+
+**Mechanism:** Server-issued opaque session token. Delivered via either an
+HttpOnly cookie (Mobile flow) or an Authorization Bearer header (Web UI flow).
+
+**Issuance:** When either of the two authentication flows above succeeds, the
+server generates a cryptographically random 32-byte token (`crypto.randomBytes(32)`),
+stores it in an in-memory `sessionStore` keyed to the user's context, and:
+
+- Sets the `fsm_session` cookie on the response (Mobile flow benefits; Web UI
+  flow's browser silently ignores it).
+- Returns the token in the JSON response body of `/api/v1/shell-session-init`
+  (Web UI flow uses this; Mobile flow doesn't read it because Mobile uses the
+  cookie path instead).
+
+**Cookie attributes (Mobile flow):** `HttpOnly`, `Secure`, `SameSite=None`,
+`Path=/`, `Max-Age=1800` (30 minutes).
+
+- `HttpOnly` — JavaScript cannot read the cookie. Mitigates XSS-based session
+  theft for the Mobile flow.
 - `Secure` — only transmitted over HTTPS. CF enforces HTTPS, so this is satisfied.
-- `SameSite=Lax` — sent on the redirect that follows the WebContainer POST, but
-  not in arbitrary cross-site contexts. Note: this attribute is the reason the
-  cookie does not flow in the FSM Web UI iframe context — see "Web UI carve-out".
-- `Max-Age=1800` — session expires after 30 minutes of inactivity. Server-side
-  store also has a matching TTL with eviction on every entry POST.
+- `SameSite=None` — set even though the Mobile WebView doesn't need it; the
+  attribute is required when `Secure` is set this way and is harmless in the
+  WebView's first-party context.
+- `Max-Age=1800` — session expires after 30 minutes. The server-side
+  `sessionStore` has a matching TTL with eviction on every entry POST.
 
-**Validation:** The `requireSession` middleware (used on `/web-container-context`)
-reads the cookie, looks up the token in `sessionStore`, and proceeds if found
-and non-expired. Missing or invalid cookies return HTTP 401.
+**Bearer token storage (Web UI flow):** The token returned in the JSON response
+is stored on `window.__fsmSessionToken` by `ContextService.js` after Shell session
+init succeeds. The global fetch wrapper in `webapp/Component.js` reads this value
+on every `/api/v1/*` request and attaches it as `Authorization: Bearer <token>`
+if present. The token is held in memory only; it is cleared automatically when
+the iframe is reloaded, navigated away from, or closed. Same effective lifetime
+as the cookie.
+
+**Validation:** The `requireSession` middleware (used on all `/api/v1/*` routes
+except `/api/v1/shell-session-init`, and on `/web-container-context`) checks
+both sources:
+
+1. `fsm_session` cookie — checked first
+2. `Authorization: Bearer <token>` header — checked second if no cookie
+
+Whichever source provides a valid token, the request proceeds. Missing or
+invalid sessions return HTTP 401. Logs include `source=cookie` or `source=bearer`
+to make the auth path visible in operational data.
 
 **Threat blocked:** A random attacker who knows the URL cannot read another
-user's stored context, cannot replay an old contextKey, and cannot impersonate
-an active user's Mobile session.
-
-### Cookie scoping for `/api/v1/*` — the lenient carve-out
-
-The `/api/v1/*` routes use `optionalSession` instead of `requireSession`:
-
-- **If a session cookie is present and valid** → request proceeds with the user's
-  context attached. (Mobile flow.)
-- **If a session cookie is present but invalid or expired** → request is rejected
-  with HTTP 401. Forces re-authentication.
-- **If no session cookie is present at all** → request proceeds without a context.
-  Logged at `console.log` level as `API-UNAUTH:` for monitoring. (Web UI carve-out
-  and standalone flow.)
-
-The "no cookie" branch is the deliberate compromise that allows Web UI and
-standalone flows to function. See next section for the rationale.
+user's stored context, cannot replay an old contextKey, cannot impersonate
+an active user's Mobile or Web UI session, and cannot call any `/api/v1/*`
+endpoint without a valid session token issued by one of the two authenticated
+flows.
 
 ---
 
-## Web UI carve-out — known limitation
+## Bootstrap sequencing
 
-### What the carve-out is
+The frontend bootstrap order matters and is enforced in
+`webapp/controller/View1.controller.js` `_initializeAsync()`. The dependency
+chain is:
 
-The `optionalSession` middleware on `/api/v1/*` permits requests without a session
-cookie. This means:
-
-- **Legitimate Web UI iframe traffic works.** The Web UI Shell loads the app via
-  GET, never receives a Set-Cookie from the WebContainer POST handler, and makes
-  `/api/v1/*` calls without a cookie. With this carve-out, those calls succeed.
-- **Anyone with the URL can call `/api/v1/*` directly without a cookie.** A `curl`
-  command targeting any endpoint will succeed, just like it did before any auth
-  model was implemented.
-
-### Why we accept this
-
-Three reasons, in order of weight:
-
-1. **Equivalence to the prior state.** Before any auth was implemented, all
-   `/api/v1/*` calls were reachable by anyone with the URL. The carve-out preserves
-   that exact behavior for Web UI users while adding strict auth for Mobile users.
-   We did not regress; we improved Mobile.
-2. **Web UI usage is low and known.** The Web UI flow is occasionally used,
-   primarily by office-based supervisors. The realistic threat — a random
-   internet scanner — is partially mitigated because outbound FSM API calls
-   require valid FSM destination credentials that the attacker also needs the
-   FSM data context for. The blast radius is bounded.
-3. **The "right" fix (FSM JWT validation) is blocked on external dependencies.**
-   See "Future work — Option B" below.
-
-### What this carve-out does NOT excuse
-
-This carve-out is bounded to `/api/v1/*` only. The following endpoints remain
-strictly authenticated and **MUST NOT** be relaxed:
-
-- `POST /web-container-access-point` — requires Authentication Key (Tier 1).
-- `POST /` — requires Authentication Key (Tier 1).
-- `GET /web-container-context` — requires session cookie (Tier 2 strict).
-
-### Monitoring the carve-out
-
-Every unauthenticated call to `/api/v1/*` is logged with the `API-UNAUTH:` prefix.
-Review CF logs periodically:
-
-```bash
-cf logs mobileapptm --recent | grep "API-UNAUTH:"
+```
+auth context → type config → activity loading
+auth context →             → org levels  
+auth context →             → cache warm
+auth context →             → org hierarchy
 ```
 
-Two reasons to act on what you see:
+Concretely, `_initializeAsync()` does:
 
-- **Volume far higher than known Web UI usage** — possible signal of attacker
-  scanning. Investigate User-Agent strings and IPs in the log lines.
-- **Unusual endpoints being called without a cookie** — for example, a flood of
-  `batch-delete` calls without cookies could indicate abuse.
+1. `await this._loadWebContainerContext()` — establishes auth (cookie set by
+   Mobile flow already, or Bearer token stored by Web UI flow).
+2. `await TypeConfigService.init()` — calls `/api/v1/get-type-config` which
+   needs auth; falls back to built-in defaults on failure.
+3. Fires `_loadOrganizationLevels()`, `_loadOrganizationalHierarchy()`, and
+   `CacheService.warmAllCaches()` in parallel — all need auth, none depend on
+   each other.
 
-Neither has been observed to date, but the logging exists so the data is there
-when needed.
+Steps 1 and 2 are awaited because subsequent work depends on them. Step 3's
+items run in parallel because they're independent.
+
+`onInit()` itself is **synchronous** and only does:
+
+```javascript
+onInit() {
+    TMDialogService.init(this);
+    this._initializeModel();      // creates the view model — must exist before user can click anything
+    this._initializeAsync();      // fire-and-forget, runs the chain above
+}
+```
+
+This satisfies the UI5 lifecycle contract (event listeners must return
+`undefined`, not a Promise) AND ensures the view model exists before the view
+renders, so the Refresh button (and similar) cannot be clicked before its
+handler's prerequisites exist.
+
+### Defense-in-depth: fetch wrapper gate
+
+In addition to the explicit sequencing in `_initializeAsync()`, the global
+fetch wrapper in `webapp/Component.js` blocks `/api/v1/*` requests behind a
+`window.__fsmSessionReady` Promise that is resolved by `ContextService` after
+session establishment. If any code path in the future fires `/api/v1/*`
+outside the controlled bootstrap sequence, the gate prevents a 401 by waiting
+up to 10 seconds for context to be ready. After 10 seconds, a safety timeout
+fires and the request proceeds (so a context-resolution bug doesn't deadlock
+the UI permanently).
+
+In normal operation, the gate is never actually hit — `_initializeAsync()`
+sequences things correctly and nothing fires before context is ready. The
+gate is insurance for unexpected code paths.
+
+---
+
+## What is no longer applicable (historical)
+
+### Web UI carve-out (closed April 2026)
+
+Prior to the Bearer-token implementation, the `/api/v1/*` middleware was lenient
+("`optionalSession`") to allow the Web UI Shell flow to function despite never
+receiving a session cookie. Anyone with the URL could call any `/api/v1/*`
+endpoint without authentication.
+
+This carve-out has been **removed**. All `/api/v1/*` endpoints now require a
+valid session token, supplied via either cookie (Mobile) or Bearer header
+(Web UI).
+
+### Cookie-only model for Web UI (April 2026, brief)
+
+For a brief period during implementation, the Web UI flow attempted to use a
+cookie alone (with `SameSite=None; Secure`). This appeared to work in HTTP
+terms — the server's `Set-Cookie` response was correct — but failed
+silently because the browser refused to store the cookie due to third-party
+context blocking. All `/api/v1/*` calls in Web UI returned 401.
+
+The Bearer-header mechanism replaced this. The cookie is still set as a
+best-effort fallback (where some browsers/configurations do allow it, it works),
+but the Bearer header is the actual primary mechanism for Web UI.
+
+### Standalone URL flow (now requires a real session)
+
+Prior to strict authentication, the lenient middleware allowed standalone URL
+mode (`?activityId=...`) to function. With strict authentication in place,
+standalone mode now returns 401 on all API calls. Standalone is treated as a
+development-only mode; for normal access, use FSM Mobile or Web UI.
 
 ---
 
@@ -238,59 +372,28 @@ This was the first option evaluated. It was rejected for the following reasons:
    WebView does not handle this cleanly — login state established inside the
    WebView often does not persist across WebContainer launches, and FSM Mobile
    does not pass any IAS-recognized authentication context into the WebView.
+
 2. **Documented industry experience.** SAP community posts (e.g.,
    *"Developing a SAP FSM extension on SAP BTP CF using Federated Authentication"*)
    describe XSUAA-protected extensions failing during installation in FSM
-   Extension Management. The clean integration path is XSUAA+IAS for FSM Web UI
-   only, with a separate auth path for FSM Mobile WebContainer. Maintaining two
-   parallel authentication systems is more complex than the current model.
-3. **The cost-to-benefit ratio is poor for this app's threat model.** Implementing
-   full XSUAA+IAS+approuter would take an estimated 2-3 days of work, plus
-   coordination with the BTP admin and IAS tenant configuration. The benefit
-   over the current Authentication Key + cookie model, given Web UI's low usage,
-   does not justify that investment at this time.
+   Extension Management. The clean integration path for XSUAA+IAS targets FSM
+   Web UI only and requires a separate auth path for FSM Mobile WebContainer.
+   Maintaining two parallel authentication systems would be more complex than
+   the current model, which uses two well-defined flows with shared session-token
+   infrastructure.
+
+3. **Cost-benefit ratio.** Implementing full XSUAA+IAS+approuter would take an
+   estimated 2-3 days of work, plus coordination with the BTP admin and IAS
+   tenant configuration. The current model — Authentication Key for Mobile
+   plus FSM JWT validation for Web UI — was implemented in a few hours and
+   provides cryptographic verification of user identity for both flows. The
+   incremental security benefit of XSUAA+IAS over the current model does not
+   justify the cost or the operational complexity at this time.
 
 This decision should be revisited if any of the following change:
-
-- FSM Web UI usage grows substantially.
+- The company mandates XSUAA on all BTP applications without exceptions.
 - A compliance or audit requirement specifically demands XSUAA on inbound paths.
 - FSM Mobile changes its WebContainer auth model in a way that aligns with XSUAA.
-
----
-
-## Future work — Option B (FSM JWT validation)
-
-The Shell SDK provides a real RS256-signed JWT (`authToken`) in the Shell context.
-A future improvement is to validate this JWT on every `/api/v1/*` call from the
-Web UI flow, eliminating the carve-out.
-
-### What's blocking it
-
-FSM does not expose a public JWKS endpoint at standard discovery paths
-(`.well-known/openid-configuration`, `.well-known/jwks.json`, etc., all return
-307 redirects to the Shell login page or 404). Without the JWKS URL, JWT signature
-verification is impossible.
-
-The path forward is one of:
-
-- Open an SAP support ticket (component `CEC-SRV-FSM`) requesting the public
-  JWKS endpoint URL for `cloud-authentication-service-de`.
-- Use FSM's token introspection endpoint instead of local JWKS verification
-  (slower, creates runtime dependency on FSM availability).
-- Implement full XSUAA+IAS+federated auth (see "Why not XSUAA" above for cost).
-
-### Estimated effort once JWKS is known
-
-~2-3 hours, contained to:
-
-- One new backend file (`utils/FSMJwtValidator.js`)
-- One new endpoint (`POST /api/v1/shell-session-init`)
-- One new env var (`FSM_JWKS_URL`)
-- Two new npm dependencies (`jsonwebtoken`, `jwks-rsa`)
-- One frontend modification in `webapp/utils/services/ContextService.js` to call
-  the new endpoint after Shell context is detected
-- Cookie attribute change from `SameSite=Lax` to `SameSite=None; Secure` (required
-  for cross-site iframe; harmless for Mobile)
 
 ---
 
@@ -301,6 +404,7 @@ The path forward is one of:
 | Variable | Required | Purpose |
 |---|---|---|
 | `FSM_WEBCONTAINER_AUTH_KEY` | Yes — server refuses to start without it | Shared secret matching the FSM Web Container Authentication Key. Set via `cf set-env` and `cf restage`. |
+| `FSM_JWKS_URL` | No (default: DE region) | URL of FSM's public JWKS endpoint. Default is `https://de.fsm.cloud.sap/api/oauth2/v2/.well-known/jwks.json`. Override for other regions (e.g., US, EU non-DE). |
 
 ### Required FSM configuration
 
@@ -310,14 +414,19 @@ The path forward is one of:
 
 ### In-memory state
 
-- `contextStore` — Map from contextKey (`<userName>_<cloudId>`) to FSM context.
-  TTL 30 minutes. In-memory only; not persisted.
+- `contextStore` — Map from contextKey (`<userName>_<cloudId>`) to FSM context
+  data. TTL 30 minutes. In-memory only; not persisted.
 - `sessionStore` — Map from session token to contextKey + expiration timestamp.
   TTL 30 minutes. In-memory only; not persisted.
+- `FSMJwtValidator` JWKS cache — Map from `kid` to public key, managed by
+  `jwks-rsa`. TTL 24 hours.
+- `window.__fsmSessionToken` (browser-side, Web UI flow only) — In-memory holder
+  of the session token, cleared on iframe reload/navigation.
 
-Both stores are reset on container restart. Active sessions become invalid
-on restart, and users must re-launch the app from FSM Mobile. This is acceptable
-for a single-instance deployment; would need to be migrated to Redis or similar
+All four reset on container restart (server side) or iframe reload (browser
+side). Active sessions become invalid on server restart; users must re-launch
+the app from FSM Mobile or refresh the FSM Web UI extension. This is acceptable
+for a single-instance deployment; would need migration to Redis or similar
 for horizontal scaling. See `manifest.yaml` (currently `instances: 1`).
 
 ### Log signals
@@ -326,9 +435,13 @@ for horizontal scaling. See `manifest.yaml` (currently `instances: 1`).
 |---|---|
 | `WC-ACCESS-POINT: context stored, session issued` | Successful Mobile entry |
 | `WC-ACCESS-POINT: rejected POST — authenticationKey ...` | Mobile entry with bad/missing auth key — investigate if frequent |
-| `AUTH: rejected ... missing-cookie` | Strict-auth endpoint hit without cookie — Web UI client trying to use a Mobile-only endpoint |
-| `AUTH: rejected ... invalid-or-expired` | Cookie tampered or expired — typically benign (user idle past TTL) |
-| `API-UNAUTH:` | `/api/v1/*` called without a cookie — Web UI traffic; monitor for unusual volume |
+| `SHELL-INIT: session issued` | Successful Web UI entry, JWT verified |
+| `SHELL-INIT: rejected — JWT validation failed: ...` | Web UI entry with invalid JWT — could be expired token (benign) or attempted forgery (investigate) |
+| `SHELL-INIT: rejected — missing authToken in body` | Frontend bug or tampering — Web UI client should always send the token |
+| `AUTH: rejected ... missing-credential ... source=none` | Endpoint hit without cookie or Bearer — direct attack attempt, or bootstrap race in Web UI (should not happen with correct sequencing) |
+| `AUTH: rejected ... invalid-or-expired ... source=cookie` | Mobile cookie expired or tampered — typically benign (user idle past TTL) |
+| `AUTH: rejected ... invalid-or-expired ... source=bearer` | Web UI Bearer token expired or tampered — typically benign (user idle past TTL or iframe alive past 30 min) |
+| `CONTEXT-FETCH: session ... attempted to read ...` | Cross-context read attempt — investigate immediately, this should not happen in normal use |
 
 ---
 
@@ -336,13 +449,37 @@ for horizontal scaling. See `manifest.yaml` (currently `instances: 1`).
 
 - **§7 (API Versioning):** Compliant. All routes mounted at `/api/v1`. Future
   breaking changes will use `/api/v2` alongside, never replacing v1.
-- **§10 (Security):** Deliberate deviation. The guideline specifies "XSUAA, OAuth2"
-  for inbound auth. This app uses Authentication Key + session cookie for the
-  reasons documented in "Why not XSUAA" above. This deviation has been approved
-  per §12 ("Abweichungen nur mit Architekturfreigabe") on **[date]** by **[approver]**.
-- **§10 (Secrets):** Compliant. No secrets are hardcoded. Authentication Key is
-  read from environment variable. Outbound FSM credentials come from the BTP
-  Destination Service binding.
+- **§10 (Security — XSUAA, OAuth2):** Deliberate deviation. The guideline specifies
+  "XSUAA, OAuth2" for inbound auth. This app uses Authentication Key (Mobile flow)
+  + FSM JWT signature verification (Web UI flow), both backed by HttpOnly cookies
+  or Bearer tokens depending on context. All inbound paths to `/api/v1/*` are
+  cryptographically authenticated. This deviation has been approved per §12
+  ("Abweichungen nur mit Architekturfreigabe") on **[date]** by **[approver]**.
+- **§10 (No hardcoded secrets):** Compliant. Authentication Key is read from
+  environment variable. JWKS URL has a code default that can be overridden via
+  env var. Outbound FSM credentials come from the BTP Destination Service binding.
+- **§10 (Secrets via service bindings):** Partially compliant. Authentication Key
+  is via env var rather than a user-provided service. Defensible for a single
+  secret; can be migrated to a service binding if company governance requires it.
+
+---
+
+## Threat model summary
+
+| Threat | Mitigation |
+|---|---|
+| Anonymous attacker POSTs fake context to `/web-container-access-point` | Authentication Key required — attacker would need the FSM-side secret |
+| Anonymous attacker calls `/api/v1/*` directly with no credentials | `requireSession` rejects with 401 |
+| Attacker forges a fake JWT to reach `/api/v1/shell-session-init` | RS256 signature verification against FSM's JWKS — attacker doesn't have FSM's private key |
+| Attacker presents a valid but expired JWT | Rejected by `jsonwebtoken`'s expiration check |
+| Attacker downgrades a token to `alg: none` | Rejected by validator's algorithm allow-list (`['RS256']`) |
+| Attacker substitutes HS256 token signed with the public key | Rejected by validator's algorithm allow-list |
+| Attacker reads `/web-container-context?key=guess` | `requireSession` + cross-context check — must own the contextKey |
+| Cookie theft via XSS (Mobile flow) | Cookie is HttpOnly — JS cannot read it |
+| Bearer token theft via XSS (Web UI flow) | Token is JS-readable, but the iframe is sandboxed from the parent page — XSS would have to come from inside the iframe (i.e., from your own code) |
+| Cookie/Bearer theft via network sniffing | All transport is HTTPS-only; CF enforces HTTPS |
+| Session reuse after logout/timeout | Server-side `sessionStore` lookup — expired entries removed on every entry POST or session-init call |
+| Privileged technician misuses FSM API via leaked token within 30 min | Mitigated only by 30-minute TTL; same residual risk as any session-token auth |
 
 ---
 
@@ -350,12 +487,18 @@ for horizontal scaling. See `manifest.yaml` (currently `instances: 1`).
 
 Update this document whenever any of the following change:
 
-- The auth mechanism on any endpoint (e.g., adding XSUAA, removing the Web UI
-  carve-out, implementing Option B).
+- The auth mechanism on any endpoint (e.g., adding XSUAA, adding new entry
+  flows, modifying JWT validation, changing the session-init endpoint).
+- The token delivery mechanism on either flow (e.g., switching Web UI from
+  Bearer back to cookie, adding token persistence to localStorage).
 - The cookie attributes (e.g., changing `SameSite`, the TTL, or the cookie name).
 - The `FSM_WEBCONTAINER_AUTH_KEY` rotation procedure.
+- The `FSM_JWKS_URL` (e.g., switching regions or environments).
 - A new context (beyond Mobile / Web UI / Standalone) is added to the app.
-- The session storage is moved from in-memory to Redis or similar.
+- The session storage is moved from in-memory to Redis or similar (would change
+  the multi-instance scaling section).
+- The bootstrap sequencing in `_initializeAsync()` changes (would change the
+  "Bootstrap sequencing" section).
 - A security incident affects this app.
 
 The "Last updated" line at the top of this document MUST be kept current.

@@ -2,47 +2,36 @@
  * index.js - Backend Server
  * 
  * Express.js server for the Service Confirmation application.
- * Handles FSM Mobile web container integration, serves the UI5 frontend,
- * and mounts API route modules.
  * 
- * Security model — TWO-TIER, by design:
+ * Security model (post-Option-B — full inbound auth on all paths):
  * 
- * 1. FSM Mobile WebContainer path: FULLY AUTHENTICATED.
- *    - POST /web-container-access-point requires a valid Authentication Key
- *      (shared secret with FSM Admin > Web Containers).
- *    - On success, an HttpOnly session cookie is issued.
- *    - All /api/v1/* calls from the Mobile WebView carry this cookie.
+ * 1. FSM Mobile WebContainer path:
+ *    - POST /web-container-access-point validated by Authentication Key.
+ *    - Successful validation issues an HttpOnly session cookie.
+ *    - All /api/v1/* calls require this cookie.
  * 
- * 2. FSM Web UI (Shell extension) path: UNAUTHENTICATED, by deliberate carve-out.
- *    - The Shell iframe loads via GET — no POST handler runs, no cookie issued.
- *    - /api/v1/* calls from the iframe arrive without a session cookie.
- *    - We accept them anyway. This matches the pre-cookie-auth behavior and
- *      is documented as a known limitation (see docs/SECURITY.md).
- *    - TODO: replace with proper FSM JWT validation when Web UI usage grows.
+ * 2. FSM Web UI Shell extension path:
+ *    - GET / loads the iframe (no auth at this stage — it's just static HTML).
+ *    - Frontend's ContextService POSTs the FSM access_token JWT to
+ *      /api/v1/shell-session-init.
+ *    - Backend verifies the JWT signature against FSM's JWKS endpoint and
+ *      issues an HttpOnly session cookie on success.
+ *    - All subsequent /api/v1/* calls require this cookie.
  * 
- * API VERSIONING:
- * All API routes are mounted under /api/v1/* per the company's BTP coding
- * guideline (Programmierrichtlinie §7). When breaking changes are required
- * in the future, mount /api/v2 alongside /api/v1 — do NOT modify v1 in place.
- * 
- * Required Environment Variables:
- * - FSM_WEBCONTAINER_AUTH_KEY - Shared secret matching the Authentication Key
- *   value configured in FSM Admin > Companies > [Company] > Web Containers.
- *   The server refuses to start if this is unset.
+ * 3. Standalone URL flow (?activityId=...):
+ *    - No session source available; /api/v1/* calls will 401.
+ *    - Standalone is now a development-only mode that requires a separate
+ *      auth path. Use FSM Mobile or Web UI for normal access.
  * 
  * @file index.js
- * @requires express
- * @requires cookie-parser
- * @requires ./routes/activityRoutes
- * @requires ./routes/entryRoutes
- * @requires ./routes/lookupRoutes
- * @requires ./routes/configRoutes
+ * @requires express, cookie-parser, jsonwebtoken (via FSMJwtValidator)
  */
 
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const path = require('path');
 const crypto = require('crypto');
+const { validateJwt } = require('./utils/FSMJwtValidator');
 
 const app = express();
 
@@ -55,14 +44,11 @@ const FSM_WEBCONTAINER_AUTH_KEY = process.env.FSM_WEBCONTAINER_AUTH_KEY;
 if (!FSM_WEBCONTAINER_AUTH_KEY) {
     console.error('FATAL: FSM_WEBCONTAINER_AUTH_KEY environment variable is not set.');
     console.error('       Set it via: cf set-env mobileapptm FSM_WEBCONTAINER_AUTH_KEY <value>');
-    console.error('       Then restage: cf restage mobileapptm');
-    console.error('       Value must match FSM Admin > Web Containers > Authentication Key.');
     process.exit(1);
 }
 
 if (FSM_WEBCONTAINER_AUTH_KEY.length < 16) {
     console.warn('WARNING: FSM_WEBCONTAINER_AUTH_KEY is shorter than 16 characters.');
-    console.warn('         Recommended: 32+ chars from `openssl rand -base64 32`.');
 }
 
 function isAuthKeyValid(body) {
@@ -70,13 +56,11 @@ function isAuthKeyValid(body) {
     if (typeof provided !== 'string' || provided.length === 0) {
         return false;
     }
-
     const providedBuf = Buffer.from(provided, 'utf8');
     const expectedBuf = Buffer.from(FSM_WEBCONTAINER_AUTH_KEY, 'utf8');
     if (providedBuf.length !== expectedBuf.length) {
         return false;
     }
-
     return crypto.timingSafeEqual(providedBuf, expectedBuf);
 }
 
@@ -127,45 +111,61 @@ function resolveSession(token) {
     return entry.contextKey;
 }
 
+/**
+ * Cookie attributes used everywhere a session cookie is issued.
+ * 
+ * SameSite=None is REQUIRED for the Web UI Shell iframe flow (cross-site
+ * iframe context). For the Mobile WebView flow, the WebView is a top-level
+ * browsing context — SameSite=None is harmless there.
+ * 
+ * Secure must be true when SameSite=None (browser requirement).
+ */
+const SESSION_COOKIE_OPTIONS = {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'none',  // changed from 'lax' in Option B — required for cross-site iframe
+    path: '/',
+    maxAge: SESSION_TTL_MS
+};
+
 function requireSession(req, res, next) {
-    const token = req.cookies && req.cookies[SESSION_COOKIE_NAME];
+    // Accept session token from EITHER:
+    //   1. fsm_session cookie (Mobile flow — WebView stores cookies fine)
+    //   2. Authorization: Bearer <token> header (Web UI flow — third-party
+    //      iframe context where browsers refuse to store cookies even with
+    //      SameSite=None; Secure set)
+    //
+    // Both mechanisms point to the same sessionStore. Either source counts.
+    let token = null;
+    let source = null;
+
+    const cookieToken = req.cookies && req.cookies[SESSION_COOKIE_NAME];
+    if (cookieToken) {
+        token = cookieToken;
+        source = 'cookie';
+    } else {
+        const authHeader = req.get('authorization') || '';
+        if (authHeader.toLowerCase().startsWith('bearer ')) {
+            token = authHeader.substring(7).trim();
+            source = 'bearer';
+        }
+    }
+
     const contextKey = resolveSession(token);
 
     if (!contextKey) {
-        const reason = !token ? 'missing-cookie' : 'invalid-or-expired';
+        const reason = !token ? 'missing-credential' : 'invalid-or-expired';
         console.warn(`AUTH: rejected ${req.method} ${req.originalUrl} — session ${reason} ` +
-                     `(remoteIp=${req.ip})`);
+                     `(remoteIp=${req.ip}, source=${source || 'none'})`);
         return res.status(401).json({
             message: 'Unauthorized: missing or expired session.',
-            hint: 'This endpoint requires a valid session cookie issued via FSM Mobile WebContainer.'
+            hint: 'This endpoint requires a valid session, supplied either via fsm_session ' +
+                  'cookie (Mobile flow) or Authorization: Bearer header (Web UI flow).'
         });
     }
 
     req.fsmContextKey = contextKey;
-    next();
-}
-
-function optionalSession(req, res, next) {
-    const token = req.cookies && req.cookies[SESSION_COOKIE_NAME];
-
-    if (!token) {
-        console.log(`API-UNAUTH: ${req.method} ${req.originalUrl} ` +
-                    `(no cookie, remoteIp=${req.ip}, ua=${req.get('user-agent')?.slice(0, 60) || 'unknown'})`);
-        req.fsmContextKey = null;
-        return next();
-    }
-
-    const contextKey = resolveSession(token);
-    if (!contextKey) {
-        console.warn(`API-AUTH: rejected ${req.method} ${req.originalUrl} — invalid-or-expired cookie ` +
-                     `(remoteIp=${req.ip})`);
-        return res.status(401).json({
-            message: 'Unauthorized: invalid or expired session.',
-            hint: 'Your session has expired. Please re-open the app from FSM Mobile or refresh the FSM Web UI.'
-        });
-    }
-
-    req.fsmContextKey = contextKey;
+    req.fsmAuthSource = source;
     next();
 }
 
@@ -182,7 +182,7 @@ app.use(cookieParser());
 app.enable('trust proxy');
 
 // ===========================
-// FSM WEB CONTAINER ENTRY POINTS
+// FSM MOBILE WEBCONTAINER ENTRY POINTS
 // ===========================
 
 function handleWebContainerPost(req, res, label) {
@@ -217,13 +217,7 @@ function handleWebContainerPost(req, res, label) {
                 `(contextKey=${contextKey}, contextStoreSize=${contextStore.size}, ` +
                 `sessionStoreSize=${sessionStore.size})`);
 
-    res.cookie(SESSION_COOKIE_NAME, sessionToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'lax',
-        path: '/',
-        maxAge: SESSION_TTL_MS
-    });
+    res.cookie(SESSION_COOKIE_NAME, sessionToken, SESSION_COOKIE_OPTIONS);
 
     const redirectUrl = `${req.protocol}://${req.get('host')}/?contextKey=${encodeURIComponent(contextKey)}`;
     res.redirect(redirectUrl);
@@ -238,6 +232,95 @@ app.post("/", (req, res) => {
 });
 
 // ===========================
+// FSM WEB UI SHELL SESSION INIT
+// ===========================
+// Called by the frontend ContextService when Shell context is detected,
+// passing the access_token JWT received from the FSM Shell SDK.
+// We verify the JWT signature against FSM's public JWKS endpoint and
+// issue a session cookie on success.
+//
+// MUST be registered BEFORE the requireSession middleware on /api/v1
+// (otherwise the chicken-and-egg: this endpoint can't itself require a session).
+
+app.post('/api/v1/shell-session-init', async (req, res) => {
+    const token = req.body && req.body.authToken;
+
+    if (!token) {
+        console.warn(`SHELL-INIT: rejected — missing authToken in body (remoteIp=${req.ip})`);
+        return res.status(400).json({
+            message: 'Missing authToken in request body.',
+            hint: 'Send { "authToken": "<jwt>" } where authToken is the access_token from the Shell SDK.'
+        });
+    }
+
+    let payload;
+    try {
+        payload = await validateJwt(token);
+    } catch (err) {
+        console.warn(`SHELL-INIT: rejected — JWT validation failed: ${err.message} ` +
+                     `(remoteIp=${req.ip})`);
+        return res.status(401).json({
+            message: 'Unauthorized: invalid FSM JWT.',
+            hint: 'The authToken could not be verified. It may be expired, malformed, ' +
+                  'or signed by an unrecognized key.'
+        });
+    }
+
+    // Extract identity from the validated payload.
+    // FSM JWT field names observed: user, user_name, user_email, account, account_id, companies[]
+    const userName = payload.user || payload.user_name || 'shell-user';
+    const cloudId = String(payload.account_id || payload.account || 'shell');
+
+    evictExpired();
+
+    const contextKey = buildContextKey({ userName: userName, cloudId: cloudId });
+
+    // Store a context summary derived from the validated JWT.
+    // We DO NOT store the JWT itself — once validated, it's done its job.
+    const storableContext = {
+        userName: userName,
+        cloudId: cloudId,
+        cloudAccount: payload.account,
+        userEmail: payload.user_email,
+        accountId: payload.account_id,
+        userId: payload.user_id,
+        source: 'shell',
+        jwtJti: payload.jti,
+        jwtExp: payload.exp
+    };
+    contextStore.set(contextKey, { data: storableContext, timestamp: Date.now() });
+
+    const sessionToken = generateSessionToken();
+    sessionStore.set(sessionToken, {
+        contextKey: contextKey,
+        expiresAt: Date.now() + SESSION_TTL_MS
+    });
+
+    console.log(`SHELL-INIT: session issued ` +
+                `(contextKey=${contextKey}, userEmail=${payload.user_email || 'unknown'}, ` +
+                `sessionStoreSize=${sessionStore.size})`);
+
+    // Set the cookie as a best-effort fallback. In modern browsers running
+    // the FSM Web UI iframe, this Set-Cookie is typically ignored due to
+    // third-party cookie blocking. But where it works, it's a useful belt-and-
+    // suspenders. Mobile flow always works because the WebView is first-party.
+    res.cookie(SESSION_COOKIE_NAME, sessionToken, SESSION_COOKIE_OPTIONS);
+
+    // The session token is also returned in the response body so the Web UI
+    // frontend can stash it in memory and send it as Authorization: Bearer
+    // on subsequent /api/v1/* requests. This is the actual primary mechanism
+    // for the Shell flow — the cookie above rarely sticks in the iframe.
+    res.json({
+        success: true,
+        contextKey: contextKey,
+        userName: userName,
+        cloudAccount: payload.account,
+        sessionToken: sessionToken,
+        expiresIn: SESSION_TTL_MS
+    });
+});
+
+// ===========================
 // PROTECTED CONTEXT ENDPOINT (Mobile-only)
 // ===========================
 
@@ -246,8 +329,7 @@ app.get("/web-container-context", requireSession, (req, res) => {
 
     if (!key) {
         return res.status(400).json({
-            message: 'Missing context key.',
-            hint: 'Pass ?key=<contextKey> — value comes from the contextKey URL param after redirect.'
+            message: 'Missing context key.'
         });
     }
 
@@ -262,8 +344,7 @@ app.get("/web-container-context", requireSession, (req, res) => {
 
     if (!entry) {
         return res.status(404).json({
-            message: 'Context not found or expired.',
-            hint: 'Open this app from FSM Mobile web container, not directly in browser.'
+            message: 'Context not found or expired.'
         });
     }
 
@@ -277,13 +358,17 @@ app.get("/web-container-context", requireSession, (req, res) => {
 app.use(express.static(path.join(__dirname, 'webapp')));
 
 // ===========================
-// API ROUTES — VERSIONED at /api/v1
+// API ROUTES — STRICT AUTH (no carve-out)
 // ===========================
-// Per the BTP coding guideline (Programmierrichtlinie §7), all API routes
-// are mounted under a version prefix. Future breaking changes get a new
-// version (e.g., /api/v2) mounted alongside, never replacing v1 in place.
+// All /api/v1/* routes require a valid session cookie.
+// Cookie is issued either by:
+//   - WebContainer POST (Mobile flow)
+//   - /api/v1/shell-session-init (Web UI flow)
+// 
+// /api/v1/shell-session-init is registered ABOVE this middleware, so it
+// can be called without a cookie (chicken-and-egg).
 
-app.use('/api/v1', optionalSession);
+app.use('/api/v1', requireSession);
 
 app.use('/api/v1', require('./routes/activityRoutes'));
 app.use('/api/v1', require('./routes/entryRoutes'));
@@ -298,5 +383,6 @@ app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`FSM_WEBCONTAINER_AUTH_KEY is set (${FSM_WEBCONTAINER_AUTH_KEY.length} chars)`);
     console.log(`Session TTL: ${SESSION_TTL_MS / 60000} minutes`);
-    console.log(`API mounted at /api/v1 — use /api/v1/<endpoint> in all client calls.`);
+    console.log(`Cookie: HttpOnly; Secure; SameSite=None; Path=/`);
+    console.log(`API mounted at /api/v1 (strict auth — no Web UI carve-out)`);
 });
