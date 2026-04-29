@@ -87,19 +87,43 @@ sap.ui.define([
 
         /**
          * Controller initialization
+         * 
+         * IMPORTANT: This method is async because we must await TypeConfigService.init()
+         * before any activity is prepared via _prepareActivityDataOptimized(). The activity
+         * preparation reads TypeConfigService.isExpenseType() / isMileageType() synchronously
+         * and bakes the result into the model — if init() hadn't resolved yet, activities
+         * with custom (non-default) Service Product IDs would be misclassified, and the
+         * flag persists for the page lifetime (no re-derivation). Awaiting init() removes
+         * that race entirely.
+         * 
+         * Cost: adds one synchronous network round-trip (~50-200ms) to first load,
+         * blocking subsequent activity load. Acceptable trade-off given the alternative
+         * is a silent, time-bombed bug that fires only after Type Config customization.
          */
-        onInit() {
+        async onInit() {
             TMDialogService.init(this);
-            TypeConfigService.init(); // Async but non-blocking
+
+            // Block on TypeConfigService — must finish before any activity is prepared.
+            // Wrapped in try/catch so a failure here doesn't leave the controller half-initialized:
+            // TypeConfigService falls back to built-in defaults internally on fetch failure,
+            // so we can safely proceed even if this rejects.
+            try {
+                await TypeConfigService.init();
+            } catch (err) {
+                console.error("View1.onInit: TypeConfigService.init() failed; continuing with defaults", err);
+            }
+
             this._initializeModel();
-            
-            // Load web container context first (needed for user org level resolution)
+
+            // Load web container context first (needed for user org level resolution).
+            // Activity loading flows from here — by now, TypeConfigService is initialized,
+            // so _prepareActivityDataOptimized will see the real config.
             this._loadWebContainerContext().then(() => {
                 this._loadOrganizationLevels();
             });
-            
-            // Background loading (parallel) - non-blocking
-            // CacheService warms all reference data caches in parallel for instant dialog access
+
+            // Background loading (parallel) - non-blocking.
+            // CacheService warms all reference data caches in parallel for instant dialog access.
             this._loadOrganizationalHierarchy();
             CacheService.warmAllCaches();
         },

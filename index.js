@@ -5,12 +5,22 @@
  * Handles FSM Mobile web container integration, serves the UI5 frontend,
  * and mounts API route modules.
  * 
- * Security model (two layers):
- * 1. Authentication Key (shared secret with FSM) — validates that incoming
- *    WebContainer POSTs come from a legitimate FSM Mobile client.
- * 2. Session Cookie (per-session opaque token) — issued after successful
- *    auth-key validation, required on all /api/* and /web-container-context
- *    calls. Prevents anyone-with-the-URL from calling the API directly.
+ * Security model — TWO-TIER, by design:
+ * 
+ * 1. FSM Mobile WebContainer path: FULLY AUTHENTICATED.
+ *    - POST /web-container-access-point requires a valid Authentication Key
+ *      (shared secret with FSM Admin > Web Containers).
+ *    - On success, an HttpOnly session cookie is issued.
+ *    - All /api/* calls from the Mobile WebView carry this cookie.
+ * 
+ * 2. FSM Web UI (Shell extension) path: UNAUTHENTICATED, by deliberate carve-out.
+ *    - The Shell iframe loads via GET — no POST handler runs, no cookie issued.
+ *    - /api/* calls from the iframe arrive without a session cookie.
+ *    - We accept them anyway. This matches the pre-cookie-auth behavior and
+ *      is documented as a known limitation (see docs/SECURITY.md).
+ *    - TODO: replace with proper FSM JWT validation when Web UI usage grows.
+ *      The Shell SDK provides an `authToken` JWT that can be verified against
+ *      FSM's JWKS endpoint. Estimated effort: 2-3 hours. Tracked as Option B.
  * 
  * Required Environment Variables:
  * - FSM_WEBCONTAINER_AUTH_KEY - Shared secret matching the Authentication Key
@@ -39,9 +49,6 @@ const app = express();
 // Must match the value configured in FSM Admin > Web Containers >
 // Authentication Key. FSM Mobile sends this in the POST body as
 // `authenticationKey` when launching the web container.
-//
-// Fail fast at startup if not configured — running without the secret
-// would silently leave the entry point unauthenticated.
 
 const FSM_WEBCONTAINER_AUTH_KEY = process.env.FSM_WEBCONTAINER_AUTH_KEY;
 
@@ -80,42 +87,25 @@ function isAuthKeyValid(body) {
 // ===========================
 // SESSION & CONTEXT STORES
 // ===========================
-// Two parallel maps with the same TTL:
-//   - contextStore: keyed by "userName_cloudId", holds FSM context data.
-//   - sessionStore: keyed by random session token, points to a contextKey.
-// 
-// The session token is what the browser holds in its HttpOnly cookie.
-// It's an opaque random string with no information; lookup happens server-side.
 
-const SESSION_TTL_MS = 30 * 60 * 1000; // 30 minutes
-const CONTEXT_TTL_MS = 30 * 60 * 1000; // 30 minutes — matches session TTL
+const SESSION_TTL_MS = 30 * 60 * 1000;
+const CONTEXT_TTL_MS = 30 * 60 * 1000;
 
 const contextStore = new Map();
 const sessionStore = new Map();
 
 const SESSION_COOKIE_NAME = 'fsm_session';
 
-/**
- * Build a unique context key from POST body.
- */
 function buildContextKey(body) {
     const userName = (body.userName || 'anonymous').replace(/[^a-zA-Z0-9_-]/g, '_');
     const cloudId  = (body.cloudId  || 'unknown'  ).replace(/[^a-zA-Z0-9_-]/g, '_');
     return `${userName}_${cloudId}`;
 }
 
-/**
- * Generate a fresh random session token.
- * 32 random bytes encoded as base64url → 43-character opaque string.
- */
 function generateSessionToken() {
     return crypto.randomBytes(32).toString('base64url');
 }
 
-/**
- * Remove expired entries from both stores.
- * Called on every WebContainer POST and during session validation.
- */
 function evictExpired() {
     const now = Date.now();
     for (const [key, entry] of contextStore.entries()) {
@@ -130,10 +120,6 @@ function evictExpired() {
     }
 }
 
-/**
- * Look up a session token and return the associated context key.
- * Returns null if missing, expired, or unknown.
- */
 function resolveSession(token) {
     if (!token || typeof token !== 'string') return null;
     const entry = sessionStore.get(token);
@@ -146,8 +132,11 @@ function resolveSession(token) {
 }
 
 /**
- * Express middleware: require a valid session cookie.
- * Used for /api/* and /web-container-context.
+ * STRICT middleware: require a valid session cookie. Used for
+ * /web-container-context where cookie presence is guaranteed by the
+ * Mobile flow (the only flow that uses this endpoint).
+ * 
+ * Returns 401 if no cookie or invalid cookie.
  */
 function requireSession(req, res, next) {
     const token = req.cookies && req.cookies[SESSION_COOKIE_NAME];
@@ -163,7 +152,50 @@ function requireSession(req, res, next) {
         });
     }
 
-    // Attach contextKey to request for downstream handlers if they want it
+    req.fsmContextKey = contextKey;
+    next();
+}
+
+/**
+ * LENIENT middleware: validate session cookie if present, but allow the
+ * request through if absent. Used for /api/* to support both flows:
+ *   - Mobile WebContainer: cookie present → validated, contextKey attached.
+ *   - Web UI Shell iframe: no cookie → request passes unauthenticated.
+ * 
+ * SECURITY NOTE: This is the deliberate Web UI carve-out. Any caller can
+ * reach /api/* without a cookie — we cannot distinguish "Shell iframe" from
+ * "attacker with curl." This matches pre-cookie-auth behavior and is the
+ * agreed trade-off until Option B (FSM JWT validation) is implemented.
+ * 
+ * Unauthenticated requests are LOGGED so we have visibility into how often
+ * the carve-out is exercised. If the log is loud, that's signal to invest
+ * in Option B sooner.
+ */
+function optionalSession(req, res, next) {
+    const token = req.cookies && req.cookies[SESSION_COOKIE_NAME];
+
+    if (!token) {
+        // No cookie → unauthenticated (Web UI iframe path or anonymous caller).
+        // Log for visibility; do NOT reject.
+        console.log(`API-UNAUTH: ${req.method} ${req.originalUrl} ` +
+                    `(no cookie, remoteIp=${req.ip}, ua=${req.get('user-agent')?.slice(0, 60) || 'unknown'})`);
+        req.fsmContextKey = null;
+        return next();
+    }
+
+    // Cookie present → must be valid, otherwise reject.
+    // (A bad cookie is not the same as no cookie — bad means tampered or expired,
+    //  which is a different failure mode than "Web UI never had one.")
+    const contextKey = resolveSession(token);
+    if (!contextKey) {
+        console.warn(`API-AUTH: rejected ${req.method} ${req.originalUrl} — invalid-or-expired cookie ` +
+                     `(remoteIp=${req.ip})`);
+        return res.status(401).json({
+            message: 'Unauthorized: invalid or expired session.',
+            hint: 'Your session has expired. Please re-open the app from FSM Mobile or refresh the FSM Web UI.'
+        });
+    }
+
     req.fsmContextKey = contextKey;
     next();
 }
@@ -183,19 +215,13 @@ app.enable('trust proxy');
 // ===========================
 // FSM WEB CONTAINER ENTRY POINTS
 // ===========================
-// FSM Mobile sends POST request with context when opening web container.
-// iOS: Content-Type: application/json
-// Android: Content-Type: application/x-www-form-urlencoded
-// Configure this URL in FSM Admin > Web Containers.
+// Used by FSM Mobile only. Web UI does NOT hit these — it loads via GET
+// directly from the iframe. The auth-key check enforced here is the
+// security boundary for the Mobile flow.
 
-/**
- * Shared handler for both POST entry points.
- * Validates auth key → stores context → issues session cookie → redirects.
- */
 function handleWebContainerPost(req, res, label) {
     const body = req.body || {};
 
-    // STEP 1: Validate the Authentication Key shared secret.
     if (!isAuthKeyValid(body)) {
         const provided = body && body.authenticationKey;
         const reason = !provided
@@ -209,17 +235,12 @@ function handleWebContainerPost(req, res, label) {
         });
     }
 
-    // STEP 2: Auth passed. Clean up stale entries before storing new ones.
     evictExpired();
 
-    // STEP 3: Strip the secret out of the data we keep.
     const { authenticationKey, ...storableBody } = body;
-
-    // STEP 4: Store context.
     const contextKey = buildContextKey(storableBody);
     contextStore.set(contextKey, { data: storableBody, timestamp: Date.now() });
 
-    // STEP 5: Generate session token, store mapping.
     const sessionToken = generateSessionToken();
     sessionStore.set(sessionToken, {
         contextKey: contextKey,
@@ -230,7 +251,6 @@ function handleWebContainerPost(req, res, label) {
                 `(contextKey=${contextKey}, contextStoreSize=${contextStore.size}, ` +
                 `sessionStoreSize=${sessionStore.size})`);
 
-    // STEP 6: Set session cookie + redirect.
     res.cookie(SESSION_COOKIE_NAME, sessionToken, {
         httpOnly: true,
         secure: true,
@@ -252,11 +272,12 @@ app.post("/", (req, res) => {
 });
 
 // ===========================
-// PROTECTED CONTEXT ENDPOINT
+// PROTECTED CONTEXT ENDPOINT (Mobile-only)
 // ===========================
-// Frontend calls this to retrieve its stored FSM context after redirect.
-// Now requires the session cookie — closes the previous "guess the contextKey"
-// side-channel.
+// /web-container-context is read by ContextService.js when
+// _getMobileContext() runs — only invoked when the app loaded from a
+// WebContainer redirect. Web UI uses the Shell SDK and never hits this.
+// Therefore: full session enforcement is appropriate here; no carve-out.
 
 app.get("/web-container-context", requireSession, (req, res) => {
     const key = req.query.key;
@@ -268,9 +289,6 @@ app.get("/web-container-context", requireSession, (req, res) => {
         });
     }
 
-    // Belt-and-suspenders: only allow reading the context tied to THIS session.
-    // Without this check, an authenticated user could read another user's context
-    // by passing a different contextKey.
     if (key !== req.fsmContextKey) {
         console.warn(`CONTEXT-FETCH: session ${req.fsmContextKey} attempted to read ${key}`);
         return res.status(403).json({
@@ -293,23 +311,17 @@ app.get("/web-container-context", requireSession, (req, res) => {
 // ===========================
 // STATIC FILES (UI5 FRONTEND)
 // ===========================
-// Served BEFORE the protected /api/* mount, so the UI itself loads
-// without authentication. The UI then gets its session from the cookie
-// already set by the WebContainer POST.
 
 app.use(express.static(path.join(__dirname, 'webapp')));
 
 // ===========================
-// PROTECTED API ROUTES
+// API ROUTES — LENIENT AUTH (Mobile + Web UI carve-out)
 // ===========================
-// All /api/* endpoints require a valid session cookie.
-// The cookie is set automatically by the WebContainer POST handler;
-// browsers attach it to subsequent same-origin requests with no
-// frontend code changes required (after the global fetch wrapper
-// in webapp/Component.js — which is needed because UI5's fetch
-// defaults to omit cookies on some platforms).
+// /api/* uses optionalSession instead of requireSession to permit
+// the Web UI Shell iframe flow, which never receives a session cookie.
+// See SECURITY NOTE on optionalSession above.
 
-app.use('/api', requireSession);
+app.use('/api', optionalSession);
 
 app.use('/api', require('./routes/activityRoutes'));
 app.use('/api', require('./routes/entryRoutes'));
@@ -324,4 +336,5 @@ app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`FSM_WEBCONTAINER_AUTH_KEY is set (${FSM_WEBCONTAINER_AUTH_KEY.length} chars)`);
     console.log(`Session TTL: ${SESSION_TTL_MS / 60000} minutes`);
+    console.log(`/api/* uses lenient auth — Web UI carve-out is ACTIVE.`);
 });
