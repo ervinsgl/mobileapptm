@@ -275,8 +275,13 @@ class FSMService {
     }
 
     /**
-     * Parse multipart batch response.
-     * @private
+     * Parse multipart batch response from FSM API.
+     * 
+     * Handles both:
+     *   - Parts with JSON bodies (typical for POST/PATCH responses) — parsed as JSON
+     *   - Parts without bodies (typical for DELETE 204 responses) — recorded with data: null
+     *     A bodyless response with a 2xx status is still a success.
+     * 
      * @param {string} responseBody - Raw multipart response body
      * @param {string} contentType - Content-Type header with boundary
      * @returns {Array} Array of parsed response objects
@@ -291,7 +296,7 @@ class FSMService {
                 console.error('Could not extract boundary from response');
                 return results;
             }
-            
+
             const boundary = boundaryMatch[1].replace(/"/g, '');
             const parts = responseBody.split(`--${boundary}`);
 
@@ -299,35 +304,42 @@ class FSMService {
                 // Skip empty parts and closing boundary
                 if (!part.trim() || part.trim() === '--') continue;
 
-                // Find the JSON body in the response part
+                // Skip parts that aren't HTTP responses (e.g., changeset envelopes)
+                const statusMatch = part.match(/HTTP\/1\.1 (\d+)/);
+                if (!statusMatch) continue;
+
+                const status = parseInt(statusMatch[1]);
+
+                // Extract Content-ID if present
+                const contentIdMatch = part.match(/Content-ID:\s*(\w+)/i);
+                const contentId = contentIdMatch ? contentIdMatch[1] : null;
+
+                // Try to parse JSON body — may not exist (e.g., DELETE 204 responses)
                 const jsonMatch = part.match(/\{[\s\S]*\}/);
+                let data = null;
                 if (jsonMatch) {
                     try {
-                        const jsonData = JSON.parse(jsonMatch[0]);
-                        
-                        // Extract HTTP status from the part
-                        const statusMatch = part.match(/HTTP\/1\.1 (\d+)/);
-                        const status = statusMatch ? parseInt(statusMatch[1]) : 200;
-                        
-                        // Extract Content-ID
-                        const contentIdMatch = part.match(/Content-ID:\s*(\w+)/i);
-                        const contentId = contentIdMatch ? contentIdMatch[1] : null;
-
-                        results.push({
-                            success: status >= 200 && status < 300,
-                            status,
-                            contentId,
-                            data: jsonData
-                        });
+                        data = JSON.parse(jsonMatch[0]);
                     } catch (parseError) {
-                        console.error('Error parsing batch response part:', parseError);
+                        console.error('Error parsing batch response JSON:', parseError);
                         results.push({
                             success: false,
-                            status: 500,
-                            error: 'Failed to parse response'
+                            status,
+                            contentId,
+                            error: 'Failed to parse response body'
                         });
+                        continue;
                     }
                 }
+
+                // A 2xx response with or without a body is a success.
+                // A 4xx/5xx response is a failure regardless of body presence.
+                results.push({
+                    success: status >= 200 && status < 300,
+                    status,
+                    contentId,
+                    data
+                });
             }
         } catch (error) {
             console.error('Error parsing batch response:', error);

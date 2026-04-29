@@ -966,7 +966,8 @@ sap.ui.define([
 
         /**
          * Delete selected T&M entries.
-         * Only entries with PENDING status can be deleted (REVIEW entries can be edited but not deleted).
+         * Entries with PENDING or REVIEW status can be deleted. REJECTED, DECLINED,
+         * and APPROVED entries cannot be selected (no checkbox renders for them).
          * Shows confirmation dialog before deletion.
          * @param {sap.ui.base.Event} oEvent - Button press event
          */
@@ -980,8 +981,10 @@ sap.ui.define([
             aProductGroups.forEach((group, groupIndex) => {
                 (group.activities || []).forEach((activity, activityIndex) => {
                     (activity.tmReports || []).forEach((report, reportIndex) => {
-                        // Only include selected entries with PENDING status (REVIEW can be edited but not deleted)
-                        if (report.selected && report.decisionStatus === 'PENDING') {
+                        // Include selected entries with PENDING or REVIEW status.
+                        // REJECTED/DECLINED/APPROVED entries don't render a checkbox (see view binding),
+                        // so they can't appear here even if the data model briefly says report.selected.
+                        if (report.selected && (report.decisionStatus === 'PENDING' || report.decisionStatus === 'REVIEW')) {
                             aSelectedEntries.push({
                                 report: report,
                                 path: `/productGroups/${groupIndex}/activities/${activityIndex}/tmReports/${reportIndex}`,
